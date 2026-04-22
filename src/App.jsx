@@ -142,6 +142,9 @@ export default function Syntarion() {
   const saveLogs=(id,logs)=>{try{localStorage.setItem(logKey(id),JSON.stringify(logs));}catch{}};
   const [sessionLogs,setSessionLogs]=useState(()=>loadLogs(CAMPAIGNS[0].id));
   const [logInput,setLogInput]=useState('');
+  const [isDmAuthenticated, setIsDmAuthenticated] = useState(false);
+  const [dmPasswordInput, setDmPasswordInput] = useState('');
+  const [dmError, setDmError] = useState('');
 
   const addLog=(campId,text)=>{
     if(!text.trim())return;
@@ -2121,10 +2124,14 @@ export default function Syntarion() {
     );
   };
 
-  // ── ROUTE ─────────────────────────────────────────────────────────────────
-  if(appView==='landing')return <Landing/>;
-  if(appView==='campaign')return <CampaignView/>;
-  if(appView==='dm')return <DMView/>;
+  // ── ROUTE HANDLING ──
+  if (appView === 'landing') return <Landing />;
+  if (appView === 'campaign') return <CampaignView />;
+  
+  if (appView === 'dm') {
+    // If authenticated, show DM view; if not, force back to Landing
+    return isDmAuthenticated ? <DMView /> : <Landing />;
+  }
 
   return (
     <div style={{background:C.bg,minHeight:'100vh',fontFamily:'system-ui,-apple-system,sans-serif',color:C.text}}>
@@ -2151,7 +2158,7 @@ export default function Syntarion() {
         </div>
       </div>
 
-      {/* Step bar */}
+            {/* Step bar */}
       <div style={{display:'flex',background:C.surface,borderBottom:`1px solid ${C.border}`,overflowX:'auto',boxShadow:'0 1px 2px rgba(0,0,0,0.04)'}}>
         {STEPS.map((lbl,i)=>(
           <div key={i} style={{padding:'10px 13px',fontSize:9,letterSpacing:'0.10em',textTransform:'uppercase',fontWeight:i===step?700:500,color:i===step?C.blue:i<step?C.textSub:C.dim,borderBottom:`2px solid ${i===step?C.blue:'transparent'}`,cursor:'default',whiteSpace:'nowrap',flexShrink:0,transition:'color 0.1s'}}>
