@@ -1,4 +1,7 @@
-import { useState, useEffect } from "react";
+import { consultScribe } from './scribe';
+
+import { useState, useEffect, useRef } from "react";
+import React from "react";
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 const CAMPAIGNS = [
@@ -128,9 +131,39 @@ const cardSel=(sel,theme)=>{const sc=theme==='tech'?C.tech:C.blue;const sb=theme
 export default function Syntarion() {
   const STEPS=['Adventurers','Race & Name','Belief','Class','Stats','Backstory','Sheet'];
 
-  // app-level view: 'landing' | 'wizard' | 'campaign'
+  // app-level view: 'landing' | 'wizard' | 'campaign' | 'dm'
   const [appView,setAppView]=useState('landing');
-  const [campaignView,setCampaignView]=useState(null); // campaign id when in campaign mode
+  const [campaignView,setCampaignView]=useState(null);
+  const [dmCampaign,setDmCampaign]=useState(CAMPAIGNS[0].id);
+
+  // ── SESSION LOGS (DM only, persisted per campaign) ──
+  const logKey=id=>`syntarion_logs_${id}`;
+  const loadLogs=id=>{try{return JSON.parse(localStorage.getItem(logKey(id))||'[]');}catch{return [];}};
+  const saveLogs=(id,logs)=>{try{localStorage.setItem(logKey(id),JSON.stringify(logs));}catch{}};
+  const [sessionLogs,setSessionLogs]=useState(()=>loadLogs(CAMPAIGNS[0].id));
+  const [logInput,setLogInput]=useState('');
+
+  const addLog=(campId,text)=>{
+    if(!text.trim())return;
+    const entry={id:Date.now().toString(),text:text.trim(),ts:new Date().toLocaleString()};
+    setSessionLogs(prev=>{
+      const next=[entry,...prev];
+      saveLogs(campId,next);
+      return next;
+    });
+  };
+  const deleteLog=(campId,id)=>{
+    setSessionLogs(prev=>{
+      const next=prev.filter(l=>l.id!==id);
+      saveLogs(campId,next);
+      return next;
+    });
+  };
+
+  // ── SCRIBE chat state ──
+  const [scribeMessages,setScribeMessages]=useState([]); // {role:'user'|'assistant', content:string}
+  const [scribeInput,setScribeInput]=useState('');
+  const [scribeThinking,setScribeThinking]=useState(false);
 
   // wizard state
   const [step,setStep]=useState(0);
@@ -234,6 +267,34 @@ export default function Syntarion() {
     setSelectedRoll(null);
   };
   const setActionBonus=(key,val)=>setActionBonuses(a=>({...a,[key]:val}));
+
+  // ── SCRIBE: Powered by Gemini via scribe.js ──
+  const handleConsultScribe = async (question) => {
+    if (!question.trim() || scribeThinking) return;
+
+    // 1. Post your message to the chat
+    const userMsg = { role: 'user', content: question.trim() };
+    setScribeMessages(prev => [...prev, userMsg]);
+    setScribeInput('');
+    setScribeThinking(true);
+
+    try {
+      // 2. Call the Gemini Brain in scribe.js
+      const reply = await consultScribe(question, {
+        players: savedChars.filter(c => c.campaign === dmCampaign),
+        logs: sessionLogs,
+        activeCampaign: CAMPAIGNS.find(c => c.id === dmCampaign)
+      });
+
+      // 3. Display the response
+      setScribeMessages(prev => [...prev, { role: 'assistant', content: reply }]);
+    } catch (e) {
+      console.error("Scribe Error:", e);
+      setScribeMessages(prev => [...prev, { role: 'assistant', content: 'The SCRIBE is unable to read the stars right now.' }]);
+    } finally {
+      setScribeThinking(false);
+    }
+  };
 
   const buildCharObj=()=>({
     id:charId,name:`${fn} ${ln}`.trim()||'Unnamed',fn,ln,age,gender,race,rv,pmV,
@@ -1266,6 +1327,9 @@ export default function Syntarion() {
                   Continue {mostRecentChar.name||'Character'} →
                 </button>
               )}
+              <button style={{background:'#1a0533',color:'#c084fc',border:'1px solid #7e22ce',borderRadius:12,padding:'14px 22px',fontSize:13,letterSpacing:'0.08em',textTransform:'uppercase',fontWeight:700,cursor:'pointer',boxShadow:'0 4px 14px rgba(124,58,237,0.25)'}} onClick={()=>setAppView('dm')}>
+                DM Mode
+              </button>
             </div>
 
             {/* Chips */}
@@ -1348,12 +1412,44 @@ export default function Syntarion() {
     const camp=CAMPAIGNS.find(c=>c.id===campaignView);
     const campChars=savedChars.filter(c=>c.campaign===campaignView);
     const [activeCharId,setActiveCharId]=useState(campChars[0]?.id||null);
+    const [cvTab,setCvTab]=useState('sheet'); // 'sheet' | 'actions' | 'inventory' | 'background'
     const activeChar=campChars.find(c=>c.id===activeCharId)||campChars[0]||null;
     const charCls=activeChar?allClasses.find(c=>c.id===activeChar.cid):null;
-    const allStats_=ALL_STATS;
     if(!camp)return null;
     const pathColor=activeChar?.cp==='magic'?C.magic:C.tech;
     const pathBg=activeChar?.cp==='magic'?C.magicBg:C.techBg;
+    const aSlider=activeChar?.alignSlider||0;
+    const sliderPctCV=((aSlider+4)/8)*100;
+    const sliderColorCV=aSlider<0?C.magic:aSlider>0?C.tech:C.blue;
+    const ab=activeChar?.actionBonuses||{};
+
+    // ── sub-components scoped to campaign view ──
+    const CvCard=({children,style={}})=>(
+      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:14,padding:'16px 18px',boxShadow:C.shadow,marginBottom:14,...style}}>{children}</div>
+    );
+    const CvLabel=({children})=>(
+      <div style={{fontSize:9,letterSpacing:'0.12em',textTransform:'uppercase',color:C.muted,fontWeight:700,marginBottom:10}}>{children}</div>
+    );
+    const ActionRow=({label})=>(
+      <div style={{display:'flex',alignItems:'center',gap:8,padding:'5px 0',borderBottom:`1px solid ${C.border}`}}>
+        <span style={{fontSize:11,color:C.textSub,flex:1}}>{label}</span>
+        <div style={{background:ab[label]&&ab[label]!=='0'&&ab[label]!==''?C.blueLight:C.subPanel,border:`1px solid ${ab[label]&&ab[label]!=='0'&&ab[label]!==''?C.blueDim:C.border}`,borderRadius:6,padding:'2px 8px',minWidth:38,textAlign:'center',fontSize:11,fontWeight:700,color:ab[label]&&ab[label]!=='0'&&ab[label]!==''?C.blueText:C.dim}}>
+          {ab[label]||'—'}
+        </div>
+      </div>
+    );
+    const SlotRow=({label,value})=>(
+      <div style={{display:'flex',gap:10,padding:'5px 0',borderBottom:`1px solid ${C.border}`,alignItems:'center'}}>
+        <span style={{fontSize:10,color:C.muted,width:80,flexShrink:0,fontWeight:600}}>{label}</span>
+        <span style={{fontSize:11,color:value?C.textSub:C.dim,flex:1}}>{value||'—'}</span>
+      </div>
+    );
+    const TabBtn=({id,label})=>(
+      <button onClick={()=>setCvTab(id)} style={{padding:'9px 16px',fontSize:11,letterSpacing:'0.04em',fontWeight:cvTab===id?700:500,cursor:'pointer',border:'none',borderBottom:`2px solid ${cvTab===id?C.blue:'transparent'}`,background:'transparent',color:cvTab===id?C.blue:C.muted,whiteSpace:'nowrap'}}>
+        {label}
+      </button>
+    );
+
     return (
       <div style={{background:C.bg,minHeight:'100vh',fontFamily:'system-ui,-apple-system,sans-serif'}}>
         {/* Campaign header */}
@@ -1371,7 +1467,7 @@ export default function Syntarion() {
           </div>
         </div>
 
-        <div style={{padding:'24px 28px',maxWidth:1100,margin:'0 auto'}}>
+        <div style={{padding:'20px 28px',maxWidth:1180,margin:'0 auto'}}>
           {campChars.length===0?(
             <div style={{textAlign:'center',padding:'60px 20px'}}>
               <div style={{fontSize:18,fontWeight:700,color:C.text,marginBottom:8}}>No characters in {camp.name}</div>
@@ -1379,118 +1475,328 @@ export default function Syntarion() {
               <button style={btnPrimary(false)} onClick={()=>{resetAll();setSaveCampaign(campaignView);setAppView('wizard');}}>Begin character creation →</button>
             </div>
           ):(
-            <div style={{display:'grid',gridTemplateColumns:`${campChars.length>1?'220px ':''} 1fr`,gap:20}}>
-              {/* Character selector (only if multiple) */}
+            <div style={{display:'grid',gridTemplateColumns:`${campChars.length>1?'200px ':''} 1fr`,gap:20}}>
+
+              {/* Character selector sidebar */}
               {campChars.length>1&&(
-                <div>
+                <div style={{paddingTop:4}}>
                   <div style={{fontSize:9,letterSpacing:'0.12em',textTransform:'uppercase',color:C.muted,fontWeight:700,marginBottom:10}}>Characters</div>
                   {campChars.map(ch=>(
-                    <div key={ch.id} onClick={()=>setActiveCharId(ch.id)} style={{background:activeCharId===ch.id?C.blueLight:C.card,border:`1.5px solid ${activeCharId===ch.id?C.blueDim:C.border}`,borderRadius:10,padding:'10px 12px',marginBottom:7,cursor:'pointer',display:'flex',alignItems:'center',gap:10,boxShadow:C.shadow}}>
+                    <div key={ch.id} onClick={()=>{setActiveCharId(ch.id);setCvTab('sheet');}} style={{background:activeCharId===ch.id?C.blueLight:C.card,border:`1.5px solid ${activeCharId===ch.id?C.blueDim:C.border}`,borderRadius:10,padding:'10px 12px',marginBottom:7,cursor:'pointer',display:'flex',alignItems:'center',gap:10,boxShadow:C.shadow}}>
                       <div style={{width:34,height:34,borderRadius:9,background:ch.cp==='magic'?C.magicBg:C.techBg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                         <RaceSigil raceId={ch.race} size={20} color={ch.cp==='magic'?C.magicText:C.techText}/>
                       </div>
-                      <div>
-                        <div style={{fontSize:12,fontWeight:700,color:C.text}}>{ch.name}</div>
-                        <div style={{fontSize:9,color:C.muted,marginTop:1}}>{allClasses.find(c=>c.id===ch.cid)?.name||'—'}</div>
+                      <div style={{minWidth:0}}>
+                        <div style={{fontSize:12,fontWeight:700,color:C.text,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{ch.name}</div>
+                        <div style={{fontSize:9,color:C.muted,marginTop:1}}>Lv {ch.charLevel||1} · {allClasses.find(c=>c.id===ch.cid)?.name||'—'}</div>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* Character sheet */}
+              {/* Main sheet area */}
               {activeChar&&(
                 <div>
-                  {/* Identity header with sigils */}
-                  <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:16,padding:'24px 24px 20px',marginBottom:16,boxShadow:C.shadow}}>
+                  {/* ── CHARACTER HEADER CARD ── */}
+                  <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:16,padding:'22px 24px 18px',marginBottom:14,boxShadow:C.shadow}}>
                     <div style={{display:'flex',alignItems:'flex-start',gap:18}}>
-                      {/* Sigil display */}
+                      {/* Race sigil + class badge */}
                       <div style={{position:'relative',flexShrink:0}}>
-                        <div style={{width:72,height:72,borderRadius:16,background:pathBg,border:`1px solid ${C.border}`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:C.shadow}}>
-                          <RaceSigil raceId={activeChar.race} size={42} color={pathColor}/>
+                        <div style={{width:76,height:76,borderRadius:18,background:pathBg,border:`1px solid ${C.border}`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:C.shadow}}>
+                          <RaceSigil raceId={activeChar.race} size={44} color={pathColor}/>
                         </div>
-                        <div style={{position:'absolute',bottom:-6,right:-6,width:30,height:30,borderRadius:8,background:C.surface,border:`1px solid ${C.border}`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:C.shadow}}>
+                        <div style={{position:'absolute',bottom:-7,right:-7,width:30,height:30,borderRadius:8,background:C.surface,border:`1px solid ${C.border}`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:C.shadow}}>
                           <ClassSigil classId={activeChar.cid} size={18} color={C.text}/>
                         </div>
                       </div>
-                      {/* Name block */}
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:24,fontWeight:800,color:C.text,letterSpacing:'-0.02em',fontFamily:"Georgia,serif"}}>{activeChar.name||'Unnamed'}</div>
-                        <div style={{fontSize:13,color:C.textSub,marginTop:4,fontWeight:500}}>{activeChar.race?getRaceDisplay(activeChar.race,activeChar.rv,activeChar.pmV):'No race'}{activeChar.age?` · Age ${activeChar.age}`:''}</div>
-                        <div style={{display:'flex',gap:8,marginTop:8,flexWrap:'wrap'}}>
-                          {charCls&&<span style={{...tagChip(activeChar.cp),fontSize:10}}>{charCls.name} · {charCls.disc}</span>}
-                          {activeChar.dc==='god'&&activeChar.deity&&<span style={{display:'inline-block',background:C.blueLight,color:C.blueText,padding:'2px 9px',borderRadius:20,fontSize:10,fontWeight:700}}>God: {activeChar.deity}</span>}
-                          {activeChar.dc==='spirit'&&activeChar.spirit&&<span style={{display:'inline-block',background:C.techBg,color:C.techText,padding:'2px 9px',borderRadius:20,fontSize:10,fontWeight:700}}>Spirit: {activeChar.spirit}</span>}
+
+                      {/* Name + race + chips */}
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:26,fontWeight:800,color:C.text,letterSpacing:'-0.02em',fontFamily:"Georgia,serif",lineHeight:1.1}}>{activeChar.name||'Unnamed'}</div>
+                        <div style={{fontSize:13,color:C.textSub,marginTop:5,fontWeight:500}}>{activeChar.race?getRaceDisplay(activeChar.race,activeChar.rv,activeChar.pmV):'No race'}{activeChar.age?` · Age ${activeChar.age}`:''}</div>
+                        <div style={{display:'flex',gap:7,marginTop:9,flexWrap:'wrap',alignItems:'center'}}>
+                          {charCls&&<span style={{...tagChip(activeChar.cp),fontSize:10,marginTop:0}}>{charCls.name} · {charCls.disc}</span>}
+                          {activeChar.dc==='god'&&activeChar.deity&&<span style={{background:C.blueLight,color:C.blueText,padding:'3px 10px',borderRadius:20,fontSize:10,fontWeight:700}}>God: {activeChar.deity}</span>}
+                          {activeChar.dc==='spirit'&&activeChar.spirit&&<span style={{background:C.techBg,color:C.techText,padding:'3px 10px',borderRadius:20,fontSize:10,fontWeight:700}}>Spirit: {activeChar.spirit}</span>}
+                          {activeChar.dc==='none'&&<span style={{background:C.subPanel,color:C.muted,padding:'3px 10px',borderRadius:20,fontSize:10,fontWeight:600}}>Unaffiliated</span>}
                         </div>
                       </div>
-                      {/* Morality / alignment + Level + AP */}
-                      <div style={{textAlign:'right',flexShrink:0,display:'flex',flexDirection:'column',gap:8,alignItems:'flex-end'}}>
-                        {/* Level badge */}
-                        <div style={{display:'flex',alignItems:'center',gap:8}}>
+
+                      {/* Level + AP + Alignment + Morality column */}
+                      <div style={{flexShrink:0,display:'flex',flexDirection:'column',gap:10,alignItems:'flex-end'}}>
+                        {/* Level + AP row */}
+                        <div style={{display:'flex',gap:10,alignItems:'flex-end'}}>
                           <div style={{textAlign:'center'}}>
-                            <div style={{fontSize:9,letterSpacing:'0.1em',textTransform:'uppercase',color:C.muted,fontWeight:700,marginBottom:3}}>Level</div>
-                            <div style={{width:44,height:44,borderRadius:10,background:C.blueLight,border:`2px solid ${C.blueDim}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,fontWeight:800,color:C.blueText}}>{activeChar.charLevel||1}</div>
+                            <div style={{fontSize:9,letterSpacing:'0.1em',textTransform:'uppercase',color:C.muted,fontWeight:700,marginBottom:4}}>Level</div>
+                            <div style={{width:52,height:52,borderRadius:12,background:C.blueLight,border:`2px solid ${C.blueDim}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,fontWeight:800,color:C.blueText,boxShadow:`0 0 0 3px rgba(59,130,246,0.1)`}}>{activeChar.charLevel||1}</div>
                           </div>
-                          {/* AP */}
                           <div style={{textAlign:'center'}}>
-                            <div style={{fontSize:9,letterSpacing:'0.1em',textTransform:'uppercase',color:C.muted,fontWeight:700,marginBottom:3}}>AP</div>
-                            <div style={{background:C.subPanel,border:`1.5px solid ${C.border}`,borderRadius:10,padding:'6px 10px',minWidth:64}}>
-                              <div style={{fontSize:14,fontWeight:800,color:C.text,textAlign:'center'}}>{activeChar.apCurrent||0}<span style={{color:C.dim,fontWeight:400,fontSize:11}}> / {activeChar.apTotal||0}</span></div>
-                              <div style={{fontSize:8,color:C.muted,textAlign:'center',letterSpacing:'0.06em',textTransform:'uppercase'}}>Spent / Pool</div>
+                            <div style={{fontSize:9,letterSpacing:'0.1em',textTransform:'uppercase',color:C.muted,fontWeight:700,marginBottom:4}}>AP</div>
+                            <div style={{background:C.subPanel,border:`1.5px solid ${C.border}`,borderRadius:11,padding:'7px 12px',minWidth:72,textAlign:'center'}}>
+                              <div style={{fontSize:16,fontWeight:800,color:C.text}}>{activeChar.apCurrent||0}<span style={{color:C.dim,fontWeight:400,fontSize:12}}> / {activeChar.apTotal||0}</span></div>
+                              <div style={{fontSize:8,color:C.muted,letterSpacing:'0.06em',textTransform:'uppercase',marginTop:1}}>Spent / Pool</div>
                             </div>
                           </div>
                         </div>
+
+                        {/* Alignment label */}
+                        <div style={{textAlign:'right'}}>
+                          <div style={{fontSize:9,letterSpacing:'0.1em',textTransform:'uppercase',color:C.muted,fontWeight:700,marginBottom:2}}>Alignment</div>
+                          <div style={{fontSize:13,fontWeight:800,color:sliderColorCV}}>{aSlider===0?'Neutral':aSlider<0?`Magic ${Math.abs(aSlider)}`:`Tech ${aSlider}`}</div>
+                          {activeChar.morality&&<div style={{fontSize:11,color:C.muted,marginTop:3,fontStyle:'italic'}}>{activeChar.morality}</div>}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Will / Whim Meter — physical bar across the bottom of the card */}
+                    <div style={{marginTop:18,paddingTop:14,borderTop:`1px solid ${C.border}`}}>
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+                        <div style={{display:'flex',gap:14}}>
+                          <div><span style={{fontSize:9,letterSpacing:'0.08em',textTransform:'uppercase',color:C.muted,fontWeight:700}}>Will </span><span style={{fontSize:13,fontWeight:800,color:C.text}}>{activeChar.stats?.will||8}</span><span style={{fontSize:10,color:C.muted}}> Str</span></div>
+                          <div><span style={{fontSize:9,letterSpacing:'0.08em',textTransform:'uppercase',color:C.muted,fontWeight:700}}>Whim </span><span style={{fontSize:13,fontWeight:800,color:C.text}}>{activeChar.stats?.whim||8}</span><span style={{fontSize:10,color:C.muted}}> Dex</span></div>
+                        </div>
+                        <div style={{display:'flex',gap:14}}>
+                          <div><span style={{fontSize:9,letterSpacing:'0.08em',textTransform:'uppercase',color:C.muted,fontWeight:700}}>Vitals </span><span style={{fontSize:13,fontWeight:800,color:C.text}}>{activeChar.stats?.body||8}</span></div>
+                          <div><span style={{fontSize:9,letterSpacing:'0.08em',textTransform:'uppercase',color:C.muted,fontWeight:700}}>Stamina </span><span style={{fontSize:13,fontWeight:800,color:C.text}}>{activeChar.stats?.whim||8}</span></div>
+                          <div><span style={{fontSize:9,letterSpacing:'0.08em',textTransform:'uppercase',color:C.muted,fontWeight:700}}>Resolve </span><span style={{fontSize:13,fontWeight:800,color:C.text}}>{activeChar.stats?.soul||8}</span></div>
+                        </div>
+                      </div>
+                      {/* Magic ↔ Tech bar */}
+                      <div style={{position:'relative',height:8,borderRadius:4,overflow:'hidden',background:C.subPanel}}>
+                        <div style={{position:'absolute',inset:0,background:`linear-gradient(to right,${C.magic},#a78bfa,${C.blue},#34d399,${C.tech})`,opacity:0.25}}/>
+                        <div style={{position:'absolute',top:0,bottom:0,left:0,width:`${sliderPctCV}%`,background:sliderColorCV,borderRadius:4,opacity:0.7}}/>
+                      </div>
+                      <div style={{display:'flex',justifyContent:'space-between',marginTop:4,fontSize:9,letterSpacing:'0.07em',textTransform:'uppercase',fontWeight:700}}>
+                        <span style={{color:C.magicLight}}>◀ Magic</span>
+                        <span style={{color:sliderColorCV}}>{aSlider===0?'Neutral':aSlider<0?`Magic ${Math.abs(aSlider)}`:`Tech ${aSlider}`}</span>
+                        <span style={{color:C.techLight}}>Tech ▶</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ── TABS ── */}
+                  <div style={{display:'flex',background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,marginBottom:14,overflow:'hidden',boxShadow:C.shadow}}>
+                    <TabBtn id="sheet"      label="Stats & Abilities"/>
+                    <TabBtn id="actions"    label="Actions"/>
+                    <TabBtn id="inventory"  label="Inventory"/>
+                    <TabBtn id="background" label="Background"/>
+                  </div>
+
+                  {/* ── TAB: STATS & ABILITIES ── */}
+                  {cvTab==='sheet'&&(
+                    <div>
+                      {/* Ability scores split */}
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
+                        {[
+                          ['Magic / Spiritual',ALL_STATS.filter(s=>s.axis==='magic'),C.magic],
+                          ['Tech / Mortal',    ALL_STATS.filter(s=>s.axis==='tech'), C.tech],
+                        ].map(([label,statList,col])=>(
+                          <CvCard key={label}>
+                            <CvLabel><span style={{color:col}}>{label}</span></CvLabel>
+                            {statList.map(({key,label:sl_,equiv},idx)=>{
+                              const val=activeChar.stats?.[key]||8;
+                              const pct=Math.round((val-1)/19*100);
+                              return(
+                                <div key={key} style={{display:'grid',gridTemplateColumns:'90px 1fr 28px',alignItems:'center',gap:8,padding:'5px 0',borderBottom:idx<statList.length-1?`1px solid ${C.border}`:'none'}}>
+                                  <div>
+                                    <div style={{fontSize:11,fontWeight:700,color:C.text}}>{sl_}</div>
+                                    <div style={{fontSize:9,color:C.muted}}>{equiv}</div>
+                                  </div>
+                                  <div style={{height:4,background:C.subPanel,borderRadius:2,overflow:'hidden'}}>
+                                    <div style={{height:'100%',width:`${pct}%`,background:col,borderRadius:2}}/>
+                                  </div>
+                                  <div style={{fontSize:16,fontWeight:800,color:C.text,textAlign:'right'}}>{val}</div>
+                                </div>
+                              );
+                            })}
+                          </CvCard>
+                        ))}
+                      </div>
+
+                      {/* Class abilities + Heritage abilities */}
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
+                        <CvCard>
+                          <CvLabel>Class abilities</CvLabel>
+                          {(activeChar.classAbilities||[]).filter(a=>a.name).length===0
+                            ?<div style={{fontSize:11,color:C.dim,fontStyle:'italic'}}>No class abilities recorded yet.</div>
+                            :(activeChar.classAbilities||[]).filter(a=>a.name).map((ab_,i)=>(
+                              <div key={ab_.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'5px 0',borderBottom:`1px solid ${C.border}`}}>
+                                <span style={{fontSize:11,color:C.textSub,fontWeight:500}}>{ab_.name}</span>
+                                <span style={{background:C.blueLight,color:C.blueText,borderRadius:6,padding:'2px 9px',fontSize:11,fontWeight:700,minWidth:32,textAlign:'center'}}>{ab_.points}</span>
+                              </div>
+                            ))
+                          }
+                        </CvCard>
+                        <CvCard>
+                          <CvLabel>Heritage abilities</CvLabel>
+                          {(activeChar.heritageAbilities||[]).filter(a=>a.name).length===0
+                            ?<div style={{fontSize:11,color:C.dim,fontStyle:'italic'}}>No heritage abilities recorded yet.</div>
+                            :(activeChar.heritageAbilities||[]).filter(a=>a.name).map((ab_,i)=>(
+                              <div key={ab_.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'5px 0',borderBottom:`1px solid ${C.border}`}}>
+                                <span style={{fontSize:11,color:C.textSub,fontWeight:500}}>{ab_.name}</span>
+                                <span style={{background:C.techBg,color:C.techText,borderRadius:6,padding:'2px 9px',fontSize:11,fontWeight:700,minWidth:32,textAlign:'center'}}>{ab_.points}</span>
+                              </div>
+                            ))
+                          }
+                        </CvCard>
+                      </div>
+
+                      {/* Disciplines with points */}
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
+                        {[
+                          ['Magic disciplines',  MAGIC_DISCIPLINES, C.magicChip, C.magicLight, C.magic],
+                          ['Tech disciplines',   TECH_DISCIPLINES,  C.techChip,  C.techLight,  C.tech],
+                        ].map(([title,list,chipBg,chipColor,bCol])=>(
+                          <CvCard key={title}>
+                            <CvLabel>{title}</CvLabel>
+                            {list.map((d,i)=>(
+                              <div key={d.key} style={{display:'grid',gridTemplateColumns:'1fr auto auto',gap:8,alignItems:'center',padding:'5px 0',borderBottom:i<list.length-1?`1px solid ${C.border}`:'none'}}>
+                                <span style={{fontSize:11,color:C.textSub}}>{d.name}</span>
+                                <span style={{background:chipBg,color:chipColor,padding:'2px 8px',borderRadius:9,fontSize:9,fontWeight:700,width:52,textAlign:'center',display:'block'}}>{d.disc}</span>
+                                <span style={{background:activeChar.disciplinePoints?.[d.key]>0?chipBg:C.subPanel,color:activeChar.disciplinePoints?.[d.key]>0?bCol:C.dim,borderRadius:6,padding:'2px 8px',fontSize:11,fontWeight:700,minWidth:32,textAlign:'center',border:`1px solid ${activeChar.disciplinePoints?.[d.key]>0?bCol:C.border}`}}>{activeChar.disciplinePoints?.[d.key]||0}</span>
+                              </div>
+                            ))}
+                          </CvCard>
+                        ))}
+                      </div>
+
+                      {/* Backstory */}
+                      {activeChar.backstory&&(
+                        <CvCard>
+                          <CvLabel>Backstory</CvLabel>
+                          {activeChar.backstory.split('\n\n').map((para,i)=>(
+                            <p key={i} style={{fontSize:12,color:para.startsWith('▸')?C.techText:C.textSub,lineHeight:1.78,margin:0,marginBottom:i<activeChar.backstory.split('\n\n').length-1?12:0,fontStyle:para.startsWith('▸')?'normal':'italic',fontWeight:para.startsWith('▸')?700:400}}>{para}</p>
+                          ))}
+                        </CvCard>
+                      )}
+                      {activeChar.notes&&(
+                        <CvCard>
+                          <CvLabel>Session notes</CvLabel>
+                          <div style={{fontSize:12,color:C.textSub,lineHeight:1.65,whiteSpace:'pre-wrap'}}>{activeChar.notes}</div>
+                        </CvCard>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ── TAB: ACTIONS ── */}
+                  {cvTab==='actions'&&(
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                      <div>
+                        {[
+                          ['Universal',   ACTIONS.universal],
+                          ['Magic actions',ACTIONS.magic],
+                          ['Defense',     ACTIONS.defense],
+                          ['Alignment',   ACTIONS.alignment],
+                        ].map(([title,list])=>(
+                          <CvCard key={title}>
+                            <CvLabel>{title}</CvLabel>
+                            {list.map(a=><ActionRow key={a} label={a}/>)}
+                          </CvCard>
+                        ))}
+                      </div>
+                      <div>
+                        {[
+                          ['Combat',       ACTIONS.combat],
+                          ['Social',       ACTIONS.social],
+                          ['Tech actions', ACTIONS.tech],
+                          ['Stealth',      ACTIONS.stealth],
+                        ].map(([title,list])=>(
+                          <CvCard key={title}>
+                            <CvLabel>{title}</CvLabel>
+                            {list.map(a=><ActionRow key={a} label={a}/>)}
+                          </CvCard>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── TAB: INVENTORY ── */}
+                  {cvTab==='inventory'&&(
+                    <div>
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
+                        {/* Apparel */}
+                        <CvCard>
+                          <CvLabel>Apparel</CvLabel>
+                          {['Head','Torso','Waist','Hands','Greaves','Boots'].map(slot=>(
+                            <SlotRow key={slot} label={slot} value={activeChar.apparel?.[slot]}/>
+                          ))}
+                        </CvCard>
                         <div>
-                          <div style={{fontSize:9,letterSpacing:'0.1em',textTransform:'uppercase',color:C.muted,fontWeight:700,marginBottom:3,textAlign:'right'}}>Alignment</div>
-                          <div style={{fontSize:12,fontWeight:700,color:pathColor,textAlign:'right'}}>{activeChar.alignSlider===0?'Neutral':activeChar.alignSlider<0?`Magic ${Math.abs(activeChar.alignSlider)}`:`Tech ${activeChar.alignSlider}`}</div>
-                          {activeChar.morality&&<div style={{fontSize:11,color:C.muted,marginTop:1,textAlign:'right'}}>{activeChar.morality}</div>}
+                          {/* Weapons */}
+                          <CvCard>
+                            <CvLabel>Weapons</CvLabel>
+                            {['Main Hand','Off-Hand','Side Weapon','Heavy'].map(slot=>(
+                              <SlotRow key={slot} label={slot} value={activeChar.weapons?.[slot]}/>
+                            ))}
+                          </CvCard>
+                          {/* Accessories */}
+                          <CvCard>
+                            <CvLabel>Accessories</CvLabel>
+                            {['Ring I','Ring II','Neck','Charm','Relic','Artifact'].map(slot=>(
+                              <SlotRow key={slot} label={slot} value={activeChar.accessories?.[slot]}/>
+                            ))}
+                          </CvCard>
                         </div>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Stats grid */}
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
-                    {[['Magic / Spiritual',allStats_.filter(s=>s.axis==='magic'),C.magic,C.magicBg],['Tech / Mortal',allStats_.filter(s=>s.axis==='tech'),C.tech,C.techBg]].map(([label,statList,col,bg])=>(
-                      <div key={label} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:14,padding:'16px',boxShadow:C.shadow}}>
-                        <div style={{fontSize:9,letterSpacing:'0.1em',textTransform:'uppercase',color:col,fontWeight:700,marginBottom:12}}>{label}</div>
-                        {statList.map(({key,label:slabel,equiv})=>{
-                          const val=activeChar.stats?.[key]||8;
-                          const pct=Math.round((val-1)/19*100);
-                          return(
-                            <div key={key} style={{marginBottom:8}}>
-                              <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:3}}>
-                                <span style={{fontSize:11,fontWeight:700,color:C.text}}>{slabel}</span>
-                                <span style={{fontSize:11,color:C.muted}}>{equiv}</span>
-                                <span style={{fontSize:16,fontWeight:800,color:C.text,minWidth:28,textAlign:'right'}}>{val}</span>
-                              </div>
-                              <div style={{height:3,background:C.subPanel,borderRadius:2,overflow:'hidden'}}>
-                                <div style={{height:'100%',width:`${pct}%`,background:col,borderRadius:2}}/>
-                              </div>
-                            </div>
-                          );
-                        })}
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
+                        <CvCard>
+                          <CvLabel>Consumables</CvLabel>
+                          <div style={{fontSize:12,color:activeChar.inventory?.consumables?C.textSub:C.dim,whiteSpace:'pre-wrap',lineHeight:1.6,fontStyle:activeChar.inventory?.consumables?'normal':'italic'}}>{activeChar.inventory?.consumables||'Nothing recorded.'}</div>
+                        </CvCard>
+                        <CvCard>
+                          <CvLabel>Pack / Backpack</CvLabel>
+                          <div style={{fontSize:12,color:activeChar.inventory?.pack?C.textSub:C.dim,whiteSpace:'pre-wrap',lineHeight:1.6,fontStyle:activeChar.inventory?.pack?'normal':'italic'}}>{activeChar.inventory?.pack||'Nothing recorded.'}</div>
+                        </CvCard>
                       </div>
-                    ))}
-                  </div>
-
-                  {/* Backstory */}
-                  {activeChar.backstory&&(
-                    <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:14,padding:'16px',marginBottom:16,boxShadow:C.shadow}}>
-                      <div style={{fontSize:9,letterSpacing:'0.1em',textTransform:'uppercase',color:C.muted,fontWeight:700,marginBottom:10}}>Backstory</div>
-                      {activeChar.backstory.split('\n\n').map((para,i)=>(
-                        <p key={i} style={{fontSize:12,color:para.startsWith('▸')?C.techText:C.textSub,lineHeight:1.75,margin:0,marginBottom:i<activeChar.backstory.split('\n\n').length-1?10:0,fontStyle:para.startsWith('▸')?'normal':'italic',fontWeight:para.startsWith('▸')?700:400}}>{para}</p>
-                      ))}
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12}}>
+                        {[['Coin',activeChar.inventory?.coin],['Weight (lbs)',activeChar.inventory?.weight],['Misc',activeChar.inventory?.misc]].map(([label,val])=>(
+                          <CvCard key={label} style={{marginBottom:0}}>
+                            <CvLabel>{label}</CvLabel>
+                            <div style={{fontSize:13,fontWeight:700,color:val?C.text:C.dim}}>{val||'—'}</div>
+                          </CvCard>
+                        ))}
+                      </div>
                     </div>
                   )}
 
-                  {/* Notes */}
-                  {activeChar.notes&&(
-                    <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:14,padding:'14px 16px',boxShadow:C.shadow}}>
-                      <div style={{fontSize:9,letterSpacing:'0.1em',textTransform:'uppercase',color:C.muted,fontWeight:700,marginBottom:8}}>Session notes</div>
-                      <div style={{fontSize:12,color:C.textSub,lineHeight:1.65,whiteSpace:'pre-wrap'}}>{activeChar.notes}</div>
+                  {/* ── TAB: BACKGROUND ── */}
+                  {cvTab==='background'&&(
+                    <div>
+                      {activeChar.background&&(
+                        <CvCard>
+                          <CvLabel>Background</CvLabel>
+                          <div style={{fontSize:12,color:C.textSub,lineHeight:1.75,whiteSpace:'pre-wrap'}}>{activeChar.background}</div>
+                        </CvCard>
+                      )}
+                      {activeChar.motivation&&(
+                        <CvCard>
+                          <CvLabel>Motivation</CvLabel>
+                          <div style={{fontSize:12,color:C.textSub,lineHeight:1.75,whiteSpace:'pre-wrap'}}>{activeChar.motivation}</div>
+                        </CvCard>
+                      )}
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:0}}>
+                        {activeChar.classBonus&&(
+                          <CvCard style={{marginBottom:0}}>
+                            <CvLabel>Class bonus features</CvLabel>
+                            <div style={{fontSize:12,color:C.textSub,lineHeight:1.7,whiteSpace:'pre-wrap'}}>{activeChar.classBonus}</div>
+                          </CvCard>
+                        )}
+                        {activeChar.racialFeatures&&(
+                          <CvCard style={{marginBottom:0}}>
+                            <CvLabel>Racial features</CvLabel>
+                            <div style={{fontSize:12,color:C.textSub,lineHeight:1.7,whiteSpace:'pre-wrap'}}>{activeChar.racialFeatures}</div>
+                          </CvCard>
+                        )}
+                      </div>
+                      {!activeChar.background&&!activeChar.motivation&&!activeChar.classBonus&&!activeChar.racialFeatures&&(
+                        <CvCard>
+                          <div style={{fontSize:12,color:C.dim,fontStyle:'italic',textAlign:'center',padding:'16px 0'}}>No background information recorded. Edit your sheet to add it.</div>
+                        </CvCard>
+                      )}
                     </div>
                   )}
+
                 </div>
               )}
             </div>
@@ -1500,7 +1806,302 @@ export default function Syntarion() {
     );
   };
 
-  // ── SAVE CONFIRMATION TOAST: show "Enter Campaign" button if assigned ──────
+  // ── DM VIEW ───────────────────────────────────────────────────────────────
+  const DMView=()=>{
+    const scribeEndRef=React.useRef(null);
+    React.useEffect(()=>{ scribeEndRef.current?.scrollIntoView({behavior:'smooth'}); },[scribeMessages,scribeThinking]);
+
+    // When campaign changes, reload its logs
+    React.useEffect(()=>{
+      setSessionLogs(loadLogs(dmCampaign));
+    },[dmCampaign]);
+
+    const campChars=savedChars.filter(c=>c.campaign===dmCampaign);
+    const camp=CAMPAIGNS.find(c=>c.id===dmCampaign);
+
+    const DM_C={
+      bg:'#0d0d1a', surface:'#13132b', card:'#1a1a35', border:'rgba(139,92,246,0.18)',
+      borderBright:'rgba(139,92,246,0.45)', purple:'#7c3aed', purpleLight:'#a78bfa',
+      purpleDim:'#4c1d95', purpleBg:'rgba(124,58,237,0.12)', purpleGlow:'rgba(124,58,237,0.22)',
+      gold:'#f59e0b', goldBg:'rgba(245,158,11,0.1)', goldBorder:'rgba(245,158,11,0.3)',
+      text:'#f1f0ff', textSub:'#c4b5fd', muted:'#6d6f8a', dim:'#3d3d5c',
+      green:'#10b981', greenBg:'rgba(16,185,129,0.1)', red:'#ef4444',
+      scribeBg:'#0a0a18', scribeUser:'rgba(124,58,237,0.15)', scribeAssistant:'rgba(15,15,35,0.8)',
+    };
+
+    const dmInp={background:DM_C.card,border:`1px solid ${DM_C.border}`,borderRadius:8,padding:'8px 12px',color:DM_C.text,fontSize:12,outline:'none',width:'100%',boxSizing:'border-box',fontFamily:'inherit'};
+    const dmBtn=(ghost=false)=>({background:ghost?'transparent':DM_C.purple,border:`1px solid ${ghost?DM_C.border:DM_C.purple}`,borderRadius:8,padding:'8px 16px',fontSize:11,fontWeight:700,cursor:'pointer',color:ghost?DM_C.muted:DM_C.text,letterSpacing:'0.05em',textTransform:'uppercase'});
+    const dmLabel={fontSize:9,letterSpacing:'0.14em',textTransform:'uppercase',color:DM_C.muted,fontWeight:700,marginBottom:8,display:'block'};
+
+    return(
+      <div style={{background:DM_C.bg,minHeight:'100vh',fontFamily:'system-ui,-apple-system,sans-serif',color:DM_C.text}}>
+
+        {/* ── DM HEADER ── */}
+        <div style={{background:DM_C.surface,borderBottom:`1px solid ${DM_C.border}`,padding:'12px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',boxShadow:`0 1px 20px ${DM_C.purpleGlow}`}}>
+          <div style={{display:'flex',alignItems:'center',gap:14}}>
+            <button onClick={()=>setAppView('landing')} style={{background:'transparent',border:`1px solid ${DM_C.border}`,borderRadius:7,padding:'5px 11px',cursor:'pointer',color:DM_C.muted,fontSize:10,letterSpacing:'0.06em',textTransform:'uppercase'}}>← Home</button>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <div style={{width:8,height:8,borderRadius:'50%',background:DM_C.purple,boxShadow:`0 0 8px ${DM_C.purple}`}}/>
+              <span style={{fontSize:14,fontWeight:800,color:DM_C.text,letterSpacing:'0.14em',textTransform:'uppercase',fontFamily:"Georgia,serif"}}>Syntarion</span>
+              <span style={{fontSize:11,color:DM_C.purpleLight,fontWeight:600,letterSpacing:'0.06em',textTransform:'uppercase',background:DM_C.purpleBg,border:`1px solid ${DM_C.border}`,borderRadius:5,padding:'2px 8px'}}>DM Mode</span>
+            </div>
+          </div>
+          {/* Campaign selector */}
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <span style={{fontSize:10,color:DM_C.muted,letterSpacing:'0.08em',textTransform:'uppercase'}}>Campaign</span>
+            <div style={{display:'flex',gap:4}}>
+              {CAMPAIGNS.map(c=>(
+                <button key={c.id} onClick={()=>setDmCampaign(c.id)} style={{background:dmCampaign===c.id?DM_C.purpleBg:'transparent',border:`1px solid ${dmCampaign===c.id?DM_C.purple:DM_C.border}`,borderRadius:6,padding:'5px 10px',cursor:'pointer',color:dmCampaign===c.id?DM_C.purpleLight:DM_C.muted,fontSize:10,fontWeight:600}}>
+                  {c.id}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── MAIN LAYOUT: 3 columns ── */}
+        <div style={{display:'grid',gridTemplateColumns:'280px 1fr 380px',height:'calc(100vh - 57px)',overflow:'hidden'}}>
+
+          {/* ── LEFT: Party panel ── */}
+          <div style={{borderRight:`1px solid ${DM_C.border}`,overflowY:'auto',padding:'16px 14px',background:DM_C.surface}}>
+            <div style={{...dmLabel}}>Party — {camp?.subtitle||camp?.name}</div>
+
+            {campChars.length===0?(
+              <div style={{fontSize:11,color:DM_C.muted,fontStyle:'italic',padding:'12px 0',textAlign:'center'}}>No characters in this campaign.<br/>Players must save to this campaign first.</div>
+            ):campChars.map(ch=>{
+              const cls_=allClasses.find(c=>c.id===ch.cid);
+              const pathCol=ch.cp==='magic'?'#a78bfa':'#34d399';
+              return(
+                <div key={ch.id} style={{background:DM_C.card,border:`1px solid ${DM_C.border}`,borderRadius:10,padding:'12px 13px',marginBottom:10}}>
+                  {/* Name + level */}
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6}}>
+                    <div>
+                      <div style={{fontSize:13,fontWeight:800,color:DM_C.text}}>{ch.name}</div>
+                      <div style={{fontSize:10,color:DM_C.muted,marginTop:1}}>{getRaceDisplay(ch.race,ch.rv,ch.pmV)} · {cls_?.name||'?'}</div>
+                    </div>
+                    <div style={{textAlign:'right'}}>
+                      <div style={{width:32,height:32,borderRadius:8,background:DM_C.purpleBg,border:`1px solid ${DM_C.border}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:800,color:DM_C.purpleLight}}>{ch.charLevel||1}</div>
+                    </div>
+                  </div>
+                  {/* AP bar */}
+                  <div style={{marginBottom:8}}>
+                    <div style={{display:'flex',justifyContent:'space-between',marginBottom:3}}>
+                      <span style={{fontSize:9,color:DM_C.muted,letterSpacing:'0.08em',textTransform:'uppercase',fontWeight:700}}>AP</span>
+                      <span style={{fontSize:10,fontWeight:700,color:DM_C.gold}}>{ch.apCurrent||0} / {ch.apTotal||0}</span>
+                    </div>
+                    <div style={{height:3,background:DM_C.dim,borderRadius:2,overflow:'hidden'}}>
+                      <div style={{height:'100%',width:`${ch.apTotal>0?Math.min(100,((ch.apCurrent||0)/(ch.apTotal||1))*100):0}%`,background:DM_C.gold,borderRadius:2}}/>
+                    </div>
+                  </div>
+                  {/* Key stats row */}
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:4,marginBottom:8}}>
+                    {['spirit','will','body','mind'].map(k=>(
+                      <div key={k} style={{background:DM_C.bg,borderRadius:5,padding:'4px 0',textAlign:'center'}}>
+                        <div style={{fontSize:8,color:DM_C.muted,textTransform:'uppercase',letterSpacing:'0.06em'}}>{k.slice(0,3)}</div>
+                        <div style={{fontSize:13,fontWeight:800,color:DM_C.text}}>{ch.stats?.[k]||8}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Alignment chip + belief */}
+                  <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+                    <span style={{background:DM_C.purpleBg,color:pathCol,border:`1px solid ${DM_C.border}`,borderRadius:5,padding:'2px 7px',fontSize:9,fontWeight:700}}>{ch.alignSlider===0?'Neutral':ch.alignSlider<0?`Magic ${Math.abs(ch.alignSlider)}`:`Tech ${ch.alignSlider}`}</span>
+                    {(ch.deity||ch.spirit)&&<span style={{background:DM_C.goldBg,color:DM_C.gold,border:`1px solid ${DM_C.goldBorder}`,borderRadius:5,padding:'2px 7px',fontSize:9,fontWeight:600}}>{ch.deity||ch.spirit}</span>}
+                  </div>
+                  {/* Class abilities with points */}
+                  {(ch.classAbilities||[]).some(a=>a.name)&&(
+                    <div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${DM_C.dim}`}}>
+                      {(ch.classAbilities||[]).filter(a=>a.name).map(a=>(
+                        <div key={a.id} style={{display:'flex',justifyContent:'space-between',fontSize:10,color:DM_C.textSub,padding:'2px 0'}}>
+                          <span>{a.name}</span><span style={{color:DM_C.purpleLight,fontWeight:700}}>{a.points}pt</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* ── Session log ── */}
+            <div style={{marginTop:16,paddingTop:14,borderTop:`1px solid ${DM_C.border}`}}>
+              <div style={{...dmLabel}}>Session log — {camp?.name}</div>
+              <div style={{display:'flex',gap:6,marginBottom:10}}>
+                <input style={{...dmInp,flex:1}} value={logInput} onChange={e=>setLogInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){addLog(dmCampaign,logInput);setLogInput('');}}} placeholder="Log an event…"/>
+                <button style={{...dmBtn(),padding:'8px 12px',flexShrink:0}} onClick={()=>{addLog(dmCampaign,logInput);setLogInput('');}}>+</button>
+              </div>
+              <div style={{maxHeight:240,overflowY:'auto'}}>
+                {sessionLogs.length===0?<div style={{fontSize:11,color:DM_C.muted,fontStyle:'italic',textAlign:'center',padding:'8px 0'}}>No events logged yet.</div>
+                :sessionLogs.map(log=>(
+                  <div key={log.id} style={{background:DM_C.card,border:`1px solid ${DM_C.border}`,borderRadius:7,padding:'7px 10px',marginBottom:6,display:'flex',gap:8,alignItems:'flex-start'}}>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:11,color:DM_C.textSub,lineHeight:1.5}}>{log.text}</div>
+                      <div style={{fontSize:9,color:DM_C.muted,marginTop:2}}>{log.ts}</div>
+                    </div>
+                    <button onClick={()=>deleteLog(dmCampaign,log.id)} style={{background:'transparent',border:'none',cursor:'pointer',color:DM_C.dim,fontSize:13,padding:'0 2px',flexShrink:0}}>✕</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── CENTER: Campaign overview + quick reference ── */}
+          <div style={{overflowY:'auto',padding:'16px 20px',borderRight:`1px solid ${DM_C.border}`}}>
+            <div style={{...dmLabel}}>Campaign overview</div>
+
+            {/* Campaign cards */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:18}}>
+              {CAMPAIGNS.map(c=>{
+                const cc=savedChars.filter(ch=>ch.campaign===c.id);
+                const isActive=c.id===dmCampaign;
+                return(
+                  <div key={c.id} onClick={()=>setDmCampaign(c.id)} style={{background:isActive?DM_C.purpleBg:DM_C.card,border:`1px solid ${isActive?DM_C.purple:DM_C.border}`,borderRadius:10,padding:'12px 14px',cursor:'pointer',boxShadow:isActive?`0 0 14px ${DM_C.purpleGlow}`:'none'}}>
+                    <div style={{fontSize:10,color:DM_C.muted,letterSpacing:'0.08em',textTransform:'uppercase',fontWeight:700}}>{c.name}</div>
+                    <div style={{fontSize:15,fontWeight:800,color:isActive?DM_C.purpleLight:DM_C.text,marginTop:4}}>{c.subtitle}</div>
+                    <div style={{fontSize:11,color:isActive?DM_C.purpleLight:DM_C.muted,marginTop:6,fontWeight:600}}>{cc.length} character{cc.length!==1?'s':''}</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* All characters flat list with key stats */}
+            <div style={{...dmLabel,marginTop:4}}>All registered characters</div>
+            {savedChars.length===0?(
+              <div style={{fontSize:11,color:DM_C.muted,fontStyle:'italic',padding:12,background:DM_C.card,borderRadius:8,border:`1px solid ${DM_C.border}`}}>No saved characters yet.</div>
+            ):(
+              <div style={{display:'grid',gap:6}}>
+                {savedChars.map(ch=>{
+                  const cls_=allClasses.find(c=>c.id===ch.cid);
+                  const campName=CAMPAIGNS.find(c=>c.id===ch.campaign)?.name||'Unassigned';
+                  return(
+                    <div key={ch.id} style={{background:DM_C.card,border:`1px solid ${DM_C.border}`,borderRadius:8,padding:'9px 12px',display:'grid',gridTemplateColumns:'1fr auto auto',gap:10,alignItems:'center'}}>
+                      <div>
+                        <span style={{fontSize:12,fontWeight:700,color:DM_C.text}}>{ch.name}</span>
+                        <span style={{fontSize:10,color:DM_C.muted,marginLeft:8}}>{getRaceDisplay(ch.race,ch.rv,ch.pmV)} · {cls_?.name||'?'}</span>
+                      </div>
+                      <span style={{fontSize:10,color:DM_C.muted,background:DM_C.bg,borderRadius:5,padding:'2px 8px',border:`1px solid ${DM_C.dim}`}}>{campName}</span>
+                      <span style={{fontSize:11,fontWeight:700,color:DM_C.purpleLight}}>Lv {ch.charLevel||1}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Discipline overview for active campaign */}
+            {campChars.length>0&&(
+              <>
+                <div style={{...dmLabel,marginTop:20}}>Discipline points — {camp?.name}</div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                  {[...MAGIC_DISCIPLINES,...TECH_DISCIPLINES].map(d=>{
+                    const axis=MAGIC_DISCIPLINES.find(x=>x.key===d.key)?'magic':'tech';
+                    const totals=campChars.map(ch=>ch.disciplinePoints?.[d.key]||0);
+                    const hasAny=totals.some(v=>v>0);
+                    return(
+                      <div key={d.key} style={{background:DM_C.card,border:`1px solid ${hasAny?DM_C.borderBright:DM_C.border}`,borderRadius:7,padding:'6px 10px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                        <span style={{fontSize:10,color:hasAny?DM_C.textSub:DM_C.muted}}>{d.name}</span>
+                        <span style={{fontSize:9,color:axis==='magic'?DM_C.purpleLight:'#34d399',background:DM_C.purpleBg,borderRadius:4,padding:'1px 6px',fontWeight:700}}>{d.disc}</span>
+                        <div style={{display:'flex',gap:4}}>
+                          {campChars.map((ch,i)=>(
+                            <span key={ch.id} style={{fontSize:11,fontWeight:700,color:ch.disciplinePoints?.[d.key]>0?DM_C.gold:DM_C.dim,minWidth:18,textAlign:'center'}}>{ch.disciplinePoints?.[d.key]||0}</span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* ── RIGHT: SCRIBE ── */}
+          <div style={{display:'flex',flexDirection:'column',background:DM_C.scribeBg,borderLeft:`1px solid ${DM_C.border}`}}>
+            {/* Scribe header */}
+            <div style={{padding:'14px 18px',borderBottom:`1px solid ${DM_C.border}`,background:DM_C.surface,flexShrink:0}}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{width:8,height:8,borderRadius:'50%',background:DM_C.purple,boxShadow:`0 0 10px ${DM_C.purple}`,animation:'none'}}/>
+                <div>
+                  <div style={{fontSize:13,fontWeight:800,color:DM_C.text,letterSpacing:'0.1em',textTransform:'uppercase',fontFamily:"Georgia,serif"}}>📜 The SCRIBE</div>
+                  <div style={{fontSize:10,color:DM_C.muted,marginTop:1}}>The record-keeper sees all · Aware of {campChars.length} character{campChars.length!==1?'s':''} + {sessionLogs.length} log{sessionLogs.length!==1?'s':''}</div>
+                </div>
+                {scribeMessages.length>0&&(
+                  <button onClick={()=>setScribeMessages([])} style={{marginLeft:'auto',background:'transparent',border:`1px solid ${DM_C.border}`,borderRadius:6,padding:'3px 8px',cursor:'pointer',color:DM_C.muted,fontSize:9,letterSpacing:'0.06em',textTransform:'uppercase'}}>Clear</button>
+                )}
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div style={{flex:1,overflowY:'auto',padding:'14px 16px',display:'flex',flexDirection:'column',gap:10}}>
+              {scribeMessages.length===0&&(
+                <div style={{textAlign:'center',padding:'32px 16px'}}>
+                  <div style={{fontSize:28,marginBottom:10}}>📜</div>
+                  <div style={{fontSize:13,fontWeight:700,color:DM_C.purpleLight,marginBottom:6}}>Ask the SCRIBE</div>
+                  <div style={{fontSize:11,color:DM_C.muted,lineHeight:1.6}}>The record-keeper is aware of your party, session logs, and all of Soteria's lore.</div>
+                  <div style={{marginTop:14,display:'flex',flexDirection:'column',gap:6}}>
+                    {[
+                      'What are my players\' weaknesses?',
+                      'Generate an NPC for this campaign',
+                      'Suggest a plot hook based on the logs',
+                      'Which character needs the most attention?',
+                    ].map(s=>(
+                      <button key={s} onClick={()=>consultScribe(s)} style={{background:DM_C.purpleBg,border:`1px solid ${DM_C.border}`,borderRadius:7,padding:'7px 12px',cursor:'pointer',color:DM_C.textSub,fontSize:11,textAlign:'left',fontFamily:'inherit'}}>
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {scribeMessages.map((msg,i)=>(
+                <div key={i} style={{display:'flex',flexDirection:'column',alignItems:msg.role==='user'?'flex-end':'flex-start'}}>
+                  <div style={{maxWidth:'90%',background:msg.role==='user'?DM_C.scribeUser:DM_C.scribeAssistant,border:`1px solid ${msg.role==='user'?DM_C.borderBright:DM_C.border}`,borderRadius:msg.role==='user'?'12px 12px 3px 12px':'12px 12px 12px 3px',padding:'10px 14px'}}>
+                    {msg.role==='assistant'&&<div style={{fontSize:9,color:DM_C.purple,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:5}}>SCRIBE</div>}
+                    <div style={{fontSize:12,color:msg.role==='user'?DM_C.purpleLight:DM_C.text,lineHeight:1.7,whiteSpace:'pre-wrap'}}>{msg.content}</div>
+                  </div>
+                </div>
+              ))}
+
+              {scribeThinking&&(
+                <div style={{display:'flex',alignItems:'flex-start'}}>
+                  <div style={{background:DM_C.scribeAssistant,border:`1px solid ${DM_C.border}`,borderRadius:'12px 12px 12px 3px',padding:'10px 14px'}}>
+                    <div style={{fontSize:9,color:DM_C.purple,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:5}}>SCRIBE</div>
+                    <div style={{display:'flex',gap:5,alignItems:'center'}}>
+                      {[0,1,2].map(j=>(
+                        <div key={j} style={{width:6,height:6,borderRadius:'50%',background:DM_C.purple,opacity:0.6,animation:`pulse 1.2s ease-in-out ${j*0.2}s infinite`}}/>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={scribeEndRef}/>
+            </div>
+
+            {/* Input */}
+            <div style={{padding:'12px 16px',borderTop:`1px solid ${DM_C.border}`,background:DM_C.surface,flexShrink:0}}>
+              <div style={{display:'flex',gap:8}}>
+                <input
+                  style={{...dmInp,flex:1,padding:'10px 13px',borderColor:DM_C.border,background:DM_C.card}}
+                  value={scribeInput}
+                  onChange={e=>setScribeInput(e.target.value)}
+                  onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!scribeThinking){e.preventDefault();consultScribe(scribeInput);}}}
+                  placeholder="Ask the SCRIBE for counsel…"
+                  disabled={scribeThinking}
+                />
+                <button
+                  onClick={()=>consultScribe(scribeInput)}
+                  disabled={!scribeInput.trim()||scribeThinking}
+                  style={{background:(!scribeInput.trim()||scribeThinking)?DM_C.dim:DM_C.purple,border:'none',borderRadius:8,padding:'10px 16px',cursor:(!scribeInput.trim()||scribeThinking)?'default':'pointer',color:DM_C.text,fontWeight:700,fontSize:12,flexShrink:0,boxShadow:(!scribeInput.trim()||scribeThinking)?'none':`0 0 12px ${DM_C.purpleGlow}`}}
+                >
+                  Consult
+                </button>
+              </div>
+              <div style={{fontSize:9,color:DM_C.muted,marginTop:6,textAlign:'right',letterSpacing:'0.04em'}}>Enter to send · The SCRIBE is context-aware</div>
+            </div>
+          </div>
+
+        </div>
+
+        <style>{`@keyframes pulse{0%,100%{opacity:0.3;transform:scale(0.8);}50%{opacity:1;transform:scale(1.1);}}`}</style>
+      </div>
+    );
+  };
   const SaveToast=()=>{
     const lastSaved=savedChars.sort((a,b)=>(b.savedAt||0)-(a.savedAt||0))[0];
     const camp=lastSaved?.campaign?CAMPAIGNS.find(c=>c.id===lastSaved.campaign):null;
@@ -1523,6 +2124,7 @@ export default function Syntarion() {
   // ── ROUTE ─────────────────────────────────────────────────────────────────
   if(appView==='landing')return <Landing/>;
   if(appView==='campaign')return <CampaignView/>;
+  if(appView==='dm')return <DMView/>;
 
   return (
     <div style={{background:C.bg,minHeight:'100vh',fontFamily:'system-ui,-apple-system,sans-serif',color:C.text}}>
