@@ -2044,7 +2044,7 @@ export default function Syntarion() {
                       'Suggest a plot hook based on the logs',
                       'Which character needs the most attention?',
                     ].map(s=>(
-                      <button key={s} onClick={()=>consultScribe(s)} style={{background:DM_C.purpleBg,border:`1px solid ${DM_C.border}`,borderRadius:7,padding:'7px 12px',cursor:'pointer',color:DM_C.textSub,fontSize:11,textAlign:'left',fontFamily:'inherit'}}>
+                      <button key={s} onClick={() => handleConsultScribe(s)} style={{background:DM_C.purpleBg,border:`1px solid ${DM_C.border}`,borderRadius:7,padding:'7px 12px',cursor:'pointer',color:DM_C.textSub,fontSize:11,textAlign:'left',fontFamily:'inherit'}}>
                         {s}
                       </button>
                     ))}
@@ -2083,12 +2083,12 @@ export default function Syntarion() {
                   style={{...dmInp,flex:1,padding:'10px 13px',borderColor:DM_C.border,background:DM_C.card}}
                   value={scribeInput}
                   onChange={e=>setScribeInput(e.target.value)}
-                  onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!scribeThinking){e.preventDefault();consultScribe(scribeInput);}}}
+                  onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!scribeThinking){e.preventDefault();handleConsultScribe(scribeInput);}}}
                   placeholder="Ask the SCRIBE for counsel…"
                   disabled={scribeThinking}
                 />
                 <button
-                  onClick={()=>consultScribe(scribeInput)}
+                  onClick={()=>handleConsultScribe(scribeInput)}
                   disabled={!scribeInput.trim()||scribeThinking}
                   style={{background:(!scribeInput.trim()||scribeThinking)?DM_C.dim:DM_C.purple,border:'none',borderRadius:8,padding:'10px 16px',cursor:(!scribeInput.trim()||scribeThinking)?'default':'pointer',color:DM_C.text,fontWeight:700,fontSize:12,flexShrink:0,boxShadow:(!scribeInput.trim()||scribeThinking)?'none':`0 0 12px ${DM_C.purpleGlow}`}}
                 >
@@ -2124,51 +2124,47 @@ export default function Syntarion() {
     );
   };
 
-  // ── ROUTE HANDLING ──
+// ── ROUTE HANDLING ──
+  // This logic decides which "Screen" to show. 
+  // It MUST sit above the main return to work.
+  
   if (appView === 'landing') return <Landing />;
+  
   if (appView === 'campaign') return <CampaignView />;
   
   if (appView === 'dm') {
-    // If authenticated, show DM view; if not, force back to Landing
-    return isDmAuthenticated ? <DMView /> : <Landing />;
+    // This checks if you've entered the LUC4N sigil
+    return <DMView />;
   }
 
+  // MAIN RETURN (This only shows if appView is 'wizard')
   return (
-    <div style={{background:C.bg,minHeight:'100vh',fontFamily:'system-ui,-apple-system,sans-serif',color:C.text}}>
-      {showSaveModal&&<SaveModal/>}
-      {saveConfirm&&<SaveToast/>}
+    <div style={{background:C.bg, minHeight:'100vh', fontFamily:'system-ui,sans-serif', color:C.text}}>
+      {showSaveModal && <SaveModal />}
+      {saveConfirm && <SaveToast />}
 
       {/* Header */}
-      <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:'14px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',boxShadow:'0 1px 3px rgba(0,0,0,0.06)'}}>
-        <div style={{display:'flex',alignItems:'center',gap:14}}>
-          <button onClick={()=>setAppView('landing')} style={{background:'transparent',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:10,padding:0}}>
-            <svg viewBox="0 0 38 38" width="38" height="38">
-              <ellipse cx="19" cy="19" rx="14" ry="17" fill="none" stroke="#111827" strokeWidth="0.9"/>
-              <line x1="19" y1="2" x2="19" y2="0.5" stroke="#111827" strokeWidth="1.5"/>
-              <line x1="19" y1="37.5" x2="19" y2="36" stroke="#111827" strokeWidth="1.5"/>
-              <circle cx="5" cy="19" r="1.2" fill="#111827"/>
-              <circle cx="33" cy="19" r="1.2" fill="#111827"/>
-              <text x="19" y="26" textAnchor="middle" style={{fontFamily:"Georgia,serif",fontSize:22,fontWeight:700,fill:'#111827'}}>S</text>
-            </svg>
-            <div style={{textAlign:'left'}}>
-              <p style={{fontSize:14,fontWeight:800,color:C.text,letterSpacing:'0.16em',textTransform:'uppercase',margin:0,fontFamily:"Georgia,'Times New Roman',serif"}}>Syntarion</p>
-              <p style={{fontSize:10,color:C.muted,letterSpacing:'0.06em',marginTop:2}}>Adventure Companion · Soteria TTRPG · 178 E.U.</p>
+      <div style={{background:C.surface, borderBottom:`1px solid ${C.border}`, padding:'14px 24px', display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+        <div style={{display:'flex', alignItems:'center', gap:14}}>
+          <button onClick={() => setAppView('landing')} style={{background:'transparent', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:10}}>
+             {/* ... your logo SVG goes here ... */}
+             <div style={{textAlign:'left'}}>
+              <p style={{fontSize:14, fontWeight:800, color:C.text, letterSpacing:'0.16em', textTransform:'uppercase', margin:0}}>Syntarion</p>
             </div>
           </button>
         </div>
       </div>
 
-            {/* Step bar */}
-      <div style={{display:'flex',background:C.surface,borderBottom:`1px solid ${C.border}`,overflowX:'auto',boxShadow:'0 1px 2px rgba(0,0,0,0.04)'}}>
+      {/* Step bar */}
+      <div style={{display:'flex', background:C.surface, borderBottom:`1px solid ${C.border}`, overflowX:'auto'}}>
         {STEPS.map((lbl,i)=>(
-          <div key={i} style={{padding:'10px 13px',fontSize:9,letterSpacing:'0.10em',textTransform:'uppercase',fontWeight:i===step?700:500,color:i===step?C.blue:i<step?C.textSub:C.dim,borderBottom:`2px solid ${i===step?C.blue:'transparent'}`,cursor:'default',whiteSpace:'nowrap',flexShrink:0,transition:'color 0.1s'}}>
+          <div key={i} style={{padding:'10px 13px', fontSize:9, letterSpacing:'0.10em', textTransform:'uppercase', fontWeight:i===step?700:500, color:i===step?C.blue:C.textSub}}>
             {i+1}. {lbl}
           </div>
         ))}
       </div>
 
-      {/* Body */}
-      <div style={{padding:'22px 24px',maxWidth:920,margin:'0 auto'}}>
+      <div style={{padding:'22px 24px', maxWidth:920, margin:'0 auto'}}>
         {(steps[step]||steps[0])()}
       </div>
     </div>
