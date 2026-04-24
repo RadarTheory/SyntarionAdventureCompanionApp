@@ -1,17 +1,17 @@
 import { useState, useCallback } from 'react';
 import { useDevice } from './useDevice';
+import StepRace from './StepRace';
 import {
   COLORS, RACES, ALL_CLASSES, DEFAULT_STATS,
   pick, BS_ORIGINS, BS_ROLE, BS_PERSONALITY,
-  getRaceDisplay,
 } from './constants';
 
-// ─── STEP IMPORTS (uncomment as you build each one) ───────────────────────────
-// import StepRace      from './StepRace';
-// import StepBelief    from './StepBelief';
-// import StepClass     from './StepClass';
-// import StepStats     from './StepStats';
-// import StepBackstory from './StepBackstory';
+
+// ─── STEP IMPORTS (uncomment as you build each one) 
+import StepBelief from './StepBelief';
+import StepClass     from './StepClass';
+import StepStats     from './StepStats';
+import StepBackstory from './StepBackstory';
 // import CharacterSheet from './CharacterSheet';
 
 // ─── STEPS ────────────────────────────────────────────────────────────────────
@@ -447,11 +447,11 @@ export default function Wizard({ onComplete, onHome }) {
   // ── RENDER STEP ──
   const renderStep = () => {
     switch (currentStep) {
-      case 'race':      return <StepStub label="Race & Name"  {...stepProps} />;
-      case 'belief':    return <StepStub label="Belief"       {...stepProps} />;
-      case 'class':     return <StepStub label="Class"        {...stepProps} />;
-      case 'stats':     return <StepStub label="Stats"        {...stepProps} />;
-      case 'backstory': return <StepStub label="Backstory"    {...stepProps} />;
+      case 'race': return <StepRace {...stepProps} />;
+      case 'belief': return <StepBelief {...stepProps} />;
+      case 'class': return <StepClass {...stepProps} />;
+      case 'stats': return <StepStats {...stepProps} />;
+      case 'backstory': return <StepBackstory {...stepProps} />;
       case 'sheet':     return <StepStub label="Sheet"        {...stepProps} />;
       default:          return null;
     }
