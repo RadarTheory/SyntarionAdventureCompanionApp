@@ -29,6 +29,7 @@ export default function StepStats({
   const [activeSet, setActiveSet]     = useState(null);
   const [selectedIdx, setSelectedIdx] = useState(null);
   const [assigned, setAssigned]       = useState({});
+  const [committed, setCommitted] = useState(false);
 
   // ── Manual state ──
   const [manualVals, setManualVals] = useState(
@@ -63,12 +64,21 @@ export default function StepStats({
   };
 
   const handleStatTap = (statKey) => {
-    if (activeSet === null || selectedIdx === null) return;
-    const value = savedSets[activeSet][selectedIdx];
-    setAssigned(prev => ({ ...prev, [statKey]: selectedIdx }));
-    setStats(prev => ({ ...prev, [statKey]: value }));
-    setSelectedIdx(null);
-  };
+  // If already assigned, unassign it
+  if (statKey in assigned && selectedIdx === null) {
+    const newAssigned = { ...assigned };
+    delete newAssigned[statKey];
+    setAssigned(newAssigned);
+    setStats(prev => ({ ...prev, [statKey]: 8 }));
+    return;
+  }
+  if (activeSet === null || selectedIdx === null) return;
+  const value = savedSets[activeSet][selectedIdx];
+  const [committed, setCommitted] = useState(false);
+  setAssigned(prev => ({ ...prev, [statKey]: selectedIdx }));
+  setStats(prev => ({ ...prev, [statKey]: value }));
+  setSelectedIdx(null);
+};
 
   const handleReset = () => {
     setSavedSets([null, null, null]);
@@ -77,6 +87,7 @@ export default function StepStats({
     setSelectedIdx(null);
     setAssigned({});
     setStats({ ...DEFAULT_STATS });
+    setCommitted(false);
     setManualVals(Object.fromEntries(ALL_STATS.map(s => [s.key, '8'])));
   };
 
@@ -432,11 +443,43 @@ export default function StepStats({
       </div>
 
       {/* Total */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20, fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif' }}>
-        Stat total:
-        <span style={{ marginLeft: 8, fontWeight: 700, color: COLORS.text, fontFamily: "'Cinzel', serif" }}>{statTotal}</span>
-        <span style={{ marginLeft: 6, color: COLORS.dim }}>/ 128 max</span>
-      </div>
+      {statMode === 'roll' && allAssigned && !committed && (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginBottom: 20,
+  }}>
+    <button
+      onClick={() => setCommitted(true)}
+      style={{
+        background: COLORS.magicBg,
+        border: `1px solid ${COLORS.magic}`,
+        borderRadius: 6,
+        padding: '10px 24px',
+        cursor: 'pointer',
+        fontFamily: "'Cinzel', serif",
+        fontSize: 10,
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        color: COLORS.magicText,
+        fontWeight: 700,
+      }}
+    >✦ Commit Stats</button>
+  </div>
+)}
+
+{committed && (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginBottom: 20,
+    fontSize: 10,
+    color: COLORS.magicText,
+    fontFamily: "'Cinzel', serif",
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+  }}>✓ Stats Committed</div>
+)}
 
       {/* Navigation */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 16, borderTop: `1px solid ${COLORS.border}` }}>
