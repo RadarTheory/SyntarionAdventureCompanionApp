@@ -104,9 +104,7 @@ function SliderItem({ slider, isMobile }) {
   // Convert -4..+4 to 0..100%
   const pct = ((value + 4) / 8) * 100;
   const col = trackColor(value);
-  const displayLabel = value === 0 ? 'Neutral'
-    : value < 0 ? leftLabel
-    : rightLabel;
+  const cream = '#f0eeeb';
 
   if (isMobile) {
     return (
@@ -118,7 +116,7 @@ function SliderItem({ slider, isMobile }) {
         }}>{label}</div>
         <div style={{
           height: 3, background: COLORS.dim, borderRadius: 2,
-          position: 'relative', overflow: 'hidden', marginBottom: 3,
+          position: 'relative', overflow: 'hidden',
         }}>
           <div style={{
             position: 'absolute', top: 0, bottom: 0,
@@ -127,17 +125,11 @@ function SliderItem({ slider, isMobile }) {
             background: col, borderRadius: 2,
             transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
           }}/>
-          {/* Center mark */}
           <div style={{
             position: 'absolute', top: 0, bottom: 0,
             left: '50%', width: 1, background: COLORS.muted, opacity: 0.4,
           }}/>
         </div>
-        <div style={{
-          fontSize: 8, color: col, textAlign: 'center',
-          fontFamily: 'Georgia, serif', fontStyle: 'italic',
-          transition: 'color 0.4s ease',
-        }}>{displayLabel}</div>
       </div>
     );
   }
@@ -149,12 +141,12 @@ function SliderItem({ slider, isMobile }) {
         color: COLORS.muted, fontFamily: "'Cinzel', serif", marginBottom: 8,
       }}>{label}</div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-        <span style={{ fontSize: 8, color: leftColor, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{leftLabel}</span>
-        <span style={{ fontSize: 8, color: rightColor, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{rightLabel}</span>
+        <span style={{ fontSize: 8, color: cream, fontFamily: 'Georgia, serif', fontStyle: 'italic', opacity: 0.6 }}>{leftLabel}</span>
+        <span style={{ fontSize: 8, color: cream, fontFamily: 'Georgia, serif', fontStyle: 'italic', opacity: 0.6 }}>{rightLabel}</span>
       </div>
       <div style={{
         height: 4, background: COLORS.dim, borderRadius: 2,
-        position: 'relative', overflow: 'hidden', marginBottom: 6,
+        position: 'relative', overflow: 'hidden',
       }}>
         <div style={{
           position: 'absolute', top: 0, bottom: 0,
@@ -168,10 +160,6 @@ function SliderItem({ slider, isMobile }) {
           left: '50%', width: 1, background: COLORS.muted, opacity: 0.4,
         }}/>
       </div>
-      <div style={{
-        fontSize: 9, color: col, fontFamily: 'Georgia, serif', fontStyle: 'italic',
-        textAlign: 'center', transition: 'color 0.4s ease',
-      }}>{displayLabel}</div>
     </div>
   );
 }
