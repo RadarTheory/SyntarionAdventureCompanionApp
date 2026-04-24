@@ -496,7 +496,7 @@ export default function Wizard({ onComplete, onHome }) {
           fontFamily: "'Cinzel', serif", fontSize: isMobile ? 11 : 13,
           fontWeight: 700, letterSpacing: '0.16em',
           textTransform: 'uppercase', color: COLORS.text,
-        }}>Character Creation</div>
+        }}>AN ADVENTURER BORN</div>
 
         {/* Spacer */}
         <div style={{ width: 40 }}/>
