@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { createClient } from '@supabase/supabase-js';
 import { useDevice } from './useDevice';
 import medallion from './assets/medallion.png';
+import CharacterSelect from './CharacterSelect';
+import Wizard from './Wizard';
 
 // ─── SUPABASE ─────────────────────────────────────────────────────────────────
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -287,8 +289,20 @@ export default function Landing() {
   const handleDMSuccess = () => { setDmAuthenticated(true); setShowDMModal(false); setAppView('dm'); };
 
   // ── Route stubs — swap for real component as you build each one ──
-  if (appView === 'character-select') return <Stub label="CharacterSelect" onHome={goHome} />;
-  if (appView === 'wizard')           return <Stub label="Wizard"           onHome={goHome} />;
+  if (appView === 'character-select') return (
+  <CharacterSelect
+    savedChars={savedChars}
+    onSelect={(char) => {}}
+    onCreate={() => setAppView('wizard')}
+    onHome={goHome}
+  />
+);
+  if (appView === 'wizard') return (
+  <Wizard
+    onComplete={(char) => {}}
+    onHome={goHome}
+  />
+);
   if (appView === 'campaigns')        return <Stub label="CampaignView"     onHome={goHome} />;
   if (appView === 'roster')           return <Stub label="Roster"           onHome={goHome} />;
   if (appView === 'settings')         return <Stub label="Settings"         onHome={goHome} />;
