@@ -55,29 +55,28 @@ export default function StepStats({
     setSelectedIdx(null);
   };
 
-  const handleRollTap = (setIdx, rollIdx) => {
-    if (activeSet !== null && activeSet !== setIdx) return;
-    const alreadyAssigned = activeSet === setIdx && Object.values(assigned).includes(rollIdx);
-    if (alreadyAssigned) return;
-    setActiveSet(setIdx);
-    setSelectedIdx(selectedIdx === rollIdx ? null : rollIdx);
-  };
+const handleRollTap = (setIdx, rollIdx) => {
+  if (activeSet !== null && activeSet !== setIdx) return;
+  const alreadyAssigned = Object.values(assigned).includes(rollIdx);
+  if (alreadyAssigned) return;
+  setActiveSet(setIdx);
+  setSelectedIdx(selectedIdx === rollIdx ? null : rollIdx);
+};
 
-  const handleStatTap = (statKey) => {
-  // If already assigned, unassign it
-  if (statKey in assigned && selectedIdx === null) {
+const handleStatTap = (statKey) => {
+  if (activeSet !== null && selectedIdx !== null) {
+    const value = savedSets[activeSet][selectedIdx];
+    setAssigned(prev => ({ ...prev, [statKey]: selectedIdx }));
+    setStats(prev => ({ ...prev, [statKey]: value }));
+    setSelectedIdx(null);
+    return;
+  }
+  if (statKey in assigned) {
     const newAssigned = { ...assigned };
     delete newAssigned[statKey];
     setAssigned(newAssigned);
     setStats(prev => ({ ...prev, [statKey]: 8 }));
-    return;
   }
-  if (activeSet === null || selectedIdx === null) return;
-  const value = savedSets[activeSet][selectedIdx];
-  const [committed, setCommitted] = useState(false);
-  setAssigned(prev => ({ ...prev, [statKey]: selectedIdx }));
-  setStats(prev => ({ ...prev, [statKey]: value }));
-  setSelectedIdx(null);
 };
 
   const handleReset = () => {
@@ -117,13 +116,13 @@ export default function StepStats({
 
     return (
       <div
-        onClick={() => statMode === 'roll' && isTarget && handleStatTap(key)}
+        onClick={() => statMode === 'roll' && (isTarget || isAssigned) && handleStatTap(key)}
         style={{
           background: isAssigned ? axisBg(axis) : isTarget ? 'rgba(240,238,235,0.04)' : COLORS.card,
           border: `1.5px solid ${isAssigned ? col : isTarget ? COLORS.borderMid : COLORS.border}`,
           borderRadius: 8,
           padding: '10px 12px',
-          cursor: statMode === 'roll' && isTarget ? 'pointer' : 'default',
+          cursor: statMode === 'roll' && (isTarget || isAssigned) ? 'pointer' : 'default',
           transition: 'all 0.15s ease',
           boxSizing: 'border-box',
         }}

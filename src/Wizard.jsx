@@ -422,6 +422,9 @@ export default function Wizard({ onComplete, onHome }) {
 
   // ── SHARED STEP PROPS ──
   const stepProps = {
+    setBoonOrigin,
+    setBoonRole,
+    setBoonPersonality,
     // Character state
     fn, setFn, ln, setLn, age, setAge, gender, setGender,
     race, setRace, rv, setRv, pmV, setPmV,
@@ -523,12 +526,6 @@ export default function Wizard({ onComplete, onHome }) {
           flex: 1,
         }}>
           {/* Live boon panel — shows after race is picked */}
-          <BoonPanel
-            origin={boonOrigin}
-            role={boonRole}
-            personality={boonPersonality}
-          />
-
           {/* Active step */}
           {renderStep()}
         </div>
