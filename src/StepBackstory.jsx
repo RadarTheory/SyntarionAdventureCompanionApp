@@ -117,7 +117,7 @@ export default function StepBackstory({
 
       {/* Title */}
       <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 18 : 22, fontWeight: 700, color: COLORS.text, letterSpacing: '0.06em', marginBottom: 4 }}>
-        Your Backstory
+        Adventurer Backstory
       </div>
       <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 24, lineHeight: 1.6 }}>
         Shape your story. The Scribe will read what you leave behind.
@@ -187,7 +187,7 @@ export default function StepBackstory({
               setBackstory(`${newOrigin}. ${newRole}.`);
             }}
             style={{ ...genBtnStyle, padding: '4px 10px', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-          >✦ Generate All</button>
+          >✦ Generate </button>
         </div>
         <textarea
           value={backstory}

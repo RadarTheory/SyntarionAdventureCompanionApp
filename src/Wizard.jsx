@@ -12,7 +12,7 @@ import StepBelief from './StepBelief';
 import StepClass     from './StepClass';
 import StepStats     from './StepStats';
 import StepBackstory from './StepBackstory';
-// import CharacterSheet from './CharacterSheet';
+import CharacterSheet from './CharacterSheet';
 
 // ─── STEPS ────────────────────────────────────────────────────────────────────
 const STEPS = [
@@ -265,7 +265,7 @@ export default function Wizard({ onComplete, onHome }) {
   const [currentStep, setCurrentStep] = useState('race');
 
   // ── CHARACTER STATE ──
-  const [charId]    = useState(() => Date.now().toString());
+  const [charId] = useState(() => crypto.randomUUID());
   const [fn, setFn] = useState('');
   const [ln, setLn] = useState('');
   const [age, setAge]       = useState('');
@@ -352,7 +352,7 @@ export default function Wizard({ onComplete, onHome }) {
       };
       v += spiritNudges[spirit] || 0;
     }
-    if (beliefType === 'unaffiliated' && beliefSub === 'nihilism') v -= 1;
+    if (beliefType === 'unaffiliated' && beliefSub === 'nihilistic') v -= 1;
     // Personality boon nudge
     if (boonPersonality?.moralityNudge) v += boonPersonality.moralityNudge;
     return clamp(v);
@@ -455,7 +455,7 @@ export default function Wizard({ onComplete, onHome }) {
       case 'class': return <StepClass {...stepProps} />;
       case 'stats': return <StepStats {...stepProps} />;
       case 'backstory': return <StepBackstory {...stepProps} />;
-      case 'sheet':     return <StepStub label="Sheet"        {...stepProps} />;
+      case 'sheet': return <CharacterSheet char={buildChar()} onHome={onHome} />;
       default:          return null;
     }
   };

@@ -4,6 +4,7 @@ import { useDevice } from './useDevice';
 import medallion from './assets/medallion.png';
 import CharacterSelect from './CharacterSelect';
 import Wizard from './Wizard';
+import CharacterSheet from './CharacterSheet';
 
 // ─── SUPABASE ─────────────────────────────────────────────────────────────────
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -268,6 +269,7 @@ export default function Landing() {
   const [showDMModal, setShowDMModal]         = useState(false);
   const [dmAuthenticated, setDmAuthenticated] = useState(false);
   const [hoveredBtn, setHoveredBtn]           = useState(null);
+  const [selectedChar, setSelectedChar] = useState(null);
 
   useEffect(() => { fetchCharacters(); }, []);
 
@@ -292,7 +294,7 @@ export default function Landing() {
   if (appView === 'character-select') return (
   <CharacterSelect
     savedChars={savedChars}
-    onSelect={(char) => {}}
+    onSelect={(char) => { setSelectedChar(char); setAppView('sheet'); }}
     onCreate={() => setAppView('wizard')}
     onHome={goHome}
   />
@@ -307,6 +309,7 @@ export default function Landing() {
   if (appView === 'roster')           return <Stub label="Roster"           onHome={goHome} />;
   if (appView === 'settings')         return <Stub label="Settings"         onHome={goHome} />;
   if (appView === 'dm')               return <Stub label="DMView"           onHome={goHome} dark />;
+  if (appView === 'sheet') return <CharacterSheet char={selectedChar} onHome={goHome} />;
 
   const buttons = [
     {
