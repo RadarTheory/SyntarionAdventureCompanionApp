@@ -72,6 +72,16 @@ export default function StepBackstory({
         submittedAt: Date.now(),
       };
 
+const { error } = await supabase.from('characters').upsert({
+  id:          finalChar.id,
+  name:        finalChar.name,
+  campaign_id: finalChar.campaign || null,
+  owner_name:  finalChar.fn,
+  user_id:     finalChar.userId || null,  // ← add this
+  status:      'awaiting_adventure',
+  data:        finalChar,
+});
+
       const { error } = await supabase.from('characters').upsert({
         id:          finalChar.id,
         name:        finalChar.name,
