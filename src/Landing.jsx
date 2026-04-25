@@ -261,7 +261,7 @@ function DMSigilModal({ onSuccess, onCancel }) {
 // LANDING — top-level component
 // Re-fetches characters on every mount. Owns all routing.
 // ═════════════════════════════════════════════════════════════════════════════
-export default function Landing() {
+export default function Landing({ user }) {
   const { isMobile } = useDevice();
   const [appView, setAppView]                 = useState('home');
   const [savedChars, setSavedChars]           = useState([]);
@@ -272,11 +272,15 @@ export default function Landing() {
   const [selectedChar, setSelectedChar] = useState(null);
 
   useEffect(() => { fetchCharacters(); }, []);
-
-  const fetchCharacters = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.from('characters').select('*');
+  
+     const fetchCharacters = async () => {
+  if (!user?.id) return;
+  setLoading(true);
+  try {
+    const { data, error } = await supabase
+      .from('characters')
+      .select('*')
+      .eq('user_id', user.id);
       if (error) throw error;
       if (data) setSavedChars(data.map(row => ({ ...row.data, id: row.id })));
     } catch (err) {
