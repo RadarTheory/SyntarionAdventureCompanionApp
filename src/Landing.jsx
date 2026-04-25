@@ -379,7 +379,7 @@ export default function Landing({ user }) {
           opacity: 0.55, letterSpacing: '0.03em',
           margin: 0, lineHeight: 1.75,
         }}>
-          The Doctrine of Being calls you.<br />
+          Are you ready, Adventurer?.<br />
           Do you dare answer?
         </p>
       </div>
@@ -434,7 +434,7 @@ export default function Landing({ user }) {
               </div>
               <div style={{
                 fontSize: 14,
-                color: isPrimary ? 'rgba(240,238,235,0.35)' : 'rgba(26,23,20,0.22)',
+                color: isPrimary ? 'rgba(240,238,235,0.35)' : 'rgba(26,23,20,0.65)',
                 transform: isHovered ? 'translateX(3px)' : 'none',
                 transition: 'transform 0.18s ease',
               }}>→</div>
@@ -444,6 +444,23 @@ export default function Landing({ user }) {
       </div>
 
       {/* Footer */}
+        <button
+    onClick={() => supabase.auth.signOut()}
+    style={{
+      position: 'absolute',
+      top: 24,
+      right: 24,
+      background: 'transparent',
+      border: 'none',
+      cursor: 'pointer',
+      fontFamily: "'Cinzel', serif",
+      fontSize: 8,
+      letterSpacing: '0.16em',
+      textTransform: 'uppercase',
+      color: 'rgba(26,23,20,0.65)',
+    }}
+  >Sign out</button>
+
       <div style={{
         position: 'absolute', bottom: 24,
         fontFamily: "'Cinzel', serif", fontSize: 9,
@@ -488,7 +505,7 @@ function Stub({ label, onHome, dark }) {
         background: 'transparent',
         border: `1px solid ${dark ? 'rgba(240,238,235,0.18)' : 'rgba(26,23,20,0.18)'}`,
         borderRadius: 4, padding: '10px 24px',
-        color: dark ? 'rgba(240,238,235,0.45)' : 'rgba(26,23,20,0.45)',
+        color: dark ? 'rgba(240,238,235,0.45)' : 'rgba(26,23,20,0.65)',
         fontFamily: "'Cinzel', serif", fontSize: 10,
         letterSpacing: '0.16em', textTransform: 'uppercase', cursor: 'pointer',
       }}>← Home</button>
