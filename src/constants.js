@@ -485,7 +485,7 @@ export const SPIRITS = [
 export const UNAFFILIATED = [
   { id:'atheistic', label:'Atheistic', desc:'Actively rejects the divine.',  moralityNudge:0  },
   { id:'agnostic',  label:'Agnostic',  desc:'Uncertain. Uncommitted.',        moralityNudge:0  },
-  { id:'nihilism',  label:'Nihilism',  desc:'Nothing holds meaning.',         moralityNudge:-1 },
+  { id:'nihilistic',  label:'Nihilistic',  desc:'Nothing holds meaning.',         moralityNudge:-1 },
   { id:'none',      label:'None',      desc:'No designation.',                moralityNudge:0  },
 ];
 
