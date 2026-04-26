@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDevice } from './useDevice';
 import {
   COLORS, RACES, PM_MAJ, PM_MIN,
-  NAMES, getNamePool, pick,
+  NAMES, getNamePool, pick, RACE_VARIANT_DESCS,
 } from './constants';
 
 // ─── STYLE HELPERS ────────────────────────────────────────────────────────────
@@ -232,14 +232,22 @@ export default function StepRace({
                     }}
                   >
                     {/* Description */}
-                    <p style={{
+                      <p style={{
                       fontSize: 12,
                       color: COLORS.textSub,
                       fontFamily: 'Georgia, serif',
                       fontStyle: 'italic',
                       lineHeight: 1.75,
                       margin: '0 0 14px',
-                    }}>{r.desc}</p>
+}}>
+  {(() => {
+                      const variantDescs = RACE_VARIANT_DESCS[r.id];
+                      if (!variantDescs) return r.desc;
+                      const selectedVariant = r.isPamorph ? null : rv;
+                      if (selectedVariant && variantDescs[selectedVariant]) return variantDescs[selectedVariant];
+                      return variantDescs.default || r.desc;
+  })()}
+</p>
 
                     {/* Variants (non-Pa'morph) */}
                     {r.variants?.length > 0 && !r.isPamorph && (
