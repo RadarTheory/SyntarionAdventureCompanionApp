@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useDevice } from './useDevice';
-import {
-  COLORS, BS_COMPLICATIONS, BS_ORIGINS, BS_ROLE, BS_PERSONALITY, pick,
-} from './constants';
+import { COLORS, BS_COMPLICATIONS, BS_ORIGINS, BS_ROLE, BS_PERSONALITY, pick, CAMPAIGNS } from './constants';
 
 // ─── SUPABASE ─────────────────────────────────────────────────────────────────
 const supabaseUrl     = import.meta.env.VITE_SUPABASE_URL;
@@ -91,6 +89,7 @@ export default function StepBackstory({
         data:        finalChar,
       });
 
+      
       if (upsertError) throw upsertError;
       setSubmitted(true);
       setConfirmSubmit(false);
@@ -246,6 +245,40 @@ export default function StepBackstory({
           )}
         </div>
       )}
+
+      {/* ── CAMPAIGN ── */}
+<div style={{ marginBottom: 24 }}>
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+    <div style={{ fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" }}>
+      Campaign
+    </div>
+  </div>
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    {CAMPAIGNS.map(c => (
+      <div
+        key={c.id}
+        onClick={() => setCampaign(campaign === c.id ? '' : c.id)}
+        style={{
+          background: campaign === c.id ? 'rgba(240,238,235,0.06)' : COLORS.card,
+          border: `1px solid ${campaign === c.id ? COLORS.borderMid : COLORS.border}`,
+          borderRadius: 8,
+          padding: '10px 14px',
+          cursor: 'pointer',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          transition: 'all 0.15s',
+        }}
+      >
+        <div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: campaign === c.id ? COLORS.text : COLORS.muted, letterSpacing: '0.06em' }}>{c.name}</div>
+          <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>{c.subtitle}</div>
+        </div>
+        {campaign === c.id && <span style={{ fontSize: 10, color: COLORS.magic }}>✓</span>}
+      </div>
+    ))}
+  </div>
+</div>
 
       {/* ── SUBMIT ERROR ── */}
       {submitError && (

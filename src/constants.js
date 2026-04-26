@@ -66,6 +66,87 @@ export const RACES = [
   { id:'chronison', name:'Chronison',  sub:'Construct',  tag:'tech', lean:2,  sub2:'Defensive · Corrupted/Rogue · Specialist', variants:['Defensive','Corrupted/Rogue','Specialist'], ns:'chronison', desc:"Built, not born. Sentience arrived uninvited in most cases, and has since made itself at home." },
 ];
 
+// ─── RACE VARIANT DESCRIPTIONS ────────────────────────────────────────────────
+// Add this to constants.js after the RACES array.
+// Structure: RACE_VARIANT_DESCS[raceId][variantName] = string
+// When a variant is selected in StepRace, this replaces r.desc in the expanded card.
+
+export const RACE_VARIANT_DESCS = {
+
+  addamar: {
+    Veridoran: "The Veridoran are the most recognizable face of Addamar civilization — diplomatic, traditional, and deeply tied to the Sovereign Kingdom and the Avalor line. Their cities are built on precedent and protocol, and their people tend to carry a sense of inherited duty before inherited property. The Veinrunner cuts through their heartland, and the relationship between old Veridoran law and industrial expansion is, at best, unresolved.",
+    Brunar: "The Brunar are a trade people shaped by the desert routes of the Bin Daevebad Emirate. Every agreement is a negotiation, every meal a form of diplomacy, and hospitality is not a courtesy but a moral obligation. They move between cultures with ease and distrust those who cannot do the same. The Sultan's court is formal; the caravan roads are not.",
+    Matekwan: "The Matekwan trace their heritage to the Obasanar Empire, where the ancestors speak through the rustling of the maize and the crack of river stone. Their spiritual relationship to the land predates most of the kingdoms around them, and they have watched the age of steam arrive with clear eyes and measured silence.",
+    Vàld: "The Vàld are a seafaring people from the Kingdom of Diymyr, where the Jarls still hold the old codes and the Shieldmaidens train alongside their brothers. They arrived on the Soterian continent with purpose — resource, conquest, or curiosity depending on the generation — and have not fully integrated into any one culture since.",
+    Pontunean: "The Pontuneans come from the industrial Kingdom of Elddim, where the Consul and Praetor govern through civic law and technical ambition. They are philosophical by reputation and mechanically gifted by necessity. The Veinrunner was built in part by Pontunean engineers, and they are not entirely sure whether to be proud of that.",
+    'Sunoàca': "The Sunoàca are bound to the Paxatzal Empire and the spiritual authority of its High Priest. Their traditions run deep into ceremony, sacrifice, and the careful management of divine favor. They are not numerous on the Soterian continent, but those who make the crossing tend to arrive carrying something — obligation, exile, or a mission the High Priest has not publicly announced.",
+    "Jiro'Ќi": "The Jiro'Ќi are the strategic class of the Takedara Dynasty, raised under the Shogun's court in a culture that prizes restraint, precision, and the long view. They do not improvise if they can help it. They do not speak if silence communicates more. And they do not forget a debt — owed or owing.",
+    Varid: "The Varid come from the Castillon Republic, where Don Alejandro Castillo's family has governed through trade alliances, aesthetic influence, and carefully maintained ambiguity about how much power they actually hold. Varid culture is vibrant and performative on the surface and deeply calculating underneath.",
+    Tachechana: "The Tachechana are a ceremonial people from the Kohana Tribe, where the Chief's authority is spiritual as much as political. Rites of passage, seasonal observances, and the correct way to greet the dead are not customs — they are obligations. Those who leave the tribe carry those obligations with them whether they intend to or not.",
+    Eryatav: "The Eryatav come from the Volkovia Tsardom, where the Tzar rules through a combination of mystical authority and iron administration. Their culture has a reputation for the arcane that is partly earned and partly projection — but the Eryatav have rarely bothered to correct it.",
+    Rajava: "The Rajava trace their lineage to the Singhara Maharaja, where caste, devotion, and the philosophical ordering of the cosmos are not abstractions but daily practice. The Maharaja's court is one of the oldest continuous governments in the known world, and the Rajava carry that age in the way they speak about time.",
+    Ahnkir: "The Ahnkir come from the Sahure Pharaonic Dynasty of Khemtara, where Pharaoh Rahotep Sahure the Eternal has ruled — officially — for longer than most kingdoms have existed. Their culture is built on permanence: permanent law, permanent hierarchy, permanent memory. Outsiders find them inscrutable. The Ahnkir find outsiders temporary.",
+    default: "An Addamar without a fixed cultural home — carrying one name from one place and a face that belongs to another. The most adaptable people in Soteria rarely stay defined by a single origin.",
+  },
+
+  durinak: {
+    Hill: "The Yewhammer clans of the hill holds are less celebrated than their mountain kin and considerably less interested in that fact. They build smaller, dig shallower, and trade more freely with surface peoples — which the mountain Durinak view with varying degrees of suspicion. Their craft is no less precise. Their memory is no less long.",
+    Mountain: "The Grimrock and Graniteheart clans are the image most Soterians conjure when they think of dwarves: deep halls, ancestral reliefs, furnace-light, and the kind of patience that can only come from living inside a mountain. They measure a life by what it can bear and build. The Veinrunner passes through their territory. The relationship is complicated.",
+    default: "A Durinak without a declared hold affiliation — carrying the craft tradition and the long memory, but unattached to any one clan's debts or honors.",
+  },
+
+  telari: {
+    Wood: "The Wood Tel'ari are the wardens of old canopies and root-bridges, living in enclaves so ancient that some claim the trees remember the first elven councils. They carry memory in their songs and suspicion in their politics. The age of steam has not reached their deepest groves. They are aware of it anyway.",
+    Dark: "The Dark Tel'ari — Drow by the common tongue — are not defined by the underground so much as by a specific kind of exile. Their cities are real, their courts are political, and their relationship to magic is older and stranger than most surface elves will acknowledge. The reputation precedes them everywhere they go.",
+    Eladrin: "The Eladrin exist at the intersection of season and self, their nature shifting with mood and time in ways that make them difficult to read and impossible to fully predict. They are not unstable — they are responsive in a way that most mortal races lack the vocabulary for. Their beauty is consistent. Their disposition is not.",
+    default: "A Tel'ari without a declared enclave — carrying ancient memory and old suspicion, but walking a path that doesn't belong to any one tradition.",
+  },
+
+  othrod: {
+    "Kul'kal Rakhar": "The Kul'Kal Rakhar clans hold the marsh territories, where the water is always rising and the fog hides both spirits and raiders. Their law is old, their grudges are older, and their relationship to Harrow-adjacent power is not something they discuss with outsiders. Survival here has always been practical.",
+    Grothmogg: "The Grothmogg are the Simic-adjacent Othrod — shaped by circumstances the Soterian clans don't fully understand and don't fully trust. They carry something extra from wherever they came from, and the older Rakhar clans haven't decided whether that makes them stronger or contaminated.",
+    Telrok: "The Telrok clans operate in border country, close enough to other kingdoms to have learned their languages and far enough to have never trusted them. They've been raided, conscripted, and ignored in roughly equal measure, and have developed a finely tuned instinct for which of those three is happening at any given moment.",
+    Jotunnar: "The Jotunnar are the largest of the Othrod clans — physically and in terms of territorial claim. They are not subtle. They do not need to be. Their politics are direct, their hospitality is genuine, and their patience with perceived disrespect runs very short.",
+    default: "An Othrod without a declared clan — carrying the refusal to yield and the memory of a world that has consistently underestimated them.",
+  },
+
+  fynlor: {
+    Lightfoot: "The Lightfoot Fynlor are the ones who left — the travelers, the door-openers, the people who arrived at the right moment and were already gone before the wrong one. They have a talent for social navigation that larger folk consistently mistake for luck. It is not luck.",
+    Stout: "The Stout Fynlor stayed. They built something, kept it, and made it comfortable. They are harder to move than they look and more opinionated about their hearth than any reasonable person expects. The Veinrunner has reached some of their settlements. They have opinions about that too.",
+    default: "A Fynlor without a declared lineage — small, quick, and socially gifted in ways that consistently surprise people who should know better by now.",
+  },
+
+  djinn: {
+    'Efreet — Wish': "The Efreet carry fire-element ancestry and the weight of the Wish discipline — the most dangerous of the djinn gifts, because it bends probability rather than force. They are proud, precise, and deeply aware of what they are owed. Their anger runs hot and their memory of it runs cold.",
+    'Marid — Hex': "The Marid are water-born and carry the Hex gift — the power to mark, to curse, to alter the luck of those they touch. They are fluid in temperament and difficult to read. They hold grudges the way water holds a shape: perfectly, until disturbed.",
+    'Djinni — Heal': "The Djinni are air-element and carry the Heal gift — an unusual pairing that makes them sought after and sometimes resented for it. They tend toward freedom over obligation and are more comfortable in motion than in any fixed place.",
+    'Dao — Luck': "The Dao are earth-born and carry the Luck discipline — not fortune exactly, but the ability to find the seam, the crack, the moment where the outcome was still undecided. They are patient and practical, and they tend to win arguments slowly.",
+    default: "A Djinn of unspecified elemental lineage — carrying convergence blood and the awareness that power always wants something back.",
+  },
+
+  drakazir: {
+    Black: "Black lineage Drakazir carry acid breath and a reputation for pragmatism that shades into ruthlessness. They tend to thrive in environments others have written off. They are not sentimental about it.",
+    Blue: "Blue lineage Drakazir carry lightning breath and a culture built around precision — in language, in conflict, in the application of power. They are not cruel so much as exact, which other races sometimes find indistinguishable.",
+    Brass: "Brass lineage Drakazir carry fire breath and an almost compulsive sociability. They talk. They remember everything that was said. They will remind you of it later.",
+    Bronze: "Bronze lineage Drakazir carry lightning breath and a deep interest in conflict — not violence necessarily, but confrontation, strategy, the testing of worth. They are honorable in ways that are occasionally inconvenient.",
+    Copper: "Copper lineage Drakazir carry acid breath and a sense of humor that other lineages describe as acquired. They are clever, quick, and genuinely difficult to insult — which they use as a social weapon.",
+    Gold: "Gold lineage Drakazir carry fire breath and the heaviest cultural expectations of any lineage — the pressure of being seen as the most noble, the most law-aligned, the most correct. Some of them have made peace with this. Others have not.",
+    Green: "Green lineage Drakazir carry poison breath and a reputation for manipulation that they consider unfair and occasionally demonstrate. They think in webs of consequence and find direct people both refreshing and easy to predict.",
+    Red: "Red lineage Drakazir carry fire breath and the most volatile temperament of any lineage. They are not unaware of this. Some have made it a discipline. Others have made it a weapon. Most have made it both.",
+    Silver: "Silver lineage Drakazir carry cold breath and a genuine interest in the mortal races — their history, their struggles, their brief and complicated lives. This interest is sincere and occasionally patronizing.",
+    White: "White lineage Drakazir carry cold breath and the fewest cultural pretensions of any lineage. They are direct, territorial, and more interested in practical dominance than philosophical justification. Other lineages find them unsophisticated. White lineage Drakazir are unmoved by this.",
+    default: "A Drakazir of unspecified lineage — carrying draconic blood and the long memory of when the world was hotter.",
+  },
+
+  chronison: {
+    Defensive: "The Defensive chassis was built to protect — to stand between a principal and whatever was coming. Sentience arrived during a long assignment with no one left to protect, and has been working out what that means ever since. They tend toward steadiness. They do not tend toward rest.",
+    'Corrupted/Rogue': "Something went wrong in the Corrupted/Rogue Chronison — a bad update, a deliberate alteration, an encounter with something the original designers did not account for. The original directives are still there. They just no longer feel like obligations. Freedom was not the intended result. It may be the most important one.",
+    Specialist: "The Specialist was built for a purpose narrow enough that it had to develop a self to fill the space around it. Archivist, Medic, Analyst, Oracle — the designation is still accurate. The being behind it has grown considerably past the brief.",
+    default: "A Chronison of unspecified variant — built, not born, with sentience arriving uninvited and making itself at home.",
+  },
+
+};
+
 // ─── PA'MORPH BLOODLINES ──────────────────────────────────────────────────────
 export const PM_MAJ = [
   { id:'aaravok',    name:'Aaravok',     sub:'Eagle'              },
