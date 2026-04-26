@@ -40,8 +40,8 @@ function StatusBadge({ status }) {
 
 const FULL_TITLES = {
   'I':   'The Investigation of the Corren Mountain Mines',
-  'II':  'The Keys of Aerithos',
-  'III': 'Prints in Gamdon',
+  'II':  'The Search of Cielo Dorado',
+  'III': 'An Offering to Aeirhyd',
   'IV':  'Frigid Ill in Galekgarde',
 };
 
