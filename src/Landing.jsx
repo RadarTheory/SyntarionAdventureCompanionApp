@@ -6,6 +6,7 @@ import CharacterSelect from './CharacterSelect';
 import Wizard from './Wizard';
 import CharacterSheet from './CharacterSheet';
 
+
 // ─── SUPABASE ─────────────────────────────────────────────────────────────────
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -14,7 +15,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 // ─── CHILD VIEW IMPORTS (uncomment as you build each one) ─────────────────────
 // import Wizard from './Wizard';
 // import CharacterSelect from './CharacterSelect';
-// import CampaignView from './CampaignView';
+import CampaignView from './CampaignView';
 // import Roster from './Roster';
 // import DMView from './DMView';
 // import Settings from './Settings';
@@ -309,7 +310,15 @@ export default function Landing({ user }) {
     onHome={goHome}
   />
 );
-  if (appView === 'campaigns')        return <Stub label="CampaignView"     onHome={goHome} />;
+  if (appView === 'campaigns') return (
+  <CampaignView
+    userChar={savedChars[0] || null}
+    onHome={goHome}
+    onAssign={(campaignId) => {
+      setSavedChars(prev => prev.map(c => ({ ...c, campaign: campaignId })));
+    }}
+  />
+);
   if (appView === 'roster')           return <Stub label="Roster"           onHome={goHome} />;
   if (appView === 'settings')         return <Stub label="Settings"         onHome={goHome} />;
   if (appView === 'dm')               return <Stub label="DMView"           onHome={goHome} dark />;
@@ -379,7 +388,7 @@ export default function Landing({ user }) {
           opacity: 0.55, letterSpacing: '0.03em',
           margin: 0, lineHeight: 1.75,
         }}>
-          Are you ready, Adventurer?.<br />
+          The Doctrine of Being calls you.<br />
           Do you dare answer?
         </p>
       </div>
