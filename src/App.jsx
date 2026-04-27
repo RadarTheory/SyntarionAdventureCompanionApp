@@ -10,6 +10,11 @@ const supabase = createClient(
 export default function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    document.body.style.background = darkMode ? '#14110c' : '#f0eeeb';
+  }, [darkMode]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -23,43 +28,25 @@ export default function App() {
   }, []);
 
   if (loading) return null;
-
   if (!session) return <LoginScreen />;
 
-  return <Landing user={session.user} />;
+  return <Landing user={session.user} darkMode={darkMode} setDarkMode={setDarkMode} />;
 }
 
 function LoginScreen() {
   const handleGoogleLogin = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: window.location.origin,
-      },
+      options: { redirectTo: window.location.origin },
     });
   };
 
   return (
-    <div style={{
-      minHeight: '100vh', background: '#f0eeeb',
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      fontFamily: 'Georgia, serif',
-    }}>
+    <div style={{ minHeight: '100vh', background: '#f0eeeb', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Georgia, serif' }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap'); * { box-sizing: border-box; } body { margin: 0; }`}</style>
-      <div style={{ fontFamily: "'Cinzel', serif", fontSize: 28, fontWeight: 700, letterSpacing: '0.1em', color: '#1a1714', marginBottom: 8 }}>
-        SYNTARION
-      </div>
-      <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 13, color: 'rgba(26,23,20,0.45)', marginBottom: 48, letterSpacing: '0.03em' }}>
-        Are you ready, Adventurer?
-      </div>
-      <button onClick={handleGoogleLogin} style={{
-        background: '#1a1714', border: 'none', borderRadius: 6,
-        padding: '14px 32px', cursor: 'pointer',
-        fontFamily: "'Cinzel', serif", fontSize: 11,
-        letterSpacing: '0.16em', textTransform: 'uppercase',
-        color: '#f0eeeb', fontWeight: 700,
-      }}>
+      <div style={{ fontFamily: "'Cinzel', serif", fontSize: 28, fontWeight: 700, letterSpacing: '0.1em', color: '#1a1714', marginBottom: 8 }}>SYNTARION</div>
+      <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 13, color: 'rgba(26,23,20,0.45)', marginBottom: 48, letterSpacing: '0.03em' }}>Are you ready, Adventurer?</div>
+      <button onClick={handleGoogleLogin} style={{ background: '#1a1714', border: 'none', borderRadius: 6, padding: '14px 32px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#f0eeeb', fontWeight: 700 }}>
         Sign in with Google
       </button>
     </div>
