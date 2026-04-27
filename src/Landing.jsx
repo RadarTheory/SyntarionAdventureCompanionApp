@@ -5,7 +5,7 @@ import medallion from './assets/medallion.png';
 import CharacterSelect from './CharacterSelect';
 import Wizard from './Wizard';
 import CharacterSheet from './CharacterSheet';
-
+import { ScribeConsult, DMConsult } from './ScribeConsult';
 
 // ─── SUPABASE ─────────────────────────────────────────────────────────────────
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -13,13 +13,10 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // ─── CHILD VIEW IMPORTS (uncomment as you build each one) ─────────────────────
-// import Wizard from './Wizard';
-// import CharacterSelect from './CharacterSelect';
 import CampaignView from './CampaignView';
-// import Roster from './Roster';
-// import DMView from './DMView';
-// import Settings from './Settings';
-
+import Roster from './Roster';
+import DMView from './DMView';
+import Settings from './Settings';
 // ═════════════════════════════════════════════════════════════════════════════
 // SYNTARION LOGO
 //
@@ -262,7 +259,7 @@ function DMSigilModal({ onSuccess, onCancel }) {
 // LANDING — top-level component
 // Re-fetches characters on every mount. Owns all routing.
 // ═════════════════════════════════════════════════════════════════════════════
-export default function Landing({ user }) {
+export default function Landing({ user, darkMode, setDarkMode }) {
   const { isMobile } = useDevice();
   const [appView, setAppView]                 = useState('home');
   const [savedChars, setSavedChars]           = useState([]);
@@ -283,7 +280,7 @@ export default function Landing({ user }) {
       .select('*')
       .eq('user_id', user.id);
       if (error) throw error;
-      if (data) setSavedChars(data.map(row => ({ ...row.data, id: row.id })));
+      if (data) setSavedChars(data.map(row => ({ ...row.data, id: row.id, status: row.status, campaign_id: row.campaign_id })));
     } catch (err) {
       console.error('Fetch error:', err.message);
     } finally {
@@ -319,10 +316,33 @@ export default function Landing({ user }) {
     }}
   />
 );
-  if (appView === 'roster')           return <Stub label="Roster"           onHome={goHome} />;
-  if (appView === 'settings')         return <Stub label="Settings"         onHome={goHome} />;
-  if (appView === 'dm')               return <Stub label="DMView"           onHome={goHome} dark />;
-  if (appView === 'sheet') return <CharacterSheet char={selectedChar} onHome={goHome} />;
+  if (appView === 'roster') return (
+  <Roster
+    user={user}
+    userChar={savedChars[0] || null}
+    onHome={goHome}
+  />
+);
+  if (appView === 'settings') return (
+  <Settings
+    user={user}
+    darkMode={darkMode}
+    setDarkMode={setDarkMode}
+    onHome={goHome}
+  />
+);
+  if (appView === 'dm') return <DMView onHome={goHome} />;
+  if (appView === 'sheet') return (
+  <CharacterSheet
+    char={selectedChar}
+    user={user}
+    onHome={goHome}
+    onUpdateChar={(updated) => {
+      setSelectedChar(updated);
+      setSavedChars(prev => prev.map(c => c.id === updated.id ? updated : c));
+    }}
+  />
+);
 
   const buttons = [
     {
@@ -341,7 +361,7 @@ export default function Landing({ user }) {
 
   return (
     <div style={{
-      minHeight: '100vh', background: '#f0eeeb',
+      minHeight: '100vh', background: darkMode ? COLORS.wizard : '#f0eeeb',
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       fontFamily: 'Georgia, serif', position: 'relative',
@@ -384,7 +404,7 @@ export default function Landing({ user }) {
         </div>
         <p style={{
           fontFamily: 'Georgia, serif', fontStyle: 'italic',
-          fontSize: isMobile ? 13 : 15, color: '#1a1714',
+          fontSize: isMobile ? 13 : 15, color: darkMode ? COLORS.text : '#1a1714',
           opacity: 0.55, letterSpacing: '0.03em',
           margin: 0, lineHeight: 1.75,
         }}>
