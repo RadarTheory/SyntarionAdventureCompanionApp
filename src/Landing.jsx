@@ -459,7 +459,7 @@ export default function Landing({ user, darkMode, setDarkMode }) {
                 background: isPrimary
                   ? (isHovered ? '#1a1714' : '#2a2420')
                   : isDriftstone
-                    ? (isHovered ? 'rgba(232,200,74,0.08)' : 'rgba(232,200,74,0.04)')
+                    ? (isHovered ? 'rgba(232,200,74,0.06)' : 'transparent')
                     : (isHovered ? `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.07)` : 'transparent'),
                 border: isPrimary
                   ? '1px solid #2a2420'
