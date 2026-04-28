@@ -20,11 +20,11 @@ function HeartstoneSVG({ size = 64 }) {
 }
 
 export default function PlayDriftstone({ user, onHome }) {
-  const [phase, setPhase] = useState('idle');
+  const [phase, setPhase] = useState('lobby');
   const [playerSide, setPlayerSide] = useState(null);
 
   const exit = () => {
-    setPhase('idle');
+    setPhase('lobby');
     if (onHome) onHome();
   };
 
@@ -61,12 +61,18 @@ export default function PlayDriftstone({ user, onHome }) {
     );
   }
 
-  if (phase === 'lobby') {
-    return (
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: '#0d0b09',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
         padding: '48px 32px', background: '#14110c', borderRadius: 12,
-        border: '1px solid rgba(232,200,74,0.25)', maxWidth: 400, margin: '80px auto',
+        border: '1px solid rgba(232,200,74,0.25)', maxWidth: 400, width: '90%',
       }}>
         <HeartstoneSVG size={56} />
         <div style={{
@@ -110,38 +116,13 @@ export default function PlayDriftstone({ user, onHome }) {
         <button
           onClick={exit}
           style={{
-            background: 'transparent', border: '0.5px solid #333', borderRadius: 6,
-            padding: '8px 20px', cursor: 'pointer', color: '#555',
+            background: 'transparent', border: '0.5px solid #444', borderRadius: 6,
+            padding: '8px 20px', cursor: 'pointer', color: '#666',
             fontFamily: 'system-ui', fontSize: 12, marginTop: 8,
           }}
         >
           Cancel
         </button>
-      </div>
-    );
-  }
-
-  // idle — button shown on landing page (not used directly, Landing handles routing)
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, margin: '32px 0' }}>
-      <button
-        onClick={() => setPhase('lobby')}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 14,
-          background: 'transparent', border: '1px solid rgba(232,200,74,0.4)',
-          borderRadius: 10, padding: '16px 36px', cursor: 'pointer',
-          fontFamily: "'Cinzel', serif", fontSize: 18,
-          letterSpacing: '0.12em', textTransform: 'uppercase',
-        }}
-      >
-        <HeartstoneSVG size={36} />
-        <span style={{ color: '#e8c84a' }}>Play Driftstone</span>
-      </button>
-      <div style={{
-        fontFamily: 'Georgia, serif', fontStyle: 'italic',
-        fontSize: 12, color: 'rgba(232,200,74,0.45)', letterSpacing: '0.05em',
-      }}>
-        Set the pattern. Turn the current.
       </div>
     </div>
   );
