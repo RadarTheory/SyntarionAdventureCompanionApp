@@ -464,7 +464,7 @@ export default function Landing({ user, darkMode, setDarkMode }) {
                 border: isPrimary
                   ? '1px solid #2a2420'
                   : isDriftstone
-                    ? `1px solid rgba(232,200,74,${isHovered ? '0.45' : '0.22'})`
+                    ? `1px solid rgba(232,200,74,${isHovered ? '0.5' : '0.3'})`
                     : `1px solid rgba(${darkMode ? '240,238,235' : '26,23,20'},0.18)`,
                 borderRadius: 4,
                 padding: isPrimary
