@@ -28,49 +28,32 @@ function SyntarionLogo({ size = 320, darkMode = false }) {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
       `}</style>
-
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        userSelect: 'none',
-      }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', userSelect: 'none' }}>
         <img
           id="syn-medallion"
           src={medallion}
           alt="Syntarion medallion"
           width={size}
           height={size}
-          style={{
-            display: 'block',
-            filter: darkMode ? 'invert(1)' : 'none',
-          }}
+          style={{ display: 'block', filter: darkMode ? 'invert(1)' : 'none' }}
         />
-
-        <div
-          id="syn-wordmark"
-          style={{
-            fontFamily: "'Cinzel', 'Trajan Pro', serif",
-            fontSize: size * 0.115,
-            fontWeight: 700,
-            letterSpacing: '0.22em',
-            color: ink,
-            marginTop: size * 0.04,
-            lineHeight: 1,
-          }}
-        >
+        <div id="syn-wordmark" style={{
+          fontFamily: "'Cinzel', 'Trajan Pro', serif",
+          fontSize: size * 0.115,
+          fontWeight: 700,
+          letterSpacing: '0.22em',
+          color: ink,
+          marginTop: size * 0.04,
+          lineHeight: 1,
+        }}>
           SYNTARION
         </div>
-
-        <div
-          id="syn-subtitle"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: size * 0.04,
-            marginTop: size * 0.04,
-          }}
-        >
+        <div id="syn-subtitle" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: size * 0.04,
+          marginTop: size * 0.04,
+        }}>
           <div style={{ width: size * 0.12, height: '0.5px', background: ink, opacity: 0.3 }} />
           <div style={{
             fontFamily: "'Cinzel', serif",
@@ -85,20 +68,16 @@ function SyntarionLogo({ size = 320, darkMode = false }) {
           </div>
           <div style={{ width: size * 0.12, height: '0.5px', background: ink, opacity: 0.3 }} />
         </div>
-
-        <div
-          id="syn-era"
-          style={{
-            fontFamily: "'Cinzel', serif",
-            fontSize: size * 0.026,
-            fontWeight: 400,
-            letterSpacing: '0.28em',
-            color: ink,
-            opacity: 0.28,
-            marginTop: size * 0.03,
-            lineHeight: 1,
-          }}
-        >
+        <div id="syn-era" style={{
+          fontFamily: "'Cinzel', serif",
+          fontSize: size * 0.026,
+          fontWeight: 400,
+          letterSpacing: '0.28em',
+          color: ink,
+          opacity: 0.28,
+          marginTop: size * 0.03,
+          lineHeight: 1,
+        }}>
           SOTERIA · 178 E.U.
         </div>
       </div>
@@ -126,47 +105,49 @@ function DMSigilModal({ onSuccess, onCancel }) {
   };
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0,
-      background: 'rgba(10,8,6,0.72)',
-      backdropFilter: 'blur(6px)',
-      zIndex: 100,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: 24,
-    }} onClick={onCancel}>
-      <div onClick={e => e.stopPropagation()} style={{
-        background: '#13100d',
-        border: `1px solid ${error ? '#7f1d1d' : 'rgba(240,238,235,0.12)'}`,
-        borderRadius: 14,
-        padding: '36px 40px',
-        maxWidth: 360, width: '100%',
-        textAlign: 'center',
-        boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-        transform: shake ? 'translateX(-8px)' : 'none',
-        transition: 'transform 0.08s, border-color 0.2s',
-      }}>
+    <div
+      onClick={onCancel}
+      style={{
+        position: 'fixed', inset: 0,
+        background: 'rgba(10,8,6,0.72)',
+        backdropFilter: 'blur(6px)',
+        zIndex: 100,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 24,
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: '#13100d',
+          border: `1px solid ${error ? '#7f1d1d' : 'rgba(240,238,235,0.12)'}`,
+          borderRadius: 14,
+          padding: '36px 40px',
+          maxWidth: 360, width: '100%',
+          textAlign: 'center',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+          transform: shake ? 'translateX(-8px)' : 'none',
+          transition: 'transform 0.08s, border-color 0.2s',
+        }}
+      >
         <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
           <SyntarionLogo size={72} darkMode />
         </div>
-
         <div style={{
           fontFamily: "'Cinzel', serif", fontSize: 12,
           letterSpacing: '0.28em', color: 'rgba(240,238,235,0.4)',
           textTransform: 'uppercase', marginBottom: 8,
         }}>DM Mode</div>
-
         <div style={{
           fontFamily: "'Cinzel', serif", fontSize: 20, fontWeight: 700,
           color: '#f0eeeb', letterSpacing: '0.06em', marginBottom: 6,
         }}>Enter the Sigil</div>
-
         <div style={{
           fontSize: 12, color: 'rgba(240,238,235,0.32)', marginBottom: 24,
           lineHeight: 1.65, fontFamily: 'Georgia, serif', fontStyle: 'italic',
         }}>
           The archives are sealed.<br />Prove you hold the key.
         </div>
-
         <input
           autoFocus
           type="password"
@@ -183,7 +164,6 @@ function DMSigilModal({ onSuccess, onCancel }) {
             fontFamily: 'Georgia, serif', transition: 'border-color 0.2s',
           }}
         />
-
         {error && (
           <div style={{
             fontSize: 11, color: '#ef4444', letterSpacing: '0.12em',
@@ -191,7 +171,6 @@ function DMSigilModal({ onSuccess, onCancel }) {
             fontFamily: "'Cinzel', serif",
           }}>The archives remain sealed.</div>
         )}
-
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={onCancel} style={{
             flex: 1, background: 'transparent',
@@ -209,7 +188,6 @@ function DMSigilModal({ onSuccess, onCancel }) {
           }}>Enter</button>
         </div>
       </div>
-
       <style>{`
         @keyframes shake {
           0%,100%{transform:translateX(0);}
@@ -293,12 +271,7 @@ export default function Landing({ user, darkMode, setDarkMode }) {
   );
 
   if (appView === 'settings') return (
-    <Settings
-      user={user}
-      darkMode={darkMode}
-      setDarkMode={setDarkMode}
-      onHome={goHome}
-    />
+    <Settings user={user} darkMode={darkMode} setDarkMode={setDarkMode} onHome={goHome} />
   );
 
   if (appView === 'dm') return <DMView onHome={goHome} />;
@@ -316,10 +289,13 @@ export default function Landing({ user, darkMode, setDarkMode }) {
   );
 
   if (appView === 'driftstone') return (
-  <PlayDriftstone user={user} onHome={goHome} />
-);
+    <PlayDriftstone user={user} onHome={goHome} />
+  );
 
   // ── Home screen ────────────────────────────────────────────────────────────
+  const ink = darkMode ? '#f0eeeb' : '#1a1714';
+  const bg  = darkMode ? '#14110c' : '#f0eeeb';
+
   const buttons = [
     {
       id: 'play',
@@ -337,7 +313,7 @@ export default function Landing({ user, darkMode, setDarkMode }) {
       label: 'DRIFTSTONE',
       sub: 'Set the pattern. Turn the current.',
       onClick: () => setAppView('driftstone'),
-},
+    },
     {
       id: 'campaigns',
       label: 'CAMPAIGNS',
@@ -363,9 +339,6 @@ export default function Landing({ user, darkMode, setDarkMode }) {
       onClick: () => setShowDMModal(true),
     },
   ];
-
-  const ink = darkMode ? '#f0eeeb' : '#1a1714';
-  const bg  = darkMode ? '#14110c' : '#f0eeeb';
 
   return (
     <div style={{
@@ -428,8 +401,7 @@ export default function Landing({ user, darkMode, setDarkMode }) {
         <p style={{
           fontFamily: 'Georgia, serif', fontStyle: 'italic',
           fontSize: isMobile ? 13 : 15,
-          color: ink,
-          opacity: 0.55, letterSpacing: '0.03em',
+          color: ink, opacity: 0.55, letterSpacing: '0.03em',
           margin: 0, lineHeight: 1.75,
         }}>
           The Doctrine of Being calls you.<br />
@@ -449,6 +421,32 @@ export default function Landing({ user, darkMode, setDarkMode }) {
           const isPrimary = btn.primary;
           const isDriftstone = btn.id === 'driftstone';
 
+          const bgColor = isPrimary
+            ? (isHovered ? '#1a1714' : '#2a2420')
+            : (isHovered ? `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.07)` : 'transparent');
+
+          const borderColor = isPrimary
+            ? '#2a2420'
+            : `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.18)`;
+
+          const labelColor = isPrimary
+            ? '#f0eeeb'
+            : isDriftstone
+              ? '#a08c2e'
+              : ink;
+
+          const subColor = isPrimary
+            ? 'rgba(240,238,235,0.5)'
+            : isDriftstone
+              ? 'rgba(160,140,46,0.6)'
+              : `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.4)`;
+
+          const arrowColor = isPrimary
+            ? 'rgba(240,238,235,0.35)'
+            : isDriftstone
+              ? 'rgba(160,140,46,0.5)'
+              : `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.4)`;
+
           return (
             <button
               key={btn.id}
@@ -456,14 +454,8 @@ export default function Landing({ user, darkMode, setDarkMode }) {
               onMouseEnter={() => setHoveredBtn(btn.id)}
               onMouseLeave={() => setHoveredBtn(null)}
               style={{
-                background: isPrimary
-                  ? (isHovered ? '#1a1714' : '#2a2420')
-                  : isDriftstone
-                    ? (isHovered ? 'rgba(232,200,74,0.06)' : 'transparent')
-                    : (isHovered ? `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.07)` : 'transparent'),
-                border: isPrimary
-                  ? '1px solid #2a2420'
-                  : `1px solid rgba(${darkMode ? '240,238,235' : '26,23,20'},0.18)`,
+                background: bgColor,
+                border: `1px solid ${borderColor}`,
                 borderRadius: 4,
                 padding: isPrimary
                   ? (isMobile ? '14px 20px' : '16px 24px')
@@ -486,31 +478,19 @@ export default function Landing({ user, darkMode, setDarkMode }) {
                   fontSize: isPrimary ? (isMobile ? 13 : 15) : (isMobile ? 11 : 12),
                   fontWeight: 700,
                   letterSpacing: '0.22em',
-                  color: isPrimary
-                    ? '#f0eeeb'
-                    : isDriftstone
-                      ? '#e8c84a'
-                      : ink,
+                  color: labelColor,
                   marginBottom: 2,
                 }}>{btn.label}</div>
                 <div style={{
                   fontFamily: 'Georgia, serif', fontStyle: 'italic',
                   fontSize: isMobile ? 9 : 10,
-                  color: isPrimary
-                    ? 'rgba(240,238,235,0.5)'
-                    : isDriftstone
-                      ? 'rgba(232,200,74,0.45)'
-                      : `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.4)`,
+                  color: subColor,
                   letterSpacing: '0.03em',
                 }}>{btn.sub}</div>
               </div>
               <div style={{
                 fontSize: 14,
-                color: isPrimary
-                  ? 'rgba(240,238,235,0.35)'
-                  : isDriftstone
-                    ? 'rgba(232,200,74,0.5)'
-                    : `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.4)`,
+                color: arrowColor,
                 transform: isHovered ? 'translateX(3px)' : 'none',
                 transition: 'transform 0.18s ease',
               }}>→</div>
@@ -545,7 +525,7 @@ export default function Landing({ user, darkMode, setDarkMode }) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// STUB — placeholder while a view isn't built yet
+// STUB
 // ═════════════════════════════════════════════════════════════════════════════
 function Stub({ label, onHome, dark }) {
   return (
