@@ -14,7 +14,7 @@ const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemi
 
 const FULL_TITLES = {
   'I':   'The Investigation of the Corren Mountain Mines',
-  'II':  'The Keys of Aerithos',
+  'II':  'The Keys of Aerithos', 
   'III': 'The Trouble in Gamdon',
   'IV':  'Frozen Sick in Galekgarde',
 };
