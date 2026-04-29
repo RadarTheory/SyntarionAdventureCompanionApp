@@ -6,6 +6,7 @@ import {
   getRaceDisplay,
 } from './constants';
 import { ScribeConsult, DMConsult } from './ScribeConsult';
+import { supabase } from './supabaseClient';
 
 const TABS = [
   { id: 'identity',   label: 'Identity'   },

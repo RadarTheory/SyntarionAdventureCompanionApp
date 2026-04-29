@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useDevice } from './useDevice';
 import { COLORS, CAMPAIGNS, ALL_CLASSES, ALL_STATS, getRaceDisplay } from './constants';
+import { supabase } from './supabaseClient';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
