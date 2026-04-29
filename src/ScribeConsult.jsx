@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { COLORS, CAMPAIGNS } from './constants';
 
@@ -84,17 +84,14 @@ export function ScribeConsult({ char, onUpdateChar }) {
 
       const data = await res.json();
       const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
       if (!text) throw new Error('The archives are silent.');
 
-      // Deduct 1 AP
       const newAp = Math.max(0, apCurrent - 1);
       await supabase
         .from('characters')
         .update({ data: { ...char, apCurrent: newAp } })
         .eq('id', char.id);
 
-      // Save to messages table
       await supabase.from('messages').insert({
         character_id: char.id,
         campaign_id: char.campaign,
@@ -106,7 +103,6 @@ export function ScribeConsult({ char, onUpdateChar }) {
       setResponse(text);
       onUpdateChar({ ...char, apCurrent: newAp });
       setQuery('');
-
     } catch (err) {
       setError('The archives resisted. Try again.');
       console.error(err);
@@ -209,108 +205,321 @@ export function ScribeConsult({ char, onUpdateChar }) {
   );
 }
 
-// ─── DM CONSULT ───────────────────────────────────────────────────────────────
+// ─── GENERATE UUID ────────────────────────────────────────────────────────────
+function generateSessionId() {
+  return crypto.randomUUID
+    ? crypto.randomUUID()
+    : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+}
+
+// ─── DM CONSULT (PLAYER SIDE) ─────────────────────────────────────────────────
+// Full two-way thread. Only "End Consult" clears state.
+// The panel stays open and live until one party ends the session.
 export function DMConsult({ char, user }) {
-  const [message, setMessage] = useState('');
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
   const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
+  const [sessionId, setSessionId] = useState(null);
+  const [sessionEnded, setSessionEnded] = useState(false);
+  const bottomRef = useRef(null);
+
+  // Subscribe to messages whenever sessionId is set
+  useEffect(() => {
+    if (!sessionId) return;
+
+    fetchMessages();
+
+    const channel = supabase
+      .channel(`player-session-${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+          filter: `session_id=eq.${sessionId}`,
+        },
+        () => fetchMessages()
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [sessionId]);
+
+  // Auto-scroll on new messages
+  useEffect(() => {
+    if (open) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, open]);
+
+  const fetchMessages = async () => {
+    const { data } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: true });
+
+    if (data) {
+      setMessages(data);
+      // Check if DM ended the session
+      const ended = data.some(m => m.session_ended);
+      if (ended) setSessionEnded(true);
+    }
+  };
 
   const handleSend = async () => {
-    if (!message.trim()) return;
+    if (!input.trim() || sending || sessionEnded) return;
     setSending(true);
     setError(null);
 
+    // Generate session ID on first send — this is the thread's permanent key
+    const sid = sessionId || generateSessionId();
+    if (!sessionId) setSessionId(sid);
+
     try {
       await supabase.from('messages').insert({
+        session_id: sid,
         sender_id: user?.id || null,
         character_id: char.id,
         campaign_id: char.campaign,
         type: 'dm',
-        content: message,
+        content: input.trim(),
+        sender_name: char.name || 'Player',
+        is_dm: false,
+        session_ended: false,
       });
-
-      setSent(true);
-      setMessage('');
-      setTimeout(() => setSent(false), 3000);
+      setInput('');
     } catch (err) {
       setError('Message failed to send. Try again.');
+      console.error(err);
     } finally {
       setSending(false);
     }
   };
 
+  const handleEndConsult = async () => {
+    if (!sessionId) {
+      // Never sent anything — just close
+      setOpen(false);
+      return;
+    }
+
+    await supabase.from('messages').insert({
+      session_id: sessionId,
+      sender_id: user?.id || null,
+      character_id: char.id,
+      campaign_id: char.campaign,
+      type: 'dm_system',
+      content: '— Consult ended by player —',
+      sender_name: char.name || 'Player',
+      is_dm: false,
+      session_ended: true,
+      session_ended_by: 'player',
+      session_ended_at: new Date().toISOString(),
+    });
+
+    setSessionEnded(true);
+    setOpen(false);
+    // Reset for a fresh consult next time
+    setTimeout(() => {
+      setSessionId(null);
+      setMessages([]);
+      setSessionEnded(false);
+    }, 500);
+  };
+
+  const handleKeyDown = e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const campaignLabel = CAMPAIGNS.find(c => c.id === char.campaign)?.subtitle || 'No campaign';
+
   return (
     <div style={{ marginBottom: 20 }}>
+      {/* Toggle button */}
       <button
         onClick={() => setOpen(!open)}
         style={{
-          width: '100%', background: open ? 'rgba(240,238,235,0.04)' : 'transparent',
+          width: '100%',
+          background: open ? 'rgba(240,238,235,0.04)' : 'transparent',
           border: `1px solid ${open ? COLORS.borderMid : COLORS.border}`,
-          borderRadius: 8, padding: '12px 16px',
-          cursor: 'pointer', display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between', transition: 'all 0.15s',
+          borderRadius: open ? '8px 8px 0 0' : 8,
+          padding: '12px 16px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          transition: 'all 0.15s',
         }}
       >
         <div style={{ textAlign: 'left' }}>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, color: COLORS.text, letterSpacing: '0.06em' }}>
-            ✉ Consult the DM
+            ✉ Consult the Architect
           </div>
           <div style={{ fontSize: 10, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>
-            Send a private message · No AP cost
+            {messages.length > 0
+              ? `${messages.filter(m => !m.is_dm).length} sent · ${messages.filter(m => m.is_dm && m.type !== 'dm_system').length} received`
+              : 'Private message · No AP cost'}
           </div>
         </div>
-        <span style={{ color: COLORS.dim, fontSize: 10 }}>{open ? '▲' : '▼'}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {messages.some(m => m.is_dm && m.type !== 'dm_system') && (
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS.magic }} />
+          )}
+          <span style={{ color: COLORS.dim, fontSize: 10 }}>{open ? '▲' : '▼'}</span>
+        </div>
       </button>
 
       {open && (
         <div style={{
-          background: COLORS.card, border: `1px solid ${COLORS.border}`,
-          borderTop: 'none', borderRadius: '0 0 8px 8px',
-          padding: '16px',
+          background: COLORS.card,
+          border: `1px solid ${COLORS.border}`,
+          borderTop: 'none',
+          borderRadius: '0 0 8px 8px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}>
-          <textarea
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-            placeholder="Write your message to the DM…"
-            rows={3}
-            style={{
-              width: '100%', background: COLORS.surface,
-              border: `1px solid ${COLORS.border}`, borderRadius: 6,
-              padding: '10px 12px', color: COLORS.text, fontSize: 12,
-              fontFamily: 'Georgia, serif', lineHeight: 1.6,
-              outline: 'none', resize: 'none', boxSizing: 'border-box',
-              marginBottom: 10,
-            }}
-          />
+          {/* Thread subheader */}
+          <div style={{
+            padding: '8px 16px',
+            borderBottom: `1px solid ${COLORS.border}`,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: 'rgba(240,238,235,0.02)',
+          }}>
+            <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+              {campaignLabel} · {sessionEnded ? 'Consult ended' : sessionId ? 'Active' : 'Not started'}
+            </div>
+            <button
+              onClick={handleEndConsult}
+              style={{
+                background: 'transparent',
+                border: `1px solid ${COLORS.warn}44`,
+                borderRadius: 4,
+                padding: '3px 10px',
+                cursor: 'pointer',
+                fontSize: 7,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: COLORS.warn,
+                fontFamily: "'Cinzel', serif",
+              }}
+            >
+              End Consult
+            </button>
+          </div>
 
-          <button
-            onClick={handleSend}
-            disabled={sending || !message.trim()}
-            style={{
-              background: sent ? COLORS.magicBg : 'rgba(240,238,235,0.06)',
-              border: `1px solid ${sent ? COLORS.magic : COLORS.borderMid}`,
-              borderRadius: 6, padding: '10px 20px',
-              cursor: sending || !message.trim() ? 'default' : 'pointer',
-              fontFamily: "'Cinzel', serif", fontSize: 9,
-              letterSpacing: '0.14em', textTransform: 'uppercase',
-              color: sent ? COLORS.magicText : COLORS.text,
-              opacity: sending ? 0.6 : 1, transition: 'all 0.2s',
-            }}
-          >
-            {sent ? '✓ Message Sent' : sending ? 'Sending…' : '✦ Send to DM'}
-          </button>
+          {/* Message thread */}
+          <div style={{
+            minHeight: 120,
+            maxHeight: 280,
+            overflowY: 'auto',
+            padding: '12px 16px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+          }}>
+            {messages.length === 0 && (
+              <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '20px 0' }}>
+                Write your message below. The Architect will respond here.
+              </div>
+            )}
 
-          {error && (
-            <div style={{ marginTop: 10, fontSize: 11, color: COLORS.warn, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
-              {error}
+            {messages.map(msg => {
+              const isSystem = msg.type === 'dm_system';
+              const isMe = !msg.is_dm && !isSystem;
+
+              if (isSystem) {
+                return (
+                  <div key={msg.id} style={{ textAlign: 'center', fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', padding: '4px 0' }}>
+                    {msg.content}
+                  </div>
+                );
+              }
+
+              return (
+                <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
+                  <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginBottom: 3 }}>
+                    {msg.sender_name || (msg.is_dm ? 'The Architect' : char.name)}
+                  </div>
+                  <div style={{
+                    maxWidth: '82%',
+                    background: isMe ? 'rgba(121,245,167,0.08)' : 'rgba(240,238,235,0.06)',
+                    border: `1px solid ${isMe ? COLORS.magic + '33' : COLORS.border}`,
+                    borderRadius: isMe ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
+                    padding: '8px 12px',
+                    fontSize: 12,
+                    color: COLORS.text,
+                    fontFamily: 'Georgia, serif',
+                    lineHeight: 1.5,
+                  }}>
+                    {msg.content}
+                  </div>
+                  <div style={{ fontSize: 7, color: COLORS.dim, marginTop: 2 }}>
+                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+              );
+            })}
+            <div ref={bottomRef} />
+          </div>
+
+          {/* Input area */}
+          {!sessionEnded ? (
+            <div style={{ padding: '10px 12px', borderTop: `1px solid ${COLORS.border}`, display: 'flex', gap: 8 }}>
+              <input
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Write to the Architect… (Enter to send)"
+                style={{
+                  flex: 1,
+                  background: COLORS.surface,
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: 6,
+                  padding: '8px 10px',
+                  fontSize: 12,
+                  color: COLORS.text,
+                  fontFamily: 'Georgia, serif',
+                  outline: 'none',
+                }}
+              />
+              <button
+                onClick={handleSend}
+                disabled={sending || !input.trim()}
+                style={{
+                  background: COLORS.magicBg,
+                  border: `1px solid ${COLORS.magic}`,
+                  borderRadius: 6,
+                  padding: '8px 12px',
+                  cursor: sending || !input.trim() ? 'default' : 'pointer',
+                  fontSize: 10,
+                  color: COLORS.magicText,
+                  fontFamily: "'Cinzel', serif",
+                  opacity: sending ? 0.6 : 1,
+                }}
+              >
+                →
+              </button>
+            </div>
+          ) : (
+            <div style={{ padding: '10px 16px', borderTop: `1px solid ${COLORS.border}`, fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center' }}>
+              This consult has ended.
             </div>
           )}
 
-          {sent && (
-            <div style={{ marginTop: 12, fontSize: 11, color: COLORS.magic, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
-              The DM has been notified. They will respond in due time.
+          {error && (
+            <div style={{ padding: '0 16px 10px', fontSize: 11, color: COLORS.warn, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+              {error}
             </div>
           )}
         </div>
