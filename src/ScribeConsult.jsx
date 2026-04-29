@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from './supabaseClient';
 import { COLORS, CAMPAIGNS } from './constants';
 
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;sb_publishable_CHABxTUEcbYsBpAhuTOxTg_ENVGvqey
+const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
 
 // ─── WORLD CONTEXT ────────────────────────────────────────────────────────────
@@ -132,15 +132,13 @@ export function ScribeConsult({ char, onUpdateChar }) {
       {open && (
         <div style={{
           background: COLORS.card, border: `1px solid ${COLORS.border}`,
-          borderTop: 'none', borderRadius: '0 0 8px 8px',
-          padding: '16px',
+          borderTop: 'none', borderRadius: '0 0 8px 8px', padding: '16px',
         }}>
           {apCurrent < 1 && (
             <div style={{ fontSize: 11, color: COLORS.warn, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 12 }}>
               The Scribe demands tribute. You have no AP remaining.
             </div>
           )}
-
           <textarea
             value={query}
             onChange={e => setQuery(e.target.value)}
@@ -151,11 +149,9 @@ export function ScribeConsult({ char, onUpdateChar }) {
               border: `1px solid ${COLORS.border}`, borderRadius: 6,
               padding: '10px 12px', color: COLORS.text, fontSize: 12,
               fontFamily: 'Georgia, serif', lineHeight: 1.6,
-              outline: 'none', resize: 'none', boxSizing: 'border-box',
-              marginBottom: 10,
+              outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 10,
             }}
           />
-
           <button
             onClick={handleConsult}
             disabled={!canConsult || loading}
@@ -172,20 +168,13 @@ export function ScribeConsult({ char, onUpdateChar }) {
           >
             {loading ? 'The Scribe deliberates…' : '✦ Consult (1 AP)'}
           </button>
-
           {error && (
             <div style={{ marginTop: 12, fontSize: 11, color: COLORS.warn, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
               {error}
             </div>
           )}
-
           {response && (
-            <div style={{
-              marginTop: 16, padding: '16px',
-              background: COLORS.deityBg,
-              border: `1px solid ${COLORS.deity}44`,
-              borderRadius: 8,
-            }}>
+            <div style={{ marginTop: 16, padding: '16px', background: COLORS.deityBg, border: `1px solid ${COLORS.deity}44`, borderRadius: 8 }}>
               <div style={{ fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.deity, fontFamily: "'Cinzel', serif", marginBottom: 10 }}>
                 The Scribe Responds
               </div>
@@ -211,8 +200,6 @@ function generateSessionId() {
 }
 
 // ─── DM CONSULT (PLAYER SIDE) ─────────────────────────────────────────────────
-// Full two-way thread. Only "End Consult" clears state.
-// The panel stays open and live until one party ends the session.
 export function DMConsult({ char, user }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -222,12 +209,16 @@ export function DMConsult({ char, user }) {
   const [sessionId, setSessionId] = useState(null);
   const [sessionEnded, setSessionEnded] = useState(false);
   const bottomRef = useRef(null);
+  // Ref so the realtime callback always sees the current sessionId
+  const sessionIdRef = useRef(null);
 
-  // Subscribe to messages whenever sessionId is set
+  useEffect(() => {
+    sessionIdRef.current = sessionId;
+  }, [sessionId]);
+
   useEffect(() => {
     if (!sessionId) return;
-
-    fetchMessages();
+    fetchMessages(sessionId);
 
     const channel = supabase
       .channel(`player-session-${sessionId}`)
@@ -239,30 +230,29 @@ export function DMConsult({ char, user }) {
           table: 'messages',
           filter: `session_id=eq.${sessionId}`,
         },
-        () => fetchMessages()
+        () => fetchMessages(sessionIdRef.current)
       )
       .subscribe();
 
     return () => supabase.removeChannel(channel);
   }, [sessionId]);
 
-  // Auto-scroll on new messages
   useEffect(() => {
     if (open) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open]);
 
-  const fetchMessages = async () => {
+  // sid passed explicitly — never relies on stale closure
+  const fetchMessages = async (sid) => {
+    if (!sid) return;
     const { data } = await supabase
       .from('messages')
       .select('*')
-      .eq('session_id', sessionId)
+      .eq('session_id', sid)
       .order('created_at', { ascending: true });
 
     if (data) {
       setMessages(data);
-      // Check if DM ended the session
-      const ended = data.some(m => m.session_ended);
-      if (ended) setSessionEnded(true);
+      if (data.some(m => m.session_ended)) setSessionEnded(true);
     }
   };
 
@@ -271,9 +261,11 @@ export function DMConsult({ char, user }) {
     setSending(true);
     setError(null);
 
-    // Generate session ID on first send — this is the thread's permanent key
     const sid = sessionId || generateSessionId();
-    if (!sessionId) setSessionId(sid);
+    if (!sessionId) {
+      setSessionId(sid);
+      sessionIdRef.current = sid;
+    }
 
     try {
       await supabase.from('messages').insert({
@@ -297,12 +289,7 @@ export function DMConsult({ char, user }) {
   };
 
   const handleEndConsult = async () => {
-    if (!sessionId) {
-      // Never sent anything — just close
-      setOpen(false);
-      return;
-    }
-
+    if (!sessionId) { setOpen(false); return; }
     await supabase.from('messages').insert({
       session_id: sessionId,
       sender_id: user?.id || null,
@@ -316,29 +303,26 @@ export function DMConsult({ char, user }) {
       session_ended_by: 'player',
       session_ended_at: new Date().toISOString(),
     });
-
     setSessionEnded(true);
     setOpen(false);
-    // Reset for a fresh consult next time
     setTimeout(() => {
       setSessionId(null);
+      sessionIdRef.current = null;
       setMessages([]);
       setSessionEnded(false);
     }, 500);
   };
 
   const handleKeyDown = e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
   const campaignLabel = CAMPAIGNS.find(c => c.id === char.campaign)?.subtitle || 'No campaign';
+  const sentCount = messages.filter(m => !m.is_dm && m.type !== 'dm_system').length;
+  const receivedCount = messages.filter(m => m.is_dm && m.type !== 'dm_system').length;
 
   return (
     <div style={{ marginBottom: 20 }}>
-      {/* Toggle button */}
       <button
         onClick={() => setOpen(!open)}
         style={{
@@ -360,14 +344,12 @@ export function DMConsult({ char, user }) {
           </div>
           <div style={{ fontSize: 10, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>
             {messages.length > 0
-              ? `${messages.filter(m => !m.is_dm).length} sent · ${messages.filter(m => m.is_dm && m.type !== 'dm_system').length} received`
+              ? `${sentCount} sent · ${receivedCount} received`
               : 'Private message · No AP cost'}
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {messages.some(m => m.is_dm && m.type !== 'dm_system') && (
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS.magic }} />
-          )}
+          {receivedCount > 0 && <div style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS.magic }} />}
           <span style={{ color: COLORS.dim, fontSize: 10 }}>{open ? '▲' : '▼'}</span>
         </div>
       </button>
@@ -382,9 +364,9 @@ export function DMConsult({ char, user }) {
           flexDirection: 'column',
           overflow: 'hidden',
         }}>
-          {/* Thread subheader */}
+          {/* Subheader */}
           <div style={{
-            padding: '8px 16px',
+            padding: '8px 12px',
             borderBottom: `1px solid ${COLORS.border}`,
             display: 'flex',
             justifyContent: 'space-between',
@@ -392,55 +374,60 @@ export function DMConsult({ char, user }) {
             background: 'rgba(240,238,235,0.02)',
           }}>
             <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
-              {campaignLabel} · {sessionEnded ? 'Consult ended' : sessionId ? 'Active' : 'Not started'}
+              {campaignLabel} · {sessionEnded ? 'Ended' : sessionId ? 'Active' : 'Not started'}
             </div>
-            <button
-              onClick={handleEndConsult}
-              style={{
-                background: 'transparent',
-                border: `1px solid ${COLORS.warn}44`,
-                borderRadius: 4,
-                padding: '3px 10px',
-                cursor: 'pointer',
-                fontSize: 7,
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                color: COLORS.warn,
-                fontFamily: "'Cinzel', serif",
-              }}
-            >
-              End Consult
-            </button>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              {!sessionEnded && (
+                <button
+                  onClick={handleEndConsult}
+                  style={{
+                    background: 'transparent',
+                    border: `1px solid ${COLORS.warn}44`,
+                    borderRadius: 4, padding: '3px 10px',
+                    cursor: 'pointer', fontSize: 7,
+                    letterSpacing: '0.1em', textTransform: 'uppercase',
+                    color: COLORS.warn, fontFamily: "'Cinzel', serif",
+                  }}
+                >
+                  End Consult
+                </button>
+              )}
+              {/* ✕ minimizes only — does not end session */}
+              <button
+                onClick={() => setOpen(false)}
+                title="Minimize"
+                style={{
+                  background: 'transparent',
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: 4, padding: '3px 7px',
+                  cursor: 'pointer', fontSize: 10,
+                  color: COLORS.dim, lineHeight: 1,
+                }}
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
-          {/* Message thread */}
+          {/* Messages */}
           <div style={{
-            minHeight: 120,
-            maxHeight: 280,
-            overflowY: 'auto',
-            padding: '12px 16px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 8,
+            minHeight: 120, maxHeight: 280, overflowY: 'auto',
+            padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8,
           }}>
             {messages.length === 0 && (
               <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '20px 0' }}>
                 Write your message below. The Architect will respond here.
               </div>
             )}
-
             {messages.map(msg => {
-              const isSystem = msg.type === 'dm_system';
-              const isMe = !msg.is_dm && !isSystem;
-
-              if (isSystem) {
+              if (msg.type === 'dm_system') {
                 return (
                   <div key={msg.id} style={{ textAlign: 'center', fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', padding: '4px 0' }}>
                     {msg.content}
                   </div>
                 );
               }
-
+              const isMe = !msg.is_dm;
               return (
                 <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
                   <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginBottom: 3 }}>
@@ -451,11 +438,8 @@ export function DMConsult({ char, user }) {
                     background: isMe ? 'rgba(121,245,167,0.08)' : 'rgba(240,238,235,0.06)',
                     border: `1px solid ${isMe ? COLORS.magic + '33' : COLORS.border}`,
                     borderRadius: isMe ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
-                    padding: '8px 12px',
-                    fontSize: 12,
-                    color: COLORS.text,
-                    fontFamily: 'Georgia, serif',
-                    lineHeight: 1.5,
+                    padding: '8px 12px', fontSize: 12, color: COLORS.text,
+                    fontFamily: 'Georgia, serif', lineHeight: 1.5,
                   }}>
                     {msg.content}
                   </div>
@@ -468,7 +452,7 @@ export function DMConsult({ char, user }) {
             <div ref={bottomRef} />
           </div>
 
-          {/* Input area */}
+          {/* Input */}
           {!sessionEnded ? (
             <div style={{ padding: '10px 12px', borderTop: `1px solid ${COLORS.border}`, display: 'flex', gap: 8 }}>
               <input
@@ -477,30 +461,21 @@ export function DMConsult({ char, user }) {
                 onKeyDown={handleKeyDown}
                 placeholder="Write to the Architect… (Enter to send)"
                 style={{
-                  flex: 1,
-                  background: COLORS.surface,
-                  border: `1px solid ${COLORS.border}`,
-                  borderRadius: 6,
-                  padding: '8px 10px',
-                  fontSize: 12,
-                  color: COLORS.text,
-                  fontFamily: 'Georgia, serif',
-                  outline: 'none',
+                  flex: 1, background: COLORS.surface,
+                  border: `1px solid ${COLORS.border}`, borderRadius: 6,
+                  padding: '8px 10px', fontSize: 12, color: COLORS.text,
+                  fontFamily: 'Georgia, serif', outline: 'none',
                 }}
               />
               <button
                 onClick={handleSend}
                 disabled={sending || !input.trim()}
                 style={{
-                  background: COLORS.magicBg,
-                  border: `1px solid ${COLORS.magic}`,
-                  borderRadius: 6,
-                  padding: '8px 12px',
+                  background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`,
+                  borderRadius: 6, padding: '8px 12px',
                   cursor: sending || !input.trim() ? 'default' : 'pointer',
-                  fontSize: 10,
-                  color: COLORS.magicText,
-                  fontFamily: "'Cinzel', serif",
-                  opacity: sending ? 0.6 : 1,
+                  fontSize: 10, color: COLORS.magicText,
+                  fontFamily: "'Cinzel', serif", opacity: sending ? 0.6 : 1,
                 }}
               >
                 →
@@ -522,4 +497,3 @@ export function DMConsult({ char, user }) {
     </div>
   );
 }
-  
