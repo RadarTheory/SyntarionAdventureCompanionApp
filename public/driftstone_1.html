@@ -334,6 +334,36 @@ h2{font-size:20px;font-weight:500;margin-bottom:.5rem}
 </div>
 
 <script>
+  // ── PVP MODE BYPASS ──────────────────────────────────────────────────────────
+// Launched from PlayDriftstone.jsx with ?mode=pvp → skip the in-game menu.
+(function checkPVPMode() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('mode') !== 'pvp') return;
+
+  // Hide menu immediately when DOM is ready
+  function hideMenu() {
+    const m = document.getElementById('menu-screen');
+    if (m) m.style.display = 'none';
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', hideMenu);
+  } else {
+    hideMenu();
+  }
+
+  // After all game scripts have initialised, auto-start pvp mode
+  window.addEventListener('load', function startPVP() {
+    const m = document.getElementById('menu-screen');
+    if (m) m.style.display = 'none';
+
+    // menuSelectMode('pvp') sets gameMode and wires up the mode section
+    if (typeof menuSelectMode === 'function') menuSelectMode('pvp');
+
+    // menuStart() hides the menu-screen and calls render() + addLog()
+    if (typeof menuStart === 'function') menuStart();
+  });
+})();
+
 const DIRS=['↑','↓','←','→'];
 const BLOW={'↑':[-1,0],'↓':[1,0],'←':[0,-1],'→':[0,1]};
 const SUNWISE={'↑':[0,1],'→':[1,0],'↓':[0,-1],'←':[-1,0]};
