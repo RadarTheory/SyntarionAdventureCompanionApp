@@ -12,13 +12,6 @@ const DM_USER_ID = import.meta.env.VITE_DM_USER_ID;
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
 
-const FULL_TITLES = {
-  'I':   'The Investigation of the Corren Mountain Mines',
-  'II':  'The Keys of Aerithos', 
-  'III': 'The Trouble in Gamdon',
-  'IV':  'Frozen Sick in Galekgarde',
-};
-
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
 You are assisting the Dungeon Master (Architect) of this world.
@@ -45,10 +38,10 @@ function label8() {
 
 function StatusBadge({ status }) {
   const map = {
-    draft:              { label: 'Draft',             color: COLORS.dim,   bg: 'rgba(131,115,100,0.12)' },
-    awaiting_adventure: { label: 'Awaiting',          color: COLORS.deity, bg: COLORS.deityBg           },
-    approved:           { label: 'Approved',          color: COLORS.magic, bg: COLORS.magicBg           },
-    rejected:           { label: 'Rejected',          color: COLORS.warn,  bg: COLORS.warnBg            },
+    draft:              { label: 'Draft',    color: COLORS.dim,   bg: 'rgba(131,115,100,0.12)' },
+    awaiting_adventure: { label: 'Awaiting', color: COLORS.deity, bg: COLORS.deityBg           },
+    approved:           { label: 'Approved', color: COLORS.magic, bg: COLORS.magicBg           },
+    rejected:           { label: 'Rejected', color: COLORS.warn,  bg: COLORS.warnBg            },
   };
   const s = map[status] || map.draft;
   return (
@@ -59,23 +52,41 @@ function StatusBadge({ status }) {
 }
 
 // ─── CHAT PANEL ───────────────────────────────────────────────────────────────
+// Rules:
+//   • "End Consult" inserts a session_ended system row — visible to both sides, signals closure
+//   • "✕" only minimizes the panel — the session stays alive and re-openable from Inbox
+//   • Realtime subscription refreshes both sides on any INSERT to this session
 function ChatPanel({ session, onClose, isDM }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+  const [sessionEnded, setSessionEnded] = useState(false);
   const bottomRef = useRef(null);
 
   useEffect(() => {
     if (!session) return;
     fetchMessages();
+
     const channel = supabase
-      .channel(`session-${session.session_id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `session_id=eq.${session.session_id}` }, () => fetchMessages())
+      .channel(`dm-session-${session.session_id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `session_id=eq.${session.session_id}`,
+        },
+        () => fetchMessages()
+      )
       .subscribe();
+
     return () => supabase.removeChannel(channel);
   }, [session]);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const fetchMessages = async () => {
     const { data } = await supabase
@@ -83,63 +94,130 @@ function ChatPanel({ session, onClose, isDM }) {
       .select('*')
       .eq('session_id', session.session_id)
       .order('created_at', { ascending: true });
-    if (data) setMessages(data);
+
+    if (data) {
+      setMessages(data);
+      setSessionEnded(data.some(m => m.session_ended));
+    }
   };
 
   const handleSend = async () => {
-    if (!input.trim() || sending) return;
+    if (!input.trim() || sending || sessionEnded) return;
     setSending(true);
     await supabase.from('messages').insert({
       session_id: session.session_id,
-      sender_id: isDM ? DM_USER_ID : session.player_id,
+      sender_id: DM_USER_ID,
       character_id: session.character_id,
       campaign_id: session.campaign_id,
-      type: isDM ? 'dm_reply' : 'dm',
+      type: 'dm_reply',
       content: input.trim(),
-      sender_name: isDM ? 'The Architect' : session.character_name,
-      is_dm: isDM,
+      sender_name: 'The Architect',
+      is_dm: true,
+      session_ended: false,
     });
     setInput('');
     setSending(false);
   };
 
-  const handleEnd = async () => {
-    await supabase.from('messages')
-      .update({ session_ended: true, session_ended_at: new Date().toISOString(), session_ended_by: isDM ? 'dm' : 'player' })
-      .eq('session_id', session.session_id);
-    onClose();
+  // End Consult: insert a system row that both sides subscribe to
+  const handleEndConsult = async () => {
+    await supabase.from('messages').insert({
+      session_id: session.session_id,
+      sender_id: DM_USER_ID,
+      character_id: session.character_id,
+      campaign_id: session.campaign_id,
+      type: 'dm_system',
+      content: '— Consult ended by the Architect —',
+      sender_name: 'The Architect',
+      is_dm: true,
+      session_ended: true,
+      session_ended_by: 'dm',
+      session_ended_at: new Date().toISOString(),
+    });
+    setSessionEnded(true);
+    onClose(); // remove from active panel; stays in inbox as ended
   };
 
   return (
-    <div style={{ position: 'fixed', bottom: 24, right: 24, width: 360, maxHeight: 520, zIndex: 200, display: 'flex', flexDirection: 'column', background: '#13100d', border: `1px solid rgba(240,238,235,0.12)`, borderRadius: 14, boxShadow: '0 24px 64px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
+    <div style={{
+      position: 'fixed', bottom: 24, right: 24, width: 360, maxHeight: 520,
+      zIndex: 200, display: 'flex', flexDirection: 'column',
+      background: '#13100d', border: `1px solid rgba(240,238,235,0.12)`,
+      borderRadius: 14, boxShadow: '0 24px 64px rgba(0,0,0,0.6)', overflow: 'hidden',
+    }}>
       {/* Header */}
-      <div style={{ padding: '12px 16px', borderBottom: `1px solid rgba(240,238,235,0.08)`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(240,238,235,0.04)' }}>
+      <div style={{
+        padding: '12px 16px', borderBottom: `1px solid rgba(240,238,235,0.08)`,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        background: 'rgba(240,238,235,0.04)',
+      }}>
         <div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, color: COLORS.text, letterSpacing: '0.06em' }}>
-            {isDM ? `↩ ${session.character_name}` : '✉ The Architect'}
+            {session.character_name}
           </div>
           <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
             {CAMPAIGNS.find(c => c.id === session.campaign_id)?.subtitle || 'Private'}
+            {sessionEnded ? ' · Ended' : ' · Active'}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={handleEnd} style={{ background: 'transparent', border: `1px solid ${COLORS.warn}44`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.warn, fontFamily: "'Cinzel', serif" }}>
-            End Session
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {!sessionEnded && (
+            <button
+              onClick={handleEndConsult}
+              style={{
+                background: 'transparent', border: `1px solid ${COLORS.warn}55`,
+                borderRadius: 4, padding: '4px 10px', cursor: 'pointer',
+                fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase',
+                color: COLORS.warn, fontFamily: "'Cinzel', serif",
+              }}
+            >
+              End Consult
+            </button>
+          )}
+          {/* ✕ only minimizes — does NOT end the session */}
+          <button
+            onClick={onClose}
+            title="Minimize (session stays open)"
+            style={{
+              background: 'transparent', border: `1px solid ${COLORS.border}`,
+              borderRadius: 4, padding: '4px 8px', cursor: 'pointer',
+              fontSize: 10, color: COLORS.dim,
+            }}
+          >
+            ✕
           </button>
-          <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
         </div>
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8, minHeight: 200, maxHeight: 320 }}>
+      <div style={{
+        flex: 1, overflowY: 'auto', padding: '12px 16px',
+        display: 'flex', flexDirection: 'column', gap: 8,
+        minHeight: 200, maxHeight: 320,
+      }}>
         {messages.map(msg => {
+          if (msg.type === 'dm_system') {
+            return (
+              <div key={msg.id} style={{ textAlign: 'center', fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', padding: '4px 0' }}>
+                {msg.content}
+              </div>
+            );
+          }
+
           const isMe = isDM ? msg.is_dm : !msg.is_dm;
           return (
             <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
               <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginBottom: 3 }}>
                 {msg.sender_name || (msg.is_dm ? 'The Architect' : 'Player')}
               </div>
-              <div style={{ maxWidth: '80%', background: isMe ? 'rgba(121,245,167,0.10)' : 'rgba(240,238,235,0.06)', border: `1px solid ${isMe ? COLORS.magic + '33' : COLORS.border}`, borderRadius: isMe ? '12px 12px 2px 12px' : '12px 12px 12px 2px', padding: '8px 12px', fontSize: 12, color: COLORS.text, fontFamily: 'Georgia, serif', lineHeight: 1.5 }}>
+              <div style={{
+                maxWidth: '80%',
+                background: isMe ? 'rgba(121,245,167,0.10)' : 'rgba(240,238,235,0.06)',
+                border: `1px solid ${isMe ? COLORS.magic + '33' : COLORS.border}`,
+                borderRadius: isMe ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
+                padding: '8px 12px', fontSize: 12, color: COLORS.text,
+                fontFamily: 'Georgia, serif', lineHeight: 1.5,
+              }}>
                 {msg.content}
               </div>
               <div style={{ fontSize: 7, color: COLORS.dim, marginTop: 2 }}>
@@ -152,18 +230,39 @@ function ChatPanel({ session, onClose, isDM }) {
       </div>
 
       {/* Input */}
-      <div style={{ padding: '10px 12px', borderTop: `1px solid rgba(240,238,235,0.08)`, display: 'flex', gap: 8 }}>
-        <input
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
-          placeholder="Type a message…"
-          style={{ flex: 1, background: 'rgba(240,238,235,0.06)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', fontSize: 12, color: COLORS.text, fontFamily: 'Georgia, serif', outline: 'none' }}
-        />
-        <button onClick={handleSend} disabled={sending || !input.trim()} style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px 12px', cursor: sending ? 'default' : 'pointer', fontSize: 10, color: COLORS.magicText, fontFamily: "'Cinzel', serif", opacity: sending ? 0.6 : 1 }}>
-          →
-        </button>
-      </div>
+      {!sessionEnded ? (
+        <div style={{ padding: '10px 12px', borderTop: `1px solid rgba(240,238,235,0.08)`, display: 'flex', gap: 8 }}>
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
+            placeholder="Type a message…"
+            style={{
+              flex: 1, background: 'rgba(240,238,235,0.06)',
+              border: `1px solid ${COLORS.border}`, borderRadius: 6,
+              padding: '8px 10px', fontSize: 12, color: COLORS.text,
+              fontFamily: 'Georgia, serif', outline: 'none',
+            }}
+          />
+          <button
+            onClick={handleSend}
+            disabled={sending || !input.trim()}
+            style={{
+              background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`,
+              borderRadius: 6, padding: '8px 12px',
+              cursor: sending || !input.trim() ? 'default' : 'pointer',
+              fontSize: 10, color: COLORS.magicText,
+              fontFamily: "'Cinzel', serif", opacity: sending ? 0.6 : 1,
+            }}
+          >
+            →
+          </button>
+        </div>
+      ) : (
+        <div style={{ padding: '10px 16px', borderTop: `1px solid rgba(240,238,235,0.08)`, fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center' }}>
+          This consult has ended.
+        </div>
+      )}
     </div>
   );
 }
@@ -209,7 +308,6 @@ function CharacterEditor({ char, onSave, onClose }) {
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 16 }}>✕</button>
         </div>
 
-        {/* Status actions */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
           <button onClick={() => handleSave('approved')} style={{ flex: 1, background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText, fontFamily: "'Cinzel', serif", fontWeight: 700 }}>✓ Approve</button>
           <button onClick={() => handleSave('rejected')} style={{ flex: 1, background: COLORS.warnBg, border: `1px solid ${COLORS.warn}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.warn, fontFamily: "'Cinzel', serif", fontWeight: 700 }}>✕ Reject</button>
@@ -218,13 +316,11 @@ function CharacterEditor({ char, onSave, onClose }) {
           </button>
         </div>
 
-        {/* Note to player */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ ...label8(), marginBottom: 6 }}>Note to Player (sent on approve/reject)</div>
           <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Optional message to the player…" rows={2} style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
         </div>
 
-        {/* Campaign assignment */}
         <div style={{ marginBottom: 16 }}>
           <div style={{ ...label8(), marginBottom: 8 }}>Campaign</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -236,10 +332,9 @@ function CharacterEditor({ char, onSave, onClose }) {
           </div>
         </div>
 
-        {/* Editable fields */}
-        {[['Name', 'name'], ['Backstory', 'backstory'], ['Notes', 'notes']].map(([label, key]) => (
+        {[['Name', 'name'], ['Backstory', 'backstory'], ['Notes', 'notes']].map(([lbl, key]) => (
           <div key={key} style={{ marginBottom: 14 }}>
-            <div style={{ ...label8(), marginBottom: 6 }}>{label}</div>
+            <div style={{ ...label8(), marginBottom: 6 }}>{lbl}</div>
             {key === 'name' ? (
               <input value={data[key] || ''} onChange={e => set(key, e.target.value)} style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none', boxSizing: 'border-box' }} />
             ) : (
@@ -248,7 +343,6 @@ function CharacterEditor({ char, onSave, onClose }) {
           </div>
         ))}
 
-        {/* Stats */}
         <div style={{ ...label8(), marginBottom: 10 }}>Stats</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {ALL_STATS.map(s => (
@@ -259,7 +353,6 @@ function CharacterEditor({ char, onSave, onClose }) {
           ))}
         </div>
 
-        {/* DM Memory */}
         <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${COLORS.border}` }}>
           <DMMemoryPanel characterId={char.id} />
         </div>
@@ -309,8 +402,6 @@ function DMMemoryPanel({ characterId, campaignId }) {
   return (
     <div>
       <div style={{ ...label8(), marginBottom: 10 }}>DM Memory</div>
-
-      {/* Category + input */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
         {cats.map(c => (
           <div key={c} onClick={() => setCategory(c)} style={{ background: category === c ? COLORS.deityBg : 'transparent', border: `1px solid ${category === c ? COLORS.deity : COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: category === c ? COLORS.deityText : COLORS.dim, fontFamily: "'Cinzel', serif" }}>
@@ -322,8 +413,6 @@ function DMMemoryPanel({ characterId, campaignId }) {
         <input value={newMemory} onChange={e => setNewMemory(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMemory()} placeholder="Add a memory entry…" style={{ flex: 1, background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
         <button onClick={addMemory} disabled={saving} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 6, padding: '7px 12px', cursor: 'pointer', fontSize: 10, color: COLORS.deityText, fontFamily: "'Cinzel', serif" }}>+</button>
       </div>
-
-      {/* Memory list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 160, overflowY: 'auto' }}>
         {memories.map(m => (
           <div key={m.id} style={{ background: 'rgba(240,238,235,0.03)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
@@ -334,9 +423,7 @@ function DMMemoryPanel({ characterId, campaignId }) {
             <button onClick={() => deleteMemory(m.id)} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 12, flexShrink: 0 }}>×</button>
           </div>
         ))}
-        {memories.length === 0 && (
-          <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No memories recorded.</div>
-        )}
+        {memories.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No memories recorded.</div>}
       </div>
     </div>
   );
@@ -352,31 +439,19 @@ function ScribeDMPanel() {
   const handleConsult = async () => {
     if (!query.trim() || loading) return;
     setLoading(true);
-
     const memoryContext = history.slice(-4).map(h => `DM: ${h.q}\nScribe: ${h.a}`).join('\n\n');
     const prompt = `${SOTERIA_DM_CONTEXT}\n\n${memoryContext ? `RECENT CONSULTATION HISTORY:\n${memoryContext}\n\n` : ''}DM ASKS:\n"${query}"\n\nProvide a thorough, specific, useful response for the DM.`;
-
     try {
       const res = await fetch(GEMINI_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.8, maxOutputTokens: 600 },
-        }),
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.8, maxOutputTokens: 600 } }),
       });
       const data = await res.json();
       const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (text) {
-        setResponse(text);
-        setHistory(prev => [...prev, { q: query, a: text }]);
-        setQuery('');
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+      if (text) { setResponse(text); setHistory(prev => [...prev, { q: query, a: text }]); setQuery(''); }
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
   };
 
   return (
@@ -386,14 +461,12 @@ function ScribeDMPanel() {
       <button onClick={handleConsult} disabled={!query.trim() || loading} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 6, padding: '10px 20px', cursor: loading ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.deityText, opacity: loading ? 0.6 : 1, marginBottom: 16 }}>
         {loading ? 'The Scribe deliberates…' : '✦ Consult (Ctrl+Enter)'}
       </button>
-
       {response && (
         <div style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}44`, borderRadius: 8, padding: '16px' }}>
           <div style={{ fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.deity, fontFamily: "'Cinzel', serif", marginBottom: 10 }}>The Scribe Responds</div>
           <p style={{ fontSize: 12, color: COLORS.deityText, fontFamily: 'Georgia, serif', lineHeight: 1.8, margin: 0 }}>{response}</p>
         </div>
       )}
-
       {history.length > 0 && (
         <div style={{ marginTop: 20 }}>
           <div style={{ ...label8(), marginBottom: 10 }}>Session History</div>
@@ -418,9 +491,7 @@ function SessionLogEditor({ campaign }) {
   const [saving, setSaving] = useState(false);
   const [sessionTitle, setSessionTitle] = useState('');
 
-  useEffect(() => {
-    fetchLog();
-  }, [campaign.id]);
+  useEffect(() => { fetchLog(); }, [campaign.id]);
 
   const fetchLog = async () => {
     const { data } = await supabase.from('campaigns').select('session_log').eq('id', campaign.id).single();
@@ -430,18 +501,10 @@ function SessionLogEditor({ campaign }) {
   const addEntry = async () => {
     if (!newEntry.trim()) return;
     setSaving(true);
-    const entry = {
-      id: Date.now(),
-      title: sessionTitle || `Session ${log.length + 1}`,
-      content: newEntry.trim(),
-      timestamp: new Date().toISOString(),
-    };
+    const entry = { id: Date.now(), title: sessionTitle || `Session ${log.length + 1}`, content: newEntry.trim(), timestamp: new Date().toISOString() };
     const updated = [...log, entry];
     await supabase.from('campaigns').update({ session_log: updated }).eq('id', campaign.id);
-    setLog(updated);
-    setNewEntry('');
-    setSessionTitle('');
-    setSaving(false);
+    setLog(updated); setNewEntry(''); setSessionTitle(''); setSaving(false);
   };
 
   const deleteEntry = async (id) => {
@@ -453,8 +516,6 @@ function SessionLogEditor({ campaign }) {
   return (
     <div>
       <div style={{ ...label8(), marginBottom: 12 }}>Session Log — {campaign.subtitle}</div>
-
-      {/* New entry */}
       <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '14px', marginBottom: 16 }}>
         <input value={sessionTitle} onChange={e => setSessionTitle(e.target.value)} placeholder="Session title (optional)…" style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${COLORS.border}`, padding: '6px 0', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
         <textarea value={newEntry} onChange={e => setNewEntry(e.target.value)} placeholder="Write the session log entry… (players will see this)" rows={4} style={{ width: '100%', background: 'transparent', border: 'none', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', lineHeight: 1.7, outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
@@ -462,8 +523,6 @@ function SessionLogEditor({ campaign }) {
           {saving ? 'Committing…' : '✦ Commit to Log'}
         </button>
       </div>
-
-      {/* Existing entries */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {[...log].reverse().map(entry => (
           <div key={entry.id} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '14px 16px' }}>
@@ -477,9 +536,7 @@ function SessionLogEditor({ campaign }) {
             <p style={{ fontSize: 12, color: COLORS.textSub, fontFamily: 'Georgia, serif', lineHeight: 1.7, margin: 0 }}>{entry.content}</p>
           </div>
         ))}
-        {log.length === 0 && (
-          <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No entries yet. The chronicle awaits.</div>
-        )}
+        {log.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No entries yet. The chronicle awaits.</div>}
       </div>
     </div>
   );
@@ -500,8 +557,7 @@ function MapManager({ campaign }) {
   const save = async () => {
     setSaving(true);
     await supabase.from('campaigns').update({ map_url: url }).eq('id', campaign.id);
-    setCurrent(url);
-    setSaving(false);
+    setCurrent(url); setSaving(false);
   };
 
   return (
@@ -539,12 +595,14 @@ export default function DMView({ onHome }) {
 
   useEffect(() => {
     fetchAll();
-    // Subscribe to new messages
+    // Subscribe to new player messages
     const channel = supabase
       .channel('dm-inbox')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'is_dm=eq.false' }, () => {
-        fetchMessages();
-      })
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages', filter: 'is_dm=eq.false' },
+        () => fetchMessages()
+      )
       .subscribe();
     return () => supabase.removeChannel(channel);
   }, []);
@@ -561,35 +619,49 @@ export default function DMView({ onHome }) {
   };
 
   const fetchMessages = async () => {
+    // Pull all messages (player + system rows) to correctly detect ended sessions
     const { data } = await supabase
       .from('messages')
       .select('*')
-      .eq('is_dm', false)
-      .eq('session_ended', false)
+      .not('session_id', 'is', null)       // only threaded messages
       .order('created_at', { ascending: false });
-    if (data) {
-      // Group by session_id, get latest per session
-      const sessions = {};
-      data.forEach(msg => {
-        const key = msg.session_id || msg.id;
-        if (!sessions[key]) sessions[key] = { ...msg, session_id: key, messages: [] };
-        sessions[key].messages.push(msg);
-      });
-      const sessionList = Object.values(sessions);
-      setMessages(sessionList);
-      setUnreadCount(sessionList.filter(s => !s.read).length);
-    }
+
+    if (!data) return;
+
+    // Group by session_id — latest message is already first due to order
+    const sessions = {};
+    data.forEach(msg => {
+      const key = msg.session_id;
+      if (!sessions[key]) {
+        sessions[key] = {
+          ...msg,                          // use most-recent row for preview
+          session_id: key,
+          ended: false,
+        };
+      }
+      // If any row in the session is a session_ended marker, flag it
+      if (msg.session_ended) sessions[key].ended = true;
+    });
+
+    // Show active (non-ended) sessions first, ended at bottom
+    const sessionList = Object.values(sessions).sort((a, b) => {
+      if (a.ended !== b.ended) return a.ended ? 1 : -1;
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    setMessages(sessionList);
+    setUnreadCount(sessionList.filter(s => !s.read && !s.ended && !s.is_dm).length);
   };
 
-  const markRead = async (msgId) => {
-    await supabase.from('messages').update({ read: true }).eq('id', msgId);
+  const markRead = async (sessionId) => {
+    await supabase.from('messages').update({ read: true }).eq('session_id', sessionId).eq('is_dm', false);
     fetchMessages();
   };
 
   const openSession = (session) => {
-    markRead(session.id);
+    markRead(session.session_id);
     setActiveSession({
-      session_id: session.session_id || session.id,
+      session_id: session.session_id,
       character_id: session.character_id,
       character_name: session.sender_name || 'Player',
       campaign_id: session.campaign_id,
@@ -617,14 +689,25 @@ export default function DMView({ onHome }) {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {messages.map(session => (
-                  <div key={session.id} onClick={() => openSession(session)} style={{ background: session.read ? COLORS.card : 'rgba(121,245,167,0.06)', border: `1px solid ${session.read ? COLORS.border : COLORS.magic + '44'}`, borderRadius: 8, padding: '12px 16px', cursor: 'pointer', transition: 'all 0.15s' }}
-                    onMouseEnter={e => e.currentTarget.style.borderColor = COLORS.borderMid}
-                    onMouseLeave={e => e.currentTarget.style.borderColor = session.read ? COLORS.border : COLORS.magic + '44'}
+                  <div
+                    key={session.session_id}
+                    onClick={() => !session.ended && openSession(session)}
+                    style={{
+                      background: session.ended ? 'transparent' : (session.read ? COLORS.card : 'rgba(121,245,167,0.06)'),
+                      border: `1px solid ${session.ended ? COLORS.border : (session.read ? COLORS.border : COLORS.magic + '44')}`,
+                      borderRadius: 8, padding: '12px 16px',
+                      cursor: session.ended ? 'default' : 'pointer',
+                      opacity: session.ended ? 0.5 : 1,
+                      transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={e => { if (!session.ended) e.currentTarget.style.borderColor = COLORS.borderMid; }}
+                    onMouseLeave={e => { if (!session.ended) e.currentTarget.style.borderColor = session.read ? COLORS.border : COLORS.magic + '44'; }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                       <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, fontWeight: 700, color: COLORS.text }}>{session.sender_name || 'Unknown'}</div>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        {!session.read && <div style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS.magic }} />}
+                        {session.ended && <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', textTransform: 'uppercase' }}>Ended</div>}
+                        {!session.read && !session.ended && !session.is_dm && <div style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS.magic }} />}
                         <div style={{ fontSize: 9, color: COLORS.dim }}>{new Date(session.created_at).toLocaleDateString()}</div>
                       </div>
                     </div>
@@ -644,7 +727,6 @@ export default function DMView({ onHome }) {
       case 'Characters':
         return (
           <div>
-            {/* Filters */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', gap: 4 }}>
                 {['all', 'awaiting_adventure', 'approved', 'rejected', 'draft'].map(s => (
@@ -661,11 +743,9 @@ export default function DMView({ onHome }) {
                 ))}
               </div>
             </div>
-
             <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', marginBottom: 12 }}>
               {filtered.length} character{filtered.length !== 1 ? 's' : ''}
             </div>
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {filtered.map(char => {
                 const cls = ALL_CLASSES.find(c => c.id === char.cid);
@@ -697,11 +777,10 @@ export default function DMView({ onHome }) {
           </div>
         );
 
-      case 'Campaigns':
+      case 'Campaigns': {
         const camp = CAMPAIGNS.find(c => c.id === activeCampaignTab);
         return (
           <div>
-            {/* Campaign selector */}
             <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
               {CAMPAIGNS.map(c => (
                 <div key={c.id} onClick={() => setActiveCampaignTab(c.id)} style={{ flex: 1, background: activeCampaignTab === c.id ? COLORS.surface : 'transparent', border: `1px solid ${activeCampaignTab === c.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '8px 4px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.12s' }}>
@@ -709,8 +788,6 @@ export default function DMView({ onHome }) {
                 </div>
               ))}
             </div>
-
-            {/* Sub-tabs */}
             <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
               {['log', 'map', 'memory'].map(t => (
                 <div key={t} onClick={() => setCampaignSubTab(t)} style={{ background: campaignSubTab === t ? COLORS.surface : 'transparent', border: `1px solid ${campaignSubTab === t ? COLORS.borderMid : COLORS.border}`, borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: campaignSubTab === t ? COLORS.text : COLORS.dim, fontFamily: "'Cinzel', serif" }}>
@@ -718,12 +795,12 @@ export default function DMView({ onHome }) {
                 </div>
               ))}
             </div>
-
-            {camp && campaignSubTab === 'log' && <SessionLogEditor campaign={camp} />}
-            {camp && campaignSubTab === 'map' && <MapManager campaign={camp} />}
+            {camp && campaignSubTab === 'log'    && <SessionLogEditor campaign={camp} />}
+            {camp && campaignSubTab === 'map'    && <MapManager campaign={camp} />}
             {camp && campaignSubTab === 'memory' && <DMMemoryPanel campaignId={camp.id} />}
           </div>
         );
+      }
 
       case 'Scribe':
         return <ScribeDMPanel />;
@@ -747,13 +824,16 @@ export default function DMView({ onHome }) {
     <div style={{ minHeight: '100vh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap'); * { box-sizing: border-box; } body { margin: 0; }`}</style>
 
-      {/* Character editor modal */}
       {editingChar && <CharacterEditor char={editingChar} onSave={() => { setEditingChar(null); fetchCharacters(); }} onClose={() => setEditingChar(null)} />}
 
-      {/* Chat panel */}
-      {activeSession && <ChatPanel session={activeSession} onClose={() => setActiveSession(null)} isDM={true} />}
+      {activeSession && (
+        <ChatPanel
+          session={activeSession}
+          onClose={() => setActiveSession(null)}
+          isDM={true}
+        />
+      )}
 
-      {/* Header */}
       <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <button onClick={onHome} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.muted, padding: 0 }}>← Home</button>
         <div style={{ textAlign: 'center' }}>
@@ -763,7 +843,6 @@ export default function DMView({ onHome }) {
         <div style={{ width: 60 }} />
       </div>
 
-      {/* Tab bar */}
       <div style={{ display: 'flex', borderBottom: `1px solid ${COLORS.border}`, overflowX: 'auto', background: COLORS.surface, flexShrink: 0 }}>
         {DM_TABS.map(tab => {
           const isActive = tab === activeTab;
@@ -777,7 +856,6 @@ export default function DMView({ onHome }) {
         })}
       </div>
 
-      {/* Content */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         <div style={{ padding: isMobile ? '20px 16px' : '28px 32px', maxWidth: 740, width: '100%', margin: '0 auto' }}>
           {loading ? (
