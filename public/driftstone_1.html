@@ -339,6 +339,10 @@ h2{font-size:20px;font-weight:500;margin-bottom:.5rem}
 (function checkPVPMode() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('mode') !== 'pvp') return;
+  const requestedSide = parseInt(params.get('side'), 10);
+  if ([1, 2].includes(requestedSide)) {
+    menuSide = requestedSide;
+  }
 
   // Hide menu immediately when DOM is ready
   function hideMenu() {
@@ -358,6 +362,9 @@ h2{font-size:20px;font-weight:500;margin-bottom:.5rem}
 
     // menuSelectMode('pvp') sets gameMode and wires up the mode section
     if (typeof menuSelectMode === 'function') menuSelectMode('pvp');
+    if ([1, 2].includes(requestedSide) && typeof menuSelectSide === 'function') {
+      menuSelectSide(requestedSide);
+    }
 
     // menuStart() hides the menu-screen and calls render() + addLog()
     if (typeof menuStart === 'function') menuStart();
