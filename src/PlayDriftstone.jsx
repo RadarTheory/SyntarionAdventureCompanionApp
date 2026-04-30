@@ -312,7 +312,7 @@ export default function PlayDriftstone({ user, onHome }) {
 
         {/* Game iframe — ?mode=pvp bypasses the in-game menu */}
         <iframe
-          src="/driftstone_1.html?mode=pvp"
+          src={`/driftstone_1.html?mode=pvp${mySide ? `&side=${mySide}` : ''}`}
           style={{ flex: 1, width: '100%', border: 'none', background: '#111', minHeight: 'calc(100vh - 44px)' }}
           title="Driftstone PVP"
         />
