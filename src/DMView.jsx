@@ -446,23 +446,123 @@ function MapManager({ campaign }) {
 }
 
 function MusicPanel() {
-  const tracks = [
-    {
-      title: "AI Orchestra - Crested",
-      category: "ambient",
-      file_path: "AI Orchestra - Crested.wav"
-    },
-    {
-      title: "AI Orchestra - The Cove",
-      category: "exploration",
-      file_path: "AI Orchestra - The Cove.wav"
-    },
-    {
-      title: "AI Orchestra - Back in the Swing",
-      category: "tavern",
-      file_path: "AI Orchestra - Back in the Swing.wav"
+  const [tracks, setTracks] = useState([]);
+  const [search, setSearch] = useState("");
+  const [currentTrack, setCurrentTrack] = useState(null);
+
+  useEffect(() => {
+    fetchMusic();
+  }, []);
+
+  const fetchMusic = async () => {
+    const { data, error } = await supabase.storage
+      .from("music")
+      .list("", {
+        limit: 500,
+        sortBy: { column: "name", order: "asc" }
+      });
+
+    if (error) {
+      console.error("Music load error:", error);
+      return;
     }
-  ];
+
+    const audioFiles = data
+      .filter(file =>
+        file.name.endsWith(".wav") ||
+        file.name.endsWith(".mp3") ||
+        file.name.endsWith(".ogg")
+      )
+      .map(file => ({
+        title: file.name.replace(/\.(wav|mp3|ogg)$/i, ""),
+        file_path: file.name
+      }));
+
+    setTracks(audioFiles);
+    if (audioFiles.length > 0) setCurrentTrack(audioFiles[0]);
+  };
+
+  const getMusicUrl = (filePath) =>
+    `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/music/${encodeURIComponent(filePath)}`;
+
+  const filteredTracks = tracks.filter(track =>
+    track.title.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div>
+      <div style={{ ...label8(), marginBottom: 12 }}>Music Library</div>
+
+      <input
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Search music..."
+        style={{
+          width: "100%",
+          marginBottom: 12,
+          background: COLORS.card,
+          border: `1px solid ${COLORS.border}`,
+          borderRadius: 6,
+          padding: "10px 12px",
+          color: COLORS.text,
+          fontFamily: "Georgia, serif"
+        }}
+      />
+
+      {currentTrack && (
+        <div style={{
+          background: COLORS.card,
+          border: `1px solid ${COLORS.border}`,
+          borderRadius: 8,
+          padding: 16,
+          marginBottom: 16
+        }}>
+          <div style={{
+            fontFamily: "'Cinzel', serif",
+            fontSize: 12,
+            color: COLORS.text,
+            marginBottom: 10
+          }}>
+            Now Playing: {currentTrack.title}
+          </div>
+
+          <audio
+            controls
+            src={getMusicUrl(currentTrack.file_path)}
+            style={{ width: "100%" }}
+          />
+        </div>
+      )}
+
+      <div style={{ fontSize: 10, color: COLORS.dim, marginBottom: 10 }}>
+        {filteredTracks.length} track{filteredTracks.length !== 1 ? "s" : ""} found
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {filteredTracks.map(track => (
+          <button
+            key={track.file_path}
+            onClick={() => setCurrentTrack(track)}
+            style={{
+              textAlign: "left",
+              background: currentTrack?.file_path === track.file_path ? COLORS.magicBg : COLORS.card,
+              border: `1px solid ${currentTrack?.file_path === track.file_path ? COLORS.magic : COLORS.border}`,
+              borderRadius: 6,
+              padding: "10px 12px",
+              color: COLORS.text,
+              cursor: "pointer",
+              fontFamily: "Georgia, serif"
+            }}
+          >
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11 }}>
+              {track.title}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
