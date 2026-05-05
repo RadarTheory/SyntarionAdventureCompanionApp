@@ -1,26 +1,6 @@
-// AbilityTree.jsx
-// Drop-in tab for CharacterSheet.jsx
-// Requires: char.abilities (string[]), char.abilityPending (string[]),
-//           char.abilityOverrides (string[]), char.apCurrent, char.apTotal
-// New Supabase columns needed: abilities text[], ability_pending text[], ability_overrides text[]
-//
-// Key format: "pathId|tier|className|abilityName"
-// e.g.        "divine|t2|Cleric|Benediction"
-//
-// Integration steps:
-//   1. Add this file to your project
-//   2. In CharacterSheet.jsx add to TABS: { id: 'abilities', label: 'Abilities' }
-//   3. In renderTab() case 'abilities': return <AbilityTree char={char} onUpdateChar={onUpdateChar} user={user} isDM={isDM} />
-//   4. Pass isDM prop from your auth context (true if user has DM role)
-//   5. In Supabase: ALTER TABLE characters ADD COLUMN abilities text[] DEFAULT '{}',
-//                                          ADD COLUMN ability_pending text[] DEFAULT '{}',
-//                                          ADD COLUMN ability_overrides text[] DEFAULT '{}';
-
 import { useState, useMemo } from 'react';
 import { COLORS } from './constants';
 import { supabase } from './supabaseClient';
-
-// ─── Ability tree data ────────────────────────────────────────────────────────
 
 const TREE = {
   magic: [
@@ -111,11 +91,11 @@ const TREE = {
     {
       id: 'arcane', label: 'Arcane', sublabel: 'Mana',
       base: { name: 'Weaver', lvl: '1–5', abilities: [
-        { n: 'Arcane Sense',    d: 'Detects magical presence, active spells, and arcane disturbances.' },
-        { n: 'Cantrip Mastery', d: 'Improves efficiency and potency of basic spells, allowing repeated low-cost casting.' },
-        { n: 'Spell Threading', d: 'Refines casting structure, reducing miscasts and stabilizing complex spells.' },
-        { n: 'Focus Channel',   d: 'Increases precision and control, improving range, targeting, or duration.' },
-        { n: 'Spell Preparation',d:'Prepares structured spells in advance for faster, more reliable casting.' },
+        { n: 'Arcane Sense',     d: 'Detects magical presence, active spells, and arcane disturbances.' },
+        { n: 'Cantrip Mastery',  d: 'Improves efficiency and potency of basic spells, allowing repeated low-cost casting.' },
+        { n: 'Spell Threading',  d: 'Refines casting structure, reducing miscasts and stabilizing complex spells.' },
+        { n: 'Focus Channel',    d: 'Increases precision and control, improving range, targeting, or duration.' },
+        { n: 'Spell Preparation',d: 'Prepares structured spells in advance for faster, more reliable casting.' },
       ]},
       t2: [
         { name: 'Wizard', lvl: '5–10', abilities: [
@@ -195,11 +175,11 @@ const TREE = {
     {
       id: 'runic', label: 'Runic', sublabel: 'Gnosis',
       base: { name: 'Sage', lvl: '1–5', abilities: [
-        { n: 'Runic Literacy', d: 'Reads, identifies, and safely interprets basic runes, glyphs, and written magical structures.' },
+        { n: 'Runic Literacy',  d: 'Reads, identifies, and safely interprets basic runes, glyphs, and written magical structures.' },
         { n: 'Rune Attunement', d: "Aligns with a rune's intent, allowing it to be activated, stabilized, or resisted." },
-        { n: 'Codex Focus',    d: 'Channels power through a written focus, improving precision and reducing casting strain.' },
-        { n: 'Glyph Marking',  d: 'Places a simple glyph on a surface, object, or threshold to trigger a defined effect.' },
-        { n: 'Script Recall',  d: 'Retrieves memorized runic forms quickly, allowing faster inscription or interpretation.' },
+        { n: 'Codex Focus',     d: 'Channels power through a written focus, improving precision and reducing casting strain.' },
+        { n: 'Glyph Marking',   d: 'Places a simple glyph on a surface, object, or threshold to trigger a defined effect.' },
+        { n: 'Script Recall',   d: 'Retrieves memorized runic forms quickly, allowing faster inscription or interpretation.' },
       ]},
       t2: [
         { name: 'Codexer', lvl: '5–10', abilities: [
@@ -303,11 +283,11 @@ const TREE = {
       ],
       t3: [
         { name: 'Necromancer', lvl: '10–20', from: 'Hemoclast', abilities: [
-          { n: 'Legion Awakening',  d: 'Animates multiple constructs or remains under command.' },
-          { n: 'Death Command',     d: 'Issues direct control orders to all summoned entities.' },
-          { n: 'Essence Reclamation',d:'Reclaims energy from defeated units or targets.' },
-          { n: 'Grave Domain',      d: 'Establishes an area where decay strengthens the caster.' },
-          { n: 'Sovereign of Bones',d: 'Becomes the focal authority over all deathbound forces nearby.' },
+          { n: 'Legion Awakening',   d: 'Animates multiple constructs or remains under command.' },
+          { n: 'Death Command',      d: 'Issues direct control orders to all summoned entities.' },
+          { n: 'Essence Reclamation',d: 'Reclaims energy from defeated units or targets.' },
+          { n: 'Grave Domain',       d: 'Establishes an area where decay strengthens the caster.' },
+          { n: 'Sovereign of Bones', d: 'Becomes the focal authority over all deathbound forces nearby.' },
         ]},
         { name: 'Darkweaver', lvl: '10–20', from: 'Harrow', abilities: [
           { n: 'Umbral Thread',    d: 'Links targets through shadow, sharing damage or effects.' },
@@ -338,11 +318,11 @@ const TREE = {
           { n: 'Supply Array',     d: 'A routed network of crates, routes, or depots that controls resource flow.' },
         ]},
         { name: 'Diplomat', lvl: '5–10', abilities: [
-          { n: 'Mediation Table',   d: 'A constructed table or chamber that enforces non-hostile resolution conditions.' },
-          { n: 'Protocol Charter',  d: 'A written charter that dictates allowed conduct within its jurisdiction.' },
-          { n: 'Reputation Ledger', d: 'A tracked record system that influences outcomes based on standing.' },
-          { n: 'Concession Contract',d:'A drafted agreement that forces trade-offs when invoked.' },
-          { n: 'Alliance Seal',     d: 'A forged pact artifact linking parties under shared terms.' },
+          { n: 'Mediation Table',    d: 'A constructed table or chamber that enforces non-hostile resolution conditions.' },
+          { n: 'Protocol Charter',   d: 'A written charter that dictates allowed conduct within its jurisdiction.' },
+          { n: 'Reputation Ledger',  d: 'A tracked record system that influences outcomes based on standing.' },
+          { n: 'Concession Contract',d: 'A drafted agreement that forces trade-offs when invoked.' },
+          { n: 'Alliance Seal',      d: 'A forged pact artifact linking parties under shared terms.' },
         ]},
       ],
       t3: [
@@ -354,11 +334,11 @@ const TREE = {
           { n: 'Trade Dominion Hub',d: 'A central node that governs regional exchange, taxation, and access.' },
         ]},
         { name: 'Negotiator', lvl: '10–20', from: 'Diplomat', abilities: [
-          { n: 'Terms Charter',      d: 'A document or device that defines allowed actions within its scope.' },
-          { n: 'Binding Contract',   d: 'A sealed agreement that enforces compliance and punishes violation.' },
-          { n: 'Breach Trigger',     d: 'A prepared clause or device that activates when conditions are broken.' },
-          { n: 'Settlement Engine',  d: 'A system that converts conflict into enforceable outcomes.' },
-          { n: 'Grand Accord Archive',d:'A master treaty construct that binds multiple factions under shared constraints.' },
+          { n: 'Terms Charter',       d: 'A document or device that defines allowed actions within its scope.' },
+          { n: 'Binding Contract',    d: 'A sealed agreement that enforces compliance and punishes violation.' },
+          { n: 'Breach Trigger',      d: 'A prepared clause or device that activates when conditions are broken.' },
+          { n: 'Settlement Engine',   d: 'A system that converts conflict into enforceable outcomes.' },
+          { n: 'Grand Accord Archive',d: 'A master treaty construct that binds multiple factions under shared constraints.' },
         ]},
       ],
     },
@@ -373,11 +353,11 @@ const TREE = {
       ]},
       t2: [
         { name: 'Barbarian',   lvl: '5–10', abilities: [
-          { n: 'Rage Conduit',  d: 'A forged focus that converts damage taken into increased physical output.' },
-          { n: 'Blood Reserve', d: 'A storage system that delays or redistributes incoming damage over time.' },
-          { n: 'War Totem',     d: 'A carried object that amplifies aggression and resilience under pressure.' },
-          { n: 'Impact Gauntlets',d:'Heavy striking gear that breaks through armor and defensive constructs.' },
-          { n: 'Charge Harness',d: 'A reinforced rig that increases force during forward momentum.' },
+          { n: 'Rage Conduit',    d: 'A forged focus that converts damage taken into increased physical output.' },
+          { n: 'Blood Reserve',   d: 'A storage system that delays or redistributes incoming damage over time.' },
+          { n: 'War Totem',       d: 'A carried object that amplifies aggression and resilience under pressure.' },
+          { n: 'Impact Gauntlets',d: 'Heavy striking gear that breaks through armor and defensive constructs.' },
+          { n: 'Charge Harness',  d: 'A reinforced rig that increases force during forward momentum.' },
         ]},
         { name: 'Swashbuckler', lvl: '5–10', abilities: [
           { n: 'Duelist Frame',    d: 'A lightweight rig that enhances speed, precision, and recovery between actions.' },
@@ -422,11 +402,11 @@ const TREE = {
           { n: 'Bulwark Relay',   d: "A linked armor node that redirects magical impact from allies into the Sentine's defenses." },
         ]},
         { name: 'Null', lvl: '5–10', abilities: [
-          { n: 'Ritecore Socket', d: 'A spinal interface housing that prepares the body for deeper severance and Whythryn integration.' },
-          { n: 'Silence Gauntlet',d: 'A heavy gauntlet that interrupts spellcasting, focus use, and touch-based magic.' },
-          { n: 'Null Brands',     d: 'Forged body-marks or embedded plates that reduce attunement to magic, spirits, and divine influence.' },
-          { n: 'Counterweight Core',d:'A dense internal stabilizer that resists transformation, charm, fear, and forced alteration.' },
-          { n: 'Cogmail Harness', d: 'A partial Whythryn armor rig that strengthens the body while suppressing magical dependency.' },
+          { n: 'Ritecore Socket',   d: 'A spinal interface housing that prepares the body for deeper severance and Whythryn integration.' },
+          { n: 'Silence Gauntlet',  d: 'A heavy gauntlet that interrupts spellcasting, focus use, and touch-based magic.' },
+          { n: 'Null Brands',       d: 'Forged body-marks or embedded plates that reduce attunement to magic, spirits, and divine influence.' },
+          { n: 'Counterweight Core',d: 'A dense internal stabilizer that resists transformation, charm, fear, and forced alteration.' },
+          { n: 'Cogmail Harness',   d: 'A partial Whythryn armor rig that strengthens the body while suppressing magical dependency.' },
         ]},
       ],
       t3: [
@@ -438,11 +418,11 @@ const TREE = {
           { n: 'Groundlaw Bastion', d: 'A fortified anti-magic installation that imposes material rules over a defended zone.' },
         ]},
         { name: 'Whyth', lvl: '10–20', from: 'Null', abilities: [
-          { n: 'Ritecore Plug',      d: 'A permanent spinal implant created through the Rite of Binding, severing spiritual and magical connection.' },
-          { n: 'Whythryn Cogmail',  d: 'A full armor system that makes the wearer highly resistant to magical, divine, and spiritual effects.' },
-          { n: 'Whythryn Cudgel',   d: 'A transforming weapon built to break enchanted armor, spell barriers, and resonance-bound constructs.' },
-          { n: 'Stone and Shape Seal',d:'A forged oath-plate that reinforces material self-determination and rejects outside influence.' },
-          { n: 'Grimroot Grounding', d: 'A final grounding apparatus that roots the Whyth fully in the material world, suppressing magic through presence.' },
+          { n: 'Ritecore Plug',       d: 'A permanent spinal implant created through the Rite of Binding, severing spiritual and magical connection.' },
+          { n: 'Whythryn Cogmail',    d: 'A full armor system that makes the wearer highly resistant to magical, divine, and spiritual effects.' },
+          { n: 'Whythryn Cudgel',     d: 'A transforming weapon built to break enchanted armor, spell barriers, and resonance-bound constructs.' },
+          { n: 'Stone and Shape Seal',d: 'A forged oath-plate that reinforces material self-determination and rejects outside influence.' },
+          { n: 'Grimroot Grounding',  d: 'A final grounding apparatus that roots the Whyth fully in the material world, suppressing magic through presence.' },
         ]},
       ],
     },
@@ -457,11 +437,11 @@ const TREE = {
       ]},
       t2: [
         { name: 'Mutagenist', lvl: '5–10', abilities: [
-          { n: 'Mutagen Syringe',     d: 'An injectable compound that alters strength, speed, or resilience temporarily.' },
-          { n: 'Flesh Graft Kit',     d: 'A surgical toolset used to attach, reinforce, or modify living tissue.' },
-          { n: 'Adaptive Serum',      d: 'A prepared dose that grants resistance to a chosen hazard or condition.' },
-          { n: 'Stabilization Harness',d:'A support rig that prevents mutation collapse or bodily rejection.' },
-          { n: 'Regenesis Vat',       d: 'A containment vessel that accelerates tissue repair and biological recovery.' },
+          { n: 'Mutagen Syringe',      d: 'An injectable compound that alters strength, speed, or resilience temporarily.' },
+          { n: 'Flesh Graft Kit',      d: 'A surgical toolset used to attach, reinforce, or modify living tissue.' },
+          { n: 'Adaptive Serum',       d: 'A prepared dose that grants resistance to a chosen hazard or condition.' },
+          { n: 'Stabilization Harness',d: 'A support rig that prevents mutation collapse or bodily rejection.' },
+          { n: 'Regenesis Vat',        d: 'A containment vessel that accelerates tissue repair and biological recovery.' },
         ]},
         { name: 'Bombardier', lvl: '5–10', abilities: [
           { n: 'Blast Charge',  d: 'A prepared explosive designed to destroy barriers, armor, machinery, or clustered enemies.' },
@@ -491,11 +471,11 @@ const TREE = {
     {
       id: 'academic', label: 'Academic', sublabel: 'Ingenuity',
       base: { name: 'Scholar', lvl: '1–5', abilities: [
-        { n: 'Recall Box',     d: 'A prepared reference sheet or mnemonic overlay that restores forgotten details, names, routes, symbols, or tactical facts.' },
-        { n: 'Field Journal',  d: 'A durable research book that records observations, weaknesses, terrain notes, and discovered patterns for later use.' },
-        { n: 'Survey Lens',    d: 'A handheld optical tool that reveals distance, structure, tracks, hidden markings, and battlefield angles.' },
-        { n: 'Annotation Slate',d:'A reusable writing board that marks targets, hazards, objectives, or routes for allies to follow.' },
-        { n: 'Relic Index',    d: 'A cataloging system that identifies artifacts, mechanisms, inscriptions, and historical objects.' },
+        { n: 'Recall Box',      d: 'A prepared reference sheet or mnemonic overlay that restores forgotten details, names, routes, symbols, or tactical facts.' },
+        { n: 'Field Journal',   d: 'A durable research book that records observations, weaknesses, terrain notes, and discovered patterns for later use.' },
+        { n: 'Survey Lens',     d: 'A handheld optical tool that reveals distance, structure, tracks, hidden markings, and battlefield angles.' },
+        { n: 'Annotation Slate',d: 'A reusable writing board that marks targets, hazards, objectives, or routes for allies to follow.' },
+        { n: 'Relic Index',     d: 'A cataloging system that identifies artifacts, mechanisms, inscriptions, and historical objects.' },
       ]},
       t2: [
         { name: 'Tactician',   lvl: '5–10', abilities: [
@@ -522,11 +502,11 @@ const TREE = {
           { n: 'Grand Stratagem',   d: 'A complete operational plan that changes the conditions of an encounter, siege, pursuit, or negotiation.' },
         ]},
         { name: 'Archivist', lvl: '10–20', from: 'Cartographer', abilities: [
-          { n: 'Reliquary',       d: 'A widened secured storage system for artifacts, rare texts, schematics, maps, and historical devices.' },
-          { n: 'Master Catalogue',d: 'A comprehensive index that cross-references relics, regions, factions, languages, and known threats.' },
-          { n: 'Translation Engine',d:'A built decoding apparatus that converts lost scripts, symbolic systems, and ciphered records.' },
-          { n: 'History Cylinder',d: 'A preserved record device that stores testimony, images, maps, or reconstructed events.' },
-          { n: 'Archival Seal',   d: 'A protective mark or casing that preserves fragile knowledge and prevents tampering, decay, or theft.' },
+          { n: 'Reliquary',         d: 'A widened secured storage system for artifacts, rare texts, schematics, maps, and historical devices.' },
+          { n: 'Master Catalogue',  d: 'A comprehensive index that cross-references relics, regions, factions, languages, and known threats.' },
+          { n: 'Translation Engine',d: 'A built decoding apparatus that converts lost scripts, symbolic systems, and ciphered records.' },
+          { n: 'History Cylinder',  d: 'A preserved record device that stores testimony, images, maps, or reconstructed events.' },
+          { n: 'Archival Seal',     d: 'A protective mark or casing that preserves fragile knowledge and prevents tampering, decay, or theft.' },
         ]},
       ],
     },
@@ -541,18 +521,18 @@ const TREE = {
       ]},
       t2: [
         { name: 'Inspector', lvl: '5–10', abilities: [
-          { n: "Inspector's Scope",   d: 'A crafted lens that reveals scratches, residues, hidden seams, forged marks, and tampered objects.' },
-          { n: 'Evidence Kit',        d: 'A case of powders, vials, wax, thread, and tags used to preserve traces for later analysis.' },
-          { n: 'Falsehood Register',  d: 'A written comparison file of statements, signatures, accounts, and contradictions.' },
-          { n: 'Scene Grid',          d: 'A deployable cord-and-marker layout used to reconstruct movement, angle, timing, and position.' },
-          { n: 'Trace Evidence Canister',d:'A sealed container for carrying hair, ash, blood, soil, fiber, residue, or other evidence without contamination.' },
+          { n: "Inspector's Scope",      d: 'A crafted lens that reveals scratches, residues, hidden seams, forged marks, and tampered objects.' },
+          { n: 'Evidence Kit',           d: 'A case of powders, vials, wax, thread, and tags used to preserve traces for later analysis.' },
+          { n: 'Falsehood Register',     d: 'A written comparison file of statements, signatures, accounts, and contradictions.' },
+          { n: 'Scene Grid',             d: 'A deployable cord-and-marker layout used to reconstruct movement, angle, timing, and position.' },
+          { n: 'Trace Evidence Canister',d: 'A sealed container for carrying hair, ash, blood, soil, fiber, residue, or other evidence without contamination.' },
         ]},
         { name: 'Ranger', lvl: '5–10', abilities: [
-          { n: 'Trail Markers',    d: 'Subtle placed signs that guide allies, confuse pursuers, or mark danger.' },
+          { n: 'Trail Markers',   d: 'Subtle placed signs that guide allies, confuse pursuers, or mark danger.' },
           { n: 'Camouflage Cloak',d: 'A crafted cloak adapted to terrain, light, foliage, dust, or stone.' },
-          { n: 'Snare Kit',        d: 'A carried set of wire, stakes, hooks, and triggers for catching, slowing, or warning.' },
-          { n: 'Field Glass',      d: 'A compact optical tool for scouting, rangefinding, and identifying threats at distance.' },
-          { n: "Ranger's Cache",   d: 'A hidden supply bundle prepared for later recovery in hostile or remote terrain.' },
+          { n: 'Snare Kit',       d: 'A carried set of wire, stakes, hooks, and triggers for catching, slowing, or warning.' },
+          { n: 'Field Glass',     d: 'A compact optical tool for scouting, rangefinding, and identifying threats at distance.' },
+          { n: "Ranger's Cache",  d: 'A hidden supply bundle prepared for later recovery in hostile or remote terrain.' },
         ]},
       ],
       t3: [
@@ -575,11 +555,11 @@ const TREE = {
     {
       id: 'artifice', label: 'Artifice', sublabel: 'Reason',
       base: { name: 'Artificer', lvl: '1–5', abilities: [
-        { n: 'Grimrite Spark', d: 'A compact ignition core used to power small devices, trigger mechanisms, and improvised inventions.' },
+        { n: 'Grimrite Spark',  d: 'A compact ignition core used to power small devices, trigger mechanisms, and improvised inventions.' },
         { n: 'Field Repair Kit',d: 'A portable toolkit for restoring damaged weapons, armor, devices, vehicles, and schematics.' },
-        { n: 'Infusion Clamp', d: 'A mechanical brace that temporarily improves a weapon, tool, or piece of armor.' },
-        { n: 'Clockwork Key',  d: 'A wound mechanism that activates simple machines, locks, timers, and stored devices.' },
-        { n: 'Utility Bracer', d: 'A wrist-mounted tool rig containing small blades, wire, lenses, picks, and deployable gadgets.' },
+        { n: 'Infusion Clamp',  d: 'A mechanical brace that temporarily improves a weapon, tool, or piece of armor.' },
+        { n: 'Clockwork Key',   d: 'A wound mechanism that activates simple machines, locks, timers, and stored devices.' },
+        { n: 'Utility Bracer',  d: 'A wrist-mounted tool rig containing small blades, wire, lenses, picks, and deployable gadgets.' },
       ]},
       t2: [
         { name: 'Gunslinger', lvl: '5–10', abilities: [
@@ -629,24 +609,25 @@ function tierCost(tier) {
   return 3;
 }
 
-// Magic path ids pull slider toward magic (-), tech toward tech (+)
 const MAGIC_PATH_IDS = new Set(TREE.magic.map(p => p.id));
 
 function sliderNudge(pathId) {
   return MAGIC_PATH_IDS.has(pathId) ? -0.25 : 0.25;
 }
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
+// ─── Style helpers ────────────────────────────────────────────────────────────
 
-const MC = COLORS.magic   || '#7B68D8';
-const TC = COLORS.tech    || '#2D9E7A';
-const MTX = COLORS.magicText || '#9B8FE8';
-const TTX = COLORS.techText  || '#3DBF93';
-const WARN = COLORS.warn  || '#D4845A';
+const MC   = COLORS.magic    || '#7B68D8';
+const TC   = COLORS.tech     || '#2D9E7A';
+const MTX  = COLORS.magicText|| '#9B8FE8';
+const TTX  = COLORS.techText || '#3DBF93';
+const WARN = COLORS.warn     || '#D4845A';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
 }
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
 
 function AbilityRow({ abilityKey, name, desc, status, cost, canSpend, isDM, onSpend, onApprove, onBuyback }) {
   const [expanded, setExpanded] = useState(false);
@@ -662,14 +643,9 @@ function AbilityRow({ abilityKey, name, desc, status, cost, canSpend, isDM, onSp
     : null;
 
   return (
-    <div style={{ borderBottom: `1px solid ${COLORS.border}`, padding: '0' }}>
-      <div
-        onClick={() => setExpanded(e => !e)}
-        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 0', cursor: 'pointer' }}
-      >
-        {/* Status dot */}
+    <div style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+      <div onClick={() => setExpanded(e => !e)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 0', cursor: 'pointer' }}>
         <div style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: statusColor, opacity: status ? 1 : 0.25, border: status ? 'none' : `1px solid ${COLORS.dim}` }} />
-
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: status ? COLORS.text : COLORS.dim, letterSpacing: '0.04em' }}>{name}</span>
@@ -680,11 +656,7 @@ function AbilityRow({ abilityKey, name, desc, status, cost, canSpend, isDM, onSp
             )}
           </div>
         </div>
-
-        {/* Cost badge for locked abilities */}
-        {!status && cost > 0 && (
-          <span style={{ fontSize: 9, color: COLORS.muted, fontFamily: 'Georgia, serif', flexShrink: 0 }}>{cost}pt</span>
-        )}
+        {!status && cost > 0 && <span style={{ fontSize: 9, color: COLORS.muted, fontFamily: 'Georgia, serif', flexShrink: 0 }}>{cost}pt</span>}
         <span style={{ fontSize: 9, color: COLORS.dim, flexShrink: 0 }}>{expanded ? '▲' : '▼'}</span>
       </div>
 
@@ -692,28 +664,24 @@ function AbilityRow({ abilityKey, name, desc, status, cost, canSpend, isDM, onSp
         <div style={{ paddingBottom: 10, paddingLeft: 15 }}>
           <p style={{ fontSize: 12, color: COLORS.textSub || COLORS.muted, fontFamily: 'Georgia, serif', lineHeight: 1.7, margin: '0 0 10px' }}>{desc}</p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {/* Player: spend to unlock */}
             {!status && canSpend && cost > 0 && (
               <button onClick={(e) => { e.stopPropagation(); onSpend(abilityKey, cost); }}
                 style={{ fontSize: 9, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase', color: MTX, background: `${MC}18`, border: `1px solid ${MC}55`, borderRadius: 4, padding: '4px 10px', cursor: 'pointer' }}>
                 Spend {cost}pt → Request
               </button>
             )}
-            {/* DM: approve pending */}
             {isDM && status === 'pending' && (
               <button onClick={(e) => { e.stopPropagation(); onApprove(abilityKey); }}
                 style={{ fontSize: 9, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase', color: TTX, background: `${TC}18`, border: `1px solid ${TC}55`, borderRadius: 4, padding: '4px 10px', cursor: 'pointer' }}>
                 ✓ Approve
               </button>
             )}
-            {/* DM: buyback (remove unlocked) */}
             {isDM && (status === 'unlocked' || status === 'override') && (
               <button onClick={(e) => { e.stopPropagation(); onBuyback(abilityKey, cost); }}
                 style={{ fontSize: 9, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase', color: WARN, background: `${WARN}18`, border: `1px solid ${WARN}55`, borderRadius: 4, padding: '4px 10px', cursor: 'pointer' }}>
                 ✕ Buyback
               </button>
             )}
-            {/* DM: force unlock */}
             {isDM && !status && (
               <button onClick={(e) => { e.stopPropagation(); onApprove(abilityKey, true); }}
                 style={{ fontSize: 9, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase', color: WARN, background: `${WARN}18`, border: `1px solid ${WARN}55`, borderRadius: 4, padding: '4px 10px', cursor: 'pointer' }}>
@@ -730,7 +698,6 @@ function AbilityRow({ abilityKey, name, desc, status, cost, canSpend, isDM, onSp
 function ClassBlock({ path, tier, cls, fromLabel, axisColor, axisText, statusOf, canSpend, isDM, onSpend, onApprove, onBuyback }) {
   const [open, setOpen] = useState(false);
   const cost = tierCost(tier);
-
   const anyUnlocked = cls.abilities.some(a => {
     const s = statusOf(makeKey(path.id, tier, cls.name, a.n));
     return s === 'unlocked' || s === 'pending' || s === 'override';
@@ -745,33 +712,17 @@ function ClassBlock({ path, tier, cls, fromLabel, axisColor, axisText, statusOf,
             <span style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Lvl {cls.lvl}</span>
             {fromLabel && <span style={{ fontSize: 8, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>← {fromLabel}</span>}
           </div>
-          {tier !== 'base' && (
-            <div style={{ fontSize: 8, color: COLORS.dim, marginTop: 2 }}>{cost}pt per ability</div>
-          )}
+          {tier !== 'base' && <div style={{ fontSize: 8, color: COLORS.dim, marginTop: 2 }}>{cost}pt per ability</div>}
         </div>
         {anyUnlocked && <div style={{ width: 6, height: 6, borderRadius: '50%', background: axisColor, flexShrink: 0 }} />}
         <span style={{ fontSize: 9, color: COLORS.dim }}>{open ? '▲' : '▼'}</span>
       </div>
-
       {open && (
         <div style={{ borderTop: `1px solid ${COLORS.border}`, padding: '4px 12px 4px' }}>
           {cls.abilities.map(a => {
             const key = makeKey(path.id, tier, cls.name, a.n);
-            const status = statusOf(key);
             return (
-              <AbilityRow
-                key={key}
-                abilityKey={key}
-                name={a.n}
-                desc={a.d}
-                status={status}
-                cost={cost}
-                canSpend={canSpend}
-                isDM={isDM}
-                onSpend={onSpend}
-                onApprove={onApprove}
-                onBuyback={onBuyback}
-              />
+              <AbilityRow key={key} abilityKey={key} name={a.n} desc={a.d} status={statusOf(key)} cost={cost} canSpend={canSpend} isDM={isDM} onSpend={onSpend} onApprove={onApprove} onBuyback={onBuyback} />
             );
           })}
         </div>
@@ -782,18 +733,8 @@ function ClassBlock({ path, tier, cls, fromLabel, axisColor, axisText, statusOf,
 
 function PathSection({ path, axis, statusOf, canSpend, isDM, onSpend, onApprove, onBuyback }) {
   const [open, setOpen] = useState(false);
-  const col  = axis === 'magic' ? MC : TC;
-  const txt  = axis === 'magic' ? MTX : TTX;
-
-  const totalUnlocked = [
-    ...path.t2.flatMap(c => c.abilities),
-    ...path.t3.flatMap(c => c.abilities),
-  ].filter(a => {
-    const parent = axis === 'magic'
-      ? [...path.t2, ...path.t3].find(c => c.abilities.includes(a))
-      : [...path.t2, ...path.t3].find(c => c.abilities.includes(a));
-    return parent && (statusOf(makeKey(path.id, parent === path.t2.find(c=>c.abilities.includes(a)) ? 't2' : 't3', parent?.name, a.n)) === 'unlocked');
-  }).length;
+  const col = axis === 'magic' ? MC : TC;
+  const txt = axis === 'magic' ? MTX : TTX;
 
   return (
     <div style={{ marginBottom: 12 }}>
@@ -805,18 +746,14 @@ function PathSection({ path, axis, statusOf, canSpend, isDM, onSpend, onApprove,
         </div>
         <span style={{ fontSize: 9, color: COLORS.dim }}>{open ? '▲' : '▼'}</span>
       </div>
-
       {open && (
         <div style={{ paddingTop: 10 }}>
-          {/* Base tier label */}
           <div style={{ ...label8(), marginBottom: 6 }}>Tier 1 — Base Class · Free</div>
           <ClassBlock path={path} tier="base" cls={path.base} axisColor={col} axisText={txt} statusOf={statusOf} canSpend={false} isDM={isDM} onSpend={onSpend} onApprove={onApprove} onBuyback={onBuyback} />
-
           <div style={{ ...label8(), marginBottom: 6, marginTop: 12 }}>Tier 2 · 2pt per ability</div>
           {path.t2.map(cls => (
             <ClassBlock key={cls.name} path={path} tier="t2" cls={cls} axisColor={col} axisText={txt} statusOf={statusOf} canSpend={canSpend} isDM={isDM} onSpend={onSpend} onApprove={onApprove} onBuyback={onBuyback} />
           ))}
-
           <div style={{ ...label8(), marginBottom: 6, marginTop: 12 }}>Tier 3 · 3pt per ability</div>
           {path.t3.map(cls => (
             <ClassBlock key={cls.name} path={path} tier="t3" cls={cls} fromLabel={cls.from} axisColor={col} axisText={txt} statusOf={statusOf} canSpend={canSpend} isDM={isDM} onSpend={onSpend} onApprove={onApprove} onBuyback={onBuyback} />
@@ -831,46 +768,36 @@ function PathSection({ path, axis, statusOf, canSpend, isDM, onSpend, onApprove,
 
 export default function AbilityTree({ char, onUpdateChar, user, isDM = false }) {
   const [saving, setSaving] = useState(false);
-  const [notice, setNotice]  = useState(null);
+  const [notice, setNotice] = useState(null);
   const [macroTab, setMacroTab] = useState('magic');
 
-  // Normalise arrays from char (Supabase may return null)
-  const abilities       = useMemo(() => char.abilities        || [], [char.abilities]);
-  const abilityPending  = useMemo(() => char.abilityPending   || [], [char.abilityPending]);
-  const abilityOverrides= useMemo(() => char.abilityOverrides || [], [char.abilityOverrides]);
+  // Normalise — Supabase returns snake_case, local state may be camelCase
+  const abilities        = useMemo(() => char.abilities         || [], [char.abilities]);
+  const abilityPending   = useMemo(() => char.ability_pending   || char.abilityPending   || [], [char.ability_pending, char.abilityPending]);
+  const abilityOverrides = useMemo(() => char.ability_overrides || char.abilityOverrides || [], [char.ability_overrides, char.abilityOverrides]);
 
   const apCurrent = char.apCurrent || 0;
   const apTotal   = char.apTotal   || 0;
 
-  // Points spent on pending (already deducted from apCurrent on spend)
-  const pendingCost = useMemo(() => {
-    return abilityPending.reduce((sum, key) => {
-      const tier = key.split('|')[1];
-      return sum + tierCost(tier);
-    }, 0);
-  }, [abilityPending]);
+  const pendingCost = useMemo(() =>
+    abilityPending.reduce((sum, key) => sum + tierCost(key.split('|')[1]), 0),
+  [abilityPending]);
 
   function statusOf(key) {
-    if (abilityOverrides.includes(key))  return 'override';
-    if (abilities.includes(key))         return 'unlocked';
-    if (abilityPending.includes(key))    return 'pending';
+    if (abilityOverrides.includes(key)) return 'override';
+    if (abilities.includes(key))        return 'unlocked';
+    if (abilityPending.includes(key))   return 'pending';
     return null;
   }
 
-  function canSpend() {
-    return apCurrent > 0;
-  }
+  function canSpend() { return apCurrent > 0; }
 
   async function persist(patch) {
     setSaving(true);
     try {
-      const merged = { ...char, ...patch };
-      const { error } = await supabase
-        .from('characters')
-        .update(patch)
-        .eq('id', char.id);
+      const { error } = await supabase.from('characters').update(patch).eq('id', char.id);
       if (error) throw error;
-      onUpdateChar(merged);
+      onUpdateChar({ ...char, ...patch });
     } catch (e) {
       setNotice({ type: 'error', msg: e.message || 'Save failed.' });
     } finally {
@@ -883,64 +810,36 @@ export default function AbilityTree({ char, onUpdateChar, user, isDM = false }) 
     setTimeout(() => setNotice(null), 3200);
   }
 
-  // Player requests an ability
+  // Player requests an ability — deducts AP, adds to ability_pending
   async function handleSpend(key, cost) {
     if (apCurrent < cost) { flash(`Not enough AP. Need ${cost}, have ${apCurrent}.`, 'error'); return; }
-    if (statusOf(key)) { flash('Already unlocked or pending.', 'error'); return; }
-
-    const pathId = key.split('|')[0];
-    const nudge  = sliderNudge(pathId);
-    const newSliders = {
-      ...(char.sliders || {}),
-      magicTech: Math.max(-4, Math.min(4, (char.sliders?.magicTech || 0) + nudge)),
-    };
-
-    await persist({
-      abilityPending: [...abilityPending, key],
-      apCurrent: apCurrent - cost,
-      sliders: newSliders,
-    });
+    if (statusOf(key))    { flash('Already unlocked or pending.', 'error'); return; }
+    const newSliders = { ...(char.sliders || {}), magicTech: Math.max(-4, Math.min(4, (char.sliders?.magicTech || 0) + sliderNudge(key.split('|')[0]))) };
+    await persist({ ability_pending: [...abilityPending, key], apCurrent: apCurrent - cost, sliders: newSliders });
     flash('Ability requested — awaiting DM approval.');
   }
 
-  // DM approves pending, or force-grants
+  // DM approves pending or force-grants via ability_overrides
   async function handleApprove(key, dmGrant = false) {
+    const newSliders = { ...(char.sliders || {}), magicTech: Math.max(-4, Math.min(4, (char.sliders?.magicTech || 0) + sliderNudge(key.split('|')[0]))) };
     if (dmGrant) {
-      const pathId = key.split('|')[0];
-      const nudge  = sliderNudge(pathId);
-      const newSliders = {
-        ...(char.sliders || {}),
-        magicTech: Math.max(-4, Math.min(4, (char.sliders?.magicTech || 0) + nudge)),
-      };
-      await persist({
-        abilityOverrides: [...abilityOverrides, key],
-        sliders: newSliders,
-      });
+      await persist({ ability_overrides: [...abilityOverrides, key], sliders: newSliders });
       flash(`DM granted: ${key.split('|')[3]}`);
     } else {
-      // Move from pending → unlocked
-      await persist({
-        abilities: [...abilities, key],
-        abilityPending: abilityPending.filter(k => k !== key),
-      });
+      await persist({ abilities: [...abilities, key], ability_pending: abilityPending.filter(k => k !== key) });
       flash(`Approved: ${key.split('|')[3]}`);
     }
   }
 
-  // DM buyback: remove ability, refund cost, nudge slider back
+  // DM buyback — removes ability, refunds AP, reverses slider nudge
   async function handleBuyback(key, cost) {
-    const pathId = key.split('|')[0];
-    const nudge  = -sliderNudge(pathId); // reverse the nudge
-    const newSliders = {
-      ...(char.sliders || {}),
-      magicTech: Math.max(-4, Math.min(4, (char.sliders?.magicTech || 0) + nudge)),
-    };
+    const newSliders = { ...(char.sliders || {}), magicTech: Math.max(-4, Math.min(4, (char.sliders?.magicTech || 0) - sliderNudge(key.split('|')[0]))) };
     await persist({
-      abilities:        abilities.filter(k => k !== key),
-      abilityOverrides: abilityOverrides.filter(k => k !== key),
-      abilityPending:   abilityPending.filter(k => k !== key),
-      apCurrent:        apCurrent + cost,
-      sliders:          newSliders,
+      abilities:         abilities.filter(k => k !== key),
+      ability_overrides: abilityOverrides.filter(k => k !== key),
+      ability_pending:   abilityPending.filter(k => k !== key),
+      apCurrent:         apCurrent + cost,
+      sliders:           newSliders,
     });
     flash(`Buyback complete. ${cost}pt refunded.`);
   }
@@ -949,12 +848,12 @@ export default function AbilityTree({ char, onUpdateChar, user, isDM = false }) 
 
   return (
     <div>
-      {/* AP + slider summary */}
+      {/* AP summary */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
         {[
-          { label: 'AP Available', value: apCurrent },
-          { label: 'AP Total',     value: apTotal   },
-          { label: 'Pending Cost', value: pendingCost, dim: true },
+          { label: 'AP Current',   value: apCurrent,   dim: false },
+          { label: 'AP Total',     value: apTotal,     dim: false },
+          { label: 'Pending Cost', value: pendingCost, dim: true  },
         ].map(({ label, value, dim }) => (
           <div key={label} style={{ flex: 1, minWidth: 80, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '9px 12px', textAlign: 'center' }}>
             <div style={{ ...label8(), marginBottom: 4 }}>{label}</div>
@@ -963,20 +862,20 @@ export default function AbilityTree({ char, onUpdateChar, user, isDM = false }) 
         ))}
       </div>
 
-      {/* Magic/Tech conflict note for Tier 3 */}
+      {/* Path conflict note */}
       <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px', marginBottom: 20, fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', lineHeight: 1.65 }}>
-        <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 700, color: COLORS.text, fontSize: 11 }}>Path conflict. </span>
+        <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 700, color: COLORS.text, fontSize: 11 }}>Path Conflict. </span>
         Tier 3 abilities push the Magic | Tech meter. Heavy investment in one macro-path at levels 10–20 may trigger a DM-initiated point buyback on opposing apex abilities.
       </div>
 
-      {/* Notice */}
+      {/* Notice banner */}
       {notice && (
         <div style={{ marginBottom: 14, padding: '8px 12px', borderRadius: 6, fontSize: 11, fontFamily: 'Georgia, serif', background: notice.type === 'error' ? `${WARN}18` : `${TC}18`, color: notice.type === 'error' ? WARN : TTX, border: `1px solid ${notice.type === 'error' ? WARN : TC}44` }}>
           {notice.msg}
         </div>
       )}
 
-      {/* Macro tabs */}
+      {/* Magic / Tech tabs */}
       <div style={{ display: 'flex', borderBottom: `1px solid ${COLORS.border}`, marginBottom: 16 }}>
         {[{ id: 'magic', label: 'Magic Path', col: MC, txt: MTX }, { id: 'tech', label: 'Tech Path', col: TC, txt: TTX }].map(t => {
           const active = macroTab === t.id;
@@ -991,17 +890,7 @@ export default function AbilityTree({ char, onUpdateChar, user, isDM = false }) 
 
       {/* Path list */}
       {paths.map(path => (
-        <PathSection
-          key={path.id}
-          path={path}
-          axis={macroTab}
-          statusOf={statusOf}
-          canSpend={canSpend()}
-          isDM={isDM}
-          onSpend={handleSpend}
-          onApprove={handleApprove}
-          onBuyback={handleBuyback}
-        />
+        <PathSection key={path.id} path={path} axis={macroTab} statusOf={statusOf} canSpend={canSpend()} isDM={isDM} onSpend={handleSpend} onApprove={handleApprove} onBuyback={handleBuyback} />
       ))}
 
       {saving && (
