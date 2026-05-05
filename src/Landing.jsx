@@ -225,12 +225,14 @@ export default function Landing({ user, darkMode, setDarkMode }) {
         .select('*')
         .eq('user_id', user.id);
       if (error) throw error;
-      if (data) setSavedChars(data.map(row => ({
-        ...row.data,
-        id: row.id,
-        status: row.status,
-        campaign_id: row.campaign_id,
-      })));
+      if (data) setSavedChars(data
+  .filter(row => row.status !== 'rejected')
+  .map(row => ({
+    ...row.data,
+    id: row.id,
+    status: row.status,
+    campaign_id: row.campaign_id,
+  })));
     } catch (err) {
       console.error('Fetch error:', err.message);
     } finally {
