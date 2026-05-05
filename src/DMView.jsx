@@ -164,6 +164,23 @@ function ChatPanel({ session, onClose, isDM }) {
   );
 }
 
+<div style={{ marginBottom: 16 }}>
+  <div style={{ ...label8(), marginBottom: 10 }}>Ability Points</div>
+  <div style={{ display: 'flex', gap: 16 }}>
+    {[['apCurrent', 'AP Current'], ['apTotal', 'AP Total']].map(([key, lbl]) => (
+      <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ fontSize: 9, color: COLORS.muted, fontFamily: "'Cinzel', serif", width: 70 }}>{lbl}</div>
+        <input
+          type="number" min="0"
+          value={data[key] || 0}
+          onChange={e => set(key, parseInt(e.target.value) || 0)}
+          style={{ width: 50, background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 6px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }}
+        />
+      </div>
+    ))}
+  </div>
+</div>
+
 // ─── CHARACTER EDITOR ─────────────────────────────────────────────────────────
 function CharacterEditor({ char, onSave, onClose }) {
   const [data, setData] = useState({ ...char });
