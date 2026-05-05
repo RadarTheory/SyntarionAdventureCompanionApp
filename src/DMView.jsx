@@ -446,19 +446,85 @@ function MapManager({ campaign }) {
 }
 
 function MusicPanel() {
-  const filePath = "AI Orchestra - Crested.wav";
+  const tracks = [
+    {
+      title: "AI Orchestra - Crested",
+      category: "ambient",
+      file_path: "AI Orchestra - Crested.wav"
+    },
+    {
+      title: "AI Orchestra - The Cove",
+      category: "exploration",
+      file_path: "AI Orchestra - The Cove.wav"
+    },
+    {
+      title: "AI Orchestra - Back in the Swing",
+      category: "tavern",
+      file_path: "AI Orchestra - Back in the Swing.wav"
+    }
+  ];
 
-  const musicUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/music/${filePath}`;
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("all");
+  const [currentTrack, setCurrentTrack] = useState(tracks[0]);
+
+  const getMusicUrl = (filePath) =>
+    src={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/music/${encodeURIComponent(currentTrack.file_path)}`}
+
+  const filteredTracks = tracks.filter(track => {
+    const matchesSearch = track.title.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = category === "all" || track.category === category;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div>
       <div style={{ ...label8(), marginBottom: 12 }}>Music Library</div>
 
+      <input
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Search music..."
+        style={{
+          width: "100%",
+          marginBottom: 12,
+          background: COLORS.card,
+          border: `1px solid ${COLORS.border}`,
+          borderRadius: 6,
+          padding: "10px 12px",
+          color: COLORS.text,
+          fontFamily: "Georgia, serif"
+        }}
+      />
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+        {["all", "ambient", "combat", "exploration", "dungeon", "tavern", "boss"].map(cat => (
+          <button
+            key={cat}
+            onClick={() => setCategory(cat)}
+            style={{
+              background: category === cat ? COLORS.magicBg : "transparent",
+              border: `1px solid ${category === cat ? COLORS.magic : COLORS.border}`,
+              borderRadius: 4,
+              padding: "6px 10px",
+              color: category === cat ? COLORS.magicText : COLORS.dim,
+              cursor: "pointer",
+              fontFamily: "'Cinzel', serif",
+              fontSize: 8,
+              textTransform: "uppercase"
+            }}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
       <div style={{
         background: COLORS.card,
         border: `1px solid ${COLORS.border}`,
         borderRadius: 8,
-        padding: 16
+        padding: 16,
+        marginBottom: 16
       }}>
         <div style={{
           fontFamily: "'Cinzel', serif",
@@ -466,14 +532,45 @@ function MusicPanel() {
           color: COLORS.text,
           marginBottom: 10
         }}>
-          AI Orchestra - Crested
+          Now Playing: {currentTrack.title}
         </div>
 
-        <audio controls src={musicUrl} style={{ width: '100%' }} />
+        <audio
+          controls
+          src={getMusicUrl(currentTrack.file_path)}
+          style={{ width: "100%" }}
+        />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {filteredTracks.map(track => (
+          <button
+            key={track.file_path}
+            onClick={() => setCurrentTrack(track)}
+            style={{
+              textAlign: "left",
+              background: currentTrack.file_path === track.file_path ? COLORS.magicBg : COLORS.card,
+              border: `1px solid ${currentTrack.file_path === track.file_path ? COLORS.magic : COLORS.border}`,
+              borderRadius: 6,
+              padding: "10px 12px",
+              color: COLORS.text,
+              cursor: "pointer",
+              fontFamily: "Georgia, serif"
+            }}
+          >
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11 }}>
+              {track.title}
+            </div>
+            <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 4 }}>
+              {track.category}
+            </div>
+          </button>
+        ))}
       </div>
     </div>
   );
 }
+
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN DM VIEW
 // ═════════════════════════════════════════════════════════════════════════════
