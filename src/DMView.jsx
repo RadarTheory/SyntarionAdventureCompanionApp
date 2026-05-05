@@ -469,7 +469,7 @@ function MusicPanel() {
   const [currentTrack, setCurrentTrack] = useState(tracks[0]);
 
   const getMusicUrl = (filePath) =>
-    src={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/music/${encodeURIComponent(currentTrack.file_path)}`}
+    `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/music/${encodeURIComponent(filePath)}`;
 
   const filteredTracks = tracks.filter(track => {
     const matchesSearch = track.title.toLowerCase().includes(search.toLowerCase());
@@ -537,7 +537,7 @@ function MusicPanel() {
 
         <audio
           controls
-          src={getMusicUrl(currentTrack.file_path)}
+          src={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/music/${encodeURIComponent(currentTrack.file_path)}`}
           style={{ width: "100%" }}
         />
       </div>
