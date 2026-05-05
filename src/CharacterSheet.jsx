@@ -203,6 +203,95 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
         </div>
       );
 
+      const racialTraits = getRacialTraits(char.race, char.rv, char.pmV);
+
+{racialTraits && (
+  <>
+    <SectionHead>Racial Traits</SectionHead>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+
+      {/* Passive */}
+      {racialTraits.passive && (
+        <div style={{
+          background: COLORS.card,
+          border: `1px solid ${COLORS.border}`,
+          borderRadius: 8,
+          padding: '12px 14px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <span style={{
+              fontSize: 7,
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              fontFamily: "'Cinzel', serif",
+              color: COLORS.muted,
+              background: 'rgba(240,238,235,0.08)',
+              border: `1px solid ${COLORS.border}`,
+              borderRadius: 3,
+              padding: '2px 6px',
+            }}>Passive</span>
+            <span style={{
+              fontFamily: "'Cinzel', serif",
+              fontSize: 12,
+              fontWeight: 700,
+              color: COLORS.text,
+              letterSpacing: '0.04em',
+            }}>{racialTraits.passive.name}</span>
+          </div>
+          <p style={{
+            fontSize: 12,
+            color: COLORS.textSub,
+            fontFamily: 'Georgia, serif',
+            lineHeight: 1.7,
+            margin: 0,
+          }}>{racialTraits.passive.text}</p>
+        </div>
+      )}
+
+      {/* Active */}
+      {racialTraits.active && (
+        <div style={{
+          background: COLORS.card,
+          border: `1px solid ${COLORS.border}`,
+          borderRadius: 8,
+          padding: '12px 14px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <span style={{
+              fontSize: 7,
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              fontFamily: "'Cinzel', serif",
+              color: COLORS.deity,
+              background: COLORS.deityBg,
+              border: `1px solid ${COLORS.deity}`,
+              borderRadius: 3,
+              padding: '2px 6px',
+            }}>Active · Once per rest</span>
+            <span style={{
+              fontFamily: "'Cinzel', serif",
+              fontSize: 12,
+              fontWeight: 700,
+              color: COLORS.text,
+              letterSpacing: '0.04em',
+            }}>{racialTraits.active.name}</span>
+          </div>
+          <p style={{
+            fontSize: 12,
+            color: COLORS.textSub,
+            fontFamily: 'Georgia, serif',
+            lineHeight: 1.7,
+            margin: 0,
+          }}>{racialTraits.active.text}</p>
+        </div>
+      )}
+
+    </div>
+  </>
+)}
+
       case 'background': return (
         <div>
           <SectionHead>Character Boon</SectionHead>
