@@ -169,9 +169,9 @@ function CharCard({ char, isMobile, isOwned, isClaimed, onClaim }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
         <StatusBadge status={char.status} />
-        {!isClaimed && !isOwned && (
-          <button
-            onClick={() => onClaim(char)}
+        {!isClaimed && !isOwned && char.status !== 'rejected' && char.status !== 'approved' && (
+        <button
+          onClick={() => onClaim(char)}
             style={{
               background: 'transparent',
               border: `1px solid rgba(26,23,20,0.2)`,
@@ -207,7 +207,7 @@ export default function Roster({ user, userChar, onHome }) {
   const fetchAll = async () => {
     setLoading(true);
     const { data } = await supabase.from('characters').select('*');
-    if (data) setAllChars(data);
+if (data) setAllChars(data.filter(c => c.status !== 'rejected'));
     setLoading(false);
   };
 

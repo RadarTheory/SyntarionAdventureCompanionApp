@@ -208,7 +208,8 @@ function CharCard({ char, isMobile, getCampaignLabel, onSelect }) {
 
   return (
     <button
-      onClick={() => onSelect(char)}
+      onClick={() => char.status !== 'rejected' && char.status !== 'approved' ? onSelect(char) : null}
+      disabled={char.status === 'rejected' || char.status === 'approved'}
       style={{
         width: '100%',
         background: '#ffffff',
