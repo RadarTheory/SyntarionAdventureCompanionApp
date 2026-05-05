@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from './supabaseClient';
+import { supabase } from './SupabaseClient';
 import { useDevice } from './useDevice';
 import { COLORS, CAMPAIGNS, ALL_CLASSES, ALL_STATS, getRaceDisplay } from './constants';
 

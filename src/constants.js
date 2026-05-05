@@ -320,6 +320,18 @@ export const PAMORPH_LORE = {
 };
 
 export const RACIAL_TRAITS = {
+  addamar: {
+    passive: {
+      name: 'Unbound Adaptation',
+      text: '...',
+    },
+    active: {
+      Veridoran: {
+        name: 'Court Conditioning',
+        text: '...',
+      },
+    },
+  }, 
 
   addamar: {
     passive: {
@@ -327,7 +339,7 @@ export const RACIAL_TRAITS = {
       text: "Humans do not specialize. They survive by refusing to be one thing. When you use a stat in a way it was not designed for, you do not take the standard penalty for crossing disciplines. You were always going to find another way.",
     },
     variants: {
-      Veridoran:  { name: 'Court Conditioning', text: "Once per rest, when formal pressure, public judgment, or official scrutiny would impose a penalty, you may roll composure. On a success, ignore that penalty. They were looking for a crack. You didn't give them one." },
+      Veridoran:  { name: 'Court Conditioning', text: "Once per rest, when formal pressure, public judgment, or official scrutiny would impose a penalty, you may roll composure. On a success, ignore that penalty." },
       Brunar:     { name: 'Hospitable Bond',    text: "Once per rest, after genuinely extending food, shelter, passage, or trade to someone, you may roll to sense or shift their disposition. On a success, gain one useful truth about them or secure one small, sincere favor." },
       Matekwan:   { name: 'Ancestral Chant',    text: "Once per rest, when standing on cultivated, sacred, or inherited ground, you may roll to read what the place is carrying. On a success, learn whether danger, grief, or unfinished duty is present — and roughly how old it is." },
       "Vàld":     { name: 'Iron Nerve',         text: "Once per rest, when fear, rough conditions, or violent motion would impose a penalty, you may roll to hold steady. On a success, ignore that penalty. The Vàld do not perform calm. They are built for it." },

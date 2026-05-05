@@ -352,7 +352,8 @@ export default function StepRace({
                     }}>
                       {resolveDesc(r, rv, pmV)}
                     </p>
-
+                    <TraitBlock raceId={r.id} rv={rv} pmV={pmV} />
+        
                     {/* Variants (non-Pa'morph) */}
                     {r.variants?.length > 0 && !r.isPamorph && (
                       <div style={{ marginBottom: 14 }}>
