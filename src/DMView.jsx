@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from './supabaseClient';
 import { useDevice } from './useDevice';
 import { COLORS, CAMPAIGNS, ALL_CLASSES, ALL_STATS, getRaceDisplay } from './constants';
+import ItemCatalog from './ItemCatalog';
 
 const DM_USER_ID = import.meta.env.VITE_DM_USER_ID;
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
@@ -444,10 +445,39 @@ function MapManager({ campaign }) {
   );
 }
 
+function MusicPanel() {
+  const filePath = "AI Orchestra - Crested.wav";
+
+  const musicUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/music/${filePath}`;
+
+  return (
+    <div>
+      <div style={{ ...label8(), marginBottom: 12 }}>Music Library</div>
+
+      <div style={{
+        background: COLORS.card,
+        border: `1px solid ${COLORS.border}`,
+        borderRadius: 8,
+        padding: 16
+      }}>
+        <div style={{
+          fontFamily: "'Cinzel', serif",
+          fontSize: 12,
+          color: COLORS.text,
+          marginBottom: 10
+        }}>
+          AI Orchestra - Crested
+        </div>
+
+        <audio controls src={musicUrl} style={{ width: '100%' }} />
+      </div>
+    </div>
+  );
+}
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN DM VIEW
 // ═════════════════════════════════════════════════════════════════════════════
-const DM_TABS = ['Inbox', 'Characters', 'Campaigns', 'Scribe', 'Memory'];
+const DM_TABS = ['Inbox', 'Characters', 'Campaigns', 'Scribe', 'Memory', 'Catalog', 'Music'];
 
 export default function DMView({ onHome }) {
   const { isMobile } = useDevice();
@@ -550,7 +580,9 @@ export default function DMView({ onHome }) {
 
   const renderTab = () => {
     switch (activeTab) {
-
+      
+      case 'Catalog': return <ItemCatalog />;
+      case 'Music': return <MusicPanel />;
       case 'Inbox':
         return (
           <div>
@@ -564,6 +596,7 @@ export default function DMView({ onHome }) {
                 {showArchive ? '← Active' : '⌂ Archive'}
               </button>
             </div>
+            
 
             {displayedMessages.length === 0 ? (
               <div style={{ background: COLORS.card, border: `1px dashed ${COLORS.border}`, borderRadius: 8, padding: '40px 20px', textAlign: 'center' }}>
