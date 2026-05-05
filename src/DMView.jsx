@@ -164,22 +164,7 @@ function ChatPanel({ session, onClose, isDM }) {
   );
 }
 
-<div style={{ marginBottom: 16 }}>
-  <div style={{ ...label8(), marginBottom: 10 }}>Ability Points</div>
-  <div style={{ display: 'flex', gap: 16 }}>
-    {[['apCurrent', 'AP Current'], ['apTotal', 'AP Total']].map(([key, lbl]) => (
-      <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{ fontSize: 9, color: COLORS.muted, fontFamily: "'Cinzel', serif", width: 70 }}>{lbl}</div>
-        <input
-          type="number" min="0"
-          value={data[key] || 0}
-          onChange={e => set(key, parseInt(e.target.value) || 0)}
-          style={{ width: 50, background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 6px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }}
-        />
-      </div>
-    ))}
-  </div>
-</div>
+
 
 // ─── CHARACTER EDITOR ─────────────────────────────────────────────────────────
 function CharacterEditor({ char, onSave, onClose }) {
@@ -200,7 +185,7 @@ function CharacterEditor({ char, onSave, onClose }) {
   const set = (key, val) => setData(prev => ({ ...prev, [key]: val }));
   const setStat = (key, val) => setData(prev => ({ ...prev, stats: { ...prev.stats, [key]: parseInt(val) || 8 } }));
 
-  return (
+    return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,8,6,0.8)', backdropFilter: 'blur(6px)', zIndex: 150, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#13100d', border: `1px solid rgba(240,238,235,0.12)`, borderRadius: 14, padding: '28px 32px', maxWidth: 560, width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
@@ -233,8 +218,25 @@ function CharacterEditor({ char, onSave, onClose }) {
             }
           </div>
         ))}
-        <div style={{ ...label8(), marginBottom: 10 }}>Stats</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div style={{ marginBottom: 16 }}>
+  <div style={{ ...label8(), marginBottom: 10 }}>Ability Points</div>
+  <div style={{ display: 'flex', gap: 16 }}>
+    {[['apCurrent', 'AP Current'], ['apTotal', 'AP Total']].map(([key, lbl]) => (
+      <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ fontSize: 9, color: COLORS.muted, fontFamily: "'Cinzel', serif", width: 70 }}>{lbl}</div>
+        <input
+          type="number" min="0"
+          value={data[key] || 0}
+          onChange={e => set(key, parseInt(e.target.value) || 0)}
+          style={{ width: 50, background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 6px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }}
+        />
+      </div>
+    ))}
+  </div>
+</div>
+
+<div style={{ ...label8(), marginBottom: 10 }}>Stats</div>
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {ALL_STATS.map(s => (
             <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ fontSize: 9, color: COLORS.muted, fontFamily: "'Cinzel', serif", width: 60 }}>{s.label}</div>
