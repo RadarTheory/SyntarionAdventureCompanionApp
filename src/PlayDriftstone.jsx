@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from './SupabaseClient';
+import { supabase } from './supabaseClient';
 
 // ─── SVG ICON ─────────────────────────────────────────────────────────────────
 function HeartstoneSVG({ size = 64, glow = false, color = '#e8c84a' }) {
