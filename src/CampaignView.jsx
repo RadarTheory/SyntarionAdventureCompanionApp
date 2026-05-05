@@ -42,7 +42,7 @@ const FULL_TITLES = {
   'I':   'The Investigation of the Corren Mountain Mines',
   'II':  'The Search of Cielo Dorado',
   'III': 'An Offering to Aeirhyd',
-  'IV':  'Frigid Ill in Galekgarde',
+  'IV':  'Frigid Dirge in Galekgarde',
 };
 
 // ─── CAMPAIGN LIST ────────────────────────────────────────────────────────────

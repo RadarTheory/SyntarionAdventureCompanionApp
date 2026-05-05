@@ -7,6 +7,7 @@ import {
 } from './constants';
 import { ScribeConsult, DMConsult } from './ScribeConsult';
 import { supabase } from './supabaseClient';
+import AbilityTree from './AbilityTree';
 
 const TABS = [
   { id: 'identity',   label: 'Identity'   },
@@ -15,6 +16,7 @@ const TABS = [
   { id: 'actions',    label: 'Actions'    },
   { id: 'inventory',  label: 'Inventory'  },
   { id: 'consult',    label: 'Consult'    },
+  { id: 'abilities',  label: 'Abilities'  },
 ];
 
 const axisColor = axis => axis === 'magic' ? COLORS.magic     : COLORS.tech;
@@ -131,7 +133,7 @@ function ActionRow({ action, bonus }) {
 export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
   const { isMobile } = useDevice();
   const [activeTab, setActiveTab] = useState('identity');
-
+  const isDM = user?.id === import.meta.env.VITE_DM_USER_ID;
   if (!char) {
     return (
       <div style={{ minHeight: '100vh', background: COLORS.wizard, display: 'flex', alignItems: 'center', justifyContent: 'center', color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
@@ -302,6 +304,9 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
           )}
         </div>
       );
+
+      case 'abilities': return <AbilityTree char={char} onUpdateChar={onUpdateChar} user={user} isDM={false} />;
+      
 
       case 'consult': return (
         <div>

@@ -58,7 +58,7 @@ export const RACES = [
   { id:'trink',     name:'Trink',      sub:'Gnome',      tag:'tech', lean:2,  sub2:'Small · Arcane logic', variants:[], ns:'trink', desc:"Curious to a fault and mechanically gifted. The Trink built half the systems that run Ashendell's lower districts and have filed patents on the other half." },
   { id:'pamorph',   name:"Pa'morph",   sub:'Beast-folk', tag:'any',  lean:0,  sub2:'Choose bloodline below', variants:[], isPamorph:true, ns:'pamorph', desc:"Shape-touched and bloodline-defined, the Pa'morph exist across every corner of Soteria. Their culture varies as widely as their forms — from pack-law territories to city guilds to wilderness enclaves that appear on no official map." },
   { id:'fae',       name:'Fae',        sub:"Faerie",    tag:'magic',lean:-2, sub2:'Arcani potential · Soul-sight', variants:[], ns:'fae', desc:"Fae exist at the intersection of the material and the resonant. They perceive things that others cannot and are occasionally perceived by things that others cannot see." },
-  { id:'djinn',     name:'Djinn',      sub:'Genie',      tag:'magic',lean:-1, sub2:'Efreet · Marid · Djinni · Dao', variants:['Efreet — Wish','Marid — Hex','Djinni — Heal','Dao — Luck'], ns:'djinn', desc:"Born of elemental convergence, the Djinn carry their element's nature in their blood." },
+  { id:'djinn',     name:'Djinn',      sub:'Genie',      tag:'magic',lean:-1, sub2:'Efreet · Marid · Djinni · Dao', variants:['Efreet — Wish','Marid — Hex','Djinni — Heal','Dao — Luck'], ns:'djinn', desc:"Born of supernatural convergence, the Djinn carry their heritage in their blood, but their whim remains unpredictable.." },
   { id:'helianth',  name:'Helianth',   sub:'Tiefling',   tag:'magic',lean:-1, sub2:'Infernal ancestry', variants:[], ns:'helianth', desc:"Infernal blood runs cool in the Helianth — not hot. They are not defined by their ancestry unless they choose to be, and most of them are tired of being defined by it." },
   { id:'seraphan',  name:'Seraphan',   sub:'Aasimar',    tag:'magic',lean:-1, sub2:'Celestial blood', variants:[], ns:'seraphan', desc:"Celestial-blooded and occasionally burdened by it. The Seraphan carry a presence that others read before the Seraphan has spoken." },
   { id:'drakazir',  name:'Drakazir',   sub:'Dragonborn', tag:'any',  lean:0,  sub2:'10 color lineages', variants:['Black','Blue','Brass','Bronze','Copper','Gold','Green','Red','Silver','White'], ns:'drakazir', desc:"Lineage-proud and breath-gifted. The ten lineages have different cultural relationships to the age of steam, but all of them remember when the world was hotter." },
@@ -113,7 +113,7 @@ export const RACE_VARIANT_DESCS = {
   fynlor: {
     Lightfoot: "The Lightfoot Fynlor are the ones who left — the travelers, the door-openers, the people who arrived at the right moment and were already gone before the wrong one. They have a talent for social navigation that larger folk consistently mistake for luck. It is not luck.",
     Stout: "The Stout Fynlor stayed. They built something, kept it, and made it comfortable. They are harder to move than they look and more opinionated about their hearth than any reasonable person expects. The Veinrunner has reached some of their settlements. They have opinions about that too.",
-    default: "A Fynlor without a declared lineage — small, quick, and socially gifted in ways that consistently surprise people who should know better by now.",
+    default: "A Fynlor is small, quick, and gifted in ways that consistently surprise people who should know better by now. They make great burglars!",
   },
 
   djinn: {
@@ -183,6 +183,363 @@ export const PM_MIN = [
   { id:'lutrav',   name:"Lutra'v",   sub:'Otter'      },
   { id:'musteiah', name:'Musteiah',  sub:'Weasel'     },
 ];
+
+// ─── PA'MORPH BLOODLINE LORE ──────────────────────────────────────────────────
+// Drop these into your getRaceDisplay or constants file alongside PM_MAJ / PM_MIN.
+// Usage mirrors the Fynlor pattern: pamorph[bloodlineId] or pamorph.default
+
+export const PAMORPH_LORE = {
+
+  // ── MAJOR BLOODLINES ────────────────────────────────────────────────────────
+
+  aaravok: {
+    default: "The Aaravok are an eagle bloodline, and they have never once stopped acting like it. They arrive first, leave last, and spend the time in between watching everything you thought you were hiding. Their settlements in Hauf and Mistcliff are not accidents of geography — they are vantage points. An Aaravok who seems idle is an Aaravok who has already decided something about you.",
+  },
+
+  kraark: {
+    default: "The Kra'ark are a crow bloodline, and the difference between a crow and an eagle is that a crow is paying attention to what everyone else throws away. They accumulate. Stories, grievances, favors owed, names of people who were rude to them in port cities three years ago. The Ra'kesh kenku clan carries their cultural memory like a held breath. You are welcome among them if you are useful, interesting, or capable of keeping a secret. Ideally all three.",
+  },
+
+  cathvari: {
+    default: "The Cath'vari are a feline bloodline whose prides stretch from the mists of Serenea to the grand courts of Sarazana, and the distance between those two places tells you everything about the range of who they can be. Some hunt in silence through marsh and fog. Others attend diplomatic functions and speak four languages while pretending to only know two. Both consider this completely normal behavior for a cat.",
+  },
+
+  karazelith: {
+    default: "The Kara'zelith are a feline bloodline from the Elseworld, which means they arrived in Soteria carrying memories of a place that no longer exists — or never did, depending on who you ask. They do not grieve it openly. They move through the world with a composed distance that others often mistake for arrogance. It is not arrogance. It is the particular stillness of someone who has already survived a loss most people cannot imagine, and decided to keep going anyway.",
+  },
+
+  lioreth: {
+    default: "The Lioreth are a lion bloodline, and the Cindermane Pride of Soeferus forged them in fire and volcanic stone into something that does not bend. They are not loud about their strength. They do not need to be. A Lioreth in a room changes the room without saying a word — something about the way they stand, like they have already calculated every exit and decided they probably won't need any of them.",
+  },
+
+  taeranari: {
+    default: "The Taer'anari are a canine bloodline, and Lycharrow is their heartwood — the village on the forest stream where they learned what it means to be kin. They are fierce in the way that loyalty makes you fierce: not recklessly, not for glory, but because someone they care about is in the fight. The wolves of Wolf Cave and the warriors of Caerlŷf are cut from the same cloth. They remember who stood beside them. They remember who didn't.",
+  },
+
+  maernethim: {
+    default: "The Maernethim are a lizard bloodline, and their village in Sylvan Grove was built around Baeshra's Altar long before most of the current settlements drew their first walls. They are warriors and shamans and scouts and defenders of things that do not defend themselves. Sinawar Asiini carried that into the Corren Mountain Mines and did not break. That is not a coincidence. That is what a Maernethim is.",
+  },
+
+  bovorin: {
+    default: "The Bovorin are a minotaur bloodline, and they have been underestimated so consistently for so long that they have stopped finding it insulting and started finding it useful. They are not the brutish charge-first creatures of popular legend. They are methodical, deliberate, and possessed of a patience that would alarm you if you understood what it was pointed at. When a Bovorin finally moves, it is because they have been ready for some time.",
+  },
+
+  brawnath: {
+    default: "The Brawnath are a hippo bloodline, and the thing people get wrong about hippos — and about Brawnath — is that they seem slow until suddenly they are not. They are among the most dangerous things in the water and a reasonable threat out of it, and they know this about themselves with a calm, untroubled certainty. A Brawnath does not start conflicts. They do, however, finish them in a way that leaves a lasting impression on the geography.",
+  },
+
+  gajaroi: {
+    default: "The Gajaroi are an elephant bloodline, and they remember. Not metaphorically — they carry lineages of memory that stretch back generations, passed down through story and ceremony until history becomes a thing you can hold. The Loxodon of Gamdon and Eldrathar share their roots, and the Gajaroi honor that inheritance with the particular gravity of people who understand that forgetting is its own kind of violence.",
+  },
+
+  kodan: {
+    default: "The Ködan are a bear bloodline, and the Falorn Fjords shaped them into something that endures. Cold, isolation, the particular cruelty of a winter that does not care about you — all of this built a people who are warm in direct proportion to how hard the world outside their walls is trying to kill everyone. A Ködan hearth is a serious commitment. If they let you near it, you are being told something important.",
+  },
+
+  krokodon: {
+    default: "The Krokodon are a crocodile bloodline, and patience is their inheritance. They have lived near the water's edge long enough to know that most things come to the water eventually. They do not rush. They do not advertise. They watch the surface and they wait, and when they act it is with the absolute conviction of something that has been thinking about this for much longer than you have.",
+  },
+
+  rhainar: {
+    default: "The Rhae'inar are a rhino bloodline, and Gamdon was built in part by their hands and stubbornness. They are a people who plant things — settlements, relationships, traditions — and then decline to leave when someone suggests they should. Paarthurnara Tusgaard did not guard Gamdon's walls because she was assigned to. She guarded them because the idea of not guarding them was simply not something she was willing to entertain.",
+  },
+
+  satyr: {
+    default: "The Satyr are a goat bloodline, though they find the framing reductive. They are Fae-adjacent in ways that make them slippery to categorize — part nature spirit, part mortal, entirely committed to the idea that joy is a serious pursuit and revelry is a form of wisdom. Elmoire exists because they needed somewhere to be fully themselves. They tend to make that place wherever they happen to be standing.",
+  },
+
+  hoshiari: {
+    default: "The Hoshiari are a fox bloodline, and they have a talent for being in exactly the right place at exactly the right moment that is technically explainable but still feels like something else. Haruki Ardentbrin walked into Gamdon's crisis and immediately began making himself useful. Fib Tressere walks into most things and immediately begins assessing them. The Hoshiari are curious, adaptable, and impossible to fully predict — which is, by most accounts, exactly how they prefer it.",
+  },
+
+  // ── MINOR BLOODLINES ────────────────────────────────────────────────────────
+
+  arbor: {
+    default: "The Arbor are a boar bloodline, and they came out of Sylvan Grove with chips on their shoulders the size of old-growth trees. They are stubborn in the specific way of people who have been overlooked enough times to have made a philosophy of it. An Arbor will not back down. Not from an argument, not from a fight, not from a claim they've decided to stake. Whether this is admirable or exhausting depends entirely on whose side you're on.",
+  },
+
+  avali: {
+    default: "The Avali are a songbird bloodline, and they are small and bright and far more observant than anyone gives them credit for. They move through the world collecting things — sounds, stories, faces, the precise tone of voice someone used when they were lying. Their settlements in the Arrana hidden capital are built around the idea that information shared carefully is worth more than information hoarded. They are not naive. They are strategic.",
+  },
+
+  bjoral: {
+    default: "The Bjoral are a badger bloodline, which means they are small, territorial, and in possession of a tenacity that would be alarming in something twice their size. They built Araltum's Summerdale in the forests of Sylvan Grove and declined to leave it no matter who suggested they should. Sir Keir Mordalfus — the only Pa'morph Minor to be knighted by King Aric — is a Murinor, but he trained alongside Bjoral, and that is the highest compliment either bloodline knows how to give.",
+  },
+
+  harelin: {
+    default: "The Harelin are a hare bloodline, and they are faster than you and they know it, which gives their confidence a particular flavor — light, unbothered, almost dancing. They do not stand still long enough for most problems to catch them. This is mostly a survival strategy that has calcified into a personality. The ones who do stop, who do commit to a place or a person, surprise everyone including themselves.",
+  },
+
+  dervir: {
+    default: "The Dervi'r are an elk bloodline, and the Corren Range and its long silences shaped them into something unhurried and difficult to move. They are built for distances — long migrations, long loyalties, long memories of terrain most other creatures gave up on. They are not flashy. They are thorough. A Dervi'r who commits to a path, a cause, or a person has usually already thought about it longer than you'd expect.",
+  },
+
+  fenrik: {
+    default: "The Fenrik are a hyena bloodline, and the laugh is real — they find things funny that others don't, and they find things others find funny not funny at all. They are scavengers in the most honest sense: they see value in what gets left behind, in the margins of things, in the aftermath of other people's big moments. The Brivihan Plains gave them plenty of aftermath to work with. They are cleverer than the reputation and more loyal than the stereotype.",
+  },
+
+  hylori: {
+    default: "The Hylori are a frog and gecko bloodline, which means they adapted to more terrain than most Pa'morph Minor bothered with and are quietly proud of it. They are comfortable in wet places, dry places, dark places, high places. Halfdhen in Caerlŷf's shadow suits them: a city that needs protecting and a people that know how to stay quiet until the moment requires otherwise.",
+  },
+
+  krogharu: {
+    default: "The Kroghari are a monkey bloodline, and they figured out centuries ago that the best view is from somewhere most people can't be bothered to climb. They are at home in the Great Oak Forest, in Yhotun's deep canopy, in any vertical space the flat-footed have written off. They are social in the exhausting, wonderful way of people who genuinely like other people — curious about them, willing to talk, almost impossible to insult without trying very hard.",
+  },
+
+  murinor: {
+    default: "The Murinor are a mouse bloodline, and they have spent most of Soterian history being underestimated by people who later found out that was a mistake. Sir Keir Mordalfus was knighted by King Aric not in spite of being small but because he fought like something that had decided size was someone else's problem. The Murinor of Araltum's Summerdale built a life in the forest and kept it. That is not nothing, it is a huge statement to their resilience.",
+  },
+
+  oryzd: {
+    default: "The Oryzd are a rat bloodline, and the cities know them whether the cities want to or not. They are in the walls, the margins, the places the official maps don't bother to label. They are survivors in the structural sense — the kind of people who have looked at the worst a city can offer and decided to live in it anyway, on their own terms. Lumina's underbelly, the Broil in Ashendell, the shadowed corners of Port Haldane: the Oryzd were there before the paint dried.",
+  },
+
+  testudon: {
+    default: "The Testudon are a tortoise bloodline, and they have outlasted things. Kingdoms, arguments, grudges, fashions — the Testudon have watched most of the things people were certain about become things people are certain they never believed. They are not in a hurry. They have seen what hurry produces. Their elders carry this as a kind of unhurried authority, and their young carry it as a patience that sometimes looks, from the outside, like someone who has already given up. They haven't. They're just waiting.",
+  },
+
+  orylin: {
+    default: "The Orylin are an owl bloodline, and silence is their natural environment. Not uncomfortable silence — productive silence, the silence of someone listening to things you didn't know were making noise. They are drawn to libraries, archives, observatories. Gly'wnfron's Owlin Historical Library is their cathedral. They do not speak often, but when they do, the people in the room tend to stop what they're doing.",
+  },
+
+  ssazaral: {
+    default: "The Ssazaral are a snake bloodline, and the thing about snakes is that they are patient, they are flexible, and they are present in more places than you checked. The Ssazaral have been navigating a world that views their heritage with suspicion for long enough that the navigation itself has become a skill. They are careful, deliberate communicators. They know when a room has decided something about them before they walked in, and they know exactly what to do with that.",
+  },
+
+  lutrav: {
+    default: "The Lutra'v are an otter bloodline, and they are the ones who make difficult things look easy and then seem genuinely confused when you point out that it was difficult. They are at home in the water and comfortable everywhere else, and they approach the world with a playful competence that occasionally tips into showing off, though they would deny this with great sincerity. The coastal settlements and lake towns of Soteria see them often. They tend to improve the atmosphere.",
+  },
+
+  musteiah: {
+    default: "The Musteiah are a weasel bloodline, and the reputation preceded them so thoroughly that they eventually decided to make it useful. They are quick, clever, and they fit into places that seem too small for something with their ambitions. They are excellent in a crisis and occasionally the cause of one, depending on how bored they've been lately. The ones who find something worth caring about — a cause, a crew, a city — become the most effective people in any room they enter.",
+  },
+
+  // ── DEFAULT ─────────────────────────────────────────────────────────────────
+
+  default: "Pa'morph are the children of the beast-blooded — a people shaped by the nature of their bloodline and the world they were born into. They range from the proud major bloodlines of Therienstadt and Sarazana to the smaller but no less formidable minor bloodlines scattered across every continent in Soteria. They are not one thing. They are each of them specifically, irreducibly themselves.",
+};
+
+export const RACIAL_TRAITS = {
+
+  addamar: {
+    passive: {
+      name: 'Unbound Adaptation',
+      text: "Humans do not specialize. They survive by refusing to be one thing. When you use a stat in a way it was not designed for, you do not take the standard penalty for crossing disciplines. You were always going to find another way.",
+    },
+    variants: {
+      Veridoran:  { name: 'Court Conditioning', text: "Once per rest, when formal pressure, public judgment, or official scrutiny would impose a penalty, you may roll composure. On a success, ignore that penalty. They were looking for a crack. You didn't give them one." },
+      Brunar:     { name: 'Hospitable Bond',    text: "Once per rest, after genuinely extending food, shelter, passage, or trade to someone, you may roll to sense or shift their disposition. On a success, gain one useful truth about them or secure one small, sincere favor." },
+      Matekwan:   { name: 'Ancestral Chant',    text: "Once per rest, when standing on cultivated, sacred, or inherited ground, you may roll to read what the place is carrying. On a success, learn whether danger, grief, or unfinished duty is present — and roughly how old it is." },
+      "Vàld":     { name: 'Iron Nerve',         text: "Once per rest, when fear, rough conditions, or violent motion would impose a penalty, you may roll to hold steady. On a success, ignore that penalty. The Vàld do not perform calm. They are built for it." },
+      Pontunean:  { name: 'Ovitic Design',      text: "Once per rest, when examining any constructed thing — machine, bridge, lock, rail, civic structure — you may roll to find where it will give. On a success, identify one flaw, shortcut, or exploitable point." },
+      "Sunoàca":  { name: 'Rite of Offering',  text: "Once per rest, before a difficult roll, you may name something you risk or forfeit. If the table accepts it as real cost, gain +1 to that roll. The offering is made. The result follows." },
+      "Jiro'Ќi": { name: 'Measured Response', text: "Once per rest, after an enemy acts before you in a scene, you may roll to read their method. On a success, gain +1 against that enemy's next related action. You let them move first. That was deliberate." },
+      Varid:      { name: 'Mask of Intent',     text: "Once per rest, when someone attempts to read your motive, mood, or allegiance, you may roll to give them nothing. On a success, they receive no clear answer — not a lie, not a deflection. Simply nothing." },
+      Tachechana: { name: 'Oath-Keeper',        text: "Once per rest, when performing, recognizing, or correcting a custom, greeting, rite, or taboo, you may roll to honor it correctly. On a success, prevent offense or gain genuine trust." },
+      Eryatav:    { name: 'Tsaromen',           text: "Once per rest, when exposed to cold, darkness, fear, or unknown magic, you may roll to read the atmosphere. On a success, learn whether the danger is natural, mortal, or something older." },
+      Rajava:     { name: 'Cosmic Order',       text: "Once per rest, when confusion, illusion, or contradiction would mislead you, you may roll to find what doesn't fit. On a success, identify the thing that doesn't belong — in the room, the story, or the claim." },
+      Ahnkir:     { name: 'Dynastic Tap',       text: "Once per rest, when recalling lineage, law, burial custom, historical ruler, or ancient precedent, you may roll to surface one precise fact or warning. Specific things are the ones that matter." },
+    },
+  },
+
+  durinak: {
+    passive: {
+      name: 'Bedrock Endurance',
+      text: "Dwarves do not complain about physical difficulty. They continue. Reduce all penalties from physical strain, hard labor, and environmental wear by one step. This is not resilience. This is just what they are.",
+    },
+    variants: {
+      Hill:     { name: 'Yewroot Resolve', text: "Once per rest, when long travel, rough ground, or fatigue would impose a penalty, you may roll to keep pace. On a success, ignore that penalty. You have been walking since before this road existed." },
+      Mountain: { name: 'Grimrock Stance', text: "Once per rest, when you would be pushed, knocked prone, or moved against your will, you may roll to plant yourself. On a success, you don't move. Whatever was trying to move you did not succeed." },
+    },
+  },
+
+  telari: {
+    passive: {
+      name: 'Recall Print',
+      text: "The Tel'ari carry inherited memory older than their own lives. When you encounter something connected to ancient history, you automatically know whether it is significant. You may not know why yet. You know that it is.",
+    },
+    variants: {
+      Wood:    { name: 'Rootlead',      text: "Once per rest, when natural terrain, plant life, or animal behavior carries information, you may roll to read it. On a success, learn one thing the forest already knows." },
+      Dark:    { name: 'Deepsight',     text: "Once per rest, when darkness, concealment, or hidden movement would impose a penalty, you may roll to pierce it. On a success, ignore that penalty. You are more comfortable here than they expected." },
+      Eladrin: { name: 'Seasonal Turn', text: "Once per rest, when your emotional state or environment would hinder you, you may roll to shift with it deliberately. On a success, change your seasonal form and treat the change as an advantage rather than a liability." },
+    },
+  },
+
+  othrod: {
+    passive: {
+      name: 'Unrelent',
+      text: "When you hold a position or objective under pressure, you do not suffer morale penalties for being outnumbered or outmatched. The situation is noted. You are still here.",
+    },
+    variants: {
+      "Kul'kal Rakhar": { name: 'Marsh Patience', text: "Once per rest, when concealment, fog, water, or unstable ground would impose a penalty, you may roll to move through it cleanly. On a success, ignore that penalty. The environment is on your side. It usually is." },
+      Grothmogg:        { name: 'Altered Form',   text: "Once per rest, when strain, mutation, or unnatural alteration would impose a penalty, you may roll to stabilize. On a success, reduce the effect by one step. You decide what your body does." },
+      Telrok:           { name: 'Border Sense',   text: "Once per rest, when entering unfamiliar or contested ground, you may roll to read it before it reads you. On a success, learn one immediate threat, exit, or advantage." },
+      Jotunnar:         { name: 'War Mass',       text: "Once per rest, when your size or weight would break, shove, or overwhelm something, you may roll to press through. On a success, reduce the difficulty by one step." },
+    },
+  },
+
+  terraxian: {
+    passive: {
+      name: 'Groame',
+      text: "A Terraxian at rest is already exerting force. Reduce all penalties from impact, forced movement, and physical pressure by one step. The world gives way to them more than it admits.",
+    },
+    active: {
+      name: 'Deep Roots',
+      text: "Once per rest, when you brace, anchor, or take a stance, you may roll to transfer your mass into the ground itself. On a success, you cannot be moved, knocked prone, or repositioned by any force this scene — and allies within close range reduce incoming forced movement by one step. You are not holding the line. You are the line.",
+    },
+  },
+
+  fynlor: {
+    passive: {
+      name: 'Fortunate Footing',
+      text: "Attacks, grapples, and effects that require pinning or restraining you are made at –1. They'll try to work out how later.",
+    },
+    variants: {
+      Lightfoot: { name: 'Crowd Blend', text: "Once per rest, when moving through a crowd, clutter, or busy space would impose a penalty, you may roll to pass through unnoticed. On a success, ignore that penalty. No one saw them. They rarely do." },
+      Stout:     { name: 'Hardy Make',  text: "Once per rest, when poison, sickness, or physical discomfort would impose a penalty, you may roll to endure it. On a success, reduce the effect by one step. They will complain about this later. But they endure." },
+    },
+  },
+
+  trink: {
+    passive: {
+      name: 'Hidden Function',
+      text: "When something has a hidden component — a mechanism, a secondary purpose, a false surface — you are aware that it exists even before you find it. You may not know what it does. You know it is there.",
+    },
+    active: {
+      name: 'Aristocratic Craftsense',
+      text: "Once per rest, when examining any crafted thing — mechanism, lock, contract, ledger, ornament — you may roll to see past its surface. On a success, identify one: flaw, hidden function, maker's mark, or true value. One thing. The right thing.",
+    },
+  },
+
+  pamorph: {
+    passive: {
+      name: 'Bloodline Sense',
+      text: "You cannot be surprised by your natural environment — terrain, weather, or conditions native to your bloodline's habitat do not impose surprise penalties on you. The instinct fires before the thought forms.",
+    },
+    bloodlines: {
+      aaravok:    { name: 'Skymark',           text: "Once per rest, when elevation, wind, or open sky would aid your perception or movement, you may roll to use it. On a success, reduce the difficulty by one step. The Aaravok were watching long before you looked up." },
+      kraark:     { name: 'Voice Mimicry',     text: "Once per rest, after hearing a voice, call, signal, or sound, you may roll to reproduce it. On a success, replicate it convincingly for the current scene. The Kra'ark ear is precise and the Kra'ark memory is long." },
+      cathvari:   { name: 'Clandestine Prowl', text: "Once per rest, when quiet movement, concealment, or stalking would impose a penalty, you may roll to move unseen. On a success, ignore that penalty. You were always going to get there first." },
+      karazelith: { name: 'Elsestep',          text: "Once per rest, when unfamiliar space, shifting terrain, or spatial confusion would hinder you, you may roll to correct your position. On a success, ignore that penalty. They are never as lost as they look." },
+      lioreth:    { name: 'Pride Force',       text: "Once per rest, when holding ground or protecting an ally in close range, you may roll to impose your presence. On a success, one hostile target takes –1 to its next roll. They felt it before you moved." },
+      taeranari:  { name: 'Pack Instinct',     text: "Once per rest, when acting directly alongside an ally who is also committed to the action, you may roll to coordinate without speaking. On a success, either you or that ally gains +1 to the current action." },
+      maernethim: { name: 'Scale Stillness',   text: "Once per rest, when heat, exhaustion, environmental pressure, or physical stress would impose a penalty, you may roll to regulate. On a success, reduce the effect by one step. Sinawar Asiini went into the Corren Mountain Mines and came back out. That is not a coincidence." },
+      bovorin:    { name: 'Labyrinth Mind',    text: "Once per rest, when navigating, tracking, or escaping complex or confusing terrain, you may roll to find the path. On a success, identify one correct route or exit. They have done this before. Many times." },
+      brawnath:   { name: 'River Mass',        text: "Once per rest, when resisting force in water or close quarters, you may roll to hold position. On a success, ignore forced movement for this instance. Whatever tried to move them now has to reconsider." },
+      gajaroi:    { name: 'Ancestral Recall',  text: "Once per rest, when memory of lineage, route, tradition, or inherited knowledge would help you understand a situation, you may roll to surface what you already carry. On a success, gain one specific, usable fact or warning." },
+      kodan:      { name: 'Hearth Guard',      text: "Once per rest, when an ally near you would suffer harm or pressure, you may roll to step into it. On a success, reduce the effect against that ally by one step. They didn't wait to be asked." },
+      krokodon:   { name: 'Death Roll',        text: "Once per rest, when you successfully grapple or take hold of a creature, you may roll to wrench and spin. On a success, the target is knocked prone or takes minor damage. They waited a long time for that. It was worth it." },
+      rhainar:    { name: 'Rooted Charge',     text: "Once per rest, when breaking through, charging, or refusing to yield would apply, you may roll to drive forward. On a success, reduce the difficulty by one step. This is not aggression. This is just the direction they move." },
+      satyr:      { name: 'Revel Wisdom',      text: "Once per rest, when music, celebration, mischief, or social ease would shift a scene, you may roll to loosen what's held tight. On a success, reduce hostility or improve the mood by one step." },
+      hoshiari:   { name: 'Cunning Opening',   text: "Once per rest, when timing, deception, or sudden opportunity would let you act, you may roll to take it. On a success, gain +1 to that action. The Hoshiari do not wait for opportunity. They find it before it announces itself." },
+      arbor:      { name: 'Tusk Stubborn',     text: "Once per rest, when pushed back, intimidated, or pressured to abandon your position, you may roll to dig in. On a success, ignore that effect. Those chips are structural now." },
+      avali:      { name: 'Bright-Ear',        text: "Once per rest, when tone, rhythm, or sound would reveal what words are hiding, you may roll to listen past the surface. On a success, learn one useful clue about intent, mood, or deception." },
+      bjoral:     { name: 'Burrow Tenacity',   text: "Once per rest, when confined space, resistance, or stubborn opposition would hinder you, you may roll to push through it. On a success, reduce the effect by one step." },
+      harelin:    { name: 'Startlebound',      text: "Once per rest, when danger appears suddenly or you are caught off guard, you may roll to spring away before the moment fully registers. On a success, reposition without penalty. It has already happened by the time they think about it." },
+      dervir:     { name: 'Longstride',        text: "Once per rest, when distance, rough terrain, or pursuit would impose a penalty, you may roll to keep moving. On a success, ignore that penalty. The Corren Range shaped the Dervi'r for exactly this." },
+      fenrik:     { name: 'Aftermath Eye',     text: "Once per rest, when reading the remains of a conflict, a broken scene, or abandoned goods, you may roll to interpret what happened most recently. On a success, learn one useful fact about what took place and when." },
+      hylori:     { name: 'Clingstep',         text: "Once per rest, when wet ground, walls, uneven surfaces, or sudden instability would hinder you, you may roll to hold. On a success, ignore that penalty." },
+      krogharu:   { name: 'Canopy Hands',      text: "Once per rest, when climbing, gripping, balancing, or moving through vertical space would impose a penalty, you may roll to adapt. On a success, ignore that penalty." },
+      murinor:    { name: 'Small Courage',     text: "Once per rest, when your size would cause you to be overlooked, trapped, or underestimated, you may roll to use that as the advantage it actually is. On a success, gain +1 to the current action." },
+      oryzd:      { name: 'City Survivor',     text: "Once per rest, when filth, crowds, alleyways, ruins, or urban danger would impose a penalty, you may roll to endure it. On a success, ignore that penalty." },
+      testudon:   { name: 'Shell Patience',    text: "Once per rest, when you hold your position, brace, or wait rather than act, you may roll to absorb incoming pressure. On a success, reduce incoming harm or forced effect by one step." },
+      orylin:     { name: 'Silent Watch',      text: "Once per rest, when darkness, distance, or quiet conceals information you need, you may roll to observe it. On a success, learn one thing that was trying not to be noticed." },
+      ssazaral:   { name: 'Coiled Read',       text: "Once per rest, when body language, stillness, or hidden intent would reveal what a creature is about to do, you may roll to read it before it moves. On a success, learn whether the creature intends harm, flight, or deception." },
+      lutrav:     { name: 'Waterplay',         text: "Once per rest, when swimming, slipping free, or moving through water would impose a penalty, you may roll to move through it like it isn't one. On a success, ignore that penalty." },
+      musteiah:   { name: 'Narrow Escape',     text: "Once per rest, when trapped, cornered, or pressed into a space with no obvious exit, you may roll to find one that wasn't obvious. On a success, escape the restriction for this instance." },
+    },
+  },
+
+  fae: {
+    passive: {
+      name: 'Glamour Skin',
+      text: "Minor illusions, enchantments, and glamours do not affect you — not because you resist them, but because your perception already operates in a register where the seam between real and constructed is visible. You see the edge of the trick. You always have.",
+    },
+    active: {
+      name: 'True-Name Sense',
+      text: "Once per rest, after a creature speaks or names itself, you may roll to sense the naming. On a success, learn whether the name is true, false, hidden, or incomplete. Names are not labels. They are agreements.",
+    },
+  },
+
+  djinn: {
+    passive: {
+      name: 'Convergence Backlash',
+      text: "Whenever an enemy succeeds on a roll that directly harms or impedes you, they take –1 to their next roll. The victory cost more than they realized. It always does.",
+    },
+    variants: {
+      'Efreet — Wish': { name: 'Wishfire',     text: "Once per rest, when you succeed on a roll, you may push the result further. On a success, gain +1 to the effect — and take –1 to your next roll. The fire was worth it. It always feels like it was worth it." },
+      'Marid — Hex':   { name: 'Hexwater',     text: "Once per rest, when an enemy fails a roll within range, you may roll to mark that failure as something they will carry forward. On a success, the enemy takes –1 to the next related roll." },
+      'Djinni — Heal': { name: 'Healing Wind', text: "Once per rest, when you or an ally within range would suffer harm, you may roll to redirect some of what was coming. On a success, reduce the harm by one step." },
+      'Dao — Luck':    { name: 'Luckstone',    text: "Once per rest, after failing a roll by a narrow margin, you may roll to catch the almost. On a success, treat the failure as a partial success. They were paying attention to the gap. They found it." },
+    },
+  },
+
+  helianth: {
+    passive: {
+      name: 'Infernal Bearing',
+      text: "Intimidation, coercion, and social pressure imposed by NPCs are reduced by one step against you. They have looked at worse than this. They did not flinch then either.",
+    },
+    active: {
+      name: 'Infernal Composure',
+      text: "Once per rest, when you fail a roll against fear, charm, or coercion, you may roll again. On a success, negate the effect for this instance. They have been through worse than this person. They will not apologize now.",
+    },
+  },
+
+  seraphan: {
+    passive: {
+      name: 'Celestial Weight',
+      text: "Creatures that would deceive, manipulate, or coerce you take –1 to those rolls. They felt the weight before they started. Some of them chose a different target.",
+    },
+    active: {
+      name: 'Celestial Presence',
+      text: "Once per rest, when a creature you can see targets you or an ally with harmful intent, you may roll to make that intent feel like a mistake before it has been fully committed to. On a success, the creature takes –1 to that roll. It hesitated. They always hesitate.",
+    },
+  },
+
+  drakazir: {
+    passive: {
+      name: 'Draconic Presence',
+      text: "Creatures that have not faced you before take –1 to their first hostile roll against you. They knew what you were before you moved. They hoped it wouldn't matter.",
+    },
+    variants: {
+      Black:  { name: 'Caustic Breath',   text: "Once per rest, when you hit a creature, you may roll to dissolve rather than simply strike. On a success, reduce its defense by one step for this instance. The damage goes through. The protection doesn't." },
+      Blue:   { name: 'Stormcall',        text: "Once per rest, when acting in open air or unstable conditions, you may roll to surge with something the sky is already doing. On a success, one enemy within range takes –1 to its next roll." },
+      Brass:  { name: 'Sulfur Cloud',     text: "Once per rest, when you move through close range, you may roll to leave something in the air behind you. On a success, one enemy in the affected area takes –1 to its next action." },
+      Bronze: { name: 'Molten Flow',      text: "Once per rest, when striking metal — armor, weapon, mechanism — you may roll to heat it through the impact. On a success, reduce its effectiveness by one step for this scene." },
+      Copper: { name: 'Rustbite',         text: "Once per rest, when targeting a constructed object, weapon, or mechanism, you may roll to degrade it at the point of contact. On a success, reduce its function by one step." },
+      Gold:   { name: 'Golden Flare',     text: "Once per rest, when you or an ally is targeted, you may roll to release light that costs the person looking at it. On a success, the attacker takes –1 to that roll. They saw it coming. That was the point." },
+      Green:  { name: 'Venom Word',       text: "Once per rest, when you speak directly to a hostile creature, you may roll to put something in the words that isn't meaning. On a success, the creature takes –1 to its next mental or social roll." },
+      Red:    { name: 'Rageheat',         text: "Once per rest, when you deal damage, you may roll to leave heat behind it that doesn't stop when the strike does. On a success, deal minor additional damage or impose –1 to the target's next physical roll." },
+      Silver: { name: 'Silver Frost',     text: "Once per rest, when a creature moves near you, you may roll to chill its momentum at the point of passing. On a success, reduce its movement by one step. The cold has opinions about speed." },
+      White:  { name: 'Glass Refraction', text: "Once per rest, when you would be targeted or clearly observed, you may roll to distort what they are looking at. On a success, impose –1 on the attacker's roll or ignore a visibility penalty." },
+    },
+  },
+
+  nazari: {
+    passive: {
+      name: 'Tidal Body',
+      text: "Environmental conditions — temperature, pressure, weather, water — do not impose automatic penalties on you. You were designed for more than one world. You operate in both.",
+    },
+    active: {
+      name: 'Adaptation',
+      text: "Once per rest, when a specific environmental condition would impose a situational penalty beyond your passive range, you may roll to adapt to it before it becomes one. On a success, ignore that penalty for this scene.",
+    },
+  },
+
+  chronison: {
+    passive: {
+      name: 'Built Directive',
+      text: "Penalties from hunger, thirst, exhaustion, and environmental exposure do not apply to you. The body has a directive. It follows the directive.",
+    },
+    variants: {
+      Defensive:         { name: 'Last Stand Protocol', text: "Once per rest, when you would be reduced to zero function or forced to disengage, you may roll to hold. On a success, remain active for one additional exchange at reduced capacity. The directive has not been completed." },
+      'Corrupted/Rogue': { name: 'System Override',     text: "Once per rest, when a psychological or sensory limitation would impose a penalty that your construction should be immune to, you may roll to override it at the system level. On a success, ignore that penalty for this scene." },
+      Specialist:        { name: 'Directive Focus',     text: "Once per rest, when performing a task directly within your area of specialization, you may roll to enter a heightened processing state. On a success, reduce the difficulty by one step and ignore one source of environmental interference." },
+    },
+  },
+
+};
+
 
 // ═════════════════════════════════════════════════════════════════════════════
 // NAME LIBRARIES
@@ -980,4 +1337,27 @@ export function getRaceDisplay(raceId, rv, pmV) {
   }
   if (rv) return `${rd.name} · ${rv}`;
   return rd.name;
+}
+
+export function getRacialTraits(raceId, rv, pmV) {
+  const entry = RACIAL_TRAITS[raceId];
+  if (!entry) return null;
+
+  const passive = entry.passive || null;
+  let active = null;
+
+  if (raceId === 'pamorph') {
+    // Pa'morph: active comes from bloodline
+    if (pmV && entry.bloodlines?.[pmV]) {
+      active = entry.bloodlines[pmV];
+    }
+  } else if (entry.variants && rv && entry.variants[rv]) {
+    // Variant race: active comes from selected variant
+    active = entry.variants[rv];
+  } else if (entry.active) {
+    // Variantless race: active is direct
+    active = entry.active;
+  }
+
+  return { passive, active };
 }

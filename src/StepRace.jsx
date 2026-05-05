@@ -3,7 +3,9 @@ import { useDevice } from './useDevice';
 import {
   COLORS, RACES, PM_MAJ, PM_MIN,
   NAMES, getNamePool, pick, RACE_VARIANT_DESCS,
+  PAMORPH_LORE, getRacialTraits,
 } from './constants';
+
 
 // ─── STYLE HELPERS ────────────────────────────────────────────────────────────
 const label = {
@@ -37,9 +39,160 @@ const tagColor = (tag) => {
   return { bg: 'rgba(160,160,160,0.12)', color: '#b0b0b0', border: 'rgba(160,160,160,0.3)' };
 };
 
+// ─── RACE DISPLAY HELPER ──────────────────────────────────────────────────────
+export function getRaceDisplay(race, rv, pmV) {
+  if (!race) return '';
+
+  if (race === 'pamorph') {
+    const all = [...PM_MAJ, ...PM_MIN];
+    const bloodline = all.find(b => b.id === pmV);
+    if (!bloodline) return "Pa'morph";
+    return `Pa'morph · ${bloodline.name}`;
+  }
+
+  const raceData = RACES.find(r => r.id === race);
+  if (!raceData) return race;
+  if (rv) return `${raceData.name} · ${rv}`;
+  return raceData.name;
+}
+
+// ─── DESCRIPTION RESOLVER ─────────────────────────────────────────────────────
+function resolveDesc(r, rv, pmV) {
+  if (r.isPamorph) {
+    if (pmV && PAMORPH_LORE[pmV]) return PAMORPH_LORE[pmV].default;
+    return PAMORPH_LORE.default;
+  }
+  const variantDescs = RACE_VARIANT_DESCS[r.id];
+  if (!variantDescs) return r.desc;
+  if (rv && variantDescs[rv]) return variantDescs[rv];
+  return variantDescs.default || r.desc;
+}
+
+function TraitBlock({ raceId, rv, pmV }) {
+  const traits = getRacialTraits(raceId, rv, pmV);
+  if (!traits) return null;
+  const { passive, active } = traits;
+
+  return (
+    <div style={{ marginBottom: 14 }}>
+      {/* Passive */}
+      {passive && (
+        <div style={{
+          background: 'rgba(240,238,235,0.04)',
+          border: `1px solid ${COLORS.border}`,
+          borderRadius: 6,
+          padding: '9px 11px',
+          marginBottom: 8,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            <span style={{
+              fontSize: 7,
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              fontFamily: "'Cinzel', serif",
+              color: COLORS.muted,
+              background: 'rgba(240,238,235,0.08)',
+              border: `1px solid ${COLORS.border}`,
+              borderRadius: 3,
+              padding: '1px 5px',
+            }}>Passive</span>
+            <span style={{
+              fontSize: 11,
+              fontWeight: 700,
+              fontFamily: "'Cinzel', serif",
+              color: COLORS.text,
+              letterSpacing: '0.03em',
+            }}>{passive.name}</span>
+          </div>
+          <p style={{
+            fontSize: 11,
+            color: COLORS.muted,
+            fontFamily: 'Georgia, serif',
+            lineHeight: 1.65,
+            margin: 0,
+          }}>{passive.text}</p>
+        </div>
+      )}
+
+      {/* Active */}
+      {active ? (
+        <div style={{
+          background: 'rgba(240,238,235,0.04)',
+          border: `1px solid ${COLORS.border}`,
+          borderRadius: 6,
+          padding: '9px 11px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            <span style={{
+              fontSize: 7,
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              fontFamily: "'Cinzel', serif",
+              color: COLORS.deity,
+              background: COLORS.deityBg,
+              border: `1px solid ${COLORS.deity}`,
+              borderRadius: 3,
+              padding: '1px 5px',
+            }}>Active · Once per rest</span>
+            <span style={{
+              fontSize: 11,
+              fontWeight: 700,
+              fontFamily: "'Cinzel', serif",
+              color: COLORS.text,
+              letterSpacing: '0.03em',
+            }}>{active.name}</span>
+          </div>
+          <p style={{
+            fontSize: 11,
+            color: COLORS.muted,
+            fontFamily: 'Georgia, serif',
+            lineHeight: 1.65,
+            margin: 0,
+          }}>{active.text}</p>
+        </div>
+      ) : (
+        <div style={{
+          background: 'rgba(240,238,235,0.03)',
+          border: `1px solid ${COLORS.border}`,
+          borderRadius: 6,
+          padding: '9px 11px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            <span style={{
+              fontSize: 7,
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              fontFamily: "'Cinzel', serif",
+              color: COLORS.dim,
+              background: 'rgba(131,115,100,0.12)',
+              border: `1px solid ${COLORS.dim}`,
+              borderRadius: 3,
+              padding: '1px 5px',
+            }}>Active · Once per rest</span>
+          </div>
+          <p style={{
+            fontSize: 11,
+            color: COLORS.dim,
+            fontFamily: 'Georgia, serif',
+            fontStyle: 'italic',
+            lineHeight: 1.65,
+            margin: 0,
+          }}>
+            {raceId === 'pamorph'
+              ? 'Select a bloodline above to see your active trait.'
+              : 'Select a variant above to see your active trait.'}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // STEP RACE
-// Props: all from Wizard stepProps
 // ═════════════════════════════════════════════════════════════════════════════
 export default function StepRace({
   race, setRace, rv, setRv, pmV, setPmV,
@@ -49,59 +202,34 @@ export default function StepRace({
   const { isMobile, isDesktop } = useDevice();
   const [expandedRace, setExpandedRace] = useState(race || null);
 
-  // When race changes, generate boons reactively
   useEffect(() => {
     if (race) generateBoons(race, null, null);
   }, [race]);
 
-  const selectedRaceData = RACES.find(r => r.id === race);
-
-  // ── Name generation ──
   const namePool = race ? getNamePool(race, rv, pmV) : null;
 
   const genFirst = () => {
-  if (!race) return;
+    if (!race) return;
+    const preferredPool = getNamePool(race, rv, pmV);
+    if (!preferredPool) return;
+    let pool = [];
+    if (gender === 'f') pool = preferredPool.f || [];
+    else if (gender === 'm') pool = preferredPool.m || [];
+    else pool = [...(preferredPool.m || []), ...(preferredPool.f || [])];
+    if (!pool.length) pool = [...(preferredPool.m || []), ...(preferredPool.f || [])];
+    if (pool.length) setFn(pick(pool));
+  };
 
-  // Prefer the exact selected race/variant name pool first
-  const preferredPool = getNamePool(race, rv, pmV);
-
-  if (!preferredPool) return;
-
-  let pool = [];
-
-  if (gender === 'f') {
-    pool = preferredPool.f || [];
-  } else if (gender === 'm') {
-    pool = preferredPool.m || [];
-  } else {
-    pool = [
-      ...(preferredPool.m || []),
-      ...(preferredPool.f || []),
-    ];
-  }
-
-  // If the selected gender pool is empty, fall back to both race pools
-  if (!pool.length) {
-    pool = [
-      ...(preferredPool.m || []),
-      ...(preferredPool.f || []),
-    ];
-  }
-
-  if (pool.length) setFn(pick(pool));
-};
   const genLast = () => {
-  if (!namePool) return;
-  // Chronison last names are always serial designations
-  if (race === 'chronison') {
-    const pool = NAMES.chronison[rv] || NAMES.chronison.default;
-    if (pool?.s?.length) setLn(pick(pool.s));
-    return;
-  }
-  if (namePool.s?.length) setLn(pick(namePool.s));
-};
+    if (!namePool) return;
+    if (race === 'chronison') {
+      const pool = NAMES.chronison[rv] || NAMES.chronison.default;
+      if (pool?.s?.length) setLn(pick(pool.s));
+      return;
+    }
+    if (namePool.s?.length) setLn(pick(namePool.s));
+  };
 
-  // ── Race card click ──
   const handleRaceClick = (r) => {
     if (expandedRace === r.id) {
       setExpandedRace(null);
@@ -122,7 +250,6 @@ export default function StepRace({
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
       `}</style>
 
-      {/* ── Section title ── */}
       <div style={{
         fontFamily: "'Cinzel', serif",
         fontSize: isMobile ? 18 : 22,
@@ -131,6 +258,7 @@ export default function StepRace({
         letterSpacing: '0.06em',
         marginBottom: 4,
       }}>Choose your Race</div>
+
       <div style={{
         fontSize: 11,
         color: COLORS.muted,
@@ -157,13 +285,9 @@ export default function StepRace({
           const tc = tagColor(r.tag);
 
           return (
-            <div
-              key={r.id}
-              style={{ gridColumn: isExpanded ? `1 / -1` : 'auto' }}
-            >
-              {/* Card */}
+            <div key={r.id} style={{ gridColumn: isExpanded ? `1 / -1` : 'auto' }}>
               <div
-                onClick={() => handleRaceClick(r)} 
+                onClick={() => handleRaceClick(r)}
                 style={{
                   background: isSelected ? 'rgba(240,238,235,0.06)' : COLORS.card,
                   border: `1.5px solid ${isSelected ? COLORS.borderMid : COLORS.border}`,
@@ -186,18 +310,8 @@ export default function StepRace({
                       marginBottom: 2,
                       letterSpacing: '0.04em',
                     }}>{r.name}</div>
-                    <div style={{
-                      fontSize: 9,
-                      color: COLORS.muted,
-                      marginBottom: 4,
-                    }}>{r.sub}</div>
-                    <div style={{
-                      fontSize: 8,
-                      color: COLORS.dim,
-                      lineHeight: 1.4,
-                      marginBottom: 6,
-                    }}>{r.sub2}</div>
-                    {/* Tag chip */}
+                    <div style={{ fontSize: 9, color: COLORS.muted, marginBottom: 4 }}>{r.sub}</div>
+                    <div style={{ fontSize: 8, color: COLORS.dim, lineHeight: 1.4, marginBottom: 6 }}>{r.sub2}</div>
                     <span style={{
                       display: 'inline-block',
                       fontSize: 8,
@@ -225,29 +339,19 @@ export default function StepRace({
                 {isExpanded && (
                   <div
                     onClick={e => e.stopPropagation()}
-                    style={{
-                      marginTop: 14,
-                      paddingTop: 14,
-                      borderTop: `1px solid ${COLORS.border}`,
-                    }}
+                    style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${COLORS.border}` }}
                   >
-                    {/* Description */}
-                      <p style={{
+                    {/* Description — resolveDesc handles Pa'morph lore + all other races */}
+                    <p style={{
                       fontSize: 12,
                       color: COLORS.textSub,
                       fontFamily: 'Georgia, serif',
                       fontStyle: 'italic',
                       lineHeight: 1.75,
                       margin: '0 0 14px',
-}}>
-  {(() => {
-                      const variantDescs = RACE_VARIANT_DESCS[r.id];
-                      if (!variantDescs) return r.desc;
-                      const selectedVariant = r.isPamorph ? null : rv;
-                      if (selectedVariant && variantDescs[selectedVariant]) return variantDescs[selectedVariant];
-                      return variantDescs.default || r.desc;
-  })()}
-</p>
+                    }}>
+                      {resolveDesc(r, rv, pmV)}
+                    </p>
 
                     {/* Variants (non-Pa'morph) */}
                     {r.variants?.length > 0 && !r.isPamorph && (
@@ -345,7 +449,7 @@ export default function StepRace({
         })}
       </div>
 
-      {/* ── Name & Identity (only shows after race selected) ── */}
+      {/* ── Name & Identity ── */}
       {race && (
         <div style={{
           background: COLORS.card,
@@ -366,7 +470,6 @@ export default function StepRace({
             Name your character
           </div>
 
-          {/* Gender */}
           <div style={{ marginBottom: 16 }}>
             <span style={label}>Presented gender</span>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -392,33 +495,22 @@ export default function StepRace({
             </div>
           </div>
 
-          {/* Name fields */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr',
             gap: 14,
           }}>
-            {/* First name */}
             <div>
               <span style={label}>First name *</span>
               <button
                 onClick={genFirst}
                 style={{
-                  display: 'block',
-                  width: '100%',
-                  background: 'transparent',
-                  border: `1px solid ${COLORS.border}`,
-                  borderRadius: 6,
-                  padding: '6px 10px',
-                  cursor: 'pointer',
-                  fontSize: 9,
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  color: COLORS.muted,
-                  fontFamily: "'Cinzel', serif",
-                  marginBottom: 6,
-                  textAlign: 'center',
-                  transition: 'all 0.12s',
+                  display: 'block', width: '100%', background: 'transparent',
+                  border: `1px solid ${COLORS.border}`, borderRadius: 6,
+                  padding: '6px 10px', cursor: 'pointer', fontSize: 9,
+                  letterSpacing: '0.12em', textTransform: 'uppercase',
+                  color: COLORS.muted, fontFamily: "'Cinzel', serif",
+                  marginBottom: 6, textAlign: 'center', transition: 'all 0.12s',
                 }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = COLORS.borderMid}
                 onMouseLeave={e => e.currentTarget.style.borderColor = COLORS.border}
@@ -435,27 +527,17 @@ export default function StepRace({
               />
             </div>
 
-            {/* Last name */}
             <div>
               <span style={label}>Last name / Clan</span>
               <button
                 onClick={genLast}
                 style={{
-                  display: 'block',
-                  width: '100%',
-                  background: 'transparent',
-                  border: `1px solid ${COLORS.border}`,
-                  borderRadius: 6,
-                  padding: '6px 10px',
-                  cursor: 'pointer',
-                  fontSize: 9,
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  color: COLORS.muted,
-                  fontFamily: "'Cinzel', serif",
-                  marginBottom: 6,
-                  textAlign: 'center',
-                  transition: 'all 0.12s',
+                  display: 'block', width: '100%', background: 'transparent',
+                  border: `1px solid ${COLORS.border}`, borderRadius: 6,
+                  padding: '6px 10px', cursor: 'pointer', fontSize: 9,
+                  letterSpacing: '0.12em', textTransform: 'uppercase',
+                  color: COLORS.muted, fontFamily: "'Cinzel', serif",
+                  marginBottom: 6, textAlign: 'center', transition: 'all 0.12s',
                 }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = COLORS.borderMid}
                 onMouseLeave={e => e.currentTarget.style.borderColor = COLORS.border}
@@ -473,13 +555,11 @@ export default function StepRace({
                 inputMode="text"
                 autoComplete="off"
                 readOnly={race === 'chronison'}
-/>
+              />
             </div>
 
-            {/* Age */}
             <div>
               <span style={label}>Age</span>
-              {/* Spacer to align with generate buttons */}
               <div style={{ height: 33, marginBottom: 6 }} />
               <input
                 style={inp()}
@@ -494,7 +574,6 @@ export default function StepRace({
             </div>
           </div>
 
-          {/* Required field note */}
           {!fn && (
             <div style={{
               marginTop: 12,
