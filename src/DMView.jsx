@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useDevice } from './useDevice';
 import { COLORS, CAMPAIGNS, ALL_CLASSES, ALL_STATS, getRaceDisplay } from './constants';
+import { ScribeDMChat } from './ScribeConsult';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -9,8 +10,7 @@ const supabase = createClient(
 );
 
 const DM_USER_ID = import.meta.env.VITE_DM_USER_ID;
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+
 
 const FULL_TITLES = {
   'I':   'The Investigation of the Corren Mountain Mines',
@@ -752,7 +752,7 @@ export default function DMView({ onHome }) {
         );
 
       case 'Scribe':
-        return <ScribeDMPanel />;
+        return <ScribeDMChat />;
 
       case 'Memory':
         return (
