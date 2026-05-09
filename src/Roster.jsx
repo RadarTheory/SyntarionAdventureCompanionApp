@@ -3,11 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 import { useDevice } from './useDevice';
 import { COLORS, CAMPAIGNS, ALL_CLASSES, getRaceDisplay } from './constants';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
-
 const FULL_TITLES = {
   'I':   'The Investigation of the Corren Mountain Mines',
   'II':  'The Keys of Aerithos',
