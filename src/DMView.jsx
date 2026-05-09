@@ -87,21 +87,32 @@ function ChatPanel({ session, onClose, isDM }) {
   };
 
   const handleSend = async () => {
-    if (!input.trim() || sending) return;
-    setSending(true);
-    await supabase.from('messages').insert({
-      session_id: session.session_id,
-      sender_id: isDM ? DM_USER_ID : session.player_id,
-      character_id: session.character_id,
-      campaign_id: session.campaign_id,
-      type: isDM ? 'dm_reply' : 'dm',
-      content: input.trim(),
-      sender_name: isDM ? 'The Architect' : session.character_name,
-      is_dm: isDM,
-    });
-    setInput('');
+  if (!input.trim() || sending) return;
+
+  setSending(true);
+
+  const { error } = await supabase.from('messages').insert({
+    session_id: session.session_id,
+    sender_id: isDM ? DM_USER_ID : session.player_id,
+    character_id: session.character_id,
+    campaign_id: session.campaign_id,
+    type: isDM ? 'dm_reply' : 'player_message',
+    content: input.trim(),
+    sender_name: isDM ? 'The Architect' : session.character_name,
+    is_dm: isDM,
+    read: false,
+  });
+
+  if (error) {
+    console.error('Message insert failed:', error);
     setSending(false);
-  };
+    return;
+  }
+
+  setInput('');
+  await fetchMessages();
+  setSending(false);
+};
 
   const handleEnd = async () => {
     await supabase.from('messages')
@@ -561,25 +572,40 @@ export default function DMView({ onHome }) {
   };
 
   const fetchMessages = async () => {
-    const { data } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('is_dm', false)
-      .eq('session_ended', false)
-      .order('created_at', { ascending: false });
-    if (data) {
-      // Group by session_id, get latest per session
-      const sessions = {};
-      data.forEach(msg => {
-        const key = msg.session_id || msg.id;
-        if (!sessions[key]) sessions[key] = { ...msg, session_id: key, messages: [] };
-        sessions[key].messages.push(msg);
-      });
-      const sessionList = Object.values(sessions);
-      setMessages(sessionList);
-      setUnreadCount(sessionList.filter(s => !s.read).length);
+  const { data, error } = await supabase
+    .from('messages')
+    .select('*')
+    .eq('is_dm', false)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Inbox fetch failed:', error);
+    return;
+  }
+
+  // Group by session_id
+  const sessions = {};
+
+  data.forEach(msg => {
+    const key = msg.session_id;
+    if (!key) return;
+
+    if (
+      !sessions[key] ||
+      new Date(msg.created_at) > new Date(sessions[key].created_at)
+    ) {
+      sessions[key] = msg;
     }
-  };
+  });
+
+  const sessionList = Object.values(sessions);
+
+  setMessages(sessionList);
+
+  setUnreadCount(
+    sessionList.filter(m => !m.read).length
+  );
+};
 
   const markRead = async (msgId) => {
     await supabase.from('messages').update({ read: true }).eq('id', msgId);
