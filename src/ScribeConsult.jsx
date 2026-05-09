@@ -1,6 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
-import supabase from './lib/supabase';
+import { useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import { COLORS, CAMPAIGNS } from './constants';
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
@@ -79,14 +84,17 @@ export function ScribeConsult({ char, onUpdateChar }) {
 
       const data = await res.json();
       const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
       if (!text) throw new Error('The archives are silent.');
 
+      // Deduct 1 AP
       const newAp = Math.max(0, apCurrent - 1);
       await supabase
         .from('characters')
         .update({ data: { ...char, apCurrent: newAp } })
         .eq('id', char.id);
 
+      // Save to messages table
       await supabase.from('messages').insert({
         character_id: char.id,
         campaign_id: char.campaign,
@@ -98,6 +106,7 @@ export function ScribeConsult({ char, onUpdateChar }) {
       setResponse(text);
       onUpdateChar({ ...char, apCurrent: newAp });
       setQuery('');
+
     } catch (err) {
       setError('The archives resisted. Try again.');
       console.error(err);
@@ -132,13 +141,15 @@ export function ScribeConsult({ char, onUpdateChar }) {
       {open && (
         <div style={{
           background: COLORS.card, border: `1px solid ${COLORS.border}`,
-          borderTop: 'none', borderRadius: '0 0 8px 8px', padding: '16px',
+          borderTop: 'none', borderRadius: '0 0 8px 8px',
+          padding: '16px',
         }}>
           {apCurrent < 1 && (
             <div style={{ fontSize: 11, color: COLORS.warn, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 12 }}>
               The Scribe demands tribute. You have no AP remaining.
             </div>
           )}
+
           <textarea
             value={query}
             onChange={e => setQuery(e.target.value)}
@@ -149,9 +160,11 @@ export function ScribeConsult({ char, onUpdateChar }) {
               border: `1px solid ${COLORS.border}`, borderRadius: 6,
               padding: '10px 12px', color: COLORS.text, fontSize: 12,
               fontFamily: 'Georgia, serif', lineHeight: 1.6,
-              outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 10,
+              outline: 'none', resize: 'none', boxSizing: 'border-box',
+              marginBottom: 10,
             }}
           />
+
           <button
             onClick={handleConsult}
             disabled={!canConsult || loading}
@@ -168,13 +181,20 @@ export function ScribeConsult({ char, onUpdateChar }) {
           >
             {loading ? 'The Scribe deliberates…' : '✦ Consult (1 AP)'}
           </button>
+
           {error && (
             <div style={{ marginTop: 12, fontSize: 11, color: COLORS.warn, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
               {error}
             </div>
           )}
+
           {response && (
-            <div style={{ marginTop: 16, padding: '16px', background: COLORS.deityBg, border: `1px solid ${COLORS.deity}44`, borderRadius: 8 }}>
+            <div style={{
+              marginTop: 16, padding: '16px',
+              background: COLORS.deityBg,
+              border: `1px solid ${COLORS.deity}44`,
+              borderRadius: 8,
+            }}>
               <div style={{ fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.deity, fontFamily: "'Cinzel', serif", marginBottom: 10 }}>
                 The Scribe Responds
               </div>
@@ -189,307 +209,108 @@ export function ScribeConsult({ char, onUpdateChar }) {
   );
 }
 
-// ─── GENERATE UUID ────────────────────────────────────────────────────────────
-function generateSessionId() {
-  return crypto.randomUUID
-    ? crypto.randomUUID()
-    : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-        const r = Math.random() * 16 | 0;
-        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-      });
-}
-
-// ─── DM CONSULT (PLAYER SIDE) ─────────────────────────────────────────────────
+// ─── DM CONSULT ───────────────────────────────────────────────────────────────
 export function DMConsult({ char, user }) {
-  const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
+  const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [open, setOpen] = useState(false);
   const [error, setError] = useState(null);
-  const [sessionId, setSessionId] = useState(null);
-  const [sessionEnded, setSessionEnded] = useState(false);
-  const bottomRef = useRef(null);
-  // Ref so the realtime callback always sees the current sessionId
-  const sessionIdRef = useRef(null);
-
-  useEffect(() => {
-    sessionIdRef.current = sessionId;
-  }, [sessionId]);
-
-  useEffect(() => {
-    if (!sessionId) return;
-    fetchMessages(sessionId);
-
-    const channel = supabase
-      .channel(`player-session-${sessionId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-          filter: `session_id=eq.${sessionId}`,
-        },
-        () => fetchMessages(sessionIdRef.current)
-      )
-      .subscribe();
-
-    return () => supabase.removeChannel(channel);
-  }, [sessionId]);
-
-  useEffect(() => {
-    if (open) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, open]);
-
-  // sid passed explicitly — never relies on stale closure
-  const fetchMessages = async (sid) => {
-    if (!sid) return;
-    const { data } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('session_id', sid)
-      .order('created_at', { ascending: true });
-
-    if (data) {
-      setMessages(data);
-      if (data.some(m => m.session_ended)) setSessionEnded(true);
-    }
-  };
 
   const handleSend = async () => {
-    if (!input.trim() || sending || sessionEnded) return;
+    if (!message.trim()) return;
     setSending(true);
     setError(null);
 
-    const sid = sessionId || generateSessionId();
-    if (!sessionId) {
-      setSessionId(sid);
-      sessionIdRef.current = sid;
-    }
-
     try {
       await supabase.from('messages').insert({
-        session_id: sid,
         sender_id: user?.id || null,
         character_id: char.id,
         campaign_id: char.campaign,
         type: 'dm',
-        content: input.trim(),
-        sender_name: char.name || 'Player',
-        is_dm: false,
-        session_ended: false,
+        content: message,
       });
-      setInput('');
+
+      setSent(true);
+      setMessage('');
+      setTimeout(() => setSent(false), 3000);
     } catch (err) {
       setError('Message failed to send. Try again.');
-      console.error(err);
     } finally {
       setSending(false);
     }
   };
-
-  const handleEndConsult = async () => {
-    if (!sessionId) { setOpen(false); return; }
-    await supabase.from('messages').insert({
-      session_id: sessionId,
-      sender_id: user?.id || null,
-      character_id: char.id,
-      campaign_id: char.campaign,
-      type: 'dm_system',
-      content: '— Consult ended by player —',
-      sender_name: char.name || 'Player',
-      is_dm: false,
-      session_ended: true,
-      session_ended_by: 'player',
-      session_ended_at: new Date().toISOString(),
-    });
-    setSessionEnded(true);
-    setOpen(false);
-    setTimeout(() => {
-      setSessionId(null);
-      sessionIdRef.current = null;
-      setMessages([]);
-      setSessionEnded(false);
-    }, 500);
-  };
-
-  const handleKeyDown = e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-  };
-
-  const campaignLabel = CAMPAIGNS.find(c => c.id === char.campaign)?.subtitle || 'No campaign';
-  const sentCount = messages.filter(m => !m.is_dm && m.type !== 'dm_system').length;
-  const receivedCount = messages.filter(m => m.is_dm && m.type !== 'dm_system').length;
 
   return (
     <div style={{ marginBottom: 20 }}>
       <button
         onClick={() => setOpen(!open)}
         style={{
-          width: '100%',
-          background: open ? 'rgba(240,238,235,0.04)' : 'transparent',
+          width: '100%', background: open ? 'rgba(240,238,235,0.04)' : 'transparent',
           border: `1px solid ${open ? COLORS.borderMid : COLORS.border}`,
-          borderRadius: open ? '8px 8px 0 0' : 8,
-          padding: '12px 16px',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          transition: 'all 0.15s',
+          borderRadius: 8, padding: '12px 16px',
+          cursor: 'pointer', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', transition: 'all 0.15s',
         }}
       >
         <div style={{ textAlign: 'left' }}>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, color: COLORS.text, letterSpacing: '0.06em' }}>
-            ✉ Consult the Architect
+            ✉ Consult the DM
           </div>
           <div style={{ fontSize: 10, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>
-            {messages.length > 0
-              ? `${sentCount} sent · ${receivedCount} received`
-              : 'Private message · No AP cost'}
+            Send a private message · No AP cost
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {receivedCount > 0 && <div style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS.magic }} />}
-          <span style={{ color: COLORS.dim, fontSize: 10 }}>{open ? '▲' : '▼'}</span>
-        </div>
+        <span style={{ color: COLORS.dim, fontSize: 10 }}>{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
         <div style={{
-          background: COLORS.card,
-          border: `1px solid ${COLORS.border}`,
-          borderTop: 'none',
-          borderRadius: '0 0 8px 8px',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
+          background: COLORS.card, border: `1px solid ${COLORS.border}`,
+          borderTop: 'none', borderRadius: '0 0 8px 8px',
+          padding: '16px',
         }}>
-          {/* Subheader */}
-          <div style={{
-            padding: '8px 12px',
-            borderBottom: `1px solid ${COLORS.border}`,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            background: 'rgba(240,238,235,0.02)',
-          }}>
-            <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
-              {campaignLabel} · {sessionEnded ? 'Ended' : sessionId ? 'Active' : 'Not started'}
-            </div>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              {!sessionEnded && (
-                <button
-                  onClick={handleEndConsult}
-                  style={{
-                    background: 'transparent',
-                    border: `1px solid ${COLORS.warn}44`,
-                    borderRadius: 4, padding: '3px 10px',
-                    cursor: 'pointer', fontSize: 7,
-                    letterSpacing: '0.1em', textTransform: 'uppercase',
-                    color: COLORS.warn, fontFamily: "'Cinzel', serif",
-                  }}
-                >
-                  End Consult
-                </button>
-              )}
-              {/* ✕ minimizes only — does not end session */}
-              <button
-                onClick={() => setOpen(false)}
-                title="Minimize"
-                style={{
-                  background: 'transparent',
-                  border: `1px solid ${COLORS.border}`,
-                  borderRadius: 4, padding: '3px 7px',
-                  cursor: 'pointer', fontSize: 10,
-                  color: COLORS.dim, lineHeight: 1,
-                }}
-              >
-                ✕
-              </button>
-            </div>
-          </div>
+          <textarea
+            value={message}
+            onChange={e => setMessage(e.target.value)}
+            placeholder="Write your message to the DM…"
+            rows={3}
+            style={{
+              width: '100%', background: COLORS.surface,
+              border: `1px solid ${COLORS.border}`, borderRadius: 6,
+              padding: '10px 12px', color: COLORS.text, fontSize: 12,
+              fontFamily: 'Georgia, serif', lineHeight: 1.6,
+              outline: 'none', resize: 'none', boxSizing: 'border-box',
+              marginBottom: 10,
+            }}
+          />
 
-          {/* Messages */}
-          <div style={{
-            minHeight: 120, maxHeight: 280, overflowY: 'auto',
-            padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8,
-          }}>
-            {messages.length === 0 && (
-              <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '20px 0' }}>
-                Write your message below. The Architect will respond here.
-              </div>
-            )}
-            {messages.map(msg => {
-              if (msg.type === 'dm_system') {
-                return (
-                  <div key={msg.id} style={{ textAlign: 'center', fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', padding: '4px 0' }}>
-                    {msg.content}
-                  </div>
-                );
-              }
-              const isMe = !msg.is_dm;
-              return (
-                <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
-                  <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginBottom: 3 }}>
-                    {msg.sender_name || (msg.is_dm ? 'The Architect' : char.name)}
-                  </div>
-                  <div style={{
-                    maxWidth: '82%',
-                    background: isMe ? 'rgba(121,245,167,0.08)' : 'rgba(240,238,235,0.06)',
-                    border: `1px solid ${isMe ? COLORS.magic + '33' : COLORS.border}`,
-                    borderRadius: isMe ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
-                    padding: '8px 12px', fontSize: 12, color: COLORS.text,
-                    fontFamily: 'Georgia, serif', lineHeight: 1.5,
-                  }}>
-                    {msg.content}
-                  </div>
-                  <div style={{ fontSize: 7, color: COLORS.dim, marginTop: 2 }}>
-                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
-              );
-            })}
-            <div ref={bottomRef} />
-          </div>
+          <button
+            onClick={handleSend}
+            disabled={sending || !message.trim()}
+            style={{
+              background: sent ? COLORS.magicBg : 'rgba(240,238,235,0.06)',
+              border: `1px solid ${sent ? COLORS.magic : COLORS.borderMid}`,
+              borderRadius: 6, padding: '10px 20px',
+              cursor: sending || !message.trim() ? 'default' : 'pointer',
+              fontFamily: "'Cinzel', serif", fontSize: 9,
+              letterSpacing: '0.14em', textTransform: 'uppercase',
+              color: sent ? COLORS.magicText : COLORS.text,
+              opacity: sending ? 0.6 : 1, transition: 'all 0.2s',
+            }}
+          >
+            {sent ? '✓ Message Sent' : sending ? 'Sending…' : '✦ Send to DM'}
+          </button>
 
-          {/* Input */}
-          {!sessionEnded ? (
-            <div style={{ padding: '10px 12px', borderTop: `1px solid ${COLORS.border}`, display: 'flex', gap: 8 }}>
-              <input
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Write to the Architect… (Enter to send)"
-                style={{
-                  flex: 1, background: COLORS.surface,
-                  border: `1px solid ${COLORS.border}`, borderRadius: 6,
-                  padding: '8px 10px', fontSize: 12, color: COLORS.text,
-                  fontFamily: 'Georgia, serif', outline: 'none',
-                }}
-              />
-              <button
-                onClick={handleSend}
-                disabled={sending || !input.trim()}
-                style={{
-                  background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`,
-                  borderRadius: 6, padding: '8px 12px',
-                  cursor: sending || !input.trim() ? 'default' : 'pointer',
-                  fontSize: 10, color: COLORS.magicText,
-                  fontFamily: "'Cinzel', serif", opacity: sending ? 0.6 : 1,
-                }}
-              >
-                →
-              </button>
-            </div>
-          ) : (
-            <div style={{ padding: '10px 16px', borderTop: `1px solid ${COLORS.border}`, fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center' }}>
-              This consult has ended.
+          {error && (
+            <div style={{ marginTop: 10, fontSize: 11, color: COLORS.warn, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+              {error}
             </div>
           )}
 
-          {error && (
-            <div style={{ padding: '0 16px 10px', fontSize: 11, color: COLORS.warn, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
-              {error}
+          {sent && (
+            <div style={{ marginTop: 12, fontSize: 11, color: COLORS.magic, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+              The DM has been notified. They will respond in due time.
             </div>
           )}
         </div>
