@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from './supabaseClient';
+import supabase from './lib/supabase';
 import { COLORS, CAMPAIGNS } from './constants';
 
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;

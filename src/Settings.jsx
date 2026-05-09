@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
 import { COLORS } from './constants';
 

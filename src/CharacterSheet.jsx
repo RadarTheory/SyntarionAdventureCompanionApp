@@ -6,7 +6,7 @@ import {
   getRaceDisplay,
 } from './constants';
 import { ScribeConsult, DMConsult } from './ScribeConsult';
-import { supabase } from './supabaseClient';
+import supabase from './lib/supabase';
 import AbilityTree from './AbilityTree';
 
 const TABS = [

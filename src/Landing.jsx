@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { createClient } from '@supabase/supabase-js';
+import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
 import medallion from './assets/medallion.png';
 import CharacterSelect from './CharacterSelect';

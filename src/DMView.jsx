@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from './supabaseClient';
+import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
 import { COLORS, CAMPAIGNS, ALL_CLASSES, ALL_STATS, getRaceDisplay } from './constants';
 import ItemCatalog from './ItemCatalog';
@@ -560,12 +560,17 @@ export default function DMView({ onHome }) {
   const [filterCampaign, setFilterCampaign] = useState('all');
   const [unreadCount, setUnreadCount] = useState(0);
   const [showArchive, setShowArchive] = useState(false);
+  const [toast, setToast] = useState(null); // ← NEW
 
   useEffect(() => {
     fetchAll();
     const channel = supabase
       .channel('dm-inbox')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'is_dm=eq.false' }, () => fetchMessages())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'is_dm=eq.false' }, (payload) => {
+        fetchMessages();
+        setToast({ name: payload.new.sender_name || 'A player', content: payload.new.content });
+        setTimeout(() => setToast(null), 4000);
+      })
       .subscribe();
     return () => supabase.removeChannel(channel);
   }, []);
@@ -787,10 +792,24 @@ export default function DMView({ onHome }) {
 
   return (
     <div style={{ minHeight: '100vh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap'); * { box-sizing: border-box; } body { margin: 0; }`}</style>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
+        * { box-sizing: border-box; }
+        body { margin: 0; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
 
       {editingChar && <CharacterEditor char={editingChar} onSave={() => { setEditingChar(null); fetchCharacters(); }} onClose={() => setEditingChar(null)} />}
       {activeSession && <ChatPanel session={activeSession} onClose={() => setActiveSession(null)} isDM={true} />}
+
+      {/* ── TOAST ── */}
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, left: 24, zIndex: 300, background: '#13100d', border: `1px solid ${COLORS.magic}44`, borderRadius: 10, padding: '14px 18px', maxWidth: 280, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', animation: 'slideIn 0.2s ease' }}>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, fontWeight: 700, color: COLORS.magic, marginBottom: 4, letterSpacing: '0.08em' }}>✦ New Message</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, marginBottom: 4 }}>{toast.name}</div>
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.textSub, fontStyle: 'italic', lineHeight: 1.4 }}>{toast.content?.substring(0, 80)}{toast.content?.length > 80 ? '…' : ''}</div>
+        </div>
+      )}
 
       <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <button onClick={onHome} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.muted, padding: 0 }}>← Home</button>

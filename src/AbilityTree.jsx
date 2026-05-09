@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { COLORS } from './constants';
-import { supabase } from './supabaseClient';
+import supabase from './lib/supabase';
 
 const TREE = {
   magic: [
