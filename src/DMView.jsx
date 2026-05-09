@@ -4,6 +4,7 @@ import { useDevice } from './useDevice';
 import { COLORS, CAMPAIGNS, ALL_CLASSES, ALL_STATS, getRaceDisplay } from './constants';
 import ItemCatalog from './ItemCatalog';
 import { SOTERIA_LORE } from './soteria-lore';
+import PlayersPanel from './PlayersPanel';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -131,6 +132,13 @@ function ChatPanel({ session, onClose, isDM }) {
           <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
         </div>
       </div>
+
+      <button
+        onClick={() => {/* PlayersPanel self-manages collapse */}}
+        style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.muted, padding: 0 }}
+      >
+        ⚔ Players
+      </button>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8, minHeight: 200, maxHeight: 320 }}>
         {messages.map(msg => {
@@ -779,6 +787,11 @@ export default function DMView({ onHome }) {
       {editingChar && <CharacterEditor char={editingChar} onSave={() => { setEditingChar(null); fetchCharacters(); }} onClose={() => setEditingChar(null)} />}
       {activeSession && <ChatPanel session={activeSession} onClose={() => setActiveSession(null)} isDM={true} />}
       {showScribe && <ScribePanel onClose={() => setShowScribe(false)} />}
+
+        <PlayersPanel
+      onOpenCharacter={(char) => setEditingChar(char)}
+      onMessage={(session) => setActiveSession(session)}
+    />
 
       {toast && (
         <div style={{ position: 'fixed', bottom: 24, left: 24, zIndex: 300, background: '#13100d', border: `1px solid ${COLORS.magic}44`, borderRadius: 10, padding: '14px 18px', maxWidth: 280, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', animation: 'slideIn 0.2s ease' }}>
