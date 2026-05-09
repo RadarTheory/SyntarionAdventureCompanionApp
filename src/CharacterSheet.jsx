@@ -8,6 +8,8 @@ import {
 import { ScribeConsult, DMConsult } from './ScribeConsult';
 import supabase from './lib/supabase';
 import AbilityTree from './AbilityTree';
+import Astragal from './Astragal';
+import AstragalButton from './AstragalButton';
 
 const TABS = [
   { id: 'identity',   label: 'Identity'   },

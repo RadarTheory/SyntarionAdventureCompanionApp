@@ -1,0 +1,294 @@
+// Astragal.jsx
+// Syntarion Official Dice Roller
+
+import { useState, useRef, useEffect } from 'react';
+import { COLORS } from './constants';
+
+function rollDie(sides) {
+  return Math.floor(Math.random() * sides) + 1;
+}
+
+function parseDiceNotation(notation) {
+  const match = notation.toLowerCase().match(/(\d+)d(\d+)([+-]\d+)?/);
+
+  if (!match) {
+    return null;
+  }
+
+  return {
+    count: parseInt(match[1]),
+    sides: parseInt(match[2]),
+    modifier: parseInt(match[3] || 0),
+  };
+}
+
+function calculateModifier(score = 10) {
+  return Math.floor((score - 10) / 2);
+}
+
+export default function Astragal({
+  character,
+  actionName = 'Roll',
+  statKey = 'will',
+  notation = '1d20',
+  itemBonus = 0,
+  conditionBonus = 0,
+  occurrenceBonus = 0,
+  temporaryBonus = 0,
+  onResult,
+}) {
+  const [rolling, setRolling] = useState(false);
+  const [diceFaces, setDiceFaces] = useState([]);
+  const [result, setResult] = useState(null);
+
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  const handleRoll = async () => {
+    if (rolling) return;
+
+    const parsed = parseDiceNotation(notation);
+
+    if (!parsed) {
+      console.error('Invalid dice notation:', notation);
+      return;
+    }
+
+    setRolling(true);
+    setResult(null);
+
+    const statScore =
+      character?.stats?.[statKey] || 10;
+
+    const statModifier =
+      calculateModifier(statScore);
+
+    const totalBonus =
+      statModifier +
+      itemBonus +
+      conditionBonus +
+      occurrenceBonus +
+      temporaryBonus;
+
+    let animationTicks = 0;
+
+    timerRef.current = setInterval(() => {
+      const randomFaces = [];
+
+      for (let i = 0; i < parsed.count; i++) {
+        randomFaces.push(
+          rollDie(parsed.sides)
+        );
+      }
+
+      setDiceFaces(randomFaces);
+
+      animationTicks++;
+
+      if (animationTicks > 14) {
+        clearInterval(timerRef.current);
+
+        const finalRolls = [];
+
+        for (let i = 0; i < parsed.count; i++) {
+          finalRolls.push(
+            rollDie(parsed.sides)
+          );
+        }
+
+        const diceTotal =
+          finalRolls.reduce((a, b) => a + b, 0);
+
+        const grandTotal =
+          diceTotal +
+          parsed.modifier +
+          totalBonus;
+
+        const payload = {
+          actionName,
+          notation,
+          statKey,
+          statModifier,
+          itemBonus,
+          conditionBonus,
+          occurrenceBonus,
+          temporaryBonus,
+          diceResults: finalRolls,
+          diceTotal,
+          modifier: parsed.modifier,
+          totalBonus,
+          total: grandTotal,
+          timestamp: new Date().toISOString(),
+        };
+
+        setDiceFaces(finalRolls);
+        setResult(payload);
+        setRolling(false);
+
+        if (onResult) {
+          onResult(payload);
+        }
+      }
+    }, 70);
+  };
+
+  return (
+    <div
+      style={{
+        background: COLORS.card,
+        border: `1px solid ${COLORS.border}`,
+        borderRadius: 12,
+        padding: 16,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 14,
+        }}
+      >
+        <div>
+          <div
+            style={{
+              fontFamily: "'Cinzel', serif",
+              fontSize: 12,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: COLORS.text,
+            }}
+          >
+            Astragal
+          </div>
+
+          <div
+            style={{
+              fontSize: 10,
+              color: COLORS.dim,
+              fontFamily: 'Georgia, serif',
+              fontStyle: 'italic',
+              marginTop: 2,
+            }}
+          >
+            {actionName}
+          </div>
+        </div>
+
+        <button
+          onClick={handleRoll}
+          disabled={rolling}
+          style={{
+            background: COLORS.magicBg,
+            border: `1px solid ${COLORS.magic}`,
+            borderRadius: 8,
+            padding: '8px 14px',
+            cursor: rolling ? 'default' : 'pointer',
+            color: COLORS.magicText,
+            fontFamily: "'Cinzel', serif",
+            fontSize: 10,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            opacity: rolling ? 0.6 : 1,
+          }}
+        >
+          {rolling ? 'Rolling…' : notation}
+        </button>
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          gap: 10,
+          flexWrap: 'wrap',
+          marginBottom: 14,
+        }}
+      >
+        {diceFaces.map((face, i) => (
+          <div
+            key={i}
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 10,
+              background: 'rgba(240,238,235,0.05)',
+              border: `1px solid ${COLORS.border}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontFamily: "'Cinzel', serif",
+              fontSize: 20,
+              color: COLORS.text,
+              transform: rolling
+                ? `rotate(${Math.random() * 360}deg)`
+                : 'rotate(0deg)',
+              transition: 'transform 0.08s linear',
+            }}
+          >
+            {face}
+          </div>
+        ))}
+      </div>
+
+      {result && (
+        <div
+          style={{
+            background: 'rgba(240,238,235,0.03)',
+            border: `1px solid ${COLORS.border}`,
+            borderRadius: 10,
+            padding: 12,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "'Cinzel', serif",
+              fontSize: 10,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: COLORS.dim,
+              marginBottom: 8,
+            }}
+          >
+            Roll Result
+          </div>
+
+          <div
+            style={{
+              fontSize: 28,
+              fontFamily: "'Cinzel', serif",
+              color: COLORS.magic,
+              marginBottom: 10,
+            }}
+          >
+            {result.total}
+          </div>
+
+          <div
+            style={{
+              fontSize: 11,
+              color: COLORS.textSub,
+              fontFamily: 'Georgia, serif',
+              lineHeight: 1.7,
+            }}
+          >
+            Dice: {result.diceResults.join(', ')}
+            <br />
+            Stat Modifier: {result.statModifier >= 0 ? '+' : ''}
+            {result.statModifier}
+            <br />
+            Bonus Total: {result.totalBonus >= 0 ? '+' : ''}
+            {result.totalBonus}
+            <br />
+            Dice Modifier: {result.modifier >= 0 ? '+' : ''}
+            {result.modifier}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
