@@ -1,6 +1,3 @@
-// Astragal.jsx
-// Syntarion Official Dice Roller
-
 import { useState, useRef, useEffect } from 'react';
 import { COLORS } from './constants';
 
