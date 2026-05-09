@@ -1,12 +1,7 @@
 import { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
 import { COLORS } from './constants';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
 
 export default function Settings({ user, darkMode, setDarkMode, onHome }) {
   const { isMobile } = useDevice();
