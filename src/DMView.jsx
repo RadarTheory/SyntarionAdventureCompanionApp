@@ -5,12 +5,31 @@ import { COLORS, CAMPAIGNS, ALL_CLASSES, ALL_STATS, getRaceDisplay } from './con
 import ItemCatalog from './ItemCatalog';
 import { SOTERIA_LORE } from './soteria-lore';
 import PlayersPanel from './PlayersPanel';
+import { SOTERIA_LORE } from './soteria-lore';
+import { SOTERIA_MECHANICS } from './soteria-mechanics';
+import { SOTERIA_BESTIARY } from './soteria-bestiary';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
 You are assisting the Dungeon Master (Architect) of this world.
 You may speak plainly and directly — no cryptic player-facing persona needed here.
 Be thorough, creative, and specific to the Soteria setting.
+
+${SOTERIA_LORE}
+
+${SOTERIA_MECHANICS}
+
+${SOTERIA_BESTIARY}
+`;
+
+
+const SOTERIA_DM_CONTEXT = `
+You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
+You are assisting the Dungeon Master (Architect) of this world.
+You may speak plainly and directly — no cryptic player-facing persona needed here.
+Be thorough, creative, and specific to the Soteria setting.
+
+
 
 ${SOTERIA_LORE}
 `;
