@@ -1,6 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import supabase from './lib/supabase';
 import { COLORS, CAMPAIGNS } from './constants';
+import { SOTERIA_LORE } from './soteria-lore';
+
+const SOTERIA_DM_CONTEXT = `
+You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
+You are assisting the Dungeon Master (Architect) of this world.
+You may speak plainly and directly — no cryptic player-facing persona needed here.
+Be thorough, creative, and specific to the Soteria setting.
+
+${SOTERIA_LORE}
+`;
 
 const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY;
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
