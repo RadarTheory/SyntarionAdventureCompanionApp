@@ -485,17 +485,24 @@ function MusicPanel() {
         .from('music')
         .list('', { limit: 1000, sortBy: { column: 'name', order: 'asc' } });
 
-      if (listError) throw listError;
+      console.log('LIST DATA:', data);
+      console.log('LIST ERROR:', listError);
 
-      const audioFiles = (data || [])
+      if (listError) throw new Error(`Storage error: ${listError.message} (${listError.statusCode})`);
+      if (!data) throw new Error('No data returned from storage');
+      if (data.length === 0) throw new Error('Bucket returned empty — check bucket name and permissions');
+
+      const audioFiles = data
         .filter(f => f.name && /\.(wav|mp3|ogg|flac|m4a)$/i.test(f.name))
         .map(f => ({
           title: f.name.replace(/\.(wav|mp3|ogg|flac|m4a)$/i, ''),
           file_path: f.name,
         }));
 
+      if (audioFiles.length === 0) throw new Error(`Bucket has ${data.length} files but none matched audio extensions. First file: ${data[0]?.name}`);
+
       setTracks(audioFiles);
-      if (audioFiles.length > 0) setCurrentTrack(audioFiles[0]);
+      setCurrentTrack(audioFiles[0]);
     } catch (err) {
       setError(err.message);
     }
@@ -524,8 +531,12 @@ function MusicPanel() {
           <audio key={currentTrack.file_path} controls src={getMusicUrl(currentTrack.file_path)} style={{ width: '100%' }} />
         </div>
       )}
-      {loading && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Loading tracks…</div>}
-      {error && <div style={{ fontSize: 11, color: COLORS.warn, fontFamily: 'Georgia, serif', marginBottom: 12 }}>Error: {error}</div>}
+      {loading && (
+        <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Loading tracks…</div>
+      )}
+      {error && (
+        <div style={{ fontSize: 11, color: COLORS.warn, fontFamily: 'Georgia, serif', marginBottom: 12 }}>Error: {error}</div>
+      )}
       {!loading && !error && (
         <>
           <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', marginBottom: 10 }}>
@@ -540,13 +551,17 @@ function MusicPanel() {
                   textAlign: 'left',
                   background: currentTrack?.file_path === track.file_path ? COLORS.magicBg : COLORS.card,
                   border: `1px solid ${currentTrack?.file_path === track.file_path ? COLORS.magic : COLORS.border}`,
-                  borderRadius: 6, padding: '10px 12px', color: COLORS.text, cursor: 'pointer', fontFamily: 'Georgia, serif',
+                  borderRadius: 6,
+                  padding: '10px 12px',
+                  color: COLORS.text,
+                  cursor: 'pointer',
+                  fontFamily: 'Georgia, serif',
                 }}
               >
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11 }}>{track.title}</div>
               </button>
             ))}
-            {filteredTracks.length === 0 && !loading && (
+            {filteredTracks.length === 0 && (
               <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No tracks match.</div>
             )}
           </div>
@@ -555,6 +570,7 @@ function MusicPanel() {
     </div>
   );
 }
+
 
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN DM VIEW
