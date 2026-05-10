@@ -15,15 +15,6 @@ export default function PlayersPanel({ onOpenCharacter, onMessage }) {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null); // user id currently expanded
 
-  useEffect(() => {
-    fetchAll();
-    // Refresh when characters change
-    const channel = supabase.channel('players-panel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'characters' }, fetchAll)
-      .subscribe();
-    return () => supabase.removeChannel(channel);
-  }, []);
-
   const fetchAll = async () => {
     setLoading(true);
     const [{ data: userRows }, { data: charRows }] = await Promise.all([
@@ -34,6 +25,15 @@ export default function PlayersPanel({ onOpenCharacter, onMessage }) {
     if (charRows) setCharacters(charRows.map(r => ({ ...r.data, id: r.id, status: r.status, campaign_id: r.campaign_id, user_id: r.user_id })));
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchAll();
+    // Refresh when characters change
+    const channel = supabase.channel('players-panel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'characters' }, fetchAll)
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, []);
 
   // Map each user to their characters
   const userList = users.map(u => ({

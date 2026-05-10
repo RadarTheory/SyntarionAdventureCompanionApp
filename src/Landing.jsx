@@ -205,11 +205,8 @@ export default function Landing({ user, darkMode, setDarkMode }) {
   const [savedChars, setSavedChars]           = useState([]);
   const [loading, setLoading]                 = useState(true);
   const [showDMModal, setShowDMModal]         = useState(false);
-  const [dmAuthenticated, setDmAuthenticated] = useState(false);
   const [hoveredBtn, setHoveredBtn]           = useState(null);
   const [selectedChar, setSelectedChar]       = useState(null);
-
-  useEffect(() => { fetchCharacters(); }, []);
 
   const fetchCharacters = async () => {
     if (!user?.id) return;
@@ -235,9 +232,11 @@ export default function Landing({ user, darkMode, setDarkMode }) {
     }
   };
 
+  useEffect(() => { fetchCharacters(); }, []);
+
   const goHome = () => { setAppView('home'); fetchCharacters(); };
   const handlePlay = () => setAppView(savedChars.length > 0 ? 'character-select' : 'wizard');
-  const handleDMSuccess = () => { setDmAuthenticated(true); setShowDMModal(false); setAppView('dm'); };
+  const handleDMSuccess = () => { setShowDMModal(false); setAppView('dm'); };
 
   // ── Views ──────────────────────────────────────────────────────────────────
   if (appView === 'character-select') return (

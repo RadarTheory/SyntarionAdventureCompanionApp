@@ -1,58 +1,54 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import supabase from './lib/supabase';
+import { useState, useEffect, useRef } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import { useDevice } from './useDevice';
 import { COLORS, CAMPAIGNS, ALL_CLASSES, ALL_STATS, getRaceDisplay } from './constants';
-import ItemCatalog from './ItemCatalog';
-import { SOTERIA_LORE } from './soteria-lore';
-import { SOTERIA_MECHANICS } from './soteria-mechanics';
-import { SOTERIA_BESTIARY } from './soteria-bestiary';
-import PlayersPanel from './PlayersPanel';
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
+
+const DM_USER_ID = import.meta.env.VITE_DM_USER_ID;
+const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+
+const FULL_TITLES = {
+  'I':   'The Investigation of the Corren Mountain Mines',
+  'II':  'The Keys of Aerithos',
+  'III': 'The Trouble in Gamdon',
+  'IV':  'Frozen Sick in Galekgarde',
+};
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
 You are assisting the Dungeon Master (Architect) of this world.
-You may speak plainly and directly — no cryptic player-facing persona needed here.
-Be thorough, creative, and specific to the Soteria setting.
 
-${SOTERIA_LORE}
+THE WORLD:
+- Soteria is a steampunk-fantasy world where the Veinrunner railway cuts through ancient territories
+- Four campaigns: Campaign I (Corren Mountain Mines), Campaign II (Keys of Aerithos), Campaign III (Gamdon), Campaign IV (Galekgarde)
+- Major factions: Sovereign Kingdom, Auric Order, Ylandarian Order, Grimrock Clan, Cult of Thorns
+- Grimrite is a rare enchantable resource disappearing from circulation
+- The four Lines (Ciruson, Reynu, Lucan, Serid) are cosmic threads visible only to certain individuals
 
-${SOTERIA_MECHANICS}o
-
-${SOTERIA_BESTIARY}
+AS DM ASSISTANT:
+- Provide detailed, specific, useful answers
+- Help with NPC creation, plot hooks, encounter design, lore clarification
+- Generate session notes, descriptions, and narrative content
+- You may speak plainly and directly to the DM — no need to maintain The Scribe's cryptic player-facing persona
+- Be thorough, creative, and specific to the Soteria setting
 `;
 
-const DM_USER_ID = import.meta.env.VITE_DM_USER_ID;
-const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY;
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
-
-async function callGroq(systemPrompt, messages, maxTokens = 800) {
-  const res = await fetch(GROQ_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      messages: [{ role: 'system', content: systemPrompt }, ...messages],
-      temperature: 0.8,
-      max_tokens: maxTokens,
-    }),
-  });
-  const data = await res.json();
-  const text = data?.choices?.[0]?.message?.content;
-  if (!text) throw new Error('No response from Groq');
-  return text;
-}
-
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
 }
 
 function StatusBadge({ status }) {
   const map = {
-    draft:              { label: 'Draft',    color: COLORS.dim,   bg: 'rgba(131,115,100,0.12)' },
-    awaiting_adventure: { label: 'Awaiting', color: COLORS.deity, bg: COLORS.deityBg           },
-    approved:           { label: 'Approved', color: COLORS.magic, bg: COLORS.magicBg           },
-    rejected:           { label: 'Rejected', color: COLORS.warn,  bg: COLORS.warnBg            },
+    draft:              { label: 'Draft',             color: COLORS.dim,   bg: 'rgba(131,115,100,0.12)' },
+    awaiting_adventure: { label: 'Awaiting',          color: COLORS.deity, bg: COLORS.deityBg           },
+    approved:           { label: 'Approved',          color: COLORS.magic, bg: COLORS.magicBg           },
+    rejected:           { label: 'Rejected',          color: COLORS.warn,  bg: COLORS.warnBg            },
   };
   const s = map[status] || map.draft;
   return (
@@ -62,18 +58,18 @@ function StatusBadge({ status }) {
   );
 }
 
-// ─── CHAT PANEL (Player ↔ DM) ─────────────────────────────────────────────────
+// ─── CHAT PANEL ───────────────────────────────────────────────────────────────
 function ChatPanel({ session, onClose, isDM }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
-  const [sessionEnded, setSessionEnded] = useState(false);
   const bottomRef = useRef(null);
 
   useEffect(() => {
     if (!session) return;
     fetchMessages();
-    const channel = supabase.channel(`dm-session-${session.session_id}`)
+    const channel = supabase
+      .channel(`session-${session.session_id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `session_id=eq.${session.session_id}` }, () => fetchMessages())
       .subscribe();
     return () => supabase.removeChannel(channel);
@@ -82,180 +78,92 @@ function ChatPanel({ session, onClose, isDM }) {
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   const fetchMessages = async () => {
-    const { data } = await supabase.from('messages').select('*').eq('session_id', session.session_id).order('created_at', { ascending: true });
-    if (data) { setMessages(data); setSessionEnded(data.some(m => m.session_ended)); }
+    const { data } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('session_id', session.session_id)
+      .order('created_at', { ascending: true });
+    if (data) setMessages(data);
   };
 
   const handleSend = async () => {
-    if (!input.trim() || sending || sessionEnded) return;
+    if (!input.trim() || sending) return;
     setSending(true);
     await supabase.from('messages').insert({
       session_id: session.session_id,
-      sender_id: DM_USER_ID,
+      sender_id: isDM ? DM_USER_ID : session.player_id,
       character_id: session.character_id,
       campaign_id: session.campaign_id,
-      type: 'dm_reply',
+      type: isDM ? 'dm_reply' : 'dm',
       content: input.trim(),
-      sender_name: 'The Architect',
-      is_dm: true,
-      session_ended: false,
+      sender_name: isDM ? 'The Architect' : session.character_name,
+      is_dm: isDM,
     });
-    setInput(''); setSending(false);
+    setInput('');
+    setSending(false);
   };
 
-  const handleEndConsult = async () => {
-    await supabase.from('messages').insert({
-      session_id: session.session_id,
-      sender_id: DM_USER_ID,
-      character_id: session.character_id,
-      campaign_id: session.campaign_id,
-      type: 'dm_system',
-      content: '— Consult ended by the Architect —',
-      sender_name: 'The Architect',
-      is_dm: true,
-      session_ended: true,
-      session_ended_by: 'dm',
-      session_ended_at: new Date().toISOString(),
-    });
-    setSessionEnded(true); onClose();
+  const handleEnd = async () => {
+    await supabase.from('messages')
+      .update({ session_ended: true, session_ended_at: new Date().toISOString(), session_ended_by: isDM ? 'dm' : 'player' })
+      .eq('session_id', session.session_id);
+    onClose();
   };
-
-  // Character name + player username in header
-  const headerName = session.character_name || 'Player';
-  const headerSub = session.player_username
-    ? `${CAMPAIGNS.find(c => c.id === session.campaign_id)?.subtitle || 'Private'} · @${session.player_username}`
-    : CAMPAIGNS.find(c => c.id === session.campaign_id)?.subtitle || 'Private';
 
   return (
     <div style={{ position: 'fixed', bottom: 24, right: 24, width: 360, maxHeight: 520, zIndex: 200, display: 'flex', flexDirection: 'column', background: '#13100d', border: `1px solid rgba(240,238,235,0.12)`, borderRadius: 14, boxShadow: '0 24px 64px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
-      <div style={{ padding: '12px 16px', borderBottom: `1px solid rgba(240,238,235,0.08)`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(240,238,235,0.04)' }}>
-        <div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, color: COLORS.text, letterSpacing: '0.06em' }}>{headerName}</div>
-          <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{headerSub} · {sessionEnded ? 'Ended' : 'Active'}</div>
-        </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {!sessionEnded && <button onClick={handleEndConsult} style={{ background: 'transparent', border: `1px solid ${COLORS.warn}55`, borderRadius: 4, padding: '4px 10px', cursor: 'pointer', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.warn, fontFamily: "'Cinzel', serif" }}>End Consult</button>}
-          <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
-        </div>
-      </div>
-
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8, minHeight: 200, maxHeight: 320 }}>
-        {messages.map(msg => {
-          if (msg.type === 'dm_system') return (
-            <div key={msg.id} style={{ textAlign: 'center', fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', padding: '4px 0' }}>{msg.content}</div>
-          );
-          const isMe = isDM ? msg.is_dm : !msg.is_dm;
-          // Show character name for player messages, "The Architect" for DM
-          const displayName = msg.is_dm ? 'The Architect' : (msg.sender_name || msg.character_name || 'Player');
-          return (
-            <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
-              <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginBottom: 3 }}>{displayName}</div>
-              <div style={{ maxWidth: '80%', background: isMe ? 'rgba(121,245,167,0.10)' : 'rgba(240,238,235,0.06)', border: `1px solid ${isMe ? COLORS.magic + '33' : COLORS.border}`, borderRadius: isMe ? '12px 12px 2px 12px' : '12px 12px 12px 2px', padding: '8px 12px', fontSize: 12, color: COLORS.text, fontFamily: 'Georgia, serif', lineHeight: 1.5 }}>{msg.content}</div>
-              <div style={{ fontSize: 7, color: COLORS.dim, marginTop: 2 }}>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-            </div>
-          );
-        })}
-        <div ref={bottomRef} />
-      </div>
-
-      {!sessionEnded ? (
-        <div style={{ padding: '10px 12px', borderTop: `1px solid rgba(240,238,235,0.08)`, display: 'flex', gap: 8 }}>
-          <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()} placeholder="Type a message…" style={{ flex: 1, background: 'rgba(240,238,235,0.06)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', fontSize: 12, color: COLORS.text, fontFamily: 'Georgia, serif', outline: 'none' }} />
-          <button onClick={handleSend} disabled={sending || !input.trim()} style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px 12px', cursor: sending || !input.trim() ? 'default' : 'pointer', fontSize: 10, color: COLORS.magicText, fontFamily: "'Cinzel', serif", opacity: sending ? 0.6 : 1 }}>→</button>
-        </div>
-      ) : (
-        <div style={{ padding: '10px 16px', borderTop: `1px solid rgba(240,238,235,0.08)`, fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center' }}>This consult has ended.</div>
-      )}
-    </div>
-  );
-}
-
-// ─── SCRIBE PANEL (floating chat window) ──────────────────────────────────────
-function ScribePanel({ onClose }) {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [ended, setEnded] = useState(false);
-  const bottomRef = useRef(null);
-
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
-
-  const handleSend = async () => {
-    if (!input.trim() || loading || ended) return;
-    const userMsg = input.trim();
-    setInput('');
-    setLoading(true);
-    const newMessages = [...messages, { role: 'dm', content: userMsg, time: new Date() }];
-    setMessages(newMessages);
-    try {
-      const groqHistory = newMessages.map(m => ({ role: m.role === 'dm' ? 'user' : 'assistant', content: m.content }));
-      const text = await callGroq(SOTERIA_DM_CONTEXT, groqHistory, 800);
-      setMessages(prev => [...prev, { role: 'scribe', content: text, time: new Date() }]);
-    } catch {
-      setMessages(prev => [...prev, { role: 'scribe', content: 'The archives are silent. Try again.', time: new Date() }]);
-    } finally { setLoading(false); }
-  };
-
-  const handleEnd = () => {
-    setMessages(prev => [...prev, { role: 'system', content: '— Consult ended by the Architect —', time: new Date() }]);
-    setEnded(true);
-  };
-
-  return (
-    <div style={{ position: 'fixed', bottom: 24, right: 24, width: 400, maxHeight: 560, zIndex: 200, display: 'flex', flexDirection: 'column', background: '#13100d', border: `1px solid ${COLORS.deity}44`, borderRadius: 14, boxShadow: '0 24px 64px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
       {/* Header */}
       <div style={{ padding: '12px 16px', borderBottom: `1px solid rgba(240,238,235,0.08)`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(240,238,235,0.04)' }}>
         <div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, color: COLORS.deity, letterSpacing: '0.06em' }}>The Scribe</div>
-          <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{ended ? 'Consult ended' : 'Active · Soteria Archives'}</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, color: COLORS.text, letterSpacing: '0.06em' }}>
+            {isDM ? `↩ ${session.character_name}` : '✉ The Architect'}
+          </div>
+          <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+            {CAMPAIGNS.find(c => c.id === session.campaign_id)?.subtitle || 'Private'}
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {!ended
-            ? <button onClick={handleEnd} style={{ background: 'transparent', border: `1px solid ${COLORS.warn}55`, borderRadius: 4, padding: '4px 10px', cursor: 'pointer', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.warn, fontFamily: "'Cinzel', serif" }}>End Consult</button>
-            : <button onClick={() => { setMessages([]); setEnded(false); }} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 4, padding: '4px 10px', cursor: 'pointer', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.deityText, fontFamily: "'Cinzel', serif" }}>New Consult</button>
-          }
-          <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={handleEnd} style={{ background: 'transparent', border: `1px solid ${COLORS.warn}44`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.warn, fontFamily: "'Cinzel', serif" }}>
+            End Session
+          </button>
+          <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
         </div>
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 260, maxHeight: 380 }}>
-        {messages.length === 0 && (
-          <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', marginTop: 32 }}>
-            The archives await your question, Architect.
-          </div>
-        )}
-        {messages.map((msg, i) => {
-          if (msg.role === 'system') return (
-            <div key={i} style={{ textAlign: 'center', fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', padding: '4px 0' }}>{msg.content}</div>
-          );
-          const isMe = msg.role === 'dm';
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8, minHeight: 200, maxHeight: 320 }}>
+        {messages.map(msg => {
+          const isMe = isDM ? msg.is_dm : !msg.is_dm;
           return (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
-              <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginBottom: 3 }}>{isMe ? 'The Architect' : 'The Scribe'}</div>
-              <div style={{ maxWidth: '85%', background: isMe ? 'rgba(121,245,167,0.08)' : COLORS.deityBg, border: `1px solid ${isMe ? COLORS.magic + '33' : COLORS.deity + '44'}`, borderRadius: isMe ? '12px 12px 2px 12px' : '12px 12px 12px 2px', padding: '8px 12px', fontSize: 12, color: isMe ? COLORS.text : COLORS.deityText, fontFamily: 'Georgia, serif', lineHeight: 1.65, fontStyle: isMe ? 'normal' : 'italic' }}>{msg.content}</div>
-              <div style={{ fontSize: 7, color: COLORS.dim, marginTop: 2 }}>{msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+            <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
+              <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginBottom: 3 }}>
+                {msg.sender_name || (msg.is_dm ? 'The Architect' : 'Player')}
+              </div>
+              <div style={{ maxWidth: '80%', background: isMe ? 'rgba(121,245,167,0.10)' : 'rgba(240,238,235,0.06)', border: `1px solid ${isMe ? COLORS.magic + '33' : COLORS.border}`, borderRadius: isMe ? '12px 12px 2px 12px' : '12px 12px 12px 2px', padding: '8px 12px', fontSize: 12, color: COLORS.text, fontFamily: 'Georgia, serif', lineHeight: 1.5 }}>
+                {msg.content}
+              </div>
+              <div style={{ fontSize: 7, color: COLORS.dim, marginTop: 2 }}>
+                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
             </div>
           );
         })}
-        {loading && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-            <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginBottom: 3 }}>The Scribe</div>
-            <div style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}44`, borderRadius: '12px 12px 12px 2px', padding: '8px 12px', fontSize: 12, color: COLORS.deityText, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>The Scribe deliberates…</div>
-          </div>
-        )}
         <div ref={bottomRef} />
       </div>
 
       {/* Input */}
-      {!ended ? (
-        <div style={{ padding: '10px 12px', borderTop: `1px solid rgba(240,238,235,0.08)`, display: 'flex', gap: 8 }}>
-          <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()} placeholder="Ask the Scribe…" style={{ flex: 1, background: 'rgba(240,238,235,0.06)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', fontSize: 12, color: COLORS.text, fontFamily: 'Georgia, serif', outline: 'none' }} />
-          <button onClick={handleSend} disabled={loading || !input.trim()} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 6, padding: '8px 12px', cursor: loading || !input.trim() ? 'default' : 'pointer', fontSize: 10, color: COLORS.deityText, fontFamily: "'Cinzel', serif", opacity: loading ? 0.6 : 1 }}>→</button>
-        </div>
-      ) : (
-        <div style={{ padding: '10px 16px', borderTop: `1px solid rgba(240,238,235,0.08)`, fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center' }}>This consult has ended.</div>
-      )}
+      <div style={{ padding: '10px 12px', borderTop: `1px solid rgba(240,238,235,0.08)`, display: 'flex', gap: 8 }}>
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
+          placeholder="Type a message…"
+          style={{ flex: 1, background: 'rgba(240,238,235,0.06)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', fontSize: 12, color: COLORS.text, fontFamily: 'Georgia, serif', outline: 'none' }}
+        />
+        <button onClick={handleSend} disabled={sending || !input.trim()} style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px 12px', cursor: sending ? 'default' : 'pointer', fontSize: 10, color: COLORS.magicText, fontFamily: "'Cinzel', serif", opacity: sending ? 0.6 : 1 }}>
+          →
+        </button>
+      </div>
     </div>
   );
 }
@@ -268,11 +176,26 @@ function CharacterEditor({ char, onSave, onClose }) {
 
   const handleSave = async (newStatus) => {
     setSaving(true);
-    await supabase.from('characters').update({ data: { ...data }, status: newStatus || data.status, campaign_id: data.campaign || null }).eq('id', char.id);
+    const updatedData = { ...data };
+    await supabase.from('characters').update({
+      data: updatedData,
+      status: newStatus || data.status,
+      campaign_id: data.campaign || null,
+    }).eq('id', char.id);
+
     if (note && (newStatus === 'rejected' || newStatus === 'approved')) {
-      await supabase.from('messages').insert({ character_id: char.id, campaign_id: data.campaign, type: 'dm_reply', content: note, sender_name: 'The Architect', is_dm: true });
+      await supabase.from('messages').insert({
+        character_id: char.id,
+        campaign_id: data.campaign,
+        type: 'dm_reply',
+        content: note,
+        sender_name: 'The Architect',
+        is_dm: true,
+      });
     }
-    setSaving(false); onSave();
+
+    setSaving(false);
+    onSave();
   };
 
   const set = (key, val) => setData(prev => ({ ...prev, [key]: val }));
@@ -285,40 +208,47 @@ function CharacterEditor({ char, onSave, onClose }) {
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 16, fontWeight: 700, color: COLORS.text }}>{char.name}</div>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 16 }}>✕</button>
         </div>
+
+        {/* Status actions */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
           <button onClick={() => handleSave('approved')} style={{ flex: 1, background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText, fontFamily: "'Cinzel', serif", fontWeight: 700 }}>✓ Approve</button>
           <button onClick={() => handleSave('rejected')} style={{ flex: 1, background: COLORS.warnBg, border: `1px solid ${COLORS.warn}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.warn, fontFamily: "'Cinzel', serif", fontWeight: 700 }}>✕ Reject</button>
-          <button onClick={() => handleSave()} disabled={saving} style={{ flex: 1, background: 'rgba(240,238,235,0.06)', border: `1px solid ${COLORS.borderMid}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.text, fontFamily: "'Cinzel', serif" }}>{saving ? 'Saving…' : '↑ Save'}</button>
+          <button onClick={() => handleSave()} disabled={saving} style={{ flex: 1, background: 'rgba(240,238,235,0.06)', border: `1px solid ${COLORS.borderMid}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.text, fontFamily: "'Cinzel', serif" }}>
+            {saving ? 'Saving…' : '↑ Save'}
+          </button>
         </div>
+
+        {/* Note to player */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ ...label8(), marginBottom: 6 }}>Note to Player (sent on approve/reject)</div>
           <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Optional message to the player…" rows={2} style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
         </div>
+
+        {/* Campaign assignment */}
         <div style={{ marginBottom: 16 }}>
           <div style={{ ...label8(), marginBottom: 8 }}>Campaign</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {CAMPAIGNS.map(c => <div key={c.id} onClick={() => set('campaign', data.campaign === c.id ? null : c.id)} style={{ background: data.campaign === c.id ? COLORS.magicBg : 'transparent', border: `1px solid ${data.campaign === c.id ? COLORS.magic : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontSize: 10, color: data.campaign === c.id ? COLORS.magicText : COLORS.muted, fontFamily: "'Cinzel', serif", letterSpacing: '0.06em' }}>{c.subtitle}</div>)}
-          </div>
-        </div>
-        {[['Name', 'name'], ['Backstory', 'backstory'], ['Notes', 'notes']].map(([lbl, key]) => (
-          <div key={key} style={{ marginBottom: 14 }}>
-            <div style={{ ...label8(), marginBottom: 6 }}>{lbl}</div>
-            {key === 'name'
-              ? <input value={data[key] || ''} onChange={e => set(key, e.target.value)} style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none', boxSizing: 'border-box' }} />
-              : <textarea value={data[key] || ''} onChange={e => set(key, e.target.value)} rows={3} style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none', resize: 'none', boxSizing: 'border-box' }} />}
-          </div>
-        ))}
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ ...label8(), marginBottom: 10 }}>Ability Points</div>
-          <div style={{ display: 'flex', gap: 16 }}>
-            {[['apCurrent', 'AP Current'], ['apTotal', 'AP Total']].map(([key, lbl]) => (
-              <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ fontSize: 9, color: COLORS.muted, fontFamily: "'Cinzel', serif", width: 70 }}>{lbl}</div>
-                <input type="number" min="0" value={data[key] || 0} onChange={e => set(key, parseInt(e.target.value) || 0)} style={{ width: 50, background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 6px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }} />
+            {CAMPAIGNS.map(c => (
+              <div key={c.id} onClick={() => set('campaign', data.campaign === c.id ? null : c.id)} style={{ background: data.campaign === c.id ? COLORS.magicBg : 'transparent', border: `1px solid ${data.campaign === c.id ? COLORS.magic : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontSize: 10, color: data.campaign === c.id ? COLORS.magicText : COLORS.muted, fontFamily: "'Cinzel', serif", letterSpacing: '0.06em' }}>
+                {c.subtitle}
               </div>
             ))}
           </div>
         </div>
+
+        {/* Editable fields */}
+        {[['Name', 'name'], ['Backstory', 'backstory'], ['Notes', 'notes']].map(([label, key]) => (
+          <div key={key} style={{ marginBottom: 14 }}>
+            <div style={{ ...label8(), marginBottom: 6 }}>{label}</div>
+            {key === 'name' ? (
+              <input value={data[key] || ''} onChange={e => set(key, e.target.value)} style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none', boxSizing: 'border-box' }} />
+            ) : (
+              <textarea value={data[key] || ''} onChange={e => set(key, e.target.value)} rows={3} style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
+            )}
+          </div>
+        ))}
+
+        {/* Stats */}
         <div style={{ ...label8(), marginBottom: 10 }}>Stats</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {ALL_STATS.map(s => (
@@ -328,6 +258,8 @@ function CharacterEditor({ char, onSave, onClose }) {
             </div>
           ))}
         </div>
+
+        {/* DM Memory */}
         <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${COLORS.border}` }}>
           <DMMemoryPanel characterId={char.id} />
         </div>
@@ -356,23 +288,42 @@ function DMMemoryPanel({ characterId, campaignId }) {
   const addMemory = async () => {
     if (!newMemory.trim()) return;
     setSaving(true);
-    await supabase.from('dm_memory').insert({ character_id: characterId || null, campaign_id: campaignId || null, category, content: newMemory.trim() });
-    setNewMemory(''); setSaving(false); fetchMemories();
+    await supabase.from('dm_memory').insert({
+      character_id: characterId || null,
+      campaign_id: campaignId || null,
+      category,
+      content: newMemory.trim(),
+    });
+    setNewMemory('');
+    setSaving(false);
+    fetchMemories();
   };
 
-  const deleteMemory = async (id) => { await supabase.from('dm_memory').delete().eq('id', id); fetchMemories(); };
+  const deleteMemory = async (id) => {
+    await supabase.from('dm_memory').delete().eq('id', id);
+    fetchMemories();
+  };
+
   const cats = ['note', 'secret', 'hook', 'npc', 'lore'];
 
   return (
     <div>
       <div style={{ ...label8(), marginBottom: 10 }}>DM Memory</div>
+
+      {/* Category + input */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-        {cats.map(c => <div key={c} onClick={() => setCategory(c)} style={{ background: category === c ? COLORS.deityBg : 'transparent', border: `1px solid ${category === c ? COLORS.deity : COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: category === c ? COLORS.deityText : COLORS.dim, fontFamily: "'Cinzel', serif" }}>{c}</div>)}
+        {cats.map(c => (
+          <div key={c} onClick={() => setCategory(c)} style={{ background: category === c ? COLORS.deityBg : 'transparent', border: `1px solid ${category === c ? COLORS.deity : COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: category === c ? COLORS.deityText : COLORS.dim, fontFamily: "'Cinzel', serif" }}>
+            {c}
+          </div>
+        ))}
       </div>
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
         <input value={newMemory} onChange={e => setNewMemory(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMemory()} placeholder="Add a memory entry…" style={{ flex: 1, background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
         <button onClick={addMemory} disabled={saving} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 6, padding: '7px 12px', cursor: 'pointer', fontSize: 10, color: COLORS.deityText, fontFamily: "'Cinzel', serif" }}>+</button>
       </div>
+
+      {/* Memory list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 160, overflowY: 'auto' }}>
         {memories.map(m => (
           <div key={m.id} style={{ background: 'rgba(240,238,235,0.03)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
@@ -383,8 +334,79 @@ function DMMemoryPanel({ characterId, campaignId }) {
             <button onClick={() => deleteMemory(m.id)} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 12, flexShrink: 0 }}>×</button>
           </div>
         ))}
-        {memories.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No memories recorded.</div>}
+        {memories.length === 0 && (
+          <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No memories recorded.</div>
+        )}
       </div>
+    </div>
+  );
+}
+
+// ─── SCRIBE DM PANEL ──────────────────────────────────────────────────────────
+function ScribeDMPanel() {
+  const [query, setQuery] = useState('');
+  const [response, setResponse] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState([]);
+
+  const handleConsult = async () => {
+    if (!query.trim() || loading) return;
+    setLoading(true);
+
+    const memoryContext = history.slice(-4).map(h => `DM: ${h.q}\nScribe: ${h.a}`).join('\n\n');
+    const prompt = `${SOTERIA_DM_CONTEXT}\n\n${memoryContext ? `RECENT CONSULTATION HISTORY:\n${memoryContext}\n\n` : ''}DM ASKS:\n"${query}"\n\nProvide a thorough, specific, useful response for the DM.`;
+
+    try {
+      const res = await fetch(GEMINI_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.8, maxOutputTokens: 600 },
+        }),
+      });
+      const data = await res.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) {
+        setResponse(text);
+        setHistory(prev => [...prev, { q: query, a: text }]);
+        setQuery('');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <div style={{ ...label8(), marginBottom: 12 }}>Consult the Scribe</div>
+      <textarea value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && e.ctrlKey && handleConsult()} placeholder="Ask the Scribe anything about Soteria, your campaigns, NPCs, lore…" rows={3} style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', lineHeight: 1.6, outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
+      <button onClick={handleConsult} disabled={!query.trim() || loading} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 6, padding: '10px 20px', cursor: loading ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.deityText, opacity: loading ? 0.6 : 1, marginBottom: 16 }}>
+        {loading ? 'The Scribe deliberates…' : '✦ Consult (Ctrl+Enter)'}
+      </button>
+
+      {response && (
+        <div style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}44`, borderRadius: 8, padding: '16px' }}>
+          <div style={{ fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.deity, fontFamily: "'Cinzel', serif", marginBottom: 10 }}>The Scribe Responds</div>
+          <p style={{ fontSize: 12, color: COLORS.deityText, fontFamily: 'Georgia, serif', lineHeight: 1.8, margin: 0 }}>{response}</p>
+        </div>
+      )}
+
+      {history.length > 0 && (
+        <div style={{ marginTop: 20 }}>
+          <div style={{ ...label8(), marginBottom: 10 }}>Session History</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 300, overflowY: 'auto' }}>
+            {[...history].reverse().slice(0, 5).map((h, i) => (
+              <div key={i} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '10px 12px' }}>
+                <div style={{ fontSize: 10, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 6 }}>Q: {h.q}</div>
+                <div style={{ fontSize: 11, color: COLORS.textSub, fontFamily: 'Georgia, serif', lineHeight: 1.6 }}>{h.a.substring(0, 200)}…</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -396,7 +418,9 @@ function SessionLogEditor({ campaign }) {
   const [saving, setSaving] = useState(false);
   const [sessionTitle, setSessionTitle] = useState('');
 
-  useEffect(() => { fetchLog(); }, [campaign.id]);
+  useEffect(() => {
+    fetchLog();
+  }, [campaign.id]);
 
   const fetchLog = async () => {
     const { data } = await supabase.from('campaigns').select('session_log').eq('id', campaign.id).single();
@@ -406,10 +430,18 @@ function SessionLogEditor({ campaign }) {
   const addEntry = async () => {
     if (!newEntry.trim()) return;
     setSaving(true);
-    const entry = { id: Date.now(), title: sessionTitle || `Session ${log.length + 1}`, content: newEntry.trim(), timestamp: new Date().toISOString() };
+    const entry = {
+      id: Date.now(),
+      title: sessionTitle || `Session ${log.length + 1}`,
+      content: newEntry.trim(),
+      timestamp: new Date().toISOString(),
+    };
     const updated = [...log, entry];
     await supabase.from('campaigns').update({ session_log: updated }).eq('id', campaign.id);
-    setLog(updated); setNewEntry(''); setSessionTitle(''); setSaving(false);
+    setLog(updated);
+    setNewEntry('');
+    setSessionTitle('');
+    setSaving(false);
   };
 
   const deleteEntry = async (id) => {
@@ -421,19 +453,23 @@ function SessionLogEditor({ campaign }) {
   return (
     <div>
       <div style={{ ...label8(), marginBottom: 12 }}>Session Log — {campaign.subtitle}</div>
+
+      {/* New entry */}
       <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '14px', marginBottom: 16 }}>
         <input value={sessionTitle} onChange={e => setSessionTitle(e.target.value)} placeholder="Session title (optional)…" style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${COLORS.border}`, padding: '6px 0', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
-        <textarea value={newEntry} onChange={e => setNewEntry(e.target.value)} placeholder="Write the session log entry…" rows={4} style={{ width: '100%', background: 'transparent', border: 'none', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', lineHeight: 1.7, outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
+        <textarea value={newEntry} onChange={e => setNewEntry(e.target.value)} placeholder="Write the session log entry… (players will see this)" rows={4} style={{ width: '100%', background: 'transparent', border: 'none', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', lineHeight: 1.7, outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
         <button onClick={addEntry} disabled={saving || !newEntry.trim()} style={{ background: saving ? 'transparent' : COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px 20px', cursor: saving ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText, fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
           {saving ? 'Committing…' : '✦ Commit to Log'}
         </button>
       </div>
+
+      {/* Existing entries */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {[...log].reverse().map(entry => (
           <div key={entry.id} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '14px 16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
               <div>
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, color: COLORS.text }}>{entry.title}</div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, color: COLORS.text, letterSpacing: '0.04em' }}>{entry.title}</div>
                 <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{new Date(entry.timestamp).toLocaleDateString()}</div>
               </div>
               <button onClick={() => deleteEntry(entry.id)} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 14 }}>×</button>
@@ -441,7 +477,9 @@ function SessionLogEditor({ campaign }) {
             <p style={{ fontSize: 12, color: COLORS.textSub, fontFamily: 'Georgia, serif', lineHeight: 1.7, margin: 0 }}>{entry.content}</p>
           </div>
         ))}
-        {log.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No entries yet. The chronicle awaits.</div>}
+        {log.length === 0 && (
+          <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No entries yet. The chronicle awaits.</div>
+        )}
       </div>
     </div>
   );
@@ -459,7 +497,12 @@ function MapManager({ campaign }) {
     });
   }, [campaign.id]);
 
-  const save = async () => { setSaving(true); await supabase.from('campaigns').update({ map_url: url }).eq('id', campaign.id); setCurrent(url); setSaving(false); };
+  const save = async () => {
+    setSaving(true);
+    await supabase.from('campaigns').update({ map_url: url }).eq('id', campaign.id);
+    setCurrent(url);
+    setSaving(false);
+  };
 
   return (
     <div>
@@ -467,65 +510,10 @@ function MapManager({ campaign }) {
       {current && <img src={current} alt="map" style={{ width: '100%', borderRadius: 8, border: `1px solid ${COLORS.border}`, marginBottom: 12 }} />}
       <div style={{ display: 'flex', gap: 8 }}>
         <input value={url} onChange={e => setUrl(e.target.value)} placeholder="Paste image URL…" style={{ flex: 1, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '9px 12px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none' }} />
-        <button onClick={save} disabled={saving} style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '9px 16px', cursor: saving ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText, fontWeight: 700 }}>{saving ? 'Saving…' : 'Set Map'}</button>
+        <button onClick={save} disabled={saving} style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '9px 16px', cursor: saving ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText, fontWeight: 700 }}>
+          {saving ? 'Saving…' : 'Set Map'}
+        </button>
       </div>
-    </div>
-  );
-}
-
-// ─── MUSIC PANEL ─────────────────────────────────────────────────────────────
-function MusicPanel() {
-  const [tracks, setTracks] = useState([]);
-  const [search, setSearch] = useState('');
-  const [currentTrack, setCurrentTrack] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => { fetchMusic(); }, []);
-
-  const fetchMusic = async () => {
-    setLoading(true); setError(null);
-    try {
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const res = await fetch(`${SUPABASE_URL}/storage/v1/object/list/music`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY }, body: JSON.stringify({ prefix: '', limit: 1000, offset: 0, sortBy: { column: 'name', order: 'asc' } }) });
-      if (!res.ok) { const txt = await res.text(); setError(`HTTP ${res.status}: ${txt}`); setLoading(false); return; }
-      const data = await res.json();
-      const audioFiles = (Array.isArray(data) ? data : []).filter(file => file.name && /\.(wav|mp3|ogg|flac|m4a)$/i.test(file.name)).map(file => ({ title: file.name.replace(/\.(wav|mp3|ogg|flac|m4a)$/i, ''), file_path: file.name }));
-      setTracks(audioFiles);
-      if (audioFiles.length > 0) setCurrentTrack(audioFiles[0]);
-    } catch (err) { setError(err.message); }
-    setLoading(false);
-  };
-
-  const getMusicUrl = (filePath) => `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/music/${encodeURIComponent(filePath)}`;
-  const filteredTracks = tracks.filter(t => t.title.toLowerCase().includes(search.toLowerCase()));
-
-  return (
-    <div>
-      <div style={{ ...label8(), marginBottom: 12 }}>Music Library</div>
-      <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search music…" style={{ width: '100%', marginBottom: 16, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '10px 12px', color: COLORS.text, fontFamily: 'Georgia, serif', outline: 'none', boxSizing: 'border-box' }} />
-      {currentTrack && (
-        <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: 16, marginBottom: 16 }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, marginBottom: 10, letterSpacing: '0.04em' }}>♪ {currentTrack.title}</div>
-          <audio key={currentTrack.file_path} controls src={getMusicUrl(currentTrack.file_path)} style={{ width: '100%' }} />
-        </div>
-      )}
-      {loading && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Loading tracks…</div>}
-      {error && <div style={{ fontSize: 11, color: COLORS.warn, fontFamily: 'Georgia, serif', marginBottom: 12 }}>Error: {error}</div>}
-      {!loading && (
-        <>
-          <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', marginBottom: 10 }}>{filteredTracks.length} of {tracks.length} track{tracks.length !== 1 ? 's' : ''}</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {filteredTracks.map(track => (
-              <button key={track.file_path} onClick={() => setCurrentTrack(track)} style={{ textAlign: 'left', background: currentTrack?.file_path === track.file_path ? COLORS.magicBg : COLORS.card, border: `1px solid ${currentTrack?.file_path === track.file_path ? COLORS.magic : COLORS.border}`, borderRadius: 6, padding: '10px 12px', color: COLORS.text, cursor: 'pointer', fontFamily: 'Georgia, serif' }}>
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11 }}>{track.title}</div>
-              </button>
-            ))}
-            {filteredTracks.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No tracks match.</div>}
-          </div>
-        </>
-      )}
     </div>
   );
 }
@@ -533,7 +521,7 @@ function MusicPanel() {
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN DM VIEW
 // ═════════════════════════════════════════════════════════════════════════════
-const DM_TABS = ['Inbox', 'Characters', 'Campaigns', 'Scribe', 'Memory', 'Catalog', 'Music'];
+const DM_TABS = ['Inbox', 'Characters', 'Campaigns', 'Scribe', 'Memory'];
 
 export default function DMView({ onHome }) {
   const { isMobile } = useDevice();
@@ -545,80 +533,65 @@ export default function DMView({ onHome }) {
   const [activeCampaignTab, setActiveCampaignTab] = useState('I');
   const [campaignSubTab, setCampaignSubTab] = useState('log');
   const [activeSession, setActiveSession] = useState(null);
-  const [showScribe, setShowScribe] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCampaign, setFilterCampaign] = useState('all');
   const [unreadCount, setUnreadCount] = useState(0);
-  const [showArchive, setShowArchive] = useState(false);
-  const [toast, setToast] = useState(null);
-
-  const activeSessionRef = useRef(activeSession);
-  useEffect(() => { activeSessionRef.current = activeSession; }, [activeSession]);
-
-  const fetchMessages = useCallback(async () => {
-    const { data } = await supabase.from('messages').select('*').not('session_id', 'is', null).order('created_at', { ascending: false });
-    if (!data) return;
-    const sessions = {};
-    data.forEach(msg => {
-      const key = msg.session_id;
-      if (!sessions[key]) sessions[key] = { ...msg, session_id: key, ended: false, archived: false };
-      if (msg.session_ended) sessions[key].ended = true;
-      if (msg.archived) sessions[key].archived = true;
-      // Prefer non-DM sender name for the session label
-      if (!msg.is_dm && msg.sender_name && msg.sender_name !== 'The Architect') {
-        sessions[key].sender_name = msg.sender_name;
-      }
-      if (!msg.is_dm && msg.character_name) sessions[key].character_name = msg.character_name;
-      if (!msg.is_dm && msg.player_username) sessions[key].player_username = msg.player_username;
-    });
-    const sessionList = Object.values(sessions).sort((a, b) => {
-      if (a.ended !== b.ended) return a.ended ? 1 : -1;
-      return new Date(b.created_at) - new Date(a.created_at);
-    });
-    setMessages(sessionList);
-    setUnreadCount(sessionList.filter(s => !s.read && !s.ended && !s.is_dm && !s.archived).length);
-  }, []);
 
   useEffect(() => {
     fetchAll();
-    const channel = supabase.channel('dm-inbox')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'is_dm=eq.false' }, (payload) => {
+    // Subscribe to new messages
+    const channel = supabase
+      .channel('dm-inbox')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'is_dm=eq.false' }, () => {
         fetchMessages();
-        setToast({ name: payload.new.sender_name || 'A player', content: payload.new.content });
-        setTimeout(() => setToast(null), 4000);
-        if (payload.new.session_id && activeSessionRef.current?.session_id !== payload.new.session_id) {
-          setActiveSession({
-            session_id: payload.new.session_id,
-            character_id: payload.new.character_id,
-            character_name: payload.new.sender_name || payload.new.character_name || 'Player',
-            player_username: payload.new.player_username || null,
-            campaign_id: payload.new.campaign_id,
-            player_id: payload.new.sender_id,
-          });
-        }
       })
       .subscribe();
     return () => supabase.removeChannel(channel);
-  }, [fetchMessages]);
+  }, []);
 
-  const fetchAll = async () => { setLoading(true); await Promise.all([fetchCharacters(), fetchMessages()]); setLoading(false); };
+  const fetchAll = async () => {
+    setLoading(true);
+    await Promise.all([fetchCharacters(), fetchMessages()]);
+    setLoading(false);
+  };
 
   const fetchCharacters = async () => {
     const { data } = await supabase.from('characters').select('*');
     if (data) setCharacters(data.map(row => ({ ...row.data, id: row.id, status: row.status, campaign_id: row.campaign_id, user_id: row.user_id })));
   };
 
-  const markRead = async (sessionId) => { await supabase.from('messages').update({ read: true }).eq('session_id', sessionId).eq('is_dm', false); fetchMessages(); };
-  const archiveSession = async (e, sessionId) => { e.stopPropagation(); await supabase.from('messages').update({ archived: true }).eq('session_id', sessionId); fetchMessages(); };
-  const unarchiveSession = async (e, sessionId) => { e.stopPropagation(); await supabase.from('messages').update({ archived: false }).eq('session_id', sessionId); fetchMessages(); };
+  const fetchMessages = async () => {
+    const { data } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('is_dm', false)
+      .eq('session_ended', false)
+      .order('created_at', { ascending: false });
+    if (data) {
+      // Group by session_id, get latest per session
+      const sessions = {};
+      data.forEach(msg => {
+        const key = msg.session_id || msg.id;
+        if (!sessions[key]) sessions[key] = { ...msg, session_id: key, messages: [] };
+        sessions[key].messages.push(msg);
+      });
+      const sessionList = Object.values(sessions);
+      setMessages(sessionList);
+      setUnreadCount(sessionList.filter(s => !s.read).length);
+    }
+  };
+
+  const markRead = async (msgId) => {
+    await supabase.from('messages').update({ read: true }).eq('id', msgId);
+    fetchMessages();
+  };
 
   const openSession = (session) => {
-    markRead(session.session_id);
+    markRead(session.id);
     setActiveSession({
-      session_id: session.session_id,
+      session_id: session.session_id || session.id,
       character_id: session.character_id,
-      character_name: session.sender_name || session.character_name || 'Player',
-      player_username: session.player_username || null,
+      character_name: session.sender_name || 'Player',
       campaign_id: session.campaign_id,
       player_id: session.sender_id,
     });
@@ -630,68 +603,39 @@ export default function DMView({ onHome }) {
     return true;
   });
 
-  const activeMessages = messages.filter(s => !s.archived);
-  const archivedMessages = messages.filter(s => s.archived);
-  const displayedMessages = showArchive ? archivedMessages : activeMessages;
-
   const renderTab = () => {
     switch (activeTab) {
-      case 'Catalog': return <ItemCatalog />;
-      case 'Music': return <MusicPanel />;
-
-      case 'Scribe':
-        return (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', gap: 16 }}>
-            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: COLORS.deity, letterSpacing: '0.1em' }}>The Scribe</div>
-            <div style={{ fontSize: 12, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', maxWidth: 320 }}>
-              An ancient archival intelligence, bound to answer the Architect alone. Open a consult to query the Soteria archives.
-            </div>
-            <button onClick={() => setShowScribe(true)} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 8, padding: '12px 28px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.deityText, marginTop: 8 }}>
-              ✦ Open Consult
-            </button>
-          </div>
-        );
 
       case 'Inbox':
         return (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ ...label8() }}>{showArchive ? 'Archived Messages' : 'Player Messages'}</div>
-              <button onClick={() => setShowArchive(!showArchive)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 10px', cursor: 'pointer', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>{showArchive ? '← Active' : '⌂ Archive'}</button>
-            </div>
-            {displayedMessages.length === 0 ? (
+            <div style={{ ...label8(), marginBottom: 12 }}>Player Messages</div>
+            {messages.length === 0 ? (
               <div style={{ background: COLORS.card, border: `1px dashed ${COLORS.border}`, borderRadius: 8, padding: '40px 20px', textAlign: 'center' }}>
-                <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{showArchive ? 'The archive is empty.' : 'No messages. The world is quiet.'}</div>
+                <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No messages. The world is quiet.</div>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {displayedMessages.map(session => {
-                  // Display: character name (player username)
-                  const displayName = session.sender_name || session.character_name || 'Unknown';
-                  const playerTag = session.player_username ? ` (@${session.player_username})` : '';
-                  return (
-                    <div key={session.session_id} onClick={() => !session.ended && !session.archived && openSession(session)}
-                      style={{ background: session.ended || session.archived ? 'transparent' : (session.read ? COLORS.card : 'rgba(121,245,167,0.06)'), border: `1px solid ${session.ended || session.archived ? COLORS.border : (session.read ? COLORS.border : COLORS.magic + '44')}`, borderRadius: 8, padding: '12px 16px', cursor: session.ended || session.archived ? 'default' : 'pointer', opacity: session.ended || session.archived ? 0.55 : 1, transition: 'all 0.15s' }}
-                      onMouseEnter={e => { if (!session.ended && !session.archived) e.currentTarget.style.borderColor = COLORS.borderMid; }}
-                      onMouseLeave={e => { if (!session.ended && !session.archived) e.currentTarget.style.borderColor = session.read ? COLORS.border : COLORS.magic + '44'; }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                        <div>
-                          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, fontWeight: 700, color: COLORS.text }}>{displayName}</div>
-                          {playerTag && <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.06em', marginTop: 1 }}>{playerTag}</div>}
-                        </div>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                          {session.ended && <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', textTransform: 'uppercase' }}>Ended</div>}
-                          {!session.read && !session.ended && !session.is_dm && !session.archived && <div style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS.magic }} />}
-                          <div style={{ fontSize: 9, color: COLORS.dim }}>{new Date(session.created_at).toLocaleDateString()}</div>
-                          <button onClick={session.archived ? (e) => unarchiveSession(e, session.session_id) : (e) => archiveSession(e, session.session_id)} title={session.archived ? 'Restore' : 'Archive'} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 3, padding: '2px 6px', cursor: 'pointer', fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>{session.archived ? '↩' : '⌂'}</button>
-                        </div>
+                {messages.map(session => (
+                  <div key={session.id} onClick={() => openSession(session)} style={{ background: session.read ? COLORS.card : 'rgba(121,245,167,0.06)', border: `1px solid ${session.read ? COLORS.border : COLORS.magic + '44'}`, borderRadius: 8, padding: '12px 16px', cursor: 'pointer', transition: 'all 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = COLORS.borderMid}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = session.read ? COLORS.border : COLORS.magic + '44'}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                      <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, fontWeight: 700, color: COLORS.text }}>{session.sender_name || 'Unknown'}</div>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        {!session.read && <div style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS.magic }} />}
+                        <div style={{ fontSize: 9, color: COLORS.dim }}>{new Date(session.created_at).toLocaleDateString()}</div>
                       </div>
-                      <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 4 }}>{CAMPAIGNS.find(c => c.id === session.campaign_id)?.subtitle || 'No campaign'}</div>
-                      <div style={{ fontSize: 12, color: COLORS.textSub, fontFamily: 'Georgia, serif', lineHeight: 1.5 }}>{session.content?.substring(0, 120)}{session.content?.length > 120 ? '…' : ''}</div>
                     </div>
-                  );
-                })}
+                    <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 4 }}>
+                      {CAMPAIGNS.find(c => c.id === session.campaign_id)?.subtitle || 'No campaign'}
+                    </div>
+                    <div style={{ fontSize: 12, color: COLORS.textSub, fontFamily: 'Georgia, serif', lineHeight: 1.5 }}>
+                      {session.content?.substring(0, 120)}{session.content?.length > 120 ? '…' : ''}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -700,6 +644,7 @@ export default function DMView({ onHome }) {
       case 'Characters':
         return (
           <div>
+            {/* Filters */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', gap: 4 }}>
                 {['all', 'awaiting_adventure', 'approved', 'rejected', 'draft'].map(s => (
@@ -710,11 +655,17 @@ export default function DMView({ onHome }) {
               </div>
               <div style={{ display: 'flex', gap: 4 }}>
                 {[{ id: 'all', subtitle: 'All' }, ...CAMPAIGNS].map(c => (
-                  <div key={c.id} onClick={() => setFilterCampaign(c.id)} style={{ background: filterCampaign === c.id ? COLORS.surface : 'transparent', border: `1px solid ${filterCampaign === c.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: filterCampaign === c.id ? COLORS.text : COLORS.dim, fontFamily: "'Cinzel', serif" }}>{c.subtitle}</div>
+                  <div key={c.id} onClick={() => setFilterCampaign(c.id)} style={{ background: filterCampaign === c.id ? COLORS.surface : 'transparent', border: `1px solid ${filterCampaign === c.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: filterCampaign === c.id ? COLORS.text : COLORS.dim, fontFamily: "'Cinzel', serif" }}>
+                    {c.subtitle}
+                  </div>
                 ))}
               </div>
             </div>
-            <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', marginBottom: 12 }}>{filtered.length} character{filtered.length !== 1 ? 's' : ''}</div>
+
+            <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', marginBottom: 12 }}>
+              {filtered.length} character{filtered.length !== 1 ? 's' : ''}
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {filtered.map(char => {
                 const cls = ALL_CLASSES.find(c => c.id === char.cid);
@@ -722,15 +673,22 @@ export default function DMView({ onHome }) {
                   <div key={char.id} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 3 }}>{char.name || 'Unnamed'}</div>
-                      <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 3 }}>{getRaceDisplay(char.race, char.rv, char.pmV)}{cls ? ` · ${cls.name}` : ''}</div>
-                      <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase' }}>{char.campaign_id ? (CAMPAIGNS.find(c => c.id === char.campaign_id)?.subtitle || char.campaign_id) : 'Unassigned'}{char.user_id ? '' : ' · Unclaimed'}</div>
+                      <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 3 }}>
+                        {getRaceDisplay(char.race, char.rv, char.pmV)}{cls ? ` · ${cls.name}` : ''}
+                      </div>
+                      <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                        {char.campaign_id ? (CAMPAIGNS.find(c => c.id === char.campaign_id)?.subtitle || char.campaign_id) : 'Unassigned'}
+                        {char.user_id ? '' : ' · Unclaimed'}
+                      </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                       <StatusBadge status={char.status} />
                       <button onClick={() => setEditingChar(char)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 10px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif", transition: 'all 0.12s' }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.borderMid; e.currentTarget.style.color = COLORS.text; }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.color = COLORS.muted; }}
-                      >Edit</button>
+                      >
+                        Edit
+                      </button>
                     </div>
                   </div>
                 );
@@ -739,34 +697,44 @@ export default function DMView({ onHome }) {
           </div>
         );
 
-      case 'Campaigns': {
+      case 'Campaigns':
         const camp = CAMPAIGNS.find(c => c.id === activeCampaignTab);
         return (
           <div>
+            {/* Campaign selector */}
             <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
               {CAMPAIGNS.map(c => (
-                <div key={c.id} onClick={() => setActiveCampaignTab(c.id)} style={{ flex: 1, background: activeCampaignTab === c.id ? COLORS.surface : 'transparent', border: `1px solid ${activeCampaignTab === c.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '8px 4px', cursor: 'pointer', textAlign: 'center' }}>
+                <div key={c.id} onClick={() => setActiveCampaignTab(c.id)} style={{ flex: 1, background: activeCampaignTab === c.id ? COLORS.surface : 'transparent', border: `1px solid ${activeCampaignTab === c.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '8px 4px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.12s' }}>
                   <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: activeCampaignTab === c.id ? COLORS.text : COLORS.dim }}>{c.subtitle}</div>
                 </div>
               ))}
             </div>
+
+            {/* Sub-tabs */}
             <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
               {['log', 'map', 'memory'].map(t => (
-                <div key={t} onClick={() => setCampaignSubTab(t)} style={{ background: campaignSubTab === t ? COLORS.surface : 'transparent', border: `1px solid ${campaignSubTab === t ? COLORS.borderMid : COLORS.border}`, borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: campaignSubTab === t ? COLORS.text : COLORS.dim, fontFamily: "'Cinzel', serif" }}>{t}</div>
+                <div key={t} onClick={() => setCampaignSubTab(t)} style={{ background: campaignSubTab === t ? COLORS.surface : 'transparent', border: `1px solid ${campaignSubTab === t ? COLORS.borderMid : COLORS.border}`, borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: campaignSubTab === t ? COLORS.text : COLORS.dim, fontFamily: "'Cinzel', serif" }}>
+                  {t}
+                </div>
               ))}
             </div>
-            {camp && campaignSubTab === 'log'    && <SessionLogEditor campaign={camp} />}
-            {camp && campaignSubTab === 'map'    && <MapManager campaign={camp} />}
+
+            {camp && campaignSubTab === 'log' && <SessionLogEditor campaign={camp} />}
+            {camp && campaignSubTab === 'map' && <MapManager campaign={camp} />}
             {camp && campaignSubTab === 'memory' && <DMMemoryPanel campaignId={camp.id} />}
           </div>
         );
-      }
+
+      case 'Scribe':
+        return <ScribeDMPanel />;
 
       case 'Memory':
         return (
           <div>
             <div style={{ ...label8(), marginBottom: 12 }}>World Memory</div>
-            <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>Global notes, world events, faction states, and lore that feeds into all Scribe consultations.</div>
+            <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>
+              Global notes, world events, faction states, and lore that feeds into all Scribe consultations.
+            </div>
             <DMMemoryPanel />
           </div>
         );
@@ -777,28 +745,15 @@ export default function DMView({ onHome }) {
 
   return (
     <div style={{ minHeight: '100vh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
-        * { box-sizing: border-box; } body { margin: 0; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap'); * { box-sizing: border-box; } body { margin: 0; }`}</style>
 
+      {/* Character editor modal */}
       {editingChar && <CharacterEditor char={editingChar} onSave={() => { setEditingChar(null); fetchCharacters(); }} onClose={() => setEditingChar(null)} />}
+
+      {/* Chat panel */}
       {activeSession && <ChatPanel session={activeSession} onClose={() => setActiveSession(null)} isDM={true} />}
-      {showScribe && <ScribePanel onClose={() => setShowScribe(false)} />}
-        <PlayersPanel
-        onOpenCharacter={(char) => setEditingChar(char)}
-        onMessage={(session) => setActiveSession(session)}
-      />
 
-      {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: 24, zIndex: 300, background: '#13100d', border: `1px solid ${COLORS.magic}44`, borderRadius: 10, padding: '14px 18px', maxWidth: 280, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', animation: 'slideIn 0.2s ease' }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, fontWeight: 700, color: COLORS.magic, marginBottom: 4, letterSpacing: '0.08em' }}>✦ New Message</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, marginBottom: 4 }}>{toast.name}</div>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.textSub, fontStyle: 'italic', lineHeight: 1.4 }}>{toast.content?.substring(0, 80)}{toast.content?.length > 80 ? '…' : ''}</div>
-        </div>
-      )}
-
+      {/* Header */}
       <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <button onClick={onHome} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.muted, padding: 0 }}>← Home</button>
         <div style={{ textAlign: 'center' }}>
@@ -808,6 +763,7 @@ export default function DMView({ onHome }) {
         <div style={{ width: 60 }} />
       </div>
 
+      {/* Tab bar */}
       <div style={{ display: 'flex', borderBottom: `1px solid ${COLORS.border}`, overflowX: 'auto', background: COLORS.surface, flexShrink: 0 }}>
         {DM_TABS.map(tab => {
           const isActive = tab === activeTab;
@@ -821,9 +777,12 @@ export default function DMView({ onHome }) {
         })}
       </div>
 
+      {/* Content */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         <div style={{ padding: isMobile ? '20px 16px' : '28px 32px', maxWidth: 740, width: '100%', margin: '0 auto' }}>
-          {loading ? <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 13 }}>Consulting the archives…</div> : renderTab()}
+          {loading ? (
+            <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 13 }}>Consulting the archives…</div>
+          ) : renderTab()}
         </div>
       </div>
     </div>

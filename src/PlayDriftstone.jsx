@@ -228,7 +228,7 @@ export default function PlayDriftstone({ user, onHome }) {
       clearTimeout(countdownRef.current);
       setCountdown(null);
     }
-  }, [slots]);
+  }, [slots, countdown]);
 
   useEffect(() => {
     if (countdown === null) return;

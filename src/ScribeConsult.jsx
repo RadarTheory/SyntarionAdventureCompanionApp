@@ -540,7 +540,7 @@ export function DMConsult({ char, user }) {
     setSending(true);
     setError(null);
 
-    const stableSessionId = `${char.id}-${user?.id || 'guest'}-${char.campaign || char.campaign_id || 'uncassigned'}`;
+    const stableSessionId = `${char.id}-${user?.id || 'guest'}-${char.campaign || char.campaign_id || 'unassigned'}`;
 
     const { error } = await supabase.from('messages').insert({
       session_id: stableSessionId,

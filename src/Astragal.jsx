@@ -1,137 +1,155 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { COLORS } from './constants';
+
+const DIE_TYPES = [4, 6, 8, 10, 12, 20, 100];
+const DICE_COUNTS = [1, 2, 3, 4, 5, 6, 8, 10];
 
 function rollDie(sides) {
   return Math.floor(Math.random() * sides) + 1;
-}
-
-function parseDiceNotation(notation) {
-  const match = notation.toLowerCase().match(/(\d+)d(\d+)([+-]\d+)?/);
-
-  if (!match) {
-    return null;
-  }
-
-  return {
-    count: parseInt(match[1]),
-    sides: parseInt(match[2]),
-    modifier: parseInt(match[3] || 0),
-  };
 }
 
 function calculateModifier(score = 10) {
   return Math.floor((score - 10) / 2);
 }
 
+function getCritState(dieSides, diceResults, mode) {
+  if (dieSides !== 20) return null;
+
+  const natural = mode === 'disadvantage'
+    ? Math.min(...diceResults)
+    : mode === 'advantage'
+      ? Math.max(...diceResults)
+      : diceResults[0];
+
+  if (natural === 20) return 'critical_success';
+  if (natural === 1) return 'critical_failure';
+
+  return null;
+}
+
 export default function Astragal({
   character,
-  actionName = 'Roll',
+  actionName = 'Astragal',
   statKey = 'will',
-  notation = '1d20',
+  rollType = 'check',
   itemBonus = 0,
   conditionBonus = 0,
   occurrenceBonus = 0,
   temporaryBonus = 0,
   onResult,
 }) {
+  const [dieSides, setDieSides] = useState(20);
+  const [diceCount, setDiceCount] = useState(1);
+  const [flatModifier, setFlatModifier] = useState(0);
+  const [mode, setMode] = useState('normal');
   const [rolling, setRolling] = useState(false);
   const [diceFaces, setDiceFaces] = useState([]);
   const [result, setResult] = useState(null);
+  const [history, setHistory] = useState([]);
 
-  const timerRef = useRef(null);
+  const effectiveDiceCount =
+    dieSides === 20 && mode !== 'normal'
+      ? 2
+      : diceCount;
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, []);
-
-  const handleRoll = async () => {
+  const handleRoll = () => {
     if (rolling) return;
-
-    const parsed = parseDiceNotation(notation);
-
-    if (!parsed) {
-      console.error('Invalid dice notation:', notation);
-      return;
-    }
 
     setRolling(true);
     setResult(null);
 
-    const statScore =
-      character?.stats?.[statKey] || 10;
-
-    const statModifier =
-      calculateModifier(statScore);
+    const statScore = character?.stats?.[statKey] || 10;
+    const statModifier = calculateModifier(statScore);
 
     const totalBonus =
       statModifier +
       itemBonus +
       conditionBonus +
       occurrenceBonus +
-      temporaryBonus;
+      temporaryBonus +
+      flatModifier;
 
-    let animationTicks = 0;
+    let ticks = 0;
 
-    timerRef.current = setInterval(() => {
-      const randomFaces = [];
+    const interval = setInterval(() => {
+      setDiceFaces(
+        Array.from(
+          { length: effectiveDiceCount },
+          () => rollDie(dieSides)
+        )
+      );
 
-      for (let i = 0; i < parsed.count; i++) {
-        randomFaces.push(
-          rollDie(parsed.sides)
+      ticks += 1;
+
+      if (ticks >= 14) {
+        clearInterval(interval);
+
+        const finalRolls = Array.from(
+          { length: effectiveDiceCount },
+          () => rollDie(dieSides)
         );
-      }
 
-      setDiceFaces(randomFaces);
+        let usedRolls = finalRolls;
 
-      animationTicks++;
-
-      if (animationTicks > 14) {
-        clearInterval(timerRef.current);
-
-        const finalRolls = [];
-
-        for (let i = 0; i < parsed.count; i++) {
-          finalRolls.push(
-            rollDie(parsed.sides)
-          );
+        if (dieSides === 20 && mode === 'advantage') {
+          usedRolls = [Math.max(...finalRolls)];
         }
 
-        const diceTotal =
-          finalRolls.reduce((a, b) => a + b, 0);
+        if (dieSides === 20 && mode === 'disadvantage') {
+          usedRolls = [Math.min(...finalRolls)];
+        }
 
-        const grandTotal =
-          diceTotal +
-          parsed.modifier +
-          totalBonus;
+        const diceTotal = usedRolls.reduce((sum, n) => sum + n, 0);
+        const total = diceTotal + totalBonus;
+        const crit = getCritState(dieSides, finalRolls, mode);
 
         const payload = {
+          type: 'ROLL',
+          actorId: character?.id || null,
+          actorName: character?.name || 'Unknown',
           actionName,
-          notation,
+          rollType,
+          notation:
+            dieSides === 20 && mode !== 'normal'
+              ? `${mode} d20${flatModifier >= 0 ? '+' : ''}${flatModifier}`
+              : `${diceCount}d${dieSides}${flatModifier >= 0 ? '+' : ''}${flatModifier}`,
           statKey,
+          statScore,
           statModifier,
           itemBonus,
           conditionBonus,
           occurrenceBonus,
           temporaryBonus,
+          flatModifier,
           diceResults: finalRolls,
+          usedRolls,
           diceTotal,
-          modifier: parsed.modifier,
           totalBonus,
-          total: grandTotal,
+          total,
+          crit,
+          mode,
           timestamp: new Date().toISOString(),
         };
 
         setDiceFaces(finalRolls);
         setResult(payload);
+        setHistory(prev => [payload, ...prev.slice(0, 14)]);
         setRolling(false);
 
-        if (onResult) {
-          onResult(payload);
-        }
+        onResult?.(payload);
       }
     }, 70);
+  };
+
+  const selectStyle = {
+    flex: 1,
+    background: 'rgba(240,238,235,0.06)',
+    border: `1px solid ${COLORS.border}`,
+    borderRadius: 6,
+    padding: 8,
+    color: COLORS.text,
+    fontFamily: "'Cinzel', serif",
+    outline: 'none',
   };
 
   return (
@@ -141,62 +159,169 @@ export default function Astragal({
         border: `1px solid ${COLORS.border}`,
         borderRadius: 12,
         padding: 16,
+        boxShadow: '0 18px 48px rgba(0,0,0,0.45)',
       }}
     >
-      <div
+      <div style={{ marginBottom: 12 }}>
+        <div
+          style={{
+            fontFamily: "'Cinzel', serif",
+            fontSize: 12,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            color: COLORS.text,
+          }}
+        >
+          Astragal
+        </div>
+
+        <div
+          style={{
+            fontSize: 10,
+            color: COLORS.dim,
+            fontFamily: 'Georgia, serif',
+            fontStyle: 'italic',
+            marginTop: 2,
+          }}
+        >
+          Fate cast in bone
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+        <select
+          value={diceCount}
+          onChange={e => setDiceCount(Number(e.target.value))}
+          disabled={dieSides === 20 && mode !== 'normal'}
+          style={{
+          ...selectStyle,
+          background: '#2b2118',
+          color: '#f0eeeb',
+          appearance: 'none',
+          WebkitAppearance: 'none',
+          MozAppearance: 'none',
+        }}
+        >
+          {DICE_COUNTS.map(n => (
+           <option
+          key={n}
+          value={n}
+          style={{
+            background: '#2b2118',
+            color: '#f0eeeb',
+          }}
+        >
+          {n}
+        </option>
+          ))}
+        </select>
+
+              <select
+          value={dieSides}
+          onChange={e => setDieSides(Number(e.target.value))}
+          style={{
+            ...selectStyle,
+            background: '#2b2118',
+            color: '#f0eeeb',
+            appearance: 'none',
+            WebkitAppearance: 'none',
+            MozAppearance: 'none',
+          }}
+        >
+          {DIE_TYPES.map(sides => (
+            <option
+              key={sides}
+              value={sides}
+              style={{
+                background: '#2b2118',
+                color: '#f0eeeb',
+              }}
+            >
+              d{sides}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="number"
+          value={flatModifier}
+          onChange={e => setFlatModifier(Number(e.target.value))}
+          title="Flat modifier"
+          style={{
+            width: 72,
+            background: 'rgba(240,238,235,0.06)',
+            border: `1px solid ${COLORS.border}`,
+            borderRadius: 6,
+            padding: 8,
+            color: COLORS.text,
+            fontFamily: "'Cinzel', serif",
+            textAlign: 'center',
+            outline: 'none',
+          }}
+        />
+      </div>
+
+      {dieSides === 20 && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+          {[
+            ['normal', 'Normal'],
+            ['advantage', 'Adv'],
+            ['disadvantage', 'Dis'],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setMode(value)}
+              style={{
+                flex: 1,
+                background:
+                  mode === value
+                    ? COLORS.magicBg
+                    : 'rgba(240,238,235,0.04)',
+                border: `1px solid ${
+                  mode === value ? COLORS.magic : COLORS.border
+                }`,
+                borderRadius: 6,
+                padding: '7px 8px',
+                cursor: 'pointer',
+                color: mode === value ? COLORS.magicText : COLORS.dim,
+                fontFamily: "'Cinzel', serif",
+                fontSize: 8,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <button
+        onClick={handleRoll}
+        disabled={rolling}
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          width: '100%',
+          background: COLORS.magicBg,
+          border: `1px solid ${COLORS.magic}`,
+          borderRadius: 8,
+          padding: '10px 14px',
+          cursor: rolling ? 'default' : 'pointer',
+          color: COLORS.magicText,
+          fontFamily: "'Cinzel', serif",
+          fontSize: 10,
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          opacity: rolling ? 0.6 : 1,
           marginBottom: 14,
         }}
       >
-        <div>
-          <div
-            style={{
-              fontFamily: "'Cinzel', serif",
-              fontSize: 12,
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: COLORS.text,
-            }}
-          >
-            Astragal
-          </div>
-
-          <div
-            style={{
-              fontSize: 10,
-              color: COLORS.dim,
-              fontFamily: 'Georgia, serif',
-              fontStyle: 'italic',
-              marginTop: 2,
-            }}
-          >
-            {actionName}
-          </div>
-        </div>
-
-        <button
-          onClick={handleRoll}
-          disabled={rolling}
-          style={{
-            background: COLORS.magicBg,
-            border: `1px solid ${COLORS.magic}`,
-            borderRadius: 8,
-            padding: '8px 14px',
-            cursor: rolling ? 'default' : 'pointer',
-            color: COLORS.magicText,
-            fontFamily: "'Cinzel', serif",
-            fontSize: 10,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            opacity: rolling ? 0.6 : 1,
-          }}
-        >
-          {rolling ? 'Rolling…' : notation}
-        </button>
-      </div>
+        {rolling
+          ? 'Rolling…'
+          : dieSides === 20 && mode !== 'normal'
+            ? `Roll ${mode}`
+            : `Roll ${diceCount}d${dieSides}`}
+      </button>
 
       <div
         style={{
@@ -208,7 +333,7 @@ export default function Astragal({
       >
         {diceFaces.map((face, i) => (
           <div
-            key={i}
+            key={`${face}-${i}`}
             style={{
               width: 52,
               height: 52,
@@ -222,9 +347,9 @@ export default function Astragal({
               fontSize: 20,
               color: COLORS.text,
               transform: rolling
-                ? `rotate(${Math.random() * 360}deg)`
-                : 'rotate(0deg)',
-              transition: 'transform 0.08s linear',
+                ? `rotate(${(i + 1) * 24}deg) scale(1.04)`
+                : 'rotate(0deg) scale(1)',
+              transition: 'all 0.08s ease',
             }}
           >
             {face}
@@ -236,7 +361,13 @@ export default function Astragal({
         <div
           style={{
             background: 'rgba(240,238,235,0.03)',
-            border: `1px solid ${COLORS.border}`,
+            border: `1px solid ${
+              result.crit === 'critical_success'
+                ? COLORS.magic
+                : result.crit === 'critical_failure'
+                  ? COLORS.warn
+                  : COLORS.border
+            }`,
             borderRadius: 10,
             padding: 12,
           }}
@@ -247,18 +378,30 @@ export default function Astragal({
               fontSize: 10,
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
-              color: COLORS.dim,
+              color:
+                result.crit === 'critical_success'
+                  ? COLORS.magic
+                  : result.crit === 'critical_failure'
+                    ? COLORS.warn
+                    : COLORS.dim,
               marginBottom: 8,
             }}
           >
-            Roll Result
+            {result.crit === 'critical_success'
+              ? 'Critical Success'
+              : result.crit === 'critical_failure'
+                ? 'Critical Failure'
+                : 'Roll Result'}
           </div>
 
           <div
             style={{
               fontSize: 28,
               fontFamily: "'Cinzel', serif",
-              color: COLORS.magic,
+              color:
+                result.crit === 'critical_failure'
+                  ? COLORS.warn
+                  : COLORS.magic,
               marginBottom: 10,
             }}
           >
@@ -275,14 +418,64 @@ export default function Astragal({
           >
             Dice: {result.diceResults.join(', ')}
             <br />
+            Used: {result.usedRolls.join(', ')}
+            <br />
+            Dice Total: {result.diceTotal}
+            <br />
             Stat Modifier: {result.statModifier >= 0 ? '+' : ''}
             {result.statModifier}
             <br />
-            Bonus Total: {result.totalBonus >= 0 ? '+' : ''}
-            {result.totalBonus}
+            Flat Modifier: {result.flatModifier >= 0 ? '+' : ''}
+            {result.flatModifier}
             <br />
-            Dice Modifier: {result.modifier >= 0 ? '+' : ''}
-            {result.modifier}
+            Total Bonus: {result.totalBonus >= 0 ? '+' : ''}
+            {result.totalBonus}
+          </div>
+        </div>
+      )}
+
+      {history.length > 0 && (
+        <div style={{ marginTop: 14 }}>
+          <div
+            style={{
+              fontFamily: "'Cinzel', serif",
+              fontSize: 8,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: COLORS.dim,
+              marginBottom: 8,
+            }}
+          >
+            Recent Casts
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+              maxHeight: 120,
+              overflowY: 'auto',
+            }}
+          >
+            {history.slice(0, 5).map((entry, i) => (
+              <div
+                key={`${entry.timestamp}-${i}`}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  gap: 10,
+                  fontSize: 10,
+                  color: COLORS.textSub,
+                  fontFamily: 'Georgia, serif',
+                  borderBottom: `1px solid ${COLORS.border}`,
+                  paddingBottom: 5,
+                }}
+              >
+                <span>{entry.notation}</span>
+                <span>{entry.total}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}
