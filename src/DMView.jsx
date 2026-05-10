@@ -7,6 +7,8 @@ import { SOTERIA_LORE } from './soteria-lore';
 import { SOTERIA_MECHANICS } from './soteria-mechanics';
 import { SOTERIA_BESTIARY } from './soteria-bestiary';
 import PlayersPanel from './PlayersPanel';
+import AstragalButton from './AstragalButton';
+import SessionManager from './SessionManager';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -16,7 +18,7 @@ Be thorough, creative, and specific to the Soteria setting.
 
 ${SOTERIA_LORE}
 
-${SOTERIA_MECHANICS}o
+${SOTERIA_MECHANICS}
 
 ${SOTERIA_BESTIARY}
 `;
@@ -120,7 +122,6 @@ function ChatPanel({ session, onClose, isDM }) {
     setSessionEnded(true); onClose();
   };
 
-  // Character name + player username in header
   const headerName = session.character_name || 'Player';
   const headerSub = session.player_username
     ? `${CAMPAIGNS.find(c => c.id === session.campaign_id)?.subtitle || 'Private'} · @${session.player_username}`
@@ -138,14 +139,12 @@ function ChatPanel({ session, onClose, isDM }) {
           <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
         </div>
       </div>
-
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8, minHeight: 200, maxHeight: 320 }}>
         {messages.map(msg => {
           if (msg.type === 'dm_system') return (
             <div key={msg.id} style={{ textAlign: 'center', fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', padding: '4px 0' }}>{msg.content}</div>
           );
           const isMe = isDM ? msg.is_dm : !msg.is_dm;
-          // Show character name for player messages, "The Architect" for DM
           const displayName = msg.is_dm ? 'The Architect' : (msg.sender_name || msg.character_name || 'Player');
           return (
             <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
@@ -157,7 +156,6 @@ function ChatPanel({ session, onClose, isDM }) {
         })}
         <div ref={bottomRef} />
       </div>
-
       {!sessionEnded ? (
         <div style={{ padding: '10px 12px', borderTop: `1px solid rgba(240,238,235,0.08)`, display: 'flex', gap: 8 }}>
           <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()} placeholder="Type a message…" style={{ flex: 1, background: 'rgba(240,238,235,0.06)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', fontSize: 12, color: COLORS.text, fontFamily: 'Georgia, serif', outline: 'none' }} />
@@ -170,7 +168,7 @@ function ChatPanel({ session, onClose, isDM }) {
   );
 }
 
-// ─── SCRIBE PANEL (floating chat window) ──────────────────────────────────────
+// ─── SCRIBE PANEL ─────────────────────────────────────────────────────────────
 function ScribePanel({ onClose }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -203,7 +201,6 @@ function ScribePanel({ onClose }) {
 
   return (
     <div style={{ position: 'fixed', bottom: 24, right: 24, width: 400, maxHeight: 560, zIndex: 200, display: 'flex', flexDirection: 'column', background: '#13100d', border: `1px solid ${COLORS.deity}44`, borderRadius: 14, boxShadow: '0 24px 64px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
-      {/* Header */}
       <div style={{ padding: '12px 16px', borderBottom: `1px solid rgba(240,238,235,0.08)`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(240,238,235,0.04)' }}>
         <div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, color: COLORS.deity, letterSpacing: '0.06em' }}>The Scribe</div>
@@ -217,8 +214,6 @@ function ScribePanel({ onClose }) {
           <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
         </div>
       </div>
-
-      {/* Messages */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 260, maxHeight: 380 }}>
         {messages.length === 0 && (
           <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', marginTop: 32 }}>
@@ -246,8 +241,6 @@ function ScribePanel({ onClose }) {
         )}
         <div ref={bottomRef} />
       </div>
-
-      {/* Input */}
       {!ended ? (
         <div style={{ padding: '10px 12px', borderTop: `1px solid rgba(240,238,235,0.08)`, display: 'flex', gap: 8 }}>
           <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()} placeholder="Ask the Scribe…" style={{ flex: 1, background: 'rgba(240,238,235,0.06)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', fontSize: 12, color: COLORS.text, fontFamily: 'Georgia, serif', outline: 'none' }} />
@@ -551,6 +544,7 @@ export default function DMView({ onHome }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showArchive, setShowArchive] = useState(false);
   const [toast, setToast] = useState(null);
+  const [sessionTimerLabel, setSessionTimerLabel] = useState(null);
 
   const activeSessionRef = useRef(activeSession);
   useEffect(() => { activeSessionRef.current = activeSession; }, [activeSession]);
@@ -564,10 +558,7 @@ export default function DMView({ onHome }) {
       if (!sessions[key]) sessions[key] = { ...msg, session_id: key, ended: false, archived: false };
       if (msg.session_ended) sessions[key].ended = true;
       if (msg.archived) sessions[key].archived = true;
-      // Prefer non-DM sender name for the session label
-      if (!msg.is_dm && msg.sender_name && msg.sender_name !== 'The Architect') {
-        sessions[key].sender_name = msg.sender_name;
-      }
+      if (!msg.is_dm && msg.sender_name && msg.sender_name !== 'The Architect') sessions[key].sender_name = msg.sender_name;
       if (!msg.is_dm && msg.character_name) sessions[key].character_name = msg.character_name;
       if (!msg.is_dm && msg.player_username) sessions[key].player_username = msg.player_username;
     });
@@ -666,7 +657,6 @@ export default function DMView({ onHome }) {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {displayedMessages.map(session => {
-                  // Display: character name (player username)
                   const displayName = session.sender_name || session.character_name || 'Unknown';
                   const playerTag = session.player_username ? ` (@${session.player_username})` : '';
                   return (
@@ -786,7 +776,7 @@ export default function DMView({ onHome }) {
       {editingChar && <CharacterEditor char={editingChar} onSave={() => { setEditingChar(null); fetchCharacters(); }} onClose={() => setEditingChar(null)} />}
       {activeSession && <ChatPanel session={activeSession} onClose={() => setActiveSession(null)} isDM={true} />}
       {showScribe && <ScribePanel onClose={() => setShowScribe(false)} />}
-        <PlayersPanel
+      <PlayersPanel
         onOpenCharacter={(char) => setEditingChar(char)}
         onMessage={(session) => setActiveSession(session)}
       />
@@ -799,15 +789,19 @@ export default function DMView({ onHome }) {
         </div>
       )}
 
+      {/* ─── Header ─────────────────────────────────────────────────────── */}
       <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <button onClick={onHome} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.muted, padding: 0 }}>← Home</button>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 10 : 12, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.text }}>DM Mode</div>
-          <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.12em', textTransform: 'uppercase' }}>The Architect's Chamber</div>
+          <div style={{ fontSize: 8, color: sessionTimerLabel ? COLORS.magic : COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: sessionTimerLabel ? 700 : 400 }}>
+            {sessionTimerLabel || "The Architect's Chamber"}
+          </div>
         </div>
-        <div style={{ width: 60 }} />
+        <SessionManager onTimerLabel={setSessionTimerLabel} />
       </div>
 
+      {/* ─── Tab bar ─────────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', borderBottom: `1px solid ${COLORS.border}`, overflowX: 'auto', background: COLORS.surface, flexShrink: 0 }}>
         {DM_TABS.map(tab => {
           const isActive = tab === activeTab;
@@ -826,6 +820,8 @@ export default function DMView({ onHome }) {
           {loading ? <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 13 }}>Consulting the archives…</div> : renderTab()}
         </div>
       </div>
+
+      <AstragalButton character={characters?.[0]} />
     </div>
   );
 }

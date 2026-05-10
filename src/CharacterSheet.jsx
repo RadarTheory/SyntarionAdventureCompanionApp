@@ -9,6 +9,7 @@ import { ScribeConsult, DMConsult } from './ScribeConsult';
 import supabase from './lib/supabase';
 import AbilityTree from './AbilityTree';
 import AstragalButton from './AstragalButton';
+import SessionCheckin from './SessionCheckin';
 
 const TABS = [
   { id: 'identity',   label: 'Identity'   },
@@ -135,6 +136,7 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
   const { isMobile } = useDevice();
   const [activeTab, setActiveTab] = useState('identity');
   const isDM = user?.id === import.meta.env.VITE_DM_USER_ID;
+
   if (!char) {
     return (
       <div style={{ minHeight: '100vh', background: COLORS.wizard, display: 'flex', alignItems: 'center', justifyContent: 'center', color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
@@ -168,6 +170,9 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
               </div>
             ))}
           </div>
+
+          {/* Session check-in */}
+          <SessionCheckin char={char} user={user} />
 
           <SectionHead>Personal</SectionHead>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
@@ -203,95 +208,6 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
           <SliderDisplay label="Will | Whim" value={sliders.willWhim} leftLabel="Whim" rightLabel="Will" col={sliders.willWhim >= 0 ? COLORS.techText : COLORS.spiritText} />
         </div>
       );
-
-      const racialTraits = getRacialTraits(char.race, char.rv, char.pmV);
-
-{racialTraits && (
-  <>
-    <SectionHead>Racial Traits</SectionHead>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
-
-      {/* Passive */}
-      {racialTraits.passive && (
-        <div style={{
-          background: COLORS.card,
-          border: `1px solid ${COLORS.border}`,
-          borderRadius: 8,
-          padding: '12px 14px',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <span style={{
-              fontSize: 7,
-              fontWeight: 700,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              fontFamily: "'Cinzel', serif",
-              color: COLORS.muted,
-              background: 'rgba(240,238,235,0.08)',
-              border: `1px solid ${COLORS.border}`,
-              borderRadius: 3,
-              padding: '2px 6px',
-            }}>Passive</span>
-            <span style={{
-              fontFamily: "'Cinzel', serif",
-              fontSize: 12,
-              fontWeight: 700,
-              color: COLORS.text,
-              letterSpacing: '0.04em',
-            }}>{racialTraits.passive.name}</span>
-          </div>
-          <p style={{
-            fontSize: 12,
-            color: COLORS.textSub,
-            fontFamily: 'Georgia, serif',
-            lineHeight: 1.7,
-            margin: 0,
-          }}>{racialTraits.passive.text}</p>
-        </div>
-      )}
-
-      {/* Active */}
-      {racialTraits.active && (
-        <div style={{
-          background: COLORS.card,
-          border: `1px solid ${COLORS.border}`,
-          borderRadius: 8,
-          padding: '12px 14px',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <span style={{
-              fontSize: 7,
-              fontWeight: 700,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              fontFamily: "'Cinzel', serif",
-              color: COLORS.deity,
-              background: COLORS.deityBg,
-              border: `1px solid ${COLORS.deity}`,
-              borderRadius: 3,
-              padding: '2px 6px',
-            }}>Active · Once per rest</span>
-            <span style={{
-              fontFamily: "'Cinzel', serif",
-              fontSize: 12,
-              fontWeight: 700,
-              color: COLORS.text,
-              letterSpacing: '0.04em',
-            }}>{racialTraits.active.name}</span>
-          </div>
-          <p style={{
-            fontSize: 12,
-            color: COLORS.textSub,
-            fontFamily: 'Georgia, serif',
-            lineHeight: 1.7,
-            margin: 0,
-          }}>{racialTraits.active.text}</p>
-        </div>
-      )}
-
-    </div>
-  </>
-)}
 
       case 'background': return (
         <div>
@@ -396,7 +312,6 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
       );
 
       case 'abilities': return <AbilityTree char={char} onUpdateChar={onUpdateChar} user={user} isDM={false} />;
-      
 
       case 'consult': return (
         <div>
@@ -435,6 +350,8 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
           {renderTab()}
         </div>
       </div>
+
+      <AstragalButton character={char} />
     </div>
   );
 }
