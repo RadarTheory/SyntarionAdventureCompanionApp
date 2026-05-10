@@ -4,8 +4,7 @@ import {
   COLORS, ALL_STATS, ALL_CLASSES, RACES, ACTIONS,
   APPAREL_SLOTS, WEAPON_SLOTS, ACCESSORY_SLOTS,
   getRaceDisplay,
-} from './constants';
-
+} from './consta
 // ═════════════════════════════════════════════════════════════════════════════
 // CHARACTER SHEET
 // Props:
@@ -547,6 +546,22 @@ export default function CharacterSheet({ char, onHome }) {
           {renderTab()}
         </div>
       </div>
+ whiteSpace: 'nowrap', transition: 'all 0.15s ease' }}>
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ padding: isMobile ? '20px 16px' : '28px 32px', maxWidth: 680, width: '100%', margin: '0 auto' }}>
+          {renderTab()}
+        </div>
+      </div>
+
+      <AstragalButton
+        character={char}
+      />
     </div>
   );
 }
