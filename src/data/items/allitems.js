@@ -12,7 +12,8 @@ import { SCHEMATIC_MATERIALS } from './schematicMaterials';
 import { DOCUMENTS } from './documents';
 import { MAGIC_ITEMS } from './magicItems';
 import { ARTIFACTS } from './artifacts';
-import { BLACK_MARKET } from '/blackmarket'
+import { BLACK_MARKET } from './blackmarket';
+import { TRADE_GOODS } from '.tradegoods';
 
 export const ALL_ITEMS = [
   ...CURRENCY,
@@ -28,4 +29,5 @@ export const ALL_ITEMS = [
   ...MAGIC_ITEMS,
   ...ARTIFACTS,
   ...BLACK_MARKET,
+  ...TRADE_GOODS,
 ];
