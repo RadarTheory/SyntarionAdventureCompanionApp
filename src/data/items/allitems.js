@@ -14,6 +14,7 @@ import { MAGIC_ITEMS } from './magicItems';
 import { ARTIFACTS } from './artifacts';
 import { BLACK_MARKET } from './blackmarket';
 import { TRADE_GOODS } from '.tradegoods';
+import { Collectables } from './collectables';
 
 export const ALL_ITEMS = [
   ...CURRENCY,
@@ -30,4 +31,5 @@ export const ALL_ITEMS = [
   ...ARTIFACTS,
   ...BLACK_MARKET,
   ...TRADE_GOODS,
+  ...Collectables
 ];
