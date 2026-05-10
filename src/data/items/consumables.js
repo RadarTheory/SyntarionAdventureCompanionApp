@@ -1,6 +1,3 @@
-// src/data/items/consumables.js
-// Soteria item data module. Imported by allItems.js and rendered by ItemCatalog.jsx.
-
 export const CONSUMABLES = [
   // CONSUMABLES — Ammunition
   { category: 'Consumables', type: 'Ammunition', name: 'Broadhead Arrows', desc: 'Hunting arrows with wide cutting heads. Better against flesh than armor.', tags: ['ammo','hunting'], meta: 'damage: bleed-prone' },

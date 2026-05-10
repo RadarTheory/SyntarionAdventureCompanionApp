@@ -67,6 +67,7 @@ export const ARMOR = [
   { category: 'Armor', type: 'Heavy', name: 'Breastplate of the Griffin', desc: 'Embossed with a golden griffin; grants resistance to wind magic.', tags: ['armor','epic','heavy','mobility','beast'], meta: 'originalId: 503; rarity: Epic; value: 850; defense: 40' },
 
   // ARMOR — Helmet/Headgear
+  { category: 'Armor', type: 'Helmet/Headgear', name: 'Elddim Cavalry Mask', desc: 'A dark iron cavalry mask of ancient Sovereign design. The faceplate conceals identity while amplifying the wearer’s presence on the battlefield.', tags: ['armor','rare','helmet-headgear','cavalry','imperial','ceremonial','intimidation','historical'], meta: 'originalId: 611; rarity: Rare; value: 480; defense: 9' },
   { category: 'Armor', type: 'Helmet/Headgear', name: 'Miner\'s Reinforced Cap', desc: 'A stiff leather helmet fitted with a mount for a candle.', tags: ['armor','common','helmet-headgear'], meta: 'originalId: 110; rarity: Common; value: 12; defense: 3' },
   { category: 'Armor', type: 'Helmet/Headgear', name: 'Cuirass of the Azure Knight', desc: 'Blue steel plate armor that offers exceptional protection against piercing attacks.', tags: ['armor','rare','helmet-headgear','shadow'], meta: 'originalId: 111; rarity: Rare; value: 180; defense: 24' },
   { category: 'Armor', type: 'Helmet/Headgear', name: 'Tattered Ranger\'s Shroud', desc: 'A moth-eaten green cloak that still aids in forest camouflage.', tags: ['armor','common','helmet-headgear'], meta: 'originalId: 114; rarity: Common; value: 8; defense: 2' },
@@ -236,7 +237,7 @@ export const ARMOR = [
 
   // ARMOR — Robes/Clothing
   { category: 'Armor', type: 'Robes/Clothing', name: 'Robes of the Arcane Scholar', desc: 'Velvet robes with deep pockets for storing reagents.', tags: ['armor','uncommon','robes-clothing','pirate'], meta: 'originalId: 148; rarity: Uncommon; value: 80; defense: 6' },
-  { category: 'Armor', type: 'Robes/Clothing', name: 'Crimson Robes of the Blood Cult', desc: 'Enhances the power of hemomancy spells.', tags: ['armor','rare','robes-clothing'], meta: 'originalId: 239; rarity: Rare; value: 240; defense: 7' },
+  { category: 'Armor', type: 'Robes/Clothing', name: 'Crimson Robes of the Cult of Thorns', desc: 'Enhances the power of hemomancy spells.', tags: ['armor','rare','robes-clothing'], meta: 'originalId: 239; rarity: Rare; value: 240; defense: 7' },
   { category: 'Armor', type: 'Robes/Clothing', name: 'Ragged Linen Tunic', desc: 'Stained and torn; offers no protection but helps blend into crowds of beggars.', tags: ['armor','common','robes-clothing'], meta: 'originalId: 263; rarity: Common; value: 2; defense: 1' },
   { category: 'Armor', type: 'Robes/Clothing', name: 'Vestments of the High Priest', desc: 'White robes embroidered with gold; amplifies healing magic.', tags: ['armor','epic','robes-clothing','holy','healing'], meta: 'originalId: 296; rarity: Epic; value: 650; defense: 10' },
   { category: 'Armor', type: 'Robes/Clothing', name: 'Tunic of the Forest Ranger', desc: 'Dyed in mottled greens and browns for effective woodland camouflage.', tags: ['armor','common','robes-clothing'], meta: 'originalId: 443; rarity: Common; value: 20; defense: 3' },
