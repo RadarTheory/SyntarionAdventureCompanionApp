@@ -477,27 +477,47 @@ function MusicPanel() {
   useEffect(() => { fetchMusic(); }, []);
 
   const fetchMusic = async () => {
-    setLoading(true); setError(null);
+    setLoading(true);
+    setError(null);
     try {
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const res = await fetch(`${SUPABASE_URL}/storage/v1/object/list/music`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY }, body: JSON.stringify({ prefix: '', limit: 1000, offset: 0, sortBy: { column: 'name', order: 'asc' } }) });
-      if (!res.ok) { const txt = await res.text(); setError(`HTTP ${res.status}: ${txt}`); setLoading(false); return; }
-      const data = await res.json();
-      const audioFiles = (Array.isArray(data) ? data : []).filter(file => file.name && /\.(wav|mp3|ogg|flac|m4a)$/i.test(file.name)).map(file => ({ title: file.name.replace(/\.(wav|mp3|ogg|flac|m4a)$/i, ''), file_path: file.name }));
+      const { data, error: listError } = await supabase
+        .storage
+        .from('music')
+        .list('', { limit: 1000, sortBy: { column: 'name', order: 'asc' } });
+
+      if (listError) throw listError;
+
+      const audioFiles = (data || [])
+        .filter(f => f.name && /\.(wav|mp3|ogg|flac|m4a)$/i.test(f.name))
+        .map(f => ({
+          title: f.name.replace(/\.(wav|mp3|ogg|flac|m4a)$/i, ''),
+          file_path: f.name,
+        }));
+
       setTracks(audioFiles);
       if (audioFiles.length > 0) setCurrentTrack(audioFiles[0]);
-    } catch (err) { setError(err.message); }
+    } catch (err) {
+      setError(err.message);
+    }
     setLoading(false);
   };
 
-  const getMusicUrl = (filePath) => `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/music/${encodeURIComponent(filePath)}`;
-  const filteredTracks = tracks.filter(t => t.title.toLowerCase().includes(search.toLowerCase()));
+  const getMusicUrl = (filePath) =>
+    `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/music/${encodeURIComponent(filePath)}`;
+
+  const filteredTracks = tracks.filter(t =>
+    t.title.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div>
       <div style={{ ...label8(), marginBottom: 12 }}>Music Library</div>
-      <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search music…" style={{ width: '100%', marginBottom: 16, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '10px 12px', color: COLORS.text, fontFamily: 'Georgia, serif', outline: 'none', boxSizing: 'border-box' }} />
+      <input
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Search music…"
+        style={{ width: '100%', marginBottom: 16, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '10px 12px', color: COLORS.text, fontFamily: 'Georgia, serif', outline: 'none', boxSizing: 'border-box' }}
+      />
       {currentTrack && (
         <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: 16, marginBottom: 16 }}>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, marginBottom: 10, letterSpacing: '0.04em' }}>♪ {currentTrack.title}</div>
@@ -506,16 +526,29 @@ function MusicPanel() {
       )}
       {loading && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Loading tracks…</div>}
       {error && <div style={{ fontSize: 11, color: COLORS.warn, fontFamily: 'Georgia, serif', marginBottom: 12 }}>Error: {error}</div>}
-      {!loading && (
+      {!loading && !error && (
         <>
-          <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', marginBottom: 10 }}>{filteredTracks.length} of {tracks.length} track{tracks.length !== 1 ? 's' : ''}</div>
+          <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', marginBottom: 10 }}>
+            {filteredTracks.length} of {tracks.length} track{tracks.length !== 1 ? 's' : ''}
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {filteredTracks.map(track => (
-              <button key={track.file_path} onClick={() => setCurrentTrack(track)} style={{ textAlign: 'left', background: currentTrack?.file_path === track.file_path ? COLORS.magicBg : COLORS.card, border: `1px solid ${currentTrack?.file_path === track.file_path ? COLORS.magic : COLORS.border}`, borderRadius: 6, padding: '10px 12px', color: COLORS.text, cursor: 'pointer', fontFamily: 'Georgia, serif' }}>
+              <button
+                key={track.file_path}
+                onClick={() => setCurrentTrack(track)}
+                style={{
+                  textAlign: 'left',
+                  background: currentTrack?.file_path === track.file_path ? COLORS.magicBg : COLORS.card,
+                  border: `1px solid ${currentTrack?.file_path === track.file_path ? COLORS.magic : COLORS.border}`,
+                  borderRadius: 6, padding: '10px 12px', color: COLORS.text, cursor: 'pointer', fontFamily: 'Georgia, serif',
+                }}
+              >
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11 }}>{track.title}</div>
               </button>
             ))}
-            {filteredTracks.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No tracks match.</div>}
+            {filteredTracks.length === 0 && !loading && (
+              <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No tracks match.</div>
+            )}
           </div>
         </>
       )}
