@@ -25,7 +25,7 @@ export const wonderousitems = [
   { category: 'Wondrous Items', type: 'Relic', name: 'Pebble of Returning Home', desc: 'A pebble that grows warmer when carried toward the place it was taken from.', tags: ['supplemental','wondrous'], meta: 'metadata: flexible' },
   { category: 'Wondrous Items', type: 'Relic', name: 'Bell of the Last Visitor', desc: 'A tarnished brass bell that rings softly whenever someone enters a room who has visited before.', tags: ['wondrous','memory'], meta: 'effect: recognize return visitors' },
   { category: 'Wondrous Items', type: 'Relic', name: 'Coin of Uneasy Debts', desc: 'A silver coin that becomes painfully cold when carried by someone who has betrayed an oath.', tags: ['wondrous','judgment'], meta: 'effect: oath discomfort' },
-
+  { category: 'Wondrous Items', type: 'Relic', name: 'Holy Brass Skull Amulet', desc: 'A polished brass amulet shaped like a sanctified skull and etched with prayer-script along the jawline. Warm to the touch in the presence of undead, Dybuks, or active Draethic resonance.', tags: ['wondrous','holy','amulet','undead','brass'], meta: 'rarity: Uncommon; effect: warns of nearby undead or resonance corruption; value: 210' },
   // WONDROUS ITEMS — TOOL
   { category: 'Wondrous Items', type: 'Tool', name: 'Broom of Quiet Corners', desc: 'A broom that sweeps dust into tidy piles and occasionally uncovers hidden floor seams.', tags: ['wondrous','domestic'], meta: 'effect: clean/search' },
   { category: 'Wondrous Items', type: 'Tool', name: 'Needle of Perfect Mending', desc: 'A needle that repairs cloth cleanly when given matching thread and patience. Cannot mend trust.', tags: ['wondrous','repair'], meta: 'effect: cloth repair' },
@@ -34,7 +34,7 @@ export const wonderousitems = [
   { category: 'Wondrous Items', type: 'Tool', name: 'Quill of Neat Margins', desc: 'A quill that keeps straight margins and adds tiny correction marks.', tags: ['supplemental','wondrous'], meta: 'metadata: flexible' },
   { category: 'Wondrous Items', type: 'Tool', name: 'Hammer of Straight Nails', desc: 'A carpenter’s hammer that subtly corrects poor swings and prevents bent nails.', tags: ['wondrous','crafting'], meta: 'effect: improved construction' },
   { category: 'Wondrous Items', type: 'Tool', name: 'Pocket Cartographer', desc: 'A brass drafting device that slowly sketches nearby hallways and streets as the bearer travels.', tags: ['wondrous','mapping'], meta: 'effect: automatic mapping' },
-
+  { category: 'Wondrous Items', type: 'Tool', name: "E. Sillmeer & Sons Clerk's Whistle", desc: 'A polished Minura shop whistle issued to senior clerks of E. Sillmeer & Sons. When blown, it produces a crisp authoritative note that draws attention, halts petty arguments, and makes loiterers feel briefly guilty.', tags: ['wondrous','tool','merchant','social'], meta: 'rarity: Uncommon; effect: command attention in shops, markets, and counting houses; value: 95' },
   // WONDROUS ITEMS — UTILITY
   { category: 'Wondrous Items', type: 'Utility', name: 'Rope of Polite Knots', desc: 'A rope that ties neat basic knots when asked plainly. It refuses cruel commands.', tags: ['wondrous','utility'], meta: 'effect: knotting' },
   { category: 'Wondrous Items', type: 'Utility', name: 'Blanket of Shared Shelter', desc: 'A blanket that stretches enough to cover one more person than expected. Warmth still must be shared.', tags: ['wondrous','camp'], meta: 'effect: shelter' },
@@ -50,4 +50,5 @@ export const wonderousitems = [
   { category: 'Wondrous Items', type: 'Wearable', name: 'Mask of the Unremarked Face', desc: 'A plain mask that makes the wearer easier to forget in a crowd, not invisible.', tags: ['wondrous','stealth'], meta: 'effect: forgettable' },
   { category: 'Wondrous Items', type: 'Wearable', name: 'Boots of Dry Crossing', desc: 'Travel boots that remain dry while crossing shallow streams, rain-slick streets, and marsh edges.', tags: ['wondrous','travel'], meta: 'effect: dry footing' },
   { category: 'Wondrous Items', type: 'Wearable', name: 'Gloves of the Gentle Grip', desc: 'Leather gloves that prevent accidental crushing, slipping, or rough handling of delicate objects.', tags: ['wondrous','utility'], meta: 'effect: delicate handling' },
+  { category: 'Wondrous Items', type: 'Wearable', name: 'Ring of Multiplicity', desc: 'A mirrored silver ring that creates faint overlapping afterimages of the wearer during movement. Rapid actions leave behind brief spectral duplicates that confuse observers and distort targeting.', tags: ['wondrous','illusion','mirror','mobility'], meta: 'rarity: Rare; effect: afterimage duplication; effect2: difficult to track in motion; value: 780' },
 ];
