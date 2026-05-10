@@ -17,6 +17,7 @@ export const PACKS = [
 { category: 'Packs', type: 'Specialist', name: 'Diplomats Pack', desc: 'Fine paper, gift ribbons, seal blanks, etiquette cards, and a clean change of gloves.', tags: ['bundle','social'], meta: 'contents: negotiation tools' },
 { category: 'Packs', type: 'Specialist', name: 'Sailors Pack', desc: 'Tarred cord, marlinspike, waxed pouch, signal flags, fishhooks, and deck shoes.', tags: ['bundle','shipboard'], meta: 'contents: maritime tools' },
 { category: 'Packs', type: 'Specialist', name: 'Monster-Hunters Pack', desc: 'Silver filings, garlic cord, mirror, shackles, field stakes, bait cage, and specimen jars.', tags: ['bundle','hunting'], meta: 'contents: creature countermeasures' },
+{ category: 'Packs', type: 'Specialist', name: 'Forgery Kit', desc: 'False seals, aging oils, signature templates, blank permits, counterfeit inks, scraping blades, and document fibers matched to common regional papers. Illegal in most civilized jurisdictions.', tags: ['bundle','forgery','crime'], meta: 'contents: counterfeit tools' },
 
 // PACKS — Starter
 { category: 'Packs', type: 'Starter', name: 'Dungeoneer Pack', desc: 'Rope, pitons, chalk, rations, lantern oil, and tools for cramped underground work.', tags: ['bundle','dungeon'], meta: 'contents: exploration basics' },
