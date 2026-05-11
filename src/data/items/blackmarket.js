@@ -1,4 +1,4 @@
-export const BLACK_MARKET = [
+export const BLACK_MARKET_ITEMS = [
   { category: 'Black Market', type: 'Exotic Substance', name: 'Shadow Silk', desc: 'A rare dark fiber associated with concealment, illicit tailoring, and shadow-aligned craftwork.', tags: ['black-market','exotic','shadow','crafting'], meta: 'rarity: Rare; value: 220' },
   { category: 'Black Market', type: 'Extract', name: 'Somnumlilly Extract', desc: 'A dangerous floral extract used in sleep draughts, poisons, sedatives, and quiet abductions.', tags: ['black-market','extract','sedative','poison'], meta: 'rarity: Rare; value: 180' },
   { category: 'Black Market', type: 'Drug', name: 'Chroma', desc: 'An illicit alchemical substance traded for altered perception, enhancement, or experimental spellwork.', tags: ['black-market','drug','alchemy','mind'], meta: 'rarity: Uncommon; value: 95' },
@@ -84,4 +84,7 @@ export const BLACK_MARKET = [
   { category: 'Black Market', type: 'Illicit Service', name: 'Memory-Wash Appointment', desc: 'A clandestine procedure that dulls recent memories, useful to criminals, witnesses, deserters, and terrified nobles.', tags: ['black-market','service','memory','mind'], meta: 'rarity: Rare; value: 600; legality: forbidden' },
   { category: 'Black Market', type: 'Illicit Service', name: 'Body-Swap Paperwork', desc: 'A forged medical and civic packet used to hide illegal biomancy, false death, or identity replacement.', tags: ['black-market','service','identity','biomancy'], meta: 'rarity: Epic; value: 1100; legality: forbidden' },
   { category: 'Black Market', type: 'Illicit Service', name: 'Quiet Burial', desc: 'A no-questions burial, cremation, or disappearance arranged by gravehands, smugglers, or corrupt mortuary clerks.', tags: ['black-market','service','death','coverup'], meta: 'rarity: Uncommon; value: 150; legality: forbidden' },
+  // Black Market - Elddim
+  { category: 'Black Market', type: 'Drug', name: 'Confusion Spore Pod', desc: 'A sealed pod of mind-warping spores used to confuse targets, ruin testimony, or make guards misremember details.', tags: ['black-market','drug','spore','mind','confusion'], meta: 'rarity: Rare; value: 170; legality: forbidden' },
+  { category: 'Black Market', type: 'Explosive Reagent', name: 'Blastblossom Bulb', desc: 'A volatile flower bulb that detonates when crushed, sparked, or improperly dried. Used by saboteurs, miners, and desperate alchemists.', tags: ['black-market','reagent','explosive','plant'], meta: 'rarity: Uncommon; value: 75; legality: restricted' },
 ];
