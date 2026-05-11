@@ -11,6 +11,8 @@ import AstragalButton from './AstragalButton';
 import SessionManager from './SessionManager';
 import MapPanel from './MapPanel';
 import VTTCanvas from './VTTCanvas';
+import HerculesCombat from './HerculesCombat';
+import herculesLogo from '../public/HerculesCombat.png';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -29,7 +31,6 @@ const DM_USER_ID = import.meta.env.VITE_DM_USER_ID;
 const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY;
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
-
 
 async function callGroq(systemPrompt, messages, maxTokens = 800) {
   const res = await fetch(GROQ_URL, {
