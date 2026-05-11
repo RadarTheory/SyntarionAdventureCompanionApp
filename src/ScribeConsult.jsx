@@ -227,7 +227,7 @@ export function DMConsult({ char, user }) {
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [thread]);
 
   const fetchThread = async () => {
-    const { data } = await supabase.from('messages').select('*').eq('session_id', sessionId).order('created_at', { ascending: true });
+    const { data } = await supabase.from('messages').select('*').not('session_id', 'is', null).neq('type', 'scribe').order('created_at', { ascending: false });
     if (data) setThread(data);
   };
 
