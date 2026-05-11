@@ -10,6 +10,7 @@ import PlayersPanel from './PlayersPanel';
 import AstragalButton from './AstragalButton';
 import SessionManager from './SessionManager';
 import MapPanel from './MapPanel';
+import VTTCanvas from './VTTCanvas';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -576,7 +577,7 @@ function MusicPanel() {
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN DM VIEW
 // ═════════════════════════════════════════════════════════════════════════════
-const DM_TABS = ['Inbox', 'Characters', 'Campaigns', 'Scribe', 'Memory', 'Catalog', 'Maps'];
+const DM_TABS = ['Inbox', 'Characters', 'Campaigns', 'Scribe', 'Memory', 'Catalog', 'Maps', 'VTT'];
 
 export default function DMView({ onHome }) {
   const { isMobile } = useDevice();
@@ -710,6 +711,8 @@ export default function DMView({ onHome }) {
       case 'Catalog': return <ItemCatalog />;
       case 'Music': return <MusicPanel />;
       case 'Maps': return <MapPanel />;
+      case 'VTT':
+  return <VTTCanvas campaignId={activeCampaignTab} />;
 
       case 'Scribe':
         return (
