@@ -5,10 +5,12 @@ import { LOCATIONS } from './MapPanel';
 
 const BRUSH_SIZES = [20, 40, 70, 110];
 const TOKEN_COLORS = ['#e85d4a', '#4a9edd', '#79f5a7', '#e8c84a', '#c084fc', '#fb923c'];
+const MIN_SCALE = 0.3;
+const MAX_SCALE = 10;
 
 function uid() { return Math.random().toString(36).slice(2, 9); }
 
-function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
+function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, transform }) {
   if (!canvas || !mapImg) return;
   const ctx = canvas.getContext('2d');
   const W = canvas.width;
@@ -16,27 +18,27 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
 
   ctx.clearRect(0, 0, W, H);
 
-  // Layer 1 — map image
+  // ── Transformed layer (map + fog + tokens) ──
+  ctx.save();
+  ctx.setTransform(transform.scale, 0, 0, transform.scale, transform.x, transform.y);
+
+  // Map
   ctx.drawImage(mapImg, 0, 0, W, H);
 
-  // Layer 2 — fog on offscreen canvas, then draw on top
+  // Fog offscreen
   const fogCanvas = document.createElement('canvas');
   fogCanvas.width = W;
   fogCanvas.height = H;
   const fogCtx = fogCanvas.getContext('2d');
-
-  // Fill fog solid
   fogCtx.fillStyle = 'rgba(10,8,6,0.85)';
   fogCtx.fillRect(0, 0, W, H);
-
-  // Cut reveal holes using destination-out on the FOG canvas only
   fogCtx.globalCompositeOperation = 'destination-out';
   fogZones.forEach(zone => {
     if (zone.type === 'reveal') {
       const cx = zone.x * W;
       const cy = zone.y * H;
       const r = zone.r * W;
-      const feather = zone.feather ?? 0.3; // 0 = hard, 1 = full feather
+      const feather = zone.feather ?? 0;
       const innerR = r * (1 - feather);
       const grad = fogCtx.createRadialGradient(cx, cy, innerR, cx, cy, r);
       grad.addColorStop(0, 'rgba(0,0,0,1)');
@@ -47,8 +49,6 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
       fogCtx.fill();
     }
   });
-
-  // Re-hide zones on top of the cuts
   fogCtx.globalCompositeOperation = 'source-over';
   fogCtx.fillStyle = 'rgba(10,8,6,0.85)';
   fogZones.forEach(zone => {
@@ -58,18 +58,15 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
       fogCtx.fill();
     }
   });
-
-  // Draw completed fog layer onto main canvas
   ctx.drawImage(fogCanvas, 0, 0);
 
-  // Layer 3 — tokens
+  // Tokens
   tokens.forEach(tok => {
     const tx = tok.x * W;
     const ty = tok.y * H;
     const r = 14;
     ctx.save();
     if (tok.type === 'player') {
-      // Square token for players
       ctx.beginPath();
       ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4);
     } else {
@@ -89,11 +86,13 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
     ctx.restore();
   });
 
-  // Layer 4 — brush preview
+  ctx.restore(); // end transformed layer
+
+  // ── Brush preview in screen space (not transformed) ──
   if (brushPreview) {
     ctx.save();
     ctx.beginPath();
-    ctx.arc(brushPreview.x, brushPreview.y, brushPreview.r, 0, Math.PI * 2);
+    ctx.arc(brushPreview.sx, brushPreview.sy, brushPreview.sr, 0, Math.PI * 2);
     ctx.strokeStyle = tool === 'fog-reveal' ? '#e8c84a88' : tool === 'fog-hide' ? '#4444ff88' : '#ffffff44';
     ctx.lineWidth = 1.5;
     ctx.setLineDash([4, 3]);
@@ -106,7 +105,10 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
   const canvasRef   = useRef(null);
   const mapImgRef   = useRef(null);
   const paintingRef = useRef(false);
+  const panRef      = useRef({ active: false, lastX: 0, lastY: 0 });
+  const transformRef = useRef({ scale: 1, x: 0, y: 0 });
 
+  const [transform, setTransform]             = useState({ scale: 1, x: 0, y: 0 });
   const [vttSession, setVttSession]           = useState(null);
   const [fogZones, setFogZones]               = useState([]);
   const [tokens, setTokens]                   = useState([]);
@@ -123,8 +125,12 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
   const [pendingClick, setPendingClick]       = useState(null);
   const [mapSearch, setMapSearch]             = useState('');
   const [showCommitPicker, setShowCommitPicker] = useState(false);
-  const [feather, setFeather]                  = useState(0.3);
+  const [feather, setFeather]                 = useState(0.3);
 
+  // Keep transformRef in sync for use in non-reactive handlers
+  useEffect(() => { transformRef.current = transform; }, [transform]);
+
+  // ── Session load ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (!campaignId) return;
     loadSession();
@@ -135,204 +141,218 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
     return () => supabase.removeChannel(sub);
   }, [campaignId]);
 
+  // ── Register place-token callback ─────────────────────────────────────────
   useEffect(() => {
     if (!onRegisterPlaceToken) return;
     onRegisterPlaceToken((tokenData) => {
-      const token = {
-        id: uid(),
-        type: 'player',
-        label: tokenData.label,
-        color: tokenData.color,
-        characterId: tokenData.characterId,
-        x: 0.5,
-        y: 0.5,
-      };
       setTokens(prev => {
-        // Replace existing token for same character if present
         const filtered = prev.filter(t => t.characterId !== tokenData.characterId);
-        return [...filtered, token];
+        return [...filtered, { id: uid(), type: 'player', label: tokenData.label, color: tokenData.color, characterId: tokenData.characterId, x: 0.5, y: 0.5 }];
       });
     });
   }, [onRegisterPlaceToken]);
 
   const loadSession = async () => {
-    const { data } = await supabase
-      .from('vtt_sessions')
-      .select('*')
-      .eq('campaign_id', campaignId)
-      .maybeSingle();
-
+    const { data } = await supabase.from('vtt_sessions').select('*').eq('campaign_id', campaignId).maybeSingle();
     if (data) {
-      setVttSession(data);
-      setFogZones(data.fog_zones || []);
-      setTokens(data.tokens || []);
-      setMapFilename(data.map_filename);
+      setVttSession(data); setFogZones(data.fog_zones || []); setTokens(data.tokens || []); setMapFilename(data.map_filename);
     } else {
       const { data: camp } = await supabase.from('campaigns').select('map_url').eq('id', campaignId).single();
       const filename = camp?.map_url || null;
-      const { data: newSession } = await supabase
-        .from('vtt_sessions')
-        .insert({ campaign_id: campaignId, map_filename: filename, fog_zones: [], tokens: [], pending_moves: [] })
-        .select()
-        .single();
+      const { data: newSession } = await supabase.from('vtt_sessions').insert({ campaign_id: campaignId, map_filename: filename, fog_zones: [], tokens: [], pending_moves: [] }).select().single();
       if (newSession) { setVttSession(newSession); setMapFilename(filename); }
     }
   };
 
   const pickMap = async (filename) => {
     if (!vttSession) {
-      const { data } = await supabase
-        .from('vtt_sessions')
-        .upsert({ campaign_id: campaignId, map_filename: filename, fog_zones: [], tokens: [], pending_moves: [] }, { onConflict: 'campaign_id' })
-        .select().single();
+      const { data } = await supabase.from('vtt_sessions').upsert({ campaign_id: campaignId, map_filename: filename, fog_zones: [], tokens: [], pending_moves: [] }, { onConflict: 'campaign_id' }).select().single();
       if (data) setVttSession(data);
     } else {
       await supabase.from('vtt_sessions').update({ map_filename: filename }).eq('id', vttSession.id);
     }
     await supabase.from('campaigns').update({ map_url: filename }).eq('id', campaignId);
-    setMapFilename(filename);
-    setMapSearch('');
+    setMapFilename(filename); setMapSearch(''); setTransform({ scale: 1, x: 0, y: 0 });
   };
 
   const save = async (targetCampaignId) => {
     setSaving(true);
-    const { data: existing } = await supabase
-      .from('vtt_sessions')
-      .select('id')
-      .eq('campaign_id', targetCampaignId)
-      .maybeSingle();
-
+    const { data: existing } = await supabase.from('vtt_sessions').select('id').eq('campaign_id', targetCampaignId).maybeSingle();
     if (existing) {
-      await supabase.from('vtt_sessions')
-        .update({ fog_zones: fogZones, tokens, map_filename: mapFilename, updated_at: new Date().toISOString() })
-        .eq('id', existing.id);
+      await supabase.from('vtt_sessions').update({ fog_zones: fogZones, tokens, map_filename: mapFilename, updated_at: new Date().toISOString() }).eq('id', existing.id);
     } else {
-      await supabase.from('vtt_sessions')
-        .insert({ campaign_id: targetCampaignId, map_filename: mapFilename, fog_zones: fogZones, tokens, pending_moves: [] });
+      await supabase.from('vtt_sessions').insert({ campaign_id: targetCampaignId, map_filename: mapFilename, fog_zones: fogZones, tokens, pending_moves: [] });
     }
     await supabase.from('campaigns').update({ map_url: mapFilename }).eq('id', targetCampaignId);
-    setSaving(false);
-    setShowCommitPicker(false);
+    setSaving(false); setShowCommitPicker(false);
   };
 
+  // ── Map image load ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!mapFilename) return;
     setMapLoaded(false);
     const img = new Image();
-    img.onload = () => { mapImgRef.current = img; setMapLoaded(true); };
+    img.onload = () => { mapImgRef.current = img; setMapLoaded(true); setTransform({ scale: 1, x: 0, y: 0 }); };
     img.src = `/Maps/${encodeURIComponent(mapFilename)}`;
   }, [mapFilename]);
 
+  // ── Redraw ────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!mapLoaded) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    drawCanvas({ canvas, mapImg: mapImgRef.current, fogZones, tokens, brushPreview, tool });
-  }, [fogZones, tokens, brushPreview, mapLoaded, tool]);
+    drawCanvas({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, brushPreview, tool, transform });
+  }, [fogZones, tokens, brushPreview, mapLoaded, tool, transform]);
 
-  const getCanvasPos = (e) => {
+  // ── Wheel zoom (non-passive, on canvas directly) ──────────────────────────
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !mapLoaded) return;
+    const handler = (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const scaleRatio = canvas.width / rect.width;
+      const mouseX = (e.clientX - rect.left) * scaleRatio;
+      const mouseY = (e.clientY - rect.top) * scaleRatio;
+      const delta = e.deltaY < 0 ? 1.12 : 0.9;
+      setTransform(prev => {
+        const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, prev.scale * delta));
+        return {
+          scale: newScale,
+          x: mouseX - (mouseX - prev.x) * (newScale / prev.scale),
+          y: mouseY - (mouseY - prev.y) * (newScale / prev.scale),
+        };
+      });
+    };
+    canvas.addEventListener('wheel', handler, { passive: false });
+    return () => canvas.removeEventListener('wheel', handler);
+  }, [mapLoaded]);
+
+  // ── Coord helpers ─────────────────────────────────────────────────────────
+  const screenToMap = (clientX, clientY) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const t = transformRef.current;
+    const scaleRatio = canvas.width / rect.width;
+    const cx = (clientX - rect.left) * scaleRatio;
+    const cy = (clientY - rect.top) * scaleRatio;
     return {
-      x: (clientX - rect.left) / rect.width,
-      y: (clientY - rect.top) / rect.height,
+      x: (cx - t.x) / (t.scale * canvas.width),
+      y: (cy - t.y) / (t.scale * canvas.height),
     };
+  };
+
+  const screenToCanvasPx = (clientX, clientY) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const scaleRatio = canvas.width / rect.width;
+    return { px: (clientX - rect.left) * scaleRatio, py: (clientY - rect.top) * scaleRatio };
   };
 
   const brushRadius = BRUSH_SIZES[brushSize];
 
+  // ── Pointer handlers ──────────────────────────────────────────────────────
   const handlePointerDown = useCallback((e) => {
     e.preventDefault();
-    const pos = getCanvasPos(e);
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    if (tool === 'pan' || e.button === 1) {
+      panRef.current = { active: true, lastX: clientX, lastY: clientY };
+      return;
+    }
+
+    const pos = screenToMap(clientX, clientY);
 
     if (tool === 'fog-reveal' || tool === 'fog-hide') {
       paintingRef.current = true;
+      const t = transformRef.current;
       const canvas = canvasRef.current;
-      const zone = { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r: brushRadius / canvas.width, feather };
+      const zone = { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r: brushRadius / (canvas.width * t.scale), feather };
       setFogZones(prev => [...prev, zone]);
     }
-
-    if (tool === 'token-enemy') {
-      setPendingClick({ x: pos.x, y: pos.y });
-      setShowTokenForm(true);
-    }
-
+    if (tool === 'token-enemy') { setPendingClick(pos); setShowTokenForm(true); }
     if (tool === 'erase-token') {
       const canvas = canvasRef.current;
-      const W = canvas.width; const H = canvas.height;
       setTokens(prev => prev.filter(t => {
-        const dx = (t.x - pos.x) * W;
-        const dy = (t.y - pos.y) * H;
+        const dx = (t.x - pos.x) * canvas.width;
+        const dy = (t.y - pos.y) * canvas.height;
         return Math.sqrt(dx * dx + dy * dy) > 18;
       }));
     }
-
     if (tool === 'token-move') {
       const canvas = canvasRef.current;
-      const W = canvas.width; const H = canvas.height;
-      let closest = null; let closestDist = 30;
-      tokens.forEach(t => {
-        const dx = (t.x - pos.x) * W;
-        const dy = (t.y - pos.y) * H;
-        const d = Math.sqrt(dx * dx + dy * dy);
-        if (d < closestDist) { closest = t.id; closestDist = d; }
+      const t = transformRef.current;
+      let closest = null; let closestDist = 30 / t.scale;
+      tokens.forEach(tok => {
+        const dx = (tok.x - pos.x) * canvas.width;
+        const dy = (tok.y - pos.y) * canvas.height;
+        if (Math.sqrt(dx * dx + dy * dy) < closestDist) { closest = tok.id; closestDist = Math.sqrt(dx * dx + dy * dy); }
       });
       setSelectedTokenId(closest);
     }
-  }, [tool, brushRadius, tokens]);
+  }, [tool, brushRadius, feather, tokens]);
 
   const handlePointerMove = useCallback((e) => {
     e.preventDefault();
-    const pos = getCanvasPos(e);
-    const canvas = canvasRef.current;
-    // Fix: convert normalized pos to canvas pixels for preview, account for CSS scaling
-    const scaleX = canvas.width / canvas.getBoundingClientRect().width;
-    setBrushPreview({ x: pos.x * canvas.width, y: pos.y * canvas.height, r: brushRadius * scaleX });
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    // Pan
+    if (panRef.current.active) {
+      const canvas = canvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+      const scaleRatio = canvas.width / rect.width;
+      const dx = (clientX - panRef.current.lastX) * scaleRatio;
+      const dy = (clientY - panRef.current.lastY) * scaleRatio;
+      panRef.current.lastX = clientX;
+      panRef.current.lastY = clientY;
+      setTransform(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
+      return;
+    }
+
+    const pos = screenToMap(clientX, clientY);
+    const { px, py } = screenToCanvasPx(clientX, clientY);
+    const t = transformRef.current;
+    setBrushPreview({ sx: px, sy: py, sr: brushRadius * t.scale });
 
     if (paintingRef.current && (tool === 'fog-reveal' || tool === 'fog-hide')) {
-      const zone = { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r: brushRadius / canvas.width, feather };
+      const canvas = canvasRef.current;
+      const zone = { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r: brushRadius / (canvas.width * t.scale), feather };
       setFogZones(prev => [...prev, zone]);
     }
-
-    if (tool === 'token-move' && selectedTokenId && e.buttons === 1) {
+    if (tool === 'token-move' && selectedTokenId && (e.buttons === 1 || e.touches)) {
       setTokens(prev => prev.map(t => t.id === selectedTokenId ? { ...t, x: pos.x, y: pos.y } : t));
     }
-  }, [tool, brushRadius, selectedTokenId]);
+  }, [tool, brushRadius, feather, selectedTokenId]);
 
   const handlePointerUp = useCallback(() => {
     paintingRef.current = false;
+    panRef.current.active = false;
     setSelectedTokenId(null);
   }, []);
 
   const handlePointerLeave = useCallback(() => {
     setBrushPreview(null);
     paintingRef.current = false;
+    panRef.current.active = false;
   }, []);
 
+  // ── Actions ───────────────────────────────────────────────────────────────
   const addEnemyToken = () => {
     if (!pendingClick || !newTokenLabel.trim()) return;
-    const token = { id: uid(), type: 'enemy', label: newTokenLabel.trim(), color: newTokenColor, x: pendingClick.x, y: pendingClick.y };
-    setTokens(prev => [...prev, token]);
-    setNewTokenLabel('');
-    setShowTokenForm(false);
-    setPendingClick(null);
+    setTokens(prev => [...prev, { id: uid(), type: 'enemy', label: newTokenLabel.trim(), color: newTokenColor, x: pendingClick.x, y: pendingClick.y }]);
+    setNewTokenLabel(''); setShowTokenForm(false); setPendingClick(null);
   };
 
   const clearFog = () => setFogZones([]);
   const revealAll = () => setFogZones([{ id: uid(), type: 'reveal', x: 0.5, y: 0.5, r: 1.5 }]);
+  const resetView = () => setTransform({ scale: 1, x: 0, y: 0 });
 
   const syncMapFromCampaign = async () => {
     const { data } = await supabase.from('campaigns').select('map_url').eq('id', campaignId).single();
-    if (data?.map_url) {
-      await supabase.from('vtt_sessions').update({ map_filename: data.map_url }).eq('id', vttSession.id);
-      setMapFilename(data.map_url);
-    }
+    if (data?.map_url) { await supabase.from('vtt_sessions').update({ map_filename: data.map_url }).eq('id', vttSession.id); setMapFilename(data.map_url); }
   };
 
   const label8 = { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
-
   const toolBtn = (id, lbl, active) => (
     <button key={id} onClick={() => setTool(id)} style={{ background: active ? 'rgba(200,168,74,0.15)' : COLORS.card, border: `1px solid ${active ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: active ? '#e8c84a' : COLORS.text, whiteSpace: 'nowrap' }}>{lbl}</button>
   );
@@ -348,6 +368,7 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
         {toolBtn('token-enemy','⚔ Enemy',  tool === 'token-enemy')}
         {toolBtn('token-move', '✥ Move',   tool === 'token-move')}
         {toolBtn('erase-token','✕ Erase',  tool === 'erase-token')}
+        {toolBtn('pan',        '✋ Pan',    tool === 'pan')}
         <div style={{ width: 1, height: 20, background: COLORS.border, margin: '0 4px' }} />
         <div style={{ ...label8, marginRight: 4 }}>Brush</div>
         {BRUSH_SIZES.map((_, i) => (
@@ -358,40 +379,31 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
         <div style={{ width: 1, height: 20, background: COLORS.border, margin: '0 4px' }} />
         <div style={{ ...label8, marginRight: 4 }}>Feather</div>
         {[0, 0.3, 0.6, 1].map((f, i) => (
-          <button key={f} onClick={() => setFeather(f)}
-            style={{ background: feather === f ? 'rgba(200,168,74,0.15)' : COLORS.card, border: `1px solid ${feather === f ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: feather === f ? '#e8c84a' : COLORS.text }}>
+          <button key={f} onClick={() => setFeather(f)} style={{ background: feather === f ? 'rgba(200,168,74,0.15)' : COLORS.card, border: `1px solid ${feather === f ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: feather === f ? '#e8c84a' : COLORS.text }}>
             {['None', 'Light', 'Med', 'Full'][i]}
           </button>
         ))}
         <div style={{ width: 1, height: 20, background: COLORS.border, margin: '0 4px' }} />
         <button onClick={revealAll} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>Reveal All</button>
         <button onClick={clearFog}  style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>Reset Fog</button>
+        <button onClick={resetView} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>⊡ Reset View</button>
         <button onClick={syncMapFromCampaign} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↺ Sync Map</button>
-        {mapFilename && (
-          <button onClick={() => { setMapFilename(null); setMapLoaded(false); setFogZones([]); setTokens([]); }} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↩ Change Map</button>
-        )}
+        {mapFilename && <button onClick={() => { setMapFilename(null); setMapLoaded(false); setFogZones([]); setTokens([]); }} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↩ Change Map</button>}
+        {mapLoaded && <div style={{ ...label8, color: COLORS.dim }}>Zoom: {Math.round(transform.scale * 100)}%</div>}
         <button onClick={() => setShowCommitPicker(true)} disabled={saving || !mapFilename} style={{ marginLeft: 'auto', background: mapFilename ? 'rgba(200,168,74,0.15)' : 'transparent', border: `1px solid ${mapFilename ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 16px', cursor: mapFilename ? 'pointer' : 'default', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: mapFilename ? '#e8c84a' : COLORS.dim, fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
           {saving ? 'Saving…' : '✦ Commit'}
         </button>
       </div>
 
       {/* ── Canvas ── */}
-      <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: `1px solid ${COLORS.border}`, background: '#0d0b09', cursor: tool === 'fog-reveal' || tool === 'fog-hide' ? 'crosshair' : tool === 'erase-token' ? 'not-allowed' : 'default' }}>
+      <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: `1px solid ${COLORS.border}`, background: '#0d0b09', cursor: tool === 'pan' ? 'grab' : tool === 'fog-reveal' || tool === 'fog-hide' ? 'crosshair' : tool === 'erase-token' ? 'not-allowed' : 'default' }}>
         {!mapFilename ? (
           <div style={{ padding: '28px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.muted, letterSpacing: '0.1em', textTransform: 'uppercase', textAlign: 'center' }}>Select a map to begin</div>
-            <input
-              value={mapSearch}
-              onChange={e => setMapSearch(e.target.value)}
-              placeholder="Search locations…"
-              style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }}
-            />
+            <input value={mapSearch} onChange={e => setMapSearch(e.target.value)} placeholder="Search locations…" style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 280, overflowY: 'auto' }}>
               {LOCATIONS.filter(l => l.name.toLowerCase().includes(mapSearch.toLowerCase())).map(loc => (
-                <button key={loc.id} onClick={() => pickMap(loc.filename)}
-                  style={{ textAlign: 'left', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.06em', color: COLORS.text }}>
-                  {loc.name}
-                </button>
+                <button key={loc.id} onClick={() => pickMap(loc.filename)} style={{ textAlign: 'left', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.06em', color: COLORS.text }}>{loc.name}</button>
               ))}
             </div>
           </div>
@@ -419,12 +431,9 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
         <div style={{ background: COLORS.surface, border: `1px solid #c8a84a44`, borderRadius: 8, padding: '14px 16px' }}>
           <div style={{ ...label8, marginBottom: 10 }}>New Enemy Token</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <input autoFocus value={newTokenLabel} onChange={e => setNewTokenLabel(e.target.value)} onKeyDown={e => e.key === 'Enter' && addEnemyToken()} placeholder="Label (e.g. Orc, G1)…" maxLength={6}
-              style={{ flex: 1, minWidth: 120, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none' }} />
+            <input autoFocus value={newTokenLabel} onChange={e => setNewTokenLabel(e.target.value)} onKeyDown={e => e.key === 'Enter' && addEnemyToken()} placeholder="Label (e.g. Orc, G1)…" maxLength={6} style={{ flex: 1, minWidth: 120, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none' }} />
             <div style={{ display: 'flex', gap: 4 }}>
-              {TOKEN_COLORS.map(c => (
-                <div key={c} onClick={() => setNewTokenColor(c)} style={{ width: 20, height: 20, borderRadius: '50%', background: c, border: `2px solid ${newTokenColor === c ? '#fff' : 'transparent'}`, cursor: 'pointer' }} />
-              ))}
+              {TOKEN_COLORS.map(c => <div key={c} onClick={() => setNewTokenColor(c)} style={{ width: 20, height: 20, borderRadius: '50%', background: c, border: `2px solid ${newTokenColor === c ? '#fff' : 'transparent'}`, cursor: 'pointer' }} />)}
             </div>
             <button onClick={addEnemyToken} style={{ background: 'rgba(200,168,74,0.15)', border: `1px solid #c8a84a`, borderRadius: 6, padding: '7px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.1em', color: '#e8c84a', fontWeight: 700 }}>Place</button>
             <button onClick={() => { setShowTokenForm(false); setPendingClick(null); }} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.dim }}>Cancel</button>
@@ -438,8 +447,8 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
           <div style={{ ...label8, marginBottom: 8 }}>Tokens on map — {tokens.length}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {tokens.map(t => (
-              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 6, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '5px 8px' }}>
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: t.color, flexShrink: 0 }} />
+              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 6, background: COLORS.card, border: `1px solid ${t.type === 'player' ? '#4a9edd44' : COLORS.border}`, borderRadius: t.type === 'player' ? 4 : 6, padding: '5px 8px' }}>
+                <div style={{ width: 10, height: 10, borderRadius: t.type === 'player' ? 2 : '50%', background: t.color, flexShrink: 0 }} />
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.text }}>{t.label}</div>
                 <button onClick={() => setTokens(prev => prev.filter(x => x.id !== t.id))} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 11, padding: 0, lineHeight: 1 }}>×</button>
               </div>
@@ -448,7 +457,7 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
         </div>
       )}
 
-      {/* ── Commit campaign picker ── */}
+      {/* ── Commit picker ── */}
       {showCommitPicker && (
         <div onClick={() => setShowCommitPicker(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#13100d', border: '1px solid #c8a84a44', borderRadius: 12, padding: '24px 28px', minWidth: 300 }}>
@@ -456,7 +465,7 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
             <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>Choose which campaign this map and fog state applies to.</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {CAMPAIGNS.map(c => (
-                <button key={c.id} onClick={() => save(c.id)} style={{ textAlign: 'left', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '12px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, transition: 'all 0.12s' }}
+                <button key={c.id} onClick={() => save(c.id)} style={{ textAlign: 'left', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '12px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = '#c8a84a88'; e.currentTarget.style.background = 'rgba(200,168,74,0.08)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.background = 'rgba(240,238,235,0.04)'; }}
                 >
