@@ -27,7 +27,7 @@ export const ALL_ITEMS = [
   ...DOCUMENTS,
   ...MAGIC_ITEMS,
   ...ARTIFACTS,
-  ...BLACK_MARKET,
+  ...BLACK_MARKET_ITEMS,
   ...TRADE_GOODS,
   ...COLLECTABLES
 ];
