@@ -17,30 +17,21 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   const H = canvas.height;
 
   ctx.clearRect(0, 0, W, H);
-
-  // ── Transformed layer (map + fog + tokens) ──
   ctx.save();
   ctx.setTransform(transform.scale, 0, 0, transform.scale, transform.x, transform.y);
-
-  // Map
   ctx.drawImage(mapImg, 0, 0, W, H);
 
-  // Fog offscreen
   const fogCanvas = document.createElement('canvas');
-  fogCanvas.width = W;
-  fogCanvas.height = H;
+  fogCanvas.width = W; fogCanvas.height = H;
   const fogCtx = fogCanvas.getContext('2d');
   fogCtx.fillStyle = 'rgba(10,8,6,0.85)';
   fogCtx.fillRect(0, 0, W, H);
   fogCtx.globalCompositeOperation = 'destination-out';
   fogZones.forEach(zone => {
     if (zone.type === 'reveal') {
-      const cx = zone.x * W;
-      const cy = zone.y * H;
-      const r = zone.r * W;
+      const cx = zone.x * W, cy = zone.y * H, r = zone.r * W;
       const feather = zone.feather ?? 0;
-      const innerR = r * (1 - feather);
-      const grad = fogCtx.createRadialGradient(cx, cy, innerR, cx, cy, r);
+      const grad = fogCtx.createRadialGradient(cx, cy, r * (1 - feather), cx, cy, r);
       grad.addColorStop(0, 'rgba(0,0,0,1)');
       grad.addColorStop(1, 'rgba(0,0,0,0)');
       fogCtx.beginPath();
@@ -60,52 +51,37 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   });
   ctx.drawImage(fogCanvas, 0, 0);
 
-  // Tokens
   tokens.forEach(tok => {
-    const tx = tok.x * W;
-    const ty = tok.y * H;
-    const r = 14;
+    const tx = tok.x * W, ty = tok.y * H, r = 14;
     ctx.save();
-    if (tok.type === 'player') {
-      ctx.beginPath();
-      ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4);
-    } else {
-      ctx.beginPath();
-      ctx.arc(tx, ty, r, 0, Math.PI * 2);
-    }
+    if (tok.type === 'player') { ctx.beginPath(); ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4); }
+    else { ctx.beginPath(); ctx.arc(tx, ty, r, 0, Math.PI * 2); }
     ctx.fillStyle = tok.color || '#4a9edd';
     ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 9px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
     ctx.restore();
   });
 
-  ctx.restore(); // end transformed layer
+  ctx.restore();
 
-  // ── Brush preview in screen space (not transformed) ──
   if (brushPreview) {
     ctx.save();
     ctx.beginPath();
     ctx.arc(brushPreview.sx, brushPreview.sy, brushPreview.sr, 0, Math.PI * 2);
     ctx.strokeStyle = tool === 'fog-reveal' ? '#e8c84a88' : tool === 'fog-hide' ? '#4444ff88' : '#ffffff44';
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([4, 3]);
-    ctx.stroke();
+    ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]); ctx.stroke();
     ctx.restore();
   }
 }
 
 export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
-  const canvasRef   = useRef(null);
-  const mapImgRef   = useRef(null);
-  const paintingRef = useRef(false);
-  const panRef      = useRef({ active: false, lastX: 0, lastY: 0 });
+  const canvasRef    = useRef(null);
+  const mapImgRef    = useRef(null);
+  const paintingRef  = useRef(false);
+  const panRef       = useRef({ active: false, lastX: 0, lastY: 0 });
   const transformRef = useRef({ scale: 1, x: 0, y: 0 });
 
   const [transform, setTransform]             = useState({ scale: 1, x: 0, y: 0 });
@@ -127,10 +103,8 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
   const [showCommitPicker, setShowCommitPicker] = useState(false);
   const [feather, setFeather]                 = useState(0.3);
 
-  // Keep transformRef in sync for use in non-reactive handlers
   useEffect(() => { transformRef.current = transform; }, [transform]);
 
-  // ── Session load ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (!campaignId) return;
     loadSession();
@@ -141,7 +115,6 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
     return () => supabase.removeChannel(sub);
   }, [campaignId]);
 
-  // ── Register place-token callback ─────────────────────────────────────────
   useEffect(() => {
     if (!onRegisterPlaceToken) return;
     onRegisterPlaceToken((tokenData) => {
@@ -155,7 +128,11 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
   const loadSession = async () => {
     const { data } = await supabase.from('vtt_sessions').select('*').eq('campaign_id', campaignId).maybeSingle();
     if (data) {
-      setVttSession(data); setFogZones(data.fog_zones || []); setTokens(data.tokens || []); setMapFilename(data.map_filename);
+      setVttSession(data);
+      setFogZones(data.fog_zones || []);
+      setTokens(data.tokens || []);
+      setMapFilename(data.map_filename);
+      if (data.view_transform) setTransform(data.view_transform);
     } else {
       const { data: camp } = await supabase.from('campaigns').select('map_url').eq('id', campaignId).single();
       const filename = camp?.map_url || null;
@@ -179,30 +156,27 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
     setSaving(true);
     const { data: existing } = await supabase.from('vtt_sessions').select('id').eq('campaign_id', targetCampaignId).maybeSingle();
     if (existing) {
-      await supabase.from('vtt_sessions').update({ fog_zones: fogZones, tokens, map_filename: mapFilename, updated_at: new Date().toISOString() }).eq('id', existing.id);
+      await supabase.from('vtt_sessions').update({ fog_zones: fogZones, tokens, map_filename: mapFilename, view_transform: transform, updated_at: new Date().toISOString() }).eq('id', existing.id);
     } else {
-      await supabase.from('vtt_sessions').insert({ campaign_id: targetCampaignId, map_filename: mapFilename, fog_zones: fogZones, tokens, pending_moves: [] });
+      await supabase.from('vtt_sessions').insert({ campaign_id: targetCampaignId, map_filename: mapFilename, fog_zones: fogZones, tokens, pending_moves: [], view_transform: transform });
     }
     await supabase.from('campaigns').update({ map_url: mapFilename }).eq('id', targetCampaignId);
     setSaving(false); setShowCommitPicker(false);
   };
 
-  // ── Map image load ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!mapFilename) return;
     setMapLoaded(false);
     const img = new Image();
-    img.onload = () => { mapImgRef.current = img; setMapLoaded(true); setTransform({ scale: 1, x: 0, y: 0 }); };
+    img.onload = () => { mapImgRef.current = img; setMapLoaded(true); };
     img.src = `/Maps/${encodeURIComponent(mapFilename)}`;
   }, [mapFilename]);
 
-  // ── Redraw ────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!mapLoaded) return;
     drawCanvas({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, brushPreview, tool, transform });
   }, [fogZones, tokens, brushPreview, mapLoaded, tool, transform]);
 
-  // ── Wheel zoom (non-passive, on canvas directly) ──────────────────────────
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !mapLoaded) return;
@@ -215,28 +189,21 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
       const delta = e.deltaY < 0 ? 1.12 : 0.9;
       setTransform(prev => {
         const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, prev.scale * delta));
-        return {
-          scale: newScale,
-          x: mouseX - (mouseX - prev.x) * (newScale / prev.scale),
-          y: mouseY - (mouseY - prev.y) * (newScale / prev.scale),
-        };
+        return { scale: newScale, x: mouseX - (mouseX - prev.x) * (newScale / prev.scale), y: mouseY - (mouseY - prev.y) * (newScale / prev.scale) };
       });
     };
     canvas.addEventListener('wheel', handler, { passive: false });
     return () => canvas.removeEventListener('wheel', handler);
   }, [mapLoaded]);
 
-  // ── Coord helpers ─────────────────────────────────────────────────────────
   const screenToMap = (clientX, clientY) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     const t = transformRef.current;
     const scaleRatio = canvas.width / rect.width;
-    const cx = (clientX - rect.left) * scaleRatio;
-    const cy = (clientY - rect.top) * scaleRatio;
     return {
-      x: (cx - t.x) / (t.scale * canvas.width),
-      y: (cy - t.y) / (t.scale * canvas.height),
+      x: ((clientX - rect.left) * scaleRatio - t.x) / (t.scale * canvas.width),
+      y: ((clientY - rect.top) * scaleRatio - t.y) / (t.scale * canvas.height),
     };
   };
 
@@ -249,26 +216,16 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
 
   const brushRadius = BRUSH_SIZES[brushSize];
 
-  // ── Pointer handlers ──────────────────────────────────────────────────────
   const handlePointerDown = useCallback((e) => {
     e.preventDefault();
-    
-    // Quick reset on Ctrl+Click
-    if (e.ctrlKey) {
-      setMapFilename(null);
-      setMapLoaded(false);
-      setFogZones([]);
-      setTokens([]);
-      return;
-    }
-
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-    if (tool === 'pan' || e.button === 1) {
-      panRef.current = { active: true, lastX: clientX, lastY: clientY };
-      return;
-    }
+    // Ctrl+drag or Pan tool = pan
+    if (tool === 'pan' || e.button === 1 || e.ctrlKey) {
+  panRef.current = { active: false, pending: true, lastX: clientX, lastY: clientY };
+  return;
+}
 
     const pos = screenToMap(clientX, clientY);
 
@@ -281,7 +238,6 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
       setFogZones(prev => {
         const next = [...prev, zone];
         if (tool === 'fog-reveal') {
-          // Remove hide zones whose center falls within this reveal brush
           return next.filter(z => {
             if (z.id === zone.id) return true;
             if (z.type !== 'hide') return true;
@@ -309,7 +265,8 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
       tokens.forEach(tok => {
         const dx = (tok.x - pos.x) * canvas.width;
         const dy = (tok.y - pos.y) * canvas.height;
-        if (Math.sqrt(dx * dx + dy * dy) < closestDist) { closest = tok.id; closestDist = Math.sqrt(dx * dx + dy * dy); }
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < closestDist) { closest = tok.id; closestDist = d; }
       });
       setSelectedTokenId(closest);
     }
@@ -320,8 +277,9 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-    // Pan
-    if (panRef.current.active) {
+    if (panRef.current.active || panRef.current.pending) {
+      panRef.current.active = true;
+      panRef.current.pending = false;
       const canvas = canvasRef.current;
       const rect = canvas.getBoundingClientRect();
       const scaleRatio = canvas.width / rect.width;
@@ -340,8 +298,21 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
 
     if (paintingRef.current && (tool === 'fog-reveal' || tool === 'fog-hide')) {
       const canvas = canvasRef.current;
-      const zone = { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r: brushRadius / (canvas.width * t.scale), feather };
-      setFogZones(prev => [...prev, zone]);
+      const r = brushRadius / (canvas.width * t.scale);
+      const zone = { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r, feather };
+      setFogZones(prev => {
+        const next = [...prev, zone];
+        if (tool === 'fog-reveal') {
+          return next.filter(z => {
+            if (z.id === zone.id) return true;
+            if (z.type !== 'hide') return true;
+            const dx = (z.x - pos.x) * canvas.width;
+            const dy = (z.y - pos.y) * canvas.height;
+            return Math.sqrt(dx * dx + dy * dy) > (r + z.r) * canvas.width;
+          });
+        }
+        return next;
+      });
     }
     if (tool === 'token-move' && selectedTokenId && (e.buttons === 1 || e.touches)) {
       setTokens(prev => prev.map(t => t.id === selectedTokenId ? { ...t, x: pos.x, y: pos.y } : t));
@@ -360,7 +331,6 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
     panRef.current.active = false;
   }, []);
 
-  // ── Actions ───────────────────────────────────────────────────────────────
   const addEnemyToken = () => {
     if (!pendingClick || !newTokenLabel.trim()) return;
     setTokens(prev => [...prev, { id: uid(), type: 'enemy', label: newTokenLabel.trim(), color: newTokenColor, x: pendingClick.x, y: pendingClick.y }]);
@@ -383,8 +353,6 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-
-      {/* ── Toolbar ── */}
       <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 14px', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
         <div style={{ ...label8, marginRight: 4 }}>Tool</div>
         {toolBtn('fog-reveal', '☀ Reveal', tool === 'fog-reveal')}
@@ -413,13 +381,12 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
         <button onClick={resetView} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>⊡ Reset View</button>
         <button onClick={syncMapFromCampaign} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↺ Sync Map</button>
         {mapFilename && <button onClick={() => { setMapFilename(null); setMapLoaded(false); setFogZones([]); setTokens([]); }} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↩ Change Map</button>}
-        {mapLoaded && <div style={{ ...label8, color: COLORS.dim }}>Zoom: {Math.round(transform.scale * 100)}%</div>}
+        {mapLoaded && <div style={{ ...label8, color: COLORS.dim }}>Ctrl+drag to pan · Zoom: {Math.round(transform.scale * 100)}%</div>}
         <button onClick={() => setShowCommitPicker(true)} disabled={saving || !mapFilename} style={{ marginLeft: 'auto', background: mapFilename ? 'rgba(200,168,74,0.15)' : 'transparent', border: `1px solid ${mapFilename ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 16px', cursor: mapFilename ? 'pointer' : 'default', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: mapFilename ? '#e8c84a' : COLORS.dim, fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
           {saving ? 'Saving…' : '✦ Commit'}
         </button>
       </div>
 
-      {/* ── Canvas ── */}
       <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: `1px solid ${COLORS.border}`, background: '#0d0b09', cursor: tool === 'pan' ? 'grab' : tool === 'fog-reveal' || tool === 'fog-hide' ? 'crosshair' : tool === 'erase-token' ? 'not-allowed' : 'default' }}>
         {!mapFilename ? (
           <div style={{ padding: '28px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -434,23 +401,12 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
         ) : !mapLoaded ? (
           <div style={{ padding: '60px 20px', textAlign: 'center', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: COLORS.dim, fontSize: 12 }}>Loading map…</div>
         ) : (
-          <canvas
-            ref={canvasRef}
-            width={900}
-            height={600}
-            style={{ width: '100%', height: 'auto', display: 'block', touchAction: 'none' }}
-            onMouseDown={handlePointerDown}
-            onMouseMove={handlePointerMove}
-            onMouseUp={handlePointerUp}
-            onMouseLeave={handlePointerLeave}
-            onTouchStart={handlePointerDown}
-            onTouchMove={handlePointerMove}
-            onTouchEnd={handlePointerUp}
-          />
+          <canvas ref={canvasRef} width={900} height={600} style={{ width: '100%', height: 'auto', display: 'block', touchAction: 'none' }}
+            onMouseDown={handlePointerDown} onMouseMove={handlePointerMove} onMouseUp={handlePointerUp} onMouseLeave={handlePointerLeave}
+            onTouchStart={handlePointerDown} onTouchMove={handlePointerMove} onTouchEnd={handlePointerUp} />
         )}
       </div>
 
-      {/* ── Token form ── */}
       {showTokenForm && (
         <div style={{ background: COLORS.surface, border: `1px solid #c8a84a44`, borderRadius: 8, padding: '14px 16px' }}>
           <div style={{ ...label8, marginBottom: 10 }}>New Enemy Token</div>
@@ -465,7 +421,6 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
         </div>
       )}
 
-      {/* ── Token list ── */}
       {tokens.length > 0 && (
         <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '12px 14px' }}>
           <div style={{ ...label8, marginBottom: 8 }}>Tokens on map — {tokens.length}</div>
@@ -481,7 +436,6 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
         </div>
       )}
 
-      {/* ── Commit picker ── */}
       {showCommitPicker && (
         <div onClick={() => setShowCommitPicker(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#13100d', border: '1px solid #c8a84a44', borderRadius: 12, padding: '24px 28px', minWidth: 300 }}>
