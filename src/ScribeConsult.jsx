@@ -111,18 +111,28 @@ export function ScribeConsult({ char, onUpdateChar }) {
   }, [messages, loading]);
 
   const persistScribeConsult = async ({ question, answer }) => {
-    const { error } = await supabase.from('messages').insert({
-      session_id: `scribe-${char.id}`,
-      sender_id: char.user_id || null,
-      sender_name: char.name || 'Unknown',
-      character_id: char.id,
-      campaign_id: char.campaign || char.campaign_id || null,
-      type: 'scribe',
-      content: question,
-      response: answer,
-      is_dm: false,
-      read: true,
-    });
+    const payload = {
+  session_id: stableSessionId,
+  sender_id: user?.id || null,
+  sender_name: char.name || 'Unknown',
+  character_id: char.id,
+  campaign_id: char.campaign || char.campaign_id || null,
+  type: 'player_message',
+  content: message.trim(),
+  is_dm: false,
+  read: false,
+};
+
+console.log('DM MESSAGE PAYLOAD:', payload);
+
+const { error } = await supabase.from('messages').insert(payload);
+
+if (error) {
+  console.error('DM send error:', error.message, error.details, error.hint, error.code);
+  setError('Message failed to send. Try again.');
+  setSending(false);
+  return;
+}
 
     if (error) {
       console.error('Failed to persist Scribe consult:', error);
