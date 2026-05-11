@@ -26,9 +26,17 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform }) {
   fogCtx.globalCompositeOperation = 'destination-out';
   fogZones.forEach(zone => {
     if (zone.type === 'reveal') {
+      const cx = zone.x * W;
+      const cy = zone.y * H;
+      const r = zone.r * W;
+      const feather = zone.feather ?? 0.3; // 0 = hard, 1 = full feather
+      const innerR = r * (1 - feather);
+      const grad = fogCtx.createRadialGradient(cx, cy, innerR, cx, cy, r);
+      grad.addColorStop(0, 'rgba(0,0,0,1)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
       fogCtx.beginPath();
-      fogCtx.arc(zone.x * W, zone.y * H, zone.r * W, 0, Math.PI * 2);
-      fogCtx.fillStyle = 'rgba(0,0,0,1)';
+      fogCtx.arc(cx, cy, r, 0, Math.PI * 2);
+      fogCtx.fillStyle = grad;
       fogCtx.fill();
     }
   });

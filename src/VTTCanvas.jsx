@@ -33,9 +33,17 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
   fogCtx.globalCompositeOperation = 'destination-out';
   fogZones.forEach(zone => {
     if (zone.type === 'reveal') {
+      const cx = zone.x * W;
+      const cy = zone.y * H;
+      const r = zone.r * W;
+      const feather = zone.feather ?? 0.3; // 0 = hard, 1 = full feather
+      const innerR = r * (1 - feather);
+      const grad = fogCtx.createRadialGradient(cx, cy, innerR, cx, cy, r);
+      grad.addColorStop(0, 'rgba(0,0,0,1)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
       fogCtx.beginPath();
-      fogCtx.arc(zone.x * W, zone.y * H, zone.r * W, 0, Math.PI * 2);
-      fogCtx.fillStyle = 'rgba(0,0,0,1)';
+      fogCtx.arc(cx, cy, r, 0, Math.PI * 2);
+      fogCtx.fillStyle = grad;
       fogCtx.fill();
     }
   });
@@ -109,6 +117,7 @@ export default function VTTCanvas({ campaignId }) {
   const [pendingClick, setPendingClick]       = useState(null);
   const [mapSearch, setMapSearch]             = useState('');
   const [showCommitPicker, setShowCommitPicker] = useState(false);
+  const [feather, setFeather]                  = useState(0.3);
 
   useEffect(() => {
     if (!campaignId) return;
@@ -215,7 +224,7 @@ export default function VTTCanvas({ campaignId }) {
     if (tool === 'fog-reveal' || tool === 'fog-hide') {
       paintingRef.current = true;
       const canvas = canvasRef.current;
-      const zone = { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r: brushRadius / canvas.width };
+      const zone = { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r: brushRadius / canvas.width, feather };
       setFogZones(prev => [...prev, zone]);
     }
 
@@ -257,7 +266,7 @@ export default function VTTCanvas({ campaignId }) {
     setBrushPreview({ x: pos.x * canvas.width, y: pos.y * canvas.height, r: brushRadius * scaleX });
 
     if (paintingRef.current && (tool === 'fog-reveal' || tool === 'fog-hide')) {
-      const zone = { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r: brushRadius / canvas.width };
+      const zone = { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r: brushRadius / canvas.width, feather };
       setFogZones(prev => [...prev, zone]);
     }
 
@@ -318,6 +327,14 @@ export default function VTTCanvas({ campaignId }) {
         {BRUSH_SIZES.map((_, i) => (
           <button key={i} onClick={() => setBrushSize(i)} style={{ width: 24, height: 24, borderRadius: '50%', background: brushSize === i ? '#c8a84a' : COLORS.card, border: `1px solid ${brushSize === i ? '#e8c84a' : COLORS.border}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ width: 6 + i * 4, height: 6 + i * 4, borderRadius: '50%', background: brushSize === i ? '#1a1714' : COLORS.muted }} />
+          </button>
+        ))}
+        <div style={{ width: 1, height: 20, background: COLORS.border, margin: '0 4px' }} />
+        <div style={{ ...label8, marginRight: 4 }}>Feather</div>
+        {[0, 0.3, 0.6, 1].map((f, i) => (
+          <button key={f} onClick={() => setFeather(f)}
+            style={{ background: feather === f ? 'rgba(200,168,74,0.15)' : COLORS.card, border: `1px solid ${feather === f ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: feather === f ? '#e8c84a' : COLORS.text }}>
+            {['None', 'Light', 'Med', 'Full'][i]}
           </button>
         ))}
         <div style={{ width: 1, height: 20, background: COLORS.border, margin: '0 4px' }} />
