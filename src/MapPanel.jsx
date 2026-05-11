@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { COLORS } from './constants';
 
 // ─── LOCATION REGISTRY ────────────────────────────────────────────────────────
-const LOCATIONS = [
+export const LOCATIONS = [
   { id: 'albion',              name: 'Albion',                            filename: 'Albion.png' },
   { id: 'aridara',             name: 'Aridara',                           filename: 'Aridara.png' },
   { id: 'ashendell',           name: 'Ashendell',                         filename: 'Ashendell.png' },
