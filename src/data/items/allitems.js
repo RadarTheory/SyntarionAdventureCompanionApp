@@ -10,7 +10,7 @@ import { SCHEMATIC_MATERIALS } from './schematicMaterials';
 import { DOCUMENTS } from './documents';
 import { MAGIC_ITEMS } from './magicItems';
 import { ARTIFACTS } from './artifacts';
-import { BLACK_MARKET } from './blackmarket';
+import { BLACK_MARKET_ITEMS } from './blackmarket';
 import { TRADE_GOODS } from "./tradegoods";
 import { COLLECTABLES } from "./collectables";
 
