@@ -16,6 +16,7 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
   const W = canvas.width;
   const H = canvas.height;
 
+
   ctx.clearRect(0, 0, W, H);
 
   // Map image
@@ -125,6 +126,7 @@ export default function VTTCanvas({ campaignId }) {
   const [selectedTokenId, setSelectedTokenId] = useState(null);
   const [showTokenForm, setShowTokenForm] = useState(false);
   const [pendingClick, setPendingClick] = useState(null);
+  const [mapSearch, setMapSearch] = useState('');
 
   // Load or create vtt_session
   useEffect(() => {
@@ -301,6 +303,22 @@ export default function VTTCanvas({ campaignId }) {
     }
   };
 
+  const pickMap = async (filename) => {
+    if (!vttSession) {
+      // Create session first
+      const { data } = await supabase
+        .from('vtt_sessions')
+        .upsert({ campaign_id: campaignId, map_filename: filename, fog_zones: [], tokens: [], pending_moves: [] }, { onConflict: 'campaign_id' })
+        .select().single();
+      if (data) setVttSession(data);
+    } else {
+      await supabase.from('vtt_sessions').update({ map_filename: filename }).eq('id', vttSession.id);
+    }
+    // Also sync to campaigns table
+    await supabase.from('campaigns').update({ map_url: filename }).eq('id', campaignId);
+    setMapFilename(filename);
+  };
+
   const label8 = { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
 
   const toolBtn = (id, label, active) => (
@@ -346,13 +364,23 @@ export default function VTTCanvas({ campaignId }) {
       {/* ── Canvas ── */}
       <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: `1px solid ${COLORS.border}`, background: '#0d0b09', cursor: tool === 'fog-reveal' || tool === 'fog-hide' ? 'crosshair' : tool === 'erase-token' ? 'not-allowed' : 'default' }}>
         {!mapFilename ? (
-          <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.muted, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>No map loaded</div>
-            <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>Set a map in the Campaign Map tab first, then click Sync Map.</div>
-            <button onClick={syncMapFromCampaign} style={{ background: 'rgba(200,168,74,0.15)', border: `1px solid #c8a84a`, borderRadius: 6, padding: '8px 20px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#e8c84a' }}>↺ Sync Map from Campaign</button>
+          <div style={{ padding: '28px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.muted, letterSpacing: '0.1em', textTransform: 'uppercase', textAlign: 'center' }}>Select a map to begin</div>
+            <input
+              value={mapSearch}
+              onChange={e => setMapSearch(e.target.value)}
+              placeholder="Search locations…"
+              style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }}
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 280, overflowY: 'auto' }}>
+              {LOCATIONS.filter(l => l.name.toLowerCase().includes(mapSearch.toLowerCase())).map(loc => (
+                <button key={loc.id} onClick={() => pickMap(loc.filename)}
+                  style={{ textAlign: 'left', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.06em', color: COLORS.text }}>
+                  {loc.name}
+                </button>
+              ))}
+            </div>
           </div>
-        ) : !mapLoaded ? (
-          <div style={{ padding: '60px 20px', textAlign: 'center', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: COLORS.dim, fontSize: 12 }}>Loading map…</div>
         ) : (
           <canvas
             ref={canvasRef}
