@@ -712,7 +712,7 @@ export default function DMView({ onHome }) {
       case 'Music': return <MusicPanel />;
       case 'Maps': return <MapPanel />;
       case 'VTT':
-  return <VTTCanvas campaignId={activeCampaignTab} />;
+       return <VTTCanvas campaignId={activeCampaignTab} />;
 
       case 'Scribe':
         return (
