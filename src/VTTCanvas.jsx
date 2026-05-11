@@ -68,9 +68,15 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
     const ty = tok.y * H;
     const r = 14;
     ctx.save();
-    ctx.beginPath();
-    ctx.arc(tx, ty, r, 0, Math.PI * 2);
-    ctx.fillStyle = tok.color || '#e85d4a';
+    if (tok.type === 'player') {
+      // Square token for players
+      ctx.beginPath();
+      ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4);
+    } else {
+      ctx.beginPath();
+      ctx.arc(tx, ty, r, 0, Math.PI * 2);
+    }
+    ctx.fillStyle = tok.color || '#4a9edd';
     ctx.fill();
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 2;
@@ -96,7 +102,7 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
   }
 }
 
-export default function VTTCanvas({ campaignId }) {
+export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
   const canvasRef   = useRef(null);
   const mapImgRef   = useRef(null);
   const paintingRef = useRef(false);
@@ -128,6 +134,26 @@ export default function VTTCanvas({ campaignId }) {
       .subscribe();
     return () => supabase.removeChannel(sub);
   }, [campaignId]);
+
+  useEffect(() => {
+    if (!onRegisterPlaceToken) return;
+    onRegisterPlaceToken((tokenData) => {
+      const token = {
+        id: uid(),
+        type: 'player',
+        label: tokenData.label,
+        color: tokenData.color,
+        characterId: tokenData.characterId,
+        x: 0.5,
+        y: 0.5,
+      };
+      setTokens(prev => {
+        // Replace existing token for same character if present
+        const filtered = prev.filter(t => t.characterId !== tokenData.characterId);
+        return [...filtered, token];
+      });
+    });
+  }, [onRegisterPlaceToken]);
 
   const loadSession = async () => {
     const { data } = await supabase

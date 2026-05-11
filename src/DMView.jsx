@@ -705,6 +705,7 @@ export default function DMView({ onHome }) {
   const activeMessages = messages.filter(s => !s.archived);
   const archivedMessages = messages.filter(s => s.archived);
   const displayedMessages = showArchive ? archivedMessages : activeMessages;
+  const vttPlaceTokenRef = useRef(null);
 
   const renderTab = () => {
     switch (activeTab) {
@@ -712,7 +713,11 @@ export default function DMView({ onHome }) {
       case 'Music': return <MusicPanel />;
       case 'Maps': return <MapPanel />;
       case 'VTT':
-       return <VTTCanvas campaignId={activeCampaignTab} />;
+        return <VTTCanvas 
+          campaignId={activeCampaignTab} 
+          onRegisterPlaceToken={fn => { vttPlaceTokenRef.current = fn; }}
+        />;
+       
 
       case 'Scribe':
         return (
@@ -863,6 +868,17 @@ export default function DMView({ onHome }) {
       <PlayersPanel
         onOpenCharacter={(char) => setEditingChar(char)}
         onMessage={(session) => setActiveSession(session)}
+        showVTT={activeTab === 'VTT'}
+        onPlaceOnVTT={(char) => {
+          if (vttPlaceTokenRef.current) {
+            vttPlaceTokenRef.current({
+              label: (char.name || 'PC').slice(0, 3),
+              color: '#4a9edd',
+              type: 'player',
+              characterId: char.id,
+            });
+          }
+        }}
       />
 
       {toast && (
