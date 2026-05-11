@@ -388,6 +388,7 @@ function DMMemoryPanel({ characterId, campaignId }) {
     </div>
   </div>
 );
+} 
 
 // ─── SESSION LOG EDITOR ───────────────────────────────────────────────────────
 function SessionLogEditor({ campaign }) {
