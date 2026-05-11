@@ -252,6 +252,16 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
   // ── Pointer handlers ──────────────────────────────────────────────────────
   const handlePointerDown = useCallback((e) => {
     e.preventDefault();
+    
+    // Quick reset on Ctrl+Click
+    if (e.ctrlKey) {
+      setMapFilename(null);
+      setMapLoaded(false);
+      setFogZones([]);
+      setTokens([]);
+      return;
+    }
+
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
@@ -264,10 +274,24 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
 
     if (tool === 'fog-reveal' || tool === 'fog-hide') {
       paintingRef.current = true;
-      const t = transformRef.current;
       const canvas = canvasRef.current;
-      const zone = { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r: brushRadius / (canvas.width * t.scale), feather };
-      setFogZones(prev => [...prev, zone]);
+      const t = transformRef.current;
+      const r = brushRadius / (canvas.width * t.scale);
+      const zone = { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r, feather };
+      setFogZones(prev => {
+        const next = [...prev, zone];
+        if (tool === 'fog-reveal') {
+          // Remove hide zones whose center falls within this reveal brush
+          return next.filter(z => {
+            if (z.id === zone.id) return true;
+            if (z.type !== 'hide') return true;
+            const dx = (z.x - pos.x) * canvas.width;
+            const dy = (z.y - pos.y) * canvas.height;
+            return Math.sqrt(dx * dx + dy * dy) > (r + z.r) * canvas.width;
+          });
+        }
+        return next;
+      });
     }
     if (tool === 'token-enemy') { setPendingClick(pos); setShowTokenForm(true); }
     if (tool === 'erase-token') {
