@@ -154,7 +154,7 @@ export default function VTTCanvas({ campaignId }) {
     } else {
       // Create session — pull map from campaigns table
       const { data: camp } = await supabase.from('campaigns').select('map_url').eq('id', campaignId).single();
-      const filename = camp?.map_url || null;
+      const filename = data.map_filename || camp?.map_url || null;
       const { data: newSession } = await supabase
         .from('vtt_sessions')
         .insert({ campaign_id: campaignId, map_filename: filename, fog_zones: [], tokens: [], pending_moves: [] })

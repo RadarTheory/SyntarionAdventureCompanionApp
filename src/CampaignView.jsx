@@ -3,6 +3,7 @@ import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
 import { COLORS, CAMPAIGNS, ALL_STATS, ALL_CLASSES, ACTIONS, getRaceDisplay } from './constants';
 import { LOCATIONS } from './MapPanel';
+import VTTViewer from './VTTViewer';
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function label8() {
@@ -116,17 +117,19 @@ function CampaignMapTab({ campaign }) {
   };
 
   const saveMap = async () => {
-    if (!selectedFilename) return;
-    setSaving(true);
-    await supabase.from('campaigns').update({ map_url: selectedFilename }).eq('id', campaign.id);
-    setMapFilename(selectedFilename);
-    setSaving(false);
-    setDmOpen(false);
-    setUnlocked(false);
-    setPassword('');
-    setSelectedFilename('');
-    setSearch('');
-  };
+  if (!selectedFilename) return;
+  setSaving(true);
+  await supabase.from('campaigns').update({ map_url: selectedFilename }).eq('id', campaign.id);
+  // ADD THIS:
+  await supabase.from('vtt_sessions').upsert({ campaign_id: String(campaign.id), map_filename: selectedFilename }, { onConflict: 'campaign_id' });
+  setMapFilename(selectedFilename);
+  setSaving(false);
+  setDmOpen(false);
+  setUnlocked(false);
+  setPassword('');
+  setSelectedFilename('');
+  setSearch('');
+};
 
   const filtered = LOCATIONS.filter(l => l.name.toLowerCase().includes(search.toLowerCase()));
   const activeLocation = LOCATIONS.find(l => l.filename === mapFilename);
@@ -261,7 +264,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
     switch (activeTab) {
 
       case 'Map':
-        return <CampaignMapTab campaign={campaign} />;
+  return <VTTViewer campaignId={String(campaign.id)} userChar={userChar} />;
 
       case 'Roster':
         return (
