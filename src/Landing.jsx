@@ -305,12 +305,6 @@ export default function Landing({ user, darkMode, setDarkMode }) {
       onClick: handlePlay,
     },
     {
-      id: 'driftstone',
-      label: 'DRIFTSTONE',
-      sub: 'Set the pattern. Turn the current.',
-      onClick: () => setAppView('driftstone'),
-    },
-    {
       id: 'campaigns',
       label: 'CAMPAIGNS',
       sub: 'Enter the age of steam',
