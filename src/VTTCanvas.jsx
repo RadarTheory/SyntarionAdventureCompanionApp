@@ -15,40 +15,46 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
   const H = canvas.height;
 
   ctx.clearRect(0, 0, W, H);
+
+  // Layer 1 — map image
   ctx.drawImage(mapImg, 0, 0, W, H);
 
-  // Step 1 — draw full fog overlay
-  ctx.save();
-  ctx.fillStyle = 'rgba(10,8,6,0.82)';
-  ctx.fillRect(0, 0, W, H);
-  ctx.restore();
+  // Layer 2 — fog on offscreen canvas, then draw on top
+  const fogCanvas = document.createElement('canvas');
+  fogCanvas.width = W;
+  fogCanvas.height = H;
+  const fogCtx = fogCanvas.getContext('2d');
 
-  // Step 2 — cut reveal holes
-  ctx.save();
-  ctx.globalCompositeOperation = 'destination-out';
+  // Fill fog solid
+  fogCtx.fillStyle = 'rgba(10,8,6,0.85)';
+  fogCtx.fillRect(0, 0, W, H);
+
+  // Cut reveal holes using destination-out on the FOG canvas only
+  fogCtx.globalCompositeOperation = 'destination-out';
   fogZones.forEach(zone => {
     if (zone.type === 'reveal') {
-      ctx.beginPath();
-      ctx.arc(zone.x * W, zone.y * H, zone.r * W, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(0,0,0,1)';
-      ctx.fill();
+      fogCtx.beginPath();
+      fogCtx.arc(zone.x * W, zone.y * H, zone.r * W, 0, Math.PI * 2);
+      fogCtx.fillStyle = 'rgba(0,0,0,1)';
+      fogCtx.fill();
     }
   });
-  ctx.restore();
 
-  // Step 3 — paint hide zones back on top
-  ctx.save();
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.fillStyle = 'rgba(10,8,6,0.82)';
+  // Re-hide zones on top of the cuts
+  fogCtx.globalCompositeOperation = 'source-over';
+  fogCtx.fillStyle = 'rgba(10,8,6,0.85)';
   fogZones.forEach(zone => {
     if (zone.type === 'hide') {
-      ctx.beginPath();
-      ctx.arc(zone.x * W, zone.y * H, zone.r * W, 0, Math.PI * 2);
-      ctx.fill();
+      fogCtx.beginPath();
+      fogCtx.arc(zone.x * W, zone.y * H, zone.r * W, 0, Math.PI * 2);
+      fogCtx.fill();
     }
   });
-  ctx.restore();
 
+  // Draw completed fog layer onto main canvas
+  ctx.drawImage(fogCanvas, 0, 0);
+
+  // Layer 3 — tokens
   tokens.forEach(tok => {
     const tx = tok.x * W;
     const ty = tok.y * H;
@@ -67,26 +73,9 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
     ctx.textBaseline = 'middle';
     ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
     ctx.restore();
-
-    if (tok.pendingX !== undefined) {
-      ctx.save();
-      ctx.setLineDash([4, 3]);
-      ctx.strokeStyle = '#e8c84a';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(tx, ty);
-      ctx.lineTo(tok.pendingX * W, tok.pendingY * H);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.beginPath();
-      ctx.arc(tok.pendingX * W, tok.pendingY * H, r, 0, Math.PI * 2);
-      ctx.strokeStyle = '#e8c84a';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.restore();
-    }
   });
 
+  // Layer 4 — brush preview
   if (brushPreview) {
     ctx.save();
     ctx.beginPath();
