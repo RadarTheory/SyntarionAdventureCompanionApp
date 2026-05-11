@@ -1,5 +1,3 @@
-// src/data/items/allItems.js
-
 import { CURRENCY } from './currency';
 import { WEAPONS } from './weapons';
 import { ARMOR } from './armor';
