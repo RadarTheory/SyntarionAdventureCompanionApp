@@ -641,22 +641,24 @@ export default function DMView({ onHome }) {
   useEffect(() => {
     fetchAll();
     const channel = supabase.channel('dm-inbox')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'is_dm=eq.false' }, (payload) => {
-        fetchMessages();
-        setToast({ name: payload.new.sender_name || 'A player', content: payload.new.content });
-        setTimeout(() => setToast(null), 4000);
-        if (payload.new.session_id && activeSessionRef.current?.session_id !== payload.new.session_id) {
-          setActiveSession({
-            session_id: payload.new.session_id,
-            character_id: payload.new.character_id,
-            character_name: payload.new.sender_name || payload.new.character_name || 'Player',
-            player_username: payload.new.player_username || null,
-            campaign_id: payload.new.campaign_id,
-            player_id: payload.new.sender_id,
-          });
-        }
-      })
-      .subscribe();
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+    fetchMessages();
+    if (!payload.new.is_dm) {
+      setToast({ name: payload.new.sender_name || 'A player', content: payload.new.content });
+      setTimeout(() => setToast(null), 4000);
+      if (payload.new.session_id && activeSessionRef.current?.session_id !== payload.new.session_id) {
+        setActiveSession({
+          session_id: payload.new.session_id,
+          character_id: payload.new.character_id,
+          character_name: payload.new.sender_name || payload.new.character_name || 'Player',
+          player_username: payload.new.player_username || null,
+          campaign_id: payload.new.campaign_id,
+          player_id: payload.new.sender_id,
+        });
+      }
+    }
+  })
+  .subscribe();
     return () => supabase.removeChannel(channel);
   }, [fetchMessages]);
 
