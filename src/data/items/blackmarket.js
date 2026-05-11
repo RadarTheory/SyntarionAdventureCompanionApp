@@ -63,6 +63,6 @@ export const BLACK_MARKET = [
   { category: 'Black Market', type: 'Drink', name: 'Kitsune Mirage Sake', desc: 'A refined illusion-laced spirit known for vivid dreams, altered perception, and dangerous memory gaps.', tags: ['black-market','drink','sake','pamorph','illusion'], meta: 'rarity: Epic; value: 320; legality: forbidden' },
   { category: 'Black Market', type: 'Drink', name: 'Aarakocra Cloud Mead', desc: 'A light sparkling mead brewed at high altitude and transported in sealed pressure flasks to preserve its airy texture.', tags: ['black-market','drink','mead','pamorph','air'], meta: 'rarity: Rare; value: 150; legality: restricted' },
   { category: 'Black Market', type: 'Drink', name: 'Pa\'morph Bloodwine', desc: 'An outlawed ceremonial wine rumored to contain trace ancestral blood. Consumed by extremists, biomancers, and identity cults seeking communion through lineage.', tags: ['black-market','drink','wine','pamorph','blood'], meta: 'rarity: Legendary; value: 900; legality: absolutely forbidden' },
-// Black Market - Section 
+  { category: 'Black Market', type: 'Drink', name: 'Satyr Milk', desc: 'A thick narcotic dairy-liquor fermented from enchanted goat milk and hallucinogenic woodland herbs. Traded through revel dens, illicit taverns, and underground pleasure circles for its euphoric and impulse-lowering effects.', tags: ['black-market','drink','satyr','hallucinogenic','vice'], meta: 'rarity: Rare; value: 145; legality: forbidden' },
 
 ];
