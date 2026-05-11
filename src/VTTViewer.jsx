@@ -14,24 +14,19 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform }) {
   ctx.clearRect(0, 0, W, H);
   ctx.save();
   ctx.setTransform(transform.scale, 0, 0, transform.scale, transform.x, transform.y);
-
   ctx.drawImage(mapImg, 0, 0, W, H);
 
   const fogCanvas = document.createElement('canvas');
-  fogCanvas.width = W;
-  fogCanvas.height = H;
+  fogCanvas.width = W; fogCanvas.height = H;
   const fogCtx = fogCanvas.getContext('2d');
   fogCtx.fillStyle = 'rgba(10,8,6,0.85)';
   fogCtx.fillRect(0, 0, W, H);
   fogCtx.globalCompositeOperation = 'destination-out';
   fogZones.forEach(zone => {
     if (zone.type === 'reveal') {
-      const cx = zone.x * W;
-      const cy = zone.y * H;
-      const r = zone.r * W;
-      const feather = zone.feather ?? 0.3; // 0 = hard, 1 = full feather
-      const innerR = r * (1 - feather);
-      const grad = fogCtx.createRadialGradient(cx, cy, innerR, cx, cy, r);
+      const cx = zone.x * W, cy = zone.y * H, r = zone.r * W;
+      const feather = zone.feather ?? 0.3;
+      const grad = fogCtx.createRadialGradient(cx, cy, r * (1 - feather), cx, cy, r);
       grad.addColorStop(0, 'rgba(0,0,0,1)');
       grad.addColorStop(1, 'rgba(0,0,0,0)');
       fogCtx.beginPath();
@@ -52,21 +47,15 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform }) {
   ctx.drawImage(fogCanvas, 0, 0);
 
   tokens.forEach(tok => {
-    const tx = tok.x * W;
-    const ty = tok.y * H;
-    const r = 14;
+    const tx = tok.x * W, ty = tok.y * H, r = 14;
     ctx.save();
-    ctx.beginPath();
-    ctx.arc(tx, ty, r, 0, Math.PI * 2);
+    if (tok.type === 'player') { ctx.beginPath(); ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4); }
+    else { ctx.beginPath(); ctx.arc(tx, ty, r, 0, Math.PI * 2); }
     ctx.fillStyle = tok.color || '#e85d4a';
     ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 9px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
     ctx.restore();
   });
@@ -75,17 +64,17 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform }) {
 }
 
 export default function VTTViewer({ campaignId }) {
-  const canvasRef  = useRef(null);
-  const mapImgRef  = useRef(null);
-  const panRef     = useRef({ panning: false, lastX: 0, lastY: 0 });
-  const pinchRef   = useRef({ active: false, lastDist: 0 });
+  const canvasRef = useRef(null);
+  const mapImgRef = useRef(null);
+  const panRef    = useRef({ panning: false, lastX: 0, lastY: 0 });
+  const pinchRef  = useRef({ active: false, lastDist: 0 });
 
-  const [transform, setTransform]       = useState({ scale: 1, x: 0, y: 0 });
-  const [fogZones, setFogZones]         = useState([]);
-  const [tokens, setTokens]             = useState([]);
-  const [mapFilename, setMapFilename]   = useState(null);
-  const [mapLoaded, setMapLoaded]       = useState(false);
-  const [fullscreen, setFullscreen]     = useState(false);
+  const [transform, setTransform]     = useState({ scale: 1, x: 0, y: 0 });
+  const [fogZones, setFogZones]       = useState([]);
+  const [tokens, setTokens]           = useState([]);
+  const [mapFilename, setMapFilename] = useState(null);
+  const [mapLoaded, setMapLoaded]     = useState(false);
+  const [fullscreen, setFullscreen]   = useState(false);
 
   useEffect(() => {
     if (!campaignId) return;
@@ -99,14 +88,19 @@ export default function VTTViewer({ campaignId }) {
 
   const loadSession = async () => {
     const { data } = await supabase.from('vtt_sessions').select('*').eq('campaign_id', campaignId).maybeSingle();
-    if (data) { setFogZones(data.fog_zones || []); setTokens(data.tokens || []); setMapFilename(data.map_filename); }
+    if (data) {
+      setFogZones(data.fog_zones || []);
+      setTokens(data.tokens || []);
+      setMapFilename(data.map_filename);
+      if (data.view_transform) setTransform(data.view_transform);
+    }
   };
 
   useEffect(() => {
     if (!mapFilename) return;
     setMapLoaded(false);
     const img = new Image();
-    img.onload = () => { mapImgRef.current = img; setMapLoaded(true); setTransform({ scale: 1, x: 0, y: 0 }); };
+    img.onload = () => { mapImgRef.current = img; setMapLoaded(true); };
     img.src = `/Maps/${encodeURIComponent(mapFilename)}`;
   }, [mapFilename]);
 
@@ -115,7 +109,6 @@ export default function VTTViewer({ campaignId }) {
     drawViewer({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, transform });
   }, [fogZones, tokens, mapLoaded, transform]);
 
-  // Mouse wheel zoom
   const handleWheel = useCallback((e) => {
     e.preventDefault();
     const canvas = canvasRef.current;
@@ -126,11 +119,7 @@ export default function VTTViewer({ campaignId }) {
     const delta = e.deltaY < 0 ? 1.1 : 0.9;
     setTransform(prev => {
       const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, prev.scale * delta));
-      return {
-        scale: newScale,
-        x: mouseX - (mouseX - prev.x) * (newScale / prev.scale),
-        y: mouseY - (mouseY - prev.y) * (newScale / prev.scale),
-      };
+      return { scale: newScale, x: mouseX - (mouseX - prev.x) * (newScale / prev.scale), y: mouseY - (mouseY - prev.y) * (newScale / prev.scale) };
     });
   }, []);
 
@@ -232,29 +221,21 @@ export default function VTTViewer({ campaignId }) {
         {!mapLoaded ? (
           <div style={{ padding: '60px 20px', textAlign: 'center', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: COLORS.dim, fontSize: 12 }}>Loading map…</div>
         ) : (
-          <canvas
-            ref={canvasRef}
-            width={900}
-            height={600}
-            style={{ width: '100%', height: 'auto', display: 'block', touchAction: 'none' }}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          />
+          <canvas ref={canvasRef} width={900} height={600} style={{ width: '100%', height: 'auto', display: 'block', touchAction: 'none' }}
+            onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} />
         )}
       </div>
 
       {fullscreen && mapLoaded && (
         <div onClick={() => setFullscreen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 500, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ fontSize: 8, color: 'rgba(240,238,235,0.4)', fontFamily: "'Cinzel', serif", marginBottom: 12, letterSpacing: '0.1em' }}>
+            {Math.round(transform.scale * 100)}% · Scroll to zoom · Drag to pan
+          </div>
           <canvas
-            ref={node => { if (node) drawViewer({ canvas: node, mapImg: mapImgRef.current, fogZones, tokens, transform: { scale: 1, x: 0, y: 0 } }); }}
-            width={900}
-            height={600}
-            style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 60px)', borderRadius: 8 }}
+            ref={node => { if (node) drawViewer({ canvas: node, mapImg: mapImgRef.current, fogZones, tokens, transform }); }}
+            width={900} height={600}
+            style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 80px)', borderRadius: 8 }}
             onClick={e => e.stopPropagation()}
           />
           <div style={{ marginTop: 12, fontSize: 9, color: 'rgba(240,238,235,0.3)', fontFamily: "'Cinzel', serif" }}>Click outside to close</div>
