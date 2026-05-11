@@ -9,32 +9,42 @@ function drawViewer({ canvas, mapImg, fogZones, tokens }) {
   const H = canvas.height;
 
   ctx.clearRect(0, 0, W, H);
+
+  // Layer 1 — map
   ctx.drawImage(mapImg, 0, 0, W, H);
 
-  // Fog
-  ctx.save();
-  ctx.fillStyle = 'rgba(10,8,6,0.82)';
-  ctx.fillRect(0, 0, W, H);
-  ctx.globalCompositeOperation = 'destination-out';
+  // Layer 2 — fog on offscreen canvas
+  const fogCanvas = document.createElement('canvas');
+  fogCanvas.width = W;
+  fogCanvas.height = H;
+  const fogCtx = fogCanvas.getContext('2d');
+
+  fogCtx.fillStyle = 'rgba(10,8,6,0.85)';
+  fogCtx.fillRect(0, 0, W, H);
+
+  fogCtx.globalCompositeOperation = 'destination-out';
   fogZones.forEach(zone => {
     if (zone.type === 'reveal') {
-      ctx.beginPath();
-      ctx.arc(zone.x * W, zone.y * H, zone.r * W, 0, Math.PI * 2);
-      ctx.fill();
+      fogCtx.beginPath();
+      fogCtx.arc(zone.x * W, zone.y * H, zone.r * W, 0, Math.PI * 2);
+      fogCtx.fillStyle = 'rgba(0,0,0,1)';
+      fogCtx.fill();
     }
   });
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.fillStyle = 'rgba(10,8,6,0.82)';
+
+  fogCtx.globalCompositeOperation = 'source-over';
+  fogCtx.fillStyle = 'rgba(10,8,6,0.85)';
   fogZones.forEach(zone => {
     if (zone.type === 'hide') {
-      ctx.beginPath();
-      ctx.arc(zone.x * W, zone.y * H, zone.r * W, 0, Math.PI * 2);
-      ctx.fill();
+      fogCtx.beginPath();
+      fogCtx.arc(zone.x * W, zone.y * H, zone.r * W, 0, Math.PI * 2);
+      fogCtx.fill();
     }
   });
-  ctx.restore();
 
-  // Tokens
+  ctx.drawImage(fogCanvas, 0, 0);
+
+  // Layer 3 — tokens
   tokens.forEach(tok => {
     const tx = tok.x * W;
     const ty = tok.y * H;
