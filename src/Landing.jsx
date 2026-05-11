@@ -1,20 +1,99 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
 import medallion from './assets/medallion.png';
 import CharacterSelect from './CharacterSelect';
 import Wizard from './Wizard';
 import CharacterSheet from './CharacterSheet';
-import { ScribeConsult, DMConsult } from './ScribeConsult';
 import PlayDriftstone from './PlayDriftstone';
 import CampaignView from './CampaignView';
 import Roster from './Roster';
 import DMView from './DMView';
 import Settings from './Settings';
 
-// ═════════════════════════════════════════════════════════════════════════════
-// SYNTARION LOGO
-// ═════════════════════════════════════════════════════════════════════════════
+// ─── MOVABLE DRIFTSTONE BUTTON ───────────────────────────────────────────────
+function DriftstoneButton({ onClick, isMobile }) {
+  const [pos, setPos] = useState({ x: 40, y: 40 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartPos = useRef({ x: 0, y: 0, initialX: 0, initialY: 0 });
+  const iconSize = isMobile ? 52 : 68;
+
+  // FIX 1: Declaring handleStart inside the component scope
+  const handleStart = (e) => {
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    setIsDragging(true);
+    dragStartPos.current = {
+      x: clientX - pos.x,
+      y: clientY - pos.y,
+      initialX: clientX,
+      initialY: clientY
+    };
+  };
+
+  useEffect(() => {
+    const handleMove = (e) => {
+      if (!isDragging) return;
+      if (e.cancelable) e.preventDefault();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      setPos({ x: clientX - dragStartPos.current.x, y: clientY - dragStartPos.current.y });
+    };
+
+    const handleEnd = (e) => {
+      if (!isDragging) return;
+      const clientX = e.type.includes('touch') ? e.changedTouches[0]?.clientX : e.clientX;
+      const clientY = e.type.includes('touch') ? e.changedTouches[0]?.clientY : e.clientY;
+      const moveThreshold = 8;
+      const deltaX = Math.abs((clientX || 0) - dragStartPos.current.initialX);
+      const deltaY = Math.abs((clientY || 0) - dragStartPos.current.initialY);
+      if (deltaX < moveThreshold && deltaY < moveThreshold) onClick();
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMove, { passive: false });
+      window.addEventListener('mouseup', handleEnd);
+      window.addEventListener('touchmove', handleMove, { passive: false });
+      window.addEventListener('touchend', handleEnd);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleMove);
+      window.removeEventListener('touchend', handleEnd);
+    };
+  }, [isDragging, onClick]);
+
+  return (
+    <div
+      onMouseDown={handleStart}
+      onTouchStart={handleStart}
+      style={{
+        position: 'fixed',
+        left: pos.x,
+        top: pos.y,
+        zIndex: 2000,
+        cursor: isDragging ? 'grabbing' : 'grab',
+        touchAction: 'none',
+        userSelect: 'none',
+      }}
+    >
+      <img
+        /* FIX 2: Using the direct filename string instead of a variable */
+        src="/drifstone.png" 
+        alt="Driftstone"
+        style={{
+          width: iconSize,
+          height: iconSize,
+          filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))',
+        }}
+      />
+    </div>
+  );
+}
+
+// ─── SYNTARION LOGO ──────────────────────────────────────────────────────────
 function SyntarionLogo({ size = 320, darkMode = false }) {
   const ink = darkMode ? '#f0eeeb' : '#1a1714';
 
@@ -80,9 +159,7 @@ function SyntarionLogo({ size = 320, darkMode = false }) {
   );
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// DM SIGIL MODAL
-// ═════════════════════════════════════════════════════════════════════════════
+// ─── DM SIGIL MODAL ──────────────────────────────────────────────────────────
 function DMSigilModal({ onSuccess, onCancel }) {
   const [input, setInput] = useState('');
   const [error, setError] = useState(false);
@@ -196,17 +273,15 @@ function DMSigilModal({ onSuccess, onCancel }) {
   );
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// LANDING
-// ═════════════════════════════════════════════════════════════════════════════
+// ─── MAIN LANDING COMPONENT ──────────────────────────────────────────────────
 export default function Landing({ user, darkMode, setDarkMode }) {
   const { isMobile } = useDevice();
-  const [appView, setAppView]                 = useState('home');
-  const [savedChars, setSavedChars]           = useState([]);
-  const [loading, setLoading]                 = useState(true);
-  const [showDMModal, setShowDMModal]         = useState(false);
-  const [hoveredBtn, setHoveredBtn]           = useState(null);
-  const [selectedChar, setSelectedChar]       = useState(null);
+  const [appView, setAppView] = useState('home');
+  const [savedChars, setSavedChars] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showDMModal, setShowDMModal] = useState(false);
+  const [hoveredBtn, setHoveredBtn] = useState(null);
+  const [selectedChar, setSelectedChar] = useState(null);
 
   const fetchCharacters = async () => {
     if (!user?.id) return;
@@ -218,13 +293,13 @@ export default function Landing({ user, darkMode, setDarkMode }) {
         .eq('user_id', user.id);
       if (error) throw error;
       if (data) setSavedChars(data
-  .filter(row => row.status !== 'rejected')
-  .map(row => ({
-    ...row.data,
-    id: row.id,
-    status: row.status,
-    campaign_id: row.campaign_id,
-  })));
+        .filter(row => row.status !== 'rejected')
+        .map(row => ({
+          ...row.data,
+          id: row.id,
+          status: row.status,
+          campaign_id: row.campaign_id,
+        })));
     } catch (err) {
       console.error('Fetch error:', err.message);
     } finally {
@@ -232,13 +307,13 @@ export default function Landing({ user, darkMode, setDarkMode }) {
     }
   };
 
-  useEffect(() => { fetchCharacters(); }, []);
+  useEffect(() => { fetchCharacters(); }, [user?.id]);
 
   const goHome = () => { setAppView('home'); fetchCharacters(); };
   const handlePlay = () => setAppView(savedChars.length > 0 ? 'character-select' : 'wizard');
   const handleDMSuccess = () => { setShowDMModal(false); setAppView('dm'); };
 
-  // ── Views ──────────────────────────────────────────────────────────────────
+  // ── Render Views ───────────────────────────────────────────────────────────
   if (appView === 'character-select') return (
     <CharacterSelect
       savedChars={savedChars}
@@ -249,7 +324,7 @@ export default function Landing({ user, darkMode, setDarkMode }) {
   );
 
   if (appView === 'wizard') return (
-    <Wizard onComplete={() => {}} onHome={goHome} />
+    <Wizard onComplete={goHome} onHome={goHome} />
   );
 
   if (appView === 'campaigns') return (
@@ -311,6 +386,12 @@ export default function Landing({ user, darkMode, setDarkMode }) {
       onClick: () => setAppView('campaigns'),
     },
     {
+      id: 'roster',
+      label: 'ROSTER',
+      sub: 'View all adventurers',
+      onClick: () => setAppView('roster'),
+    },
+    {
       id: 'settings',
       label: 'SETTINGS',
       sub: 'Preferences & display',
@@ -337,6 +418,9 @@ export default function Landing({ user, darkMode, setDarkMode }) {
       overflow: 'hidden',
       padding: isMobile ? '32px 20px' : '40px 24px',
     }}>
+
+      {/* ── Movable Button Placement ─────────────────────────────────────── */}
+      <DriftstoneButton isMobile={isMobile} onClick={() => setAppView('driftstone')} />
 
       {/* Vignette */}
       <div style={{
@@ -395,15 +479,17 @@ export default function Landing({ user, darkMode, setDarkMode }) {
 
       {/* Buttons */}
       <div style={{
-        display: 'flex', flexDirection: 'column', gap: 9,
-        width: '100%', maxWidth: isMobile ? '100%' : 320,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 9,
+        width: '100%',
+        maxWidth: isMobile ? '100%' : 320,
         animation: 'fadeUp 1.1s cubic-bezier(0.16,1,0.3,1) both',
         animationDelay: '0.5s',
       }}>
         {buttons.map(btn => {
           const isHovered = hoveredBtn === btn.id;
           const isPrimary = btn.primary;
-          const isDriftstone = btn.id === 'driftstone';
 
           const bgColor = isPrimary
             ? (isHovered ? '#1a1714' : '#2a2420')
@@ -413,23 +499,8 @@ export default function Landing({ user, darkMode, setDarkMode }) {
             ? '#2a2420'
             : `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.18)`;
 
-          const labelColor = isPrimary
-            ? '#f0eeeb'
-            : isDriftstone
-              ? '#a08c2e'
-              : ink;
-
-          const subColor = isPrimary
-            ? 'rgba(240,238,235,0.5)'
-            : isDriftstone
-              ? 'rgba(160,140,46,0.6)'
-              : `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.4)`;
-
-          const arrowColor = isPrimary
-            ? 'rgba(240,238,235,0.35)'
-            : isDriftstone
-              ? 'rgba(160,140,46,0.5)'
-              : `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.4)`;
+          const labelColor = isPrimary ? '#f0eeeb' : ink;
+          const subColor = isPrimary ? 'rgba(240,238,235,0.5)' : `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.4)`;
 
           return (
             <button
@@ -458,7 +529,7 @@ export default function Landing({ user, darkMode, setDarkMode }) {
             >
               <div style={{ textAlign: 'left' }}>
                 <div style={{
-                  fontFamily: "'Cinzel', 'Trajan Pro', serif",
+                  fontFamily: "'Cinzel', serif",
                   fontSize: isPrimary ? (isMobile ? 13 : 15) : (isMobile ? 11 : 12),
                   fontWeight: 700,
                   letterSpacing: '0.22em',
@@ -466,15 +537,20 @@ export default function Landing({ user, darkMode, setDarkMode }) {
                   marginBottom: 2,
                 }}>{btn.label}</div>
                 <div style={{
-                  fontFamily: 'Georgia, serif', fontStyle: 'italic',
+                  fontFamily: 'Georgia, serif',
+                  fontStyle: 'italic',
                   fontSize: isMobile ? 9 : 10,
                   color: subColor,
                   letterSpacing: '0.03em',
-                }}>{btn.sub}</div>
+                }}>
+                  {btn.id === 'play' && loading ? (
+                     <div className="loader" style={{ width: 12, height: 12, display: 'inline-block', verticalAlign: 'middle' }}></div>
+                  ) : btn.sub}
+                </div>
               </div>
               <div style={{
                 fontSize: 14,
-                color: arrowColor,
+                color: isPrimary ? 'rgba(240,238,235,0.35)' : `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.4)`,
                 transform: isHovered ? 'translateX(3px)' : 'none',
                 transition: 'transform 0.18s ease',
               }}>→</div>
@@ -501,6 +577,18 @@ export default function Landing({ user, darkMode, setDarkMode }) {
           from { opacity: 0; transform: translateY(18px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        @keyframes rotation {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .loader {
+          border: 2px solid #a08c2e;
+          border-bottom-color: transparent;
+          border-radius: 50%;
+          display: inline-block;
+          box-sizing: border-box;
+          animation: rotation 1s linear infinite;
+        }
         * { box-sizing: border-box; }
         body { margin: 0; }
       `}</style>
@@ -508,9 +596,7 @@ export default function Landing({ user, darkMode, setDarkMode }) {
   );
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// STUB
-// ═════════════════════════════════════════════════════════════════════════════
+// ─── STUB COMPONENT ──────────────────────────────────────────────────────────
 function Stub({ label, onHome, dark }) {
   return (
     <div style={{
