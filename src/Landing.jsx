@@ -311,12 +311,6 @@ export default function Landing({ user, darkMode, setDarkMode }) {
       onClick: () => setAppView('campaigns'),
     },
     {
-      id: 'roster',
-      label: 'ROSTER',
-      sub: 'View all adventurers',
-      onClick: () => setAppView('roster'),
-    },
-    {
       id: 'settings',
       label: 'SETTINGS',
       sub: 'Preferences & display',
