@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { COLORS } from './constants';
-import { ALL_ITEMS } from './data/items/allItems';
+import { ALL_ITEMS } from "./data/items/allitems";
 
 const ITEMS = ALL_ITEMS;
 
