@@ -94,7 +94,7 @@ export default function VTTViewer({ campaignId }) {
   if (data.view_transform) setTransform(data.view_transform);
   setMapFilename(data.map_filename); // set filename last so image load uses correct transform
 }
-
+}
   useEffect(() => {
     if (!mapFilename) return;
     setMapLoaded(false);
