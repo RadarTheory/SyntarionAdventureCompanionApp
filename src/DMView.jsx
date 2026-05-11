@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
 import { COLORS, CAMPAIGNS, ALL_CLASSES, ALL_STATS, getRaceDisplay } from './constants';
@@ -415,7 +415,7 @@ function SessionLogEditor({ campaign }) {
     <div>
       <div style={{ ...label8(), marginBottom: 12 }}>Session Log — {campaign.subtitle}</div>
       <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '14px', marginBottom: 16 }}>
-        <input value={sessionTitle} onChange={e => setSessionTitle(e.target.value)} placeholder="Session title (optional)…" style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${COLORS.border}`, padding: '6px 0', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
+        <input value={sessionTitle} onChange={e => setSessionTimerLabel(e.target.value)} placeholder="Session title (optional)…" style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${COLORS.border}`, padding: '6px 0', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
         <textarea value={newEntry} onChange={e => setNewEntry(e.target.value)} placeholder="Write the session log entry…" rows={4} style={{ width: '100%', background: 'transparent', border: 'none', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', lineHeight: 1.7, outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
         <button onClick={addEntry} disabled={saving || !newEntry.trim()} style={{ background: saving ? 'transparent' : COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px 20px', cursor: saving ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText, fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
           {saving ? 'Committing…' : '✦ Commit to Log'}
@@ -485,13 +485,9 @@ function MusicPanel() {
         .from('music')
         .list('', { limit: 1000, sortBy: { column: 'name', order: 'asc' } });
 
-      console.log('LIST DATA:', data);
-      console.log('LIST ERROR:', listError);
-
       if (listError) throw new Error(`Storage error: ${listError.message} (${listError.statusCode})`);
       if (!data) throw new Error('No data returned from storage');
-      if (data.length === 0) throw new Error('Bucket returned empty — check bucket name and permissions');
-
+      
       const audioFiles = data
         .filter(f => f.name && /\.(wav|mp3|ogg|flac|m4a)$/i.test(f.name))
         .map(f => ({
@@ -499,10 +495,8 @@ function MusicPanel() {
           file_path: f.name,
         }));
 
-      if (audioFiles.length === 0) throw new Error(`Bucket has ${data.length} files but none matched audio extensions. First file: ${data[0]?.name}`);
-
       setTracks(audioFiles);
-      setCurrentTrack(audioFiles[0]);
+      if (audioFiles.length > 0) setCurrentTrack(audioFiles[0]);
     } catch (err) {
       setError(err.message);
     }
@@ -561,9 +555,6 @@ function MusicPanel() {
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11 }}>{track.title}</div>
               </button>
             ))}
-            {filteredTracks.length === 0 && (
-              <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No tracks match.</div>
-            )}
           </div>
         </>
       )}
@@ -594,9 +585,37 @@ export default function DMView({ onHome }) {
   const [showArchive, setShowArchive] = useState(false);
   const [toast, setToast] = useState(null);
   const [sessionTimerLabel, setSessionTimerLabel] = useState(null);
+  
+  // LOBBY STATE
+  const [checkedInPlayers, setCheckedInPlayers] = useState([]);
 
   const activeSessionRef = useRef(activeSession);
   useEffect(() => { activeSessionRef.current = activeSession; }, [activeSession]);
+
+  // 1. LOBBY CHECK-IN SUBSCRIPTION
+  useEffect(() => {
+    const fetchCheckins = async () => {
+      const { data } = await supabase.from('session_checkins').select('*');
+      if (data) setCheckedInPlayers(data);
+    };
+    fetchCheckins();
+
+    const channel = supabase.channel('lobby-updates')
+      .on('postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'session_checkins' }, 
+        (payload) => {
+          setCheckedInPlayers(prev => [...prev, payload.new]);
+        }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, []);
+
+  // Deduplicate check-ins by character_id so the lobby is clean
+  const uniqueCheckins = useMemo(() => {
+    return Array.from(new Map(checkedInPlayers.map(p => [p.character_id, p])).values());
+  }, [checkedInPlayers]);
 
   const fetchMessages = useCallback(async () => {
     const { data } = await supabase.from('messages').select('*').not('session_id', 'is', null).order('created_at', { ascending: false });
@@ -847,7 +866,12 @@ export default function DMView({ onHome }) {
             {sessionTimerLabel || "The Architect's Chamber"}
           </div>
         </div>
-        <SessionManager onTimerLabel={setSessionTimerLabel} />
+        
+        {/* CORRECTED PROP PASSING HERE */}
+        <SessionManager 
+          onTimerLabel={setSessionTimerLabel} 
+          checkedInPlayers={uniqueCheckins} 
+        />
       </div>
 
       {/* ─── Tab bar ─────────────────────────────────────────────────────── */}
