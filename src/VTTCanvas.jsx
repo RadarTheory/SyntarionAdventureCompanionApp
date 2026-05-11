@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import supabase from './lib/supabase';
-import { COLORS } from './constants';
+import { COLORS, CAMPAIGNS } from './constants';
 import { LOCATIONS } from './MapPanel';
 
-const TOOLS = ['fog-reveal', 'fog-hide', 'token-enemy', 'token-move', 'erase-token'];
 const BRUSH_SIZES = [20, 40, 70, 110];
 const TOKEN_COLORS = ['#e85d4a', '#4a9edd', '#79f5a7', '#e8c84a', '#c084fc', '#fb923c'];
 
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
 function uid() { return Math.random().toString(36).slice(2, 9); }
 
 function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
@@ -16,18 +14,12 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
   const W = canvas.width;
   const H = canvas.height;
 
-
   ctx.clearRect(0, 0, W, H);
-
-  // Map image
   ctx.drawImage(mapImg, 0, 0, W, H);
 
-  // Fog overlay — dark mask with revealed holes
   ctx.save();
   ctx.fillStyle = 'rgba(10,8,6,0.82)';
   ctx.fillRect(0, 0, W, H);
-
-  // Cut reveal zones
   ctx.globalCompositeOperation = 'destination-out';
   fogZones.forEach(zone => {
     if (zone.type === 'reveal') {
@@ -36,8 +28,6 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
       ctx.fill();
     }
   });
-
-  // Re-hide zones painted on top
   ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = 'rgba(10,8,6,0.82)';
   fogZones.forEach(zone => {
@@ -49,12 +39,10 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
   });
   ctx.restore();
 
-  // Tokens
   tokens.forEach(tok => {
     const tx = tok.x * W;
     const ty = tok.y * H;
     const r = 14;
-
     ctx.save();
     ctx.beginPath();
     ctx.arc(tx, ty, r, 0, Math.PI * 2);
@@ -63,17 +51,13 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 2;
     ctx.stroke();
-
-    // Label
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 9px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const label = (tok.label || '?').slice(0, 3);
-    ctx.fillText(label, tx, ty);
+    ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
     ctx.restore();
 
-    // Pending move indicator
     if (tok.pendingX !== undefined) {
       ctx.save();
       ctx.setLineDash([4, 3]);
@@ -93,7 +77,6 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
     }
   });
 
-  // Brush preview
   if (brushPreview) {
     ctx.save();
     ctx.beginPath();
@@ -106,38 +89,35 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
   }
 }
 
-// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function VTTCanvas({ campaignId }) {
-  const canvasRef    = useRef(null);
-  const mapImgRef    = useRef(null);
-  const paintingRef  = useRef(false);
+  const canvasRef   = useRef(null);
+  const mapImgRef   = useRef(null);
+  const paintingRef = useRef(false);
 
-  const [vttSession, setVttSession]     = useState(null);
-  const [fogZones, setFogZones]         = useState([]);
-  const [tokens, setTokens]             = useState([]);
-  const [tool, setTool]                 = useState('fog-reveal');
-  const [brushSize, setBrushSize]       = useState(1);
-  const [brushPreview, setBrushPreview] = useState(null);
-  const [mapFilename, setMapFilename]   = useState(null);
-  const [mapLoaded, setMapLoaded]       = useState(false);
-  const [saving, setSaving]             = useState(false);
-  const [newTokenLabel, setNewTokenLabel] = useState('');
-  const [newTokenColor, setNewTokenColor] = useState(TOKEN_COLORS[0]);
+  const [vttSession, setVttSession]           = useState(null);
+  const [fogZones, setFogZones]               = useState([]);
+  const [tokens, setTokens]                   = useState([]);
+  const [tool, setTool]                       = useState('fog-reveal');
+  const [brushSize, setBrushSize]             = useState(1);
+  const [brushPreview, setBrushPreview]       = useState(null);
+  const [mapFilename, setMapFilename]         = useState(null);
+  const [mapLoaded, setMapLoaded]             = useState(false);
+  const [saving, setSaving]                   = useState(false);
+  const [newTokenLabel, setNewTokenLabel]     = useState('');
+  const [newTokenColor, setNewTokenColor]     = useState(TOKEN_COLORS[0]);
   const [selectedTokenId, setSelectedTokenId] = useState(null);
-  const [showTokenForm, setShowTokenForm] = useState(false);
-  const [pendingClick, setPendingClick] = useState(null);
-  const [mapSearch, setMapSearch] = useState('');
+  const [showTokenForm, setShowTokenForm]     = useState(false);
+  const [pendingClick, setPendingClick]       = useState(null);
+  const [mapSearch, setMapSearch]             = useState('');
+  const [showCommitPicker, setShowCommitPicker] = useState(false);
 
-  // Load or create vtt_session
   useEffect(() => {
     if (!campaignId) return;
     loadSession();
-
     const sub = supabase
       .channel(`vtt-${campaignId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'vtt_sessions', filter: `campaign_id=eq.${campaignId}` }, () => loadSession())
       .subscribe();
-
     return () => supabase.removeChannel(sub);
   }, [campaignId]);
 
@@ -154,22 +134,53 @@ export default function VTTCanvas({ campaignId }) {
       setTokens(data.tokens || []);
       setMapFilename(data.map_filename);
     } else {
-      // Create session — pull map from campaigns table
       const { data: camp } = await supabase.from('campaigns').select('map_url').eq('id', campaignId).single();
-      const filename = data.map_filename || camp?.map_url || null;
+      const filename = camp?.map_url || null;
       const { data: newSession } = await supabase
         .from('vtt_sessions')
         .insert({ campaign_id: campaignId, map_filename: filename, fog_zones: [], tokens: [], pending_moves: [] })
         .select()
         .single();
-      if (newSession) {
-        setVttSession(newSession);
-        setMapFilename(filename);
-      }
+      if (newSession) { setVttSession(newSession); setMapFilename(filename); }
     }
   };
 
-  // Load map image when filename changes
+  const pickMap = async (filename) => {
+    if (!vttSession) {
+      const { data } = await supabase
+        .from('vtt_sessions')
+        .upsert({ campaign_id: campaignId, map_filename: filename, fog_zones: [], tokens: [], pending_moves: [] }, { onConflict: 'campaign_id' })
+        .select().single();
+      if (data) setVttSession(data);
+    } else {
+      await supabase.from('vtt_sessions').update({ map_filename: filename }).eq('id', vttSession.id);
+    }
+    await supabase.from('campaigns').update({ map_url: filename }).eq('id', campaignId);
+    setMapFilename(filename);
+    setMapSearch('');
+  };
+
+  const save = async (targetCampaignId) => {
+    setSaving(true);
+    const { data: existing } = await supabase
+      .from('vtt_sessions')
+      .select('id')
+      .eq('campaign_id', targetCampaignId)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase.from('vtt_sessions')
+        .update({ fog_zones: fogZones, tokens, map_filename: mapFilename, updated_at: new Date().toISOString() })
+        .eq('id', existing.id);
+    } else {
+      await supabase.from('vtt_sessions')
+        .insert({ campaign_id: targetCampaignId, map_filename: mapFilename, fog_zones: fogZones, tokens, pending_moves: [] });
+    }
+    await supabase.from('campaigns').update({ map_url: mapFilename }).eq('id', targetCampaignId);
+    setSaving(false);
+    setShowCommitPicker(false);
+  };
+
   useEffect(() => {
     if (!mapFilename) return;
     setMapLoaded(false);
@@ -178,7 +189,6 @@ export default function VTTCanvas({ campaignId }) {
     img.src = `/Maps/${encodeURIComponent(mapFilename)}`;
   }, [mapFilename]);
 
-  // Redraw canvas whenever state changes
   useEffect(() => {
     if (!mapLoaded) return;
     const canvas = canvasRef.current;
@@ -194,8 +204,6 @@ export default function VTTCanvas({ campaignId }) {
     return {
       x: (clientX - rect.left) / rect.width,
       y: (clientY - rect.top) / rect.height,
-      px: clientX - rect.left,
-      py: clientY - rect.top,
     };
   };
 
@@ -219,8 +227,7 @@ export default function VTTCanvas({ campaignId }) {
 
     if (tool === 'erase-token') {
       const canvas = canvasRef.current;
-      const W = canvas.width;
-      const H = canvas.height;
+      const W = canvas.width; const H = canvas.height;
       setTokens(prev => prev.filter(t => {
         const dx = (t.x - pos.x) * W;
         const dy = (t.y - pos.y) * H;
@@ -229,12 +236,9 @@ export default function VTTCanvas({ campaignId }) {
     }
 
     if (tool === 'token-move') {
-      // Select token closest to click
       const canvas = canvasRef.current;
-      const W = canvas.width;
-      const H = canvas.height;
-      let closest = null;
-      let closestDist = 30;
+      const W = canvas.width; const H = canvas.height;
+      let closest = null; let closestDist = 30;
       tokens.forEach(t => {
         const dx = (t.x - pos.x) * W;
         const dy = (t.y - pos.y) * H;
@@ -249,7 +253,9 @@ export default function VTTCanvas({ campaignId }) {
     e.preventDefault();
     const pos = getCanvasPos(e);
     const canvas = canvasRef.current;
-    setBrushPreview({ x: pos.px, y: pos.py, r: brushRadius });
+    // Fix: convert normalized pos to canvas pixels for preview, account for CSS scaling
+    const scaleX = canvas.width / canvas.getBoundingClientRect().width;
+    setBrushPreview({ x: pos.x * canvas.width, y: pos.y * canvas.height, r: brushRadius * scaleX });
 
     if (paintingRef.current && (tool === 'fog-reveal' || tool === 'fog-hide')) {
       const zone = { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r: brushRadius / canvas.width };
@@ -280,20 +286,8 @@ export default function VTTCanvas({ campaignId }) {
     setPendingClick(null);
   };
 
-  const save = async () => {
-    if (!vttSession) return;
-    setSaving(true);
-    await supabase.from('vtt_sessions').update({ fog_zones: fogZones, tokens, updated_at: new Date().toISOString() }).eq('id', vttSession.id);
-    setSaving(false);
-  };
-
   const clearFog = () => setFogZones([]);
-  const revealAll = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    // One big circle covering the whole map
-    setFogZones([{ id: uid(), type: 'reveal', x: 0.5, y: 0.5, r: 1.5 }]);
-  };
+  const revealAll = () => setFogZones([{ id: uid(), type: 'reveal', x: 0.5, y: 0.5, r: 1.5 }]);
 
   const syncMapFromCampaign = async () => {
     const { data } = await supabase.from('campaigns').select('map_url').eq('id', campaignId).single();
@@ -303,30 +297,10 @@ export default function VTTCanvas({ campaignId }) {
     }
   };
 
-  const pickMap = async (filename) => {
-    if (!vttSession) {
-      // Create session first
-      const { data } = await supabase
-        .from('vtt_sessions')
-        .upsert({ campaign_id: campaignId, map_filename: filename, fog_zones: [], tokens: [], pending_moves: [] }, { onConflict: 'campaign_id' })
-        .select().single();
-      if (data) setVttSession(data);
-    } else {
-      await supabase.from('vtt_sessions').update({ map_filename: filename }).eq('id', vttSession.id);
-    }
-    // Also sync to campaigns table
-    await supabase.from('campaigns').update({ map_url: filename }).eq('id', campaignId);
-    setMapFilename(filename);
-  };
-
   const label8 = { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
 
-  const toolBtn = (id, label, active) => (
-    <button
-      key={id}
-      onClick={() => setTool(id)}
-      style={{ background: active ? 'rgba(200,168,74,0.15)' : COLORS.card, border: `1px solid ${active ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: active ? '#e8c84a' : COLORS.text, whiteSpace: 'nowrap' }}
-    >{label}</button>
+  const toolBtn = (id, lbl, active) => (
+    <button key={id} onClick={() => setTool(id)} style={{ background: active ? 'rgba(200,168,74,0.15)' : COLORS.card, border: `1px solid ${active ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: active ? '#e8c84a' : COLORS.text, whiteSpace: 'nowrap' }}>{lbl}</button>
   );
 
   return (
@@ -340,23 +314,21 @@ export default function VTTCanvas({ campaignId }) {
         {toolBtn('token-enemy','⚔ Enemy',  tool === 'token-enemy')}
         {toolBtn('token-move', '✥ Move',   tool === 'token-move')}
         {toolBtn('erase-token','✕ Erase',  tool === 'erase-token')}
-
         <div style={{ width: 1, height: 20, background: COLORS.border, margin: '0 4px' }} />
-
         <div style={{ ...label8, marginRight: 4 }}>Brush</div>
         {BRUSH_SIZES.map((_, i) => (
           <button key={i} onClick={() => setBrushSize(i)} style={{ width: 24, height: 24, borderRadius: '50%', background: brushSize === i ? '#c8a84a' : COLORS.card, border: `1px solid ${brushSize === i ? '#e8c84a' : COLORS.border}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ width: 6 + i * 4, height: 6 + i * 4, borderRadius: '50%', background: brushSize === i ? '#1a1714' : COLORS.muted }} />
           </button>
         ))}
-
         <div style={{ width: 1, height: 20, background: COLORS.border, margin: '0 4px' }} />
-
         <button onClick={revealAll} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>Reveal All</button>
         <button onClick={clearFog}  style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>Reset Fog</button>
         <button onClick={syncMapFromCampaign} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↺ Sync Map</button>
-
-        <button onClick={save} disabled={saving} style={{ marginLeft: 'auto', background: 'rgba(200,168,74,0.15)', border: `1px solid #c8a84a`, borderRadius: 6, padding: '6px 16px', cursor: saving ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#e8c84a', fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
+        {mapFilename && (
+          <button onClick={() => { setMapFilename(null); setMapLoaded(false); setFogZones([]); setTokens([]); }} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↩ Change Map</button>
+        )}
+        <button onClick={() => setShowCommitPicker(true)} disabled={saving || !mapFilename} style={{ marginLeft: 'auto', background: mapFilename ? 'rgba(200,168,74,0.15)' : 'transparent', border: `1px solid ${mapFilename ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 16px', cursor: mapFilename ? 'pointer' : 'default', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: mapFilename ? '#e8c84a' : COLORS.dim, fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
           {saving ? 'Saving…' : '✦ Commit'}
         </button>
       </div>
@@ -381,6 +353,8 @@ export default function VTTCanvas({ campaignId }) {
               ))}
             </div>
           </div>
+        ) : !mapLoaded ? (
+          <div style={{ padding: '60px 20px', textAlign: 'center', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: COLORS.dim, fontSize: 12 }}>Loading map…</div>
         ) : (
           <canvas
             ref={canvasRef}
@@ -398,20 +372,13 @@ export default function VTTCanvas({ campaignId }) {
         )}
       </div>
 
-      {/* ── Token form (appears when placing enemy) ── */}
+      {/* ── Token form ── */}
       {showTokenForm && (
         <div style={{ background: COLORS.surface, border: `1px solid #c8a84a44`, borderRadius: 8, padding: '14px 16px' }}>
           <div style={{ ...label8, marginBottom: 10 }}>New Enemy Token</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <input
-              autoFocus
-              value={newTokenLabel}
-              onChange={e => setNewTokenLabel(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && addEnemyToken()}
-              placeholder="Label (e.g. Orc, G1)…"
-              maxLength={6}
-              style={{ flex: 1, minWidth: 120, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none' }}
-            />
+            <input autoFocus value={newTokenLabel} onChange={e => setNewTokenLabel(e.target.value)} onKeyDown={e => e.key === 'Enter' && addEnemyToken()} placeholder="Label (e.g. Orc, G1)…" maxLength={6}
+              style={{ flex: 1, minWidth: 120, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none' }} />
             <div style={{ display: 'flex', gap: 4 }}>
               {TOKEN_COLORS.map(c => (
                 <div key={c} onClick={() => setNewTokenColor(c)} style={{ width: 20, height: 20, borderRadius: '50%', background: c, border: `2px solid ${newTokenColor === c ? '#fff' : 'transparent'}`, cursor: 'pointer' }} />
@@ -435,6 +402,28 @@ export default function VTTCanvas({ campaignId }) {
                 <button onClick={() => setTokens(prev => prev.filter(x => x.id !== t.id))} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 11, padding: 0, lineHeight: 1 }}>×</button>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Commit campaign picker ── */}
+      {showCommitPicker && (
+        <div onClick={() => setShowCommitPicker(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#13100d', border: '1px solid #c8a84a44', borderRadius: 12, padding: '24px 28px', minWidth: 300 }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8c84a', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>Commit to Campaign</div>
+            <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>Choose which campaign this map and fog state applies to.</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {CAMPAIGNS.map(c => (
+                <button key={c.id} onClick={() => save(c.id)} style={{ textAlign: 'left', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '12px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, transition: 'all 0.12s' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#c8a84a88'; e.currentTarget.style.background = 'rgba(200,168,74,0.08)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.background = 'rgba(240,238,235,0.04)'; }}
+                >
+                  <div style={{ fontSize: 8, color: COLORS.dim, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4, fontFamily: "'Cinzel', serif" }}>Campaign {c.id}</div>
+                  {c.subtitle}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setShowCommitPicker(false)} style={{ marginTop: 14, width: '100%', background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.dim }}>Cancel</button>
           </div>
         </div>
       )}
