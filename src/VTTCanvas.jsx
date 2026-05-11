@@ -17,17 +17,27 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool }) {
   ctx.clearRect(0, 0, W, H);
   ctx.drawImage(mapImg, 0, 0, W, H);
 
+  // Step 1 — draw full fog overlay
   ctx.save();
   ctx.fillStyle = 'rgba(10,8,6,0.82)';
   ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+
+  // Step 2 — cut reveal holes
+  ctx.save();
   ctx.globalCompositeOperation = 'destination-out';
   fogZones.forEach(zone => {
     if (zone.type === 'reveal') {
       ctx.beginPath();
       ctx.arc(zone.x * W, zone.y * H, zone.r * W, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,0,0,1)';
       ctx.fill();
     }
   });
+  ctx.restore();
+
+  // Step 3 — paint hide zones back on top
+  ctx.save();
   ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = 'rgba(10,8,6,0.82)';
   fogZones.forEach(zone => {
