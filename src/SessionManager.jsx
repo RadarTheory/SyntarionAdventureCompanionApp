@@ -77,7 +77,9 @@ function PlayModal({ onClose, onSessionStarted, existingSession }) {
     if (!session) return;
     fetchCheckins();
     const channel = supabase.channel(`lobby-${session.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_checkins', filter: `session_id=eq.${session.id}` }, fetchCheckins)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'session_checkins', filter: `session_id=eq.${session.id}` }, (payload) => {
+  setCheckins(prev => [...prev, payload.new]);
+})
       .subscribe();
     return () => supabase.removeChannel(channel);
   }, [session]);
