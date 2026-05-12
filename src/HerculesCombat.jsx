@@ -1,7 +1,52 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import supabase from './lib/supabase';
 import { COLORS, CAMPAIGNS } from './constants';
-import * as BestiaryModule from './soteria-bestiary';
+import { SOTERIA_BESTIARY } from './soteria-bestiary';
+
+function HerculesLogoImage({ hovered = false, darkMode = true, size = '72%' }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <div
+        style={{
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          background: darkMode ? '#100d0a' : '#f8f6f2',
+          border: darkMode
+            ? '1px solid rgba(201,185,145,0.45)'
+            : '1px solid rgba(70,50,25,0.35)',
+        }}
+      />
+    );
+  }
+
+  return (
+    <img
+      src="/HerculesCombat.png"
+      alt="HERCULES"
+      draggable={false}
+      onError={() => setFailed(true)}
+      style={{
+        width: size,
+        height: size,
+        objectFit: 'contain',
+        display: 'block',
+        filter: darkMode
+        ? hovered
+            ? 'rgba(18,14,10,0.96)'
+            : 'rgba(10,8,6,0.82)'
+        : hovered
+            ? 'rgba(255,255,255,0.96)'
+            : 'rgba(248,246,242,0.88)',
+        transition: 'all 0.18s ease',
+        pointerEvents: 'none',
+        userSelect: 'none',
+      }}
+    />
+  );
+}
 
 function normalizeCampaigns() {
   if (Array.isArray(CAMPAIGNS)) return CAMPAIGNS;
@@ -17,20 +62,48 @@ function normalizeCampaigns() {
 }
 
 function getBestiaryText() {
-  const values = Object.values(BestiaryModule || {});
-  return values.find(value => typeof value === 'string' && value.includes('CREATURE NAME:')) || '';
+  if (typeof SOTERIA_BESTIARY === 'string') return SOTERIA_BESTIARY;
+
+  if (Array.isArray(SOTERIA_BESTIARY)) {
+    return SOTERIA_BESTIARY.join('\n');
+  }
+
+  if (SOTERIA_BESTIARY && typeof SOTERIA_BESTIARY === 'object') {
+    return Object.values(SOTERIA_BESTIARY)
+      .map(value => {
+        if (typeof value === 'string') return value;
+        if (value?.name) return `CREATURE NAME: ${value.name}`;
+        if (value?.creatureName) return `CREATURE NAME: ${value.creatureName}`;
+        return '';
+      })
+      .filter(Boolean)
+      .join('\n');
+  }
+
+  return '';
 }
 
 function parseCreatureNames() {
   const text = getBestiaryText();
   if (!text) return [];
 
-  return text
-    .split('CREATURE NAME:')
-    .slice(1)
-    .map(chunk => chunk.split('\n')[0]?.trim())
-    .filter(Boolean)
-    .slice(0, 300);
+  const names = [];
+
+  const creatureNameRegex = /CREATURE NAME:\s*([^\n\r]+)/gi;
+  let match;
+
+  while ((match = creatureNameRegex.exec(text)) !== null) {
+    const name = match[1]
+      ?.replace(/["'`]/g, '')
+      .replace(/[,;]+$/g, '')
+      .trim();
+
+    if (name && !name.includes(':')) {
+      names.push(name);
+    }
+  }
+
+  return Array.from(new Set(names)).slice(0, 300);
 }
 
 function createScribeSuggestion(event) {
@@ -61,48 +134,48 @@ function createScribeSuggestion(event) {
   return `${actor}'s ${action} likely fails or creates an opening. Suggested outcome: miss, blocked attempt, enemy advantage, or consequence.`;
 }
 
-function SwordAxeLogo() {
+function HerculesLogoImage({ hovered = false, size = '72%' }) {
   return (
-    <svg viewBox="0 0 100 100" width="42" height="42" aria-hidden="true">
-      <defs>
-        <radialGradient id="hercGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#f5d47a" />
-          <stop offset="100%" stopColor="#7b1f18" />
-        </radialGradient>
-      </defs>
-
-      <circle cx="50" cy="50" r="43" fill="#15100c" stroke="#c8a84a" strokeWidth="4" />
-      <path d="M27 72 L70 29" stroke="#e8d9a7" strokeWidth="8" strokeLinecap="round" />
-      <path d="M32 25 L75 70" stroke="#b44738" strokeWidth="8" strokeLinecap="round" />
-      <path
-        d="M20 18 C34 12 46 17 48 29 C35 31 25 28 20 18Z"
-        fill="url(#hercGlow)"
-        stroke="#f0d28a"
-        strokeWidth="2"
-      />
-      <path
-        d="M77 20 C65 13 53 17 51 30 C64 32 73 29 77 20Z"
-        fill="url(#hercGlow)"
-        stroke="#f0d28a"
-        strokeWidth="2"
-      />
-      <circle cx="50" cy="50" r="10" fill="#c8a84a" stroke="#fff0bd" strokeWidth="2" />
-      <text x="50" y="87" textAnchor="middle" fontSize="10" fill="#e8d9a7" fontFamily="serif">
-        H
-      </text>
-    </svg>
+    <img
+      src="/HerculesCombat.png"
+      alt="HERCULES"
+      draggable={false}
+      style={{
+        width: size,
+        height: size,
+        objectFit: 'contain',
+        display: 'block',
+        filter: hovered
+          ? 'brightness(1.18) drop-shadow(0 0 10px rgba(201,185,145,0.45))'
+          : 'brightness(1) drop-shadow(0 0 8px rgba(200,168,74,0.25))',
+        transition: 'all 0.18s ease',
+        pointerEvents: 'none',
+        userSelect: 'none',
+      }}
+    />
   );
 }
 
-export default function HerculesCombat({ defaultCampaignId }) {
+export default function HerculesCombat({ defaultCampaignId, darkMode = true }) {
   const campaignList = useMemo(normalizeCampaigns, []);
   const creatureNames = useMemo(parseCreatureNames, []);
-
   const firstCampaignId = campaignList?.[0]?.id || '';
-  const [buttonPos, setButtonPos] = useState({ x: 28, y: 140 });
+
+  const savedPos = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('herculesButtonPos'));
+    } catch {
+      return null;
+    }
+  })();
+
+  const [buttonPos, setButtonPos] = useState(savedPos || { x: 24, y: 140 });
   const [isDragging, setIsDragging] = useState(false);
-  const [didMove, setDidMove] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const [open, setOpen] = useState(false);
+
+  const dragOffset = useRef({ x: 0, y: 0 });
+  const moved = useRef(false);
 
   const [campaignId, setCampaignId] = useState(defaultCampaignId || firstCampaignId);
   const [session, setSession] = useState(null);
@@ -112,6 +185,16 @@ export default function HerculesCombat({ defaultCampaignId }) {
   const [saving, setSaving] = useState(false);
 
   const activeSessionId = session?.id;
+
+  useEffect(() => {
+    localStorage.setItem('herculesButtonPos', JSON.stringify(buttonPos));
+  }, [buttonPos]);
+
+  useEffect(() => {
+    if (!campaignId && firstCampaignId) {
+      setCampaignId(firstCampaignId);
+    }
+  }, [campaignId, firstCampaignId]);
 
   const loadEvents = useCallback(
     async sid => {
@@ -344,28 +427,57 @@ export default function HerculesCombat({ defaultCampaignId }) {
     await loadEvents();
   };
 
-  const onPointerDown = event => {
+  const clamp = (x, y) => ({
+    x: Math.max(8, Math.min(window.innerWidth - 90, x)),
+    y: Math.max(8, Math.min(window.innerHeight - 90, y)),
+  });
+
+  const startDrag = event => {
+    const point = event.touches ? event.touches[0] : event;
+
+    dragOffset.current = {
+      x: point.clientX - buttonPos.x,
+      y: point.clientY - buttonPos.y,
+    };
+
+    moved.current = false;
     setIsDragging(true);
-    setDidMove(false);
-    event.currentTarget.setPointerCapture?.(event.pointerId);
   };
 
-  const onPointerMove = event => {
-    if (!isDragging) return;
+  const onMove = useCallback(
+    event => {
+      if (!isDragging) return;
 
-    const movedEnough = Math.abs(event.movementX) > 1 || Math.abs(event.movementY) > 1;
-    if (movedEnough) setDidMove(true);
+      const point = event.touches ? event.touches[0] : event;
 
-    setButtonPos(pos => ({
-      x: Math.max(8, pos.x + event.movementX),
-      y: Math.max(8, pos.y + event.movementY),
-    }));
-  };
+      const next = clamp(
+        point.clientX - dragOffset.current.x,
+        point.clientY - dragOffset.current.y
+      );
 
-  const onPointerUp = () => {
+      moved.current = true;
+      setButtonPos(next);
+    },
+    [isDragging]
+  );
+
+  const stopDrag = useCallback(() => {
     setIsDragging(false);
-    setTimeout(() => setDidMove(false), 0);
-  };
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', stopDrag);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', stopDrag);
+
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', stopDrag);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', stopDrag);
+    };
+  }, [onMove, stopDrag]);
 
   const filteredCreatures = creatureNames.filter(name =>
     name.toLowerCase().includes(creatureSearch.toLowerCase())
@@ -375,40 +487,42 @@ export default function HerculesCombat({ defaultCampaignId }) {
     <>
       <button
         type="button"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
+        onMouseDown={startDrag}
+        onTouchStart={startDrag}
         onClick={() => {
-          if (!didMove) setOpen(true);
+          if (!moved.current) setOpen(true);
         }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         title="HERCULES Combat Tracker"
         style={{
           position: 'fixed',
           left: buttonPos.x,
           top: buttonPos.y,
-          width: 74,
-          height: 74,
+          width: 82,
+          height: 82,
           borderRadius: '50%',
-          border: '1px solid rgba(232,200,116,0.8)',
-          background: 'radial-gradient(circle, #26160f, #090706)',
-          boxShadow: '0 0 28px rgba(200,168,74,0.25)',
-          zIndex: 300,
+          border: hovered
+            ? '1px solid rgba(230,210,160,0.92)'
+            : '1px solid rgba(201,185,145,0.45)',
+          background: hovered ? 'rgba(18,14,10,0.96)' : 'rgba(10,8,6,0.82)',
           cursor: isDragging ? 'grabbing' : 'grab',
+          zIndex: 99999,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          padding: 0,
+          overflow: 'hidden',
+          transform: hovered ? 'translateY(-2px) scale(1.04)' : 'translateY(0px) scale(1)',
+          boxShadow: hovered
+            ? '0 0 24px rgba(201,185,145,0.35), 0 14px 42px rgba(0,0,0,0.75)'
+            : '0 10px 28px rgba(0,0,0,0.55)',
+          transition: isDragging ? 'none' : 'all 0.18s ease',
+          backdropFilter: 'blur(8px)',
+          touchAction: 'none',
         }}
       >
-        <img
-        src="/HerculesCombat.png"
-        alt="HERCULES"
-        style={{
-            width: 46,
-            height: 46,
-            objectFit: 'contain',
-            filter: 'drop-shadow(0 0 8px rgba(200,168,74,0.35))',
-        }}
-/>
+        <HerculesLogoImage hovered={hovered} darkMode={darkMode} />
       </button>
 
       {open && (
@@ -423,7 +537,7 @@ export default function HerculesCombat({ defaultCampaignId }) {
             border: '1px solid rgba(200,168,74,0.35)',
             borderRadius: 16,
             boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
-            zIndex: 350,
+            zIndex: 100000,
             display: 'grid',
             gridTemplateRows: 'auto 1fr',
             overflow: 'hidden',
@@ -438,7 +552,21 @@ export default function HerculesCombat({ defaultCampaignId }) {
               gap: 12,
             }}
           >
-            <SwordAxeLogo />
+            <div
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: '50%',
+                border: '1px solid rgba(201,185,145,0.35)',
+                background: 'rgba(10,8,6,0.82)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <HerculesLogoImage size="74%" />
+            </div>
 
             <div style={{ flex: 1 }}>
               <div
@@ -613,6 +741,13 @@ export default function HerculesCombat({ defaultCampaignId }) {
           </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes herculesFade {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0px); }
+        }
+      `}</style>
     </>
   );
 }
