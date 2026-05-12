@@ -218,26 +218,48 @@ useEffect(() => {
   setEvents(data || []);
 }, []);
 
- const loadInitiative = useCallback(async () => {
-  const activeSessionId = activeSessionIdRef.current;
+ const loadInitiative = useCallback(async sid => {
+  const sessionId = sid || activeSessionIdRef.current;
 
-  if (!activeSessionId) {
-    setInitiativeRows([]);
+  if (!sessionId) {
+    setInitiative([]);
     return;
   }
 
   const { data, error } = await supabase
     .from('hercules_initiative')
     .select('*')
-    .eq('session_id', activeSessionId)
-    .order('initiative', { ascending: false });
+    .eq('session_id', sessionId)
+    .order('created_at', { ascending: true });
 
   if (error) {
     console.error('Failed to load Hercules initiative:', error);
+    setInitiative([]);
     return;
   }
 
-  setInitiativeRows(data || []);
+  const normalized = (data || [])
+    .map(row => {
+      const rollValue = Number(row.roll ?? row.initiative ?? row.total ?? 0);
+      const modifierValue = Number(row.modifier ?? 0);
+      const totalValue = Number(row.total ?? row.initiative ?? rollValue + modifierValue);
+
+      return {
+        ...row,
+        character_name:
+          row.character_name ||
+          row.actor_name ||
+          row.player_name ||
+          row.name ||
+          'Unknown',
+        roll: rollValue,
+        modifier: modifierValue,
+        total: totalValue,
+      };
+    })
+    .sort((a, b) => Number(b.total || 0) - Number(a.total || 0));
+
+  setInitiative(normalized);
 }, []);
 
   const loadSession = useCallback(async () => {
@@ -369,11 +391,13 @@ useEffect(() => {
 
   // FIX 1: was referencing undefined `sid` — use `session.id` consistently
   const endCombat = async () => {
-    if (!session?.id) return;
+  if (!campaignId) return;
 
-    const sid = session.id;
-    setSaving(true);
+  const sid = session?.id || activeSessionIdRef.current;
 
+  setSaving(true);
+
+  if (sid) {
     await supabase.from('hercules_events').insert({
       session_id: sid,
       campaign_id: String(campaignId),
@@ -383,20 +407,25 @@ useEffect(() => {
       outcome: 'HERCULES combat session closed.',
       dm_approved: true,
     });
+  }
 
-    await supabase
-      .from('hercules_sessions')
-      .update({
-        status: 'ended',
-        ended_at: new Date().toISOString(),
-      })
-      .eq('id', sid);
+  await supabase
+    .from('hercules_sessions')
+    .update({
+      status: 'ended',
+      ended_at: new Date().toISOString(),
+    })
+    .eq('campaign_id', String(campaignId))
+    .eq('status', 'active');
 
-    setSession(null);
-    setEvents([]);
-    setInitiative([]);
-    setSaving(false);
-  };
+  activeSessionIdRef.current = null;
+  setSession(null);
+  setEvents([]);
+  setInitiative([]);
+  setSaving(false);
+
+  await loadSession();
+};
 
   // FIX 2: was an unclosed function that swallowed approveEvent/denyEvent/customOutcome inside it;
   // FIX 3: was missing the actual creature insert after resolving sid
