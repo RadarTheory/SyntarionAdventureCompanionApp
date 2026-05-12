@@ -855,13 +855,17 @@ const removeCombatantFromTracker = async row => {
       const point = event.touches ? event.touches[0] : event;
 
       const clamp = (x, y) => ({
-  x: Math.max(8, Math.min(window.innerWidth - 90, x)),
-  y: Math.max(8, Math.min(window.innerHeight - 90, y)),
-});
-      
+        x: Math.max(8, Math.min(window.innerWidth - 90, x)),
+        y: Math.max(8, Math.min(window.innerHeight - 90, y)),
+      });
+
+      const nextPosition = clamp(
+        point.clientX - dragOffset.current.x,
+        point.clientY - dragOffset.current.y
+      );
 
       moved.current = true;
-      setButtonPos(next);
+      setButtonPos(nextPosition);
     },
     [isDragging]
   );
