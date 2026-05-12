@@ -67,6 +67,8 @@ function createScribeSuggestion(event) {
   const total = Number(event.total ?? event.roll ?? 0);
   const action = event.description || event.type || 'action';
   const actor = event.actor_name || 'The combatant';
+  const dragOffset = useRef({ x: 0, y: 0 });
+    const moved = useRef(false);
 
   if (event.type === 'initiative') {
     return `${actor} enters the fray with initiative ${total}. Suggested outcome: place them in descending turn order and begin tracking their actions.`;
@@ -178,6 +180,12 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true, onP
   const [creatureSearch, setCreatureSearch] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const eventsBottomRef = useRef(null);
+
+  useEffect(() => {
+    eventsBottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [events.length]);
+
   const activeSessionId = session?.id || null;
 const activeSessionIdRef = useRef(null);
 const campaignIdRef = useRef(campaignId || null);
@@ -212,7 +220,7 @@ useEffect(() => {
     .from('hercules_events')
     .select('*')
     .eq('session_id', sessionId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: true });
 
   if (error) {
     console.error('Failed to load Hercules events:', error);
@@ -543,61 +551,131 @@ const loadInitiative = useCallback(async sid => {
   // FIX 2: was an unclosed function that swallowed approveEvent/denyEvent/customOutcome inside it;
   // FIX 3: was missing the actual creature insert after resolving sid
   const addCreature = useCallback(async creatureName => {
-    if (!creatureName) return;
+  if (!creatureName || !campaignId) return;
 
-    let sid = session?.id;
+  let sid = session?.id || activeSessionIdRef.current;
 
-    if (!sid) {
-      const { data } = await supabase
-        .from('hercules_sessions')
-        .insert({ campaign_id: String(campaignId), status: 'active', current_turn: 0 })
-        .select()
-        .single();
+  if (!sid) {
+    const { data, error } = await supabase
+      .from('hercules_sessions')
+      .insert({
+        campaign_id: String(campaignId),
+        status: 'active',
+        current_turn: 0,
+      })
+      .select()
+      .single();
 
-      if (data) {
-        setSession(data);
-        sid = data.id;
-      }
+    if (error) {
+      console.error('Failed to create Hercules session for creature:', error);
+      return;
     }
 
-    if (!sid) return;
+    if (data) {
+      setSession(data);
+      activeSessionIdRef.current = data.id;
+      sid = data.id;
+    }
+  }
 
-    // Roll a d20 initiative for the creature automatically
-    const roll = Math.floor(Math.random() * 20) + 1;
+  if (!sid) return;
 
-    // Insert into initiative so the creature appears in the turn order board
-    await supabase.from('hercules_initiative').insert({
+  const tokenId = crypto.randomUUID();
+  const tokenLabel = creatureName.slice(0, 4).toUpperCase();
+
+  // 1. Create token on the VTT board.
+  const { data: vttSession, error: vttLoadError } = await supabase
+    .from('vtt_sessions')
+    .select('*')
+    .eq('campaign_id', String(campaignId))
+    .maybeSingle();
+
+  if (vttLoadError) {
+    console.error('Failed to load VTT session for creature token:', vttLoadError);
+  }
+
+  const existingTokens = Array.isArray(vttSession?.tokens) ? vttSession.tokens : [];
+
+  const newToken = {
+    id: tokenId,
+    token_id: tokenId,
+    name: creatureName,
+    label: tokenLabel,
+    creatureName,
+    type: 'enemy',
+    color: creatureColor(creatureName),
+    x: 50,
+    y: 50,
+  };
+
+  if (vttSession?.id) {
+    const { error: vttUpdateError } = await supabase
+      .from('vtt_sessions')
+      .update({
+        tokens: [...existingTokens, newToken],
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', vttSession.id);
+
+    if (vttUpdateError) {
+      console.error('Failed to add creature token to VTT session:', vttUpdateError);
+    }
+  } else {
+    const { error: vttInsertError } = await supabase
+      .from('vtt_sessions')
+      .insert({
+        campaign_id: String(campaignId),
+        tokens: [newToken],
+        fog_zones: [],
+        pending_moves: [],
+      });
+
+    if (vttInsertError) {
+      console.error('Failed to create VTT session with creature token:', vttInsertError);
+    }
+  }
+
+  // Also call the live VTT callback if DMView/VTTCanvas has it wired.
+  onPlaceToken?.(newToken);
+
+  // 2. Auto-roll initiative for that token.
+  const roll = Math.floor(Math.random() * 20) + 1;
+  const modifier = 0;
+  const turnOrder = roll + modifier;
+
+  const { error: initiativeError } = await supabase
+    .from('hercules_initiative')
+    .insert({
       session_id: sid,
+      character_id: tokenId,
       character_name: creatureName,
-      character_id: null,
       roll,
-      modifier: 0,
-      total: roll,
+      modifier,
+      turn_order: turnOrder,
     });
 
-    // Insert the combat event for the Scribe rulings panel
-    await supabase.from('hercules_events').insert({
+  if (initiativeError) {
+    console.error('Failed to add creature to initiative:', initiativeError);
+    return;
+  }
+
+  // 3. Log event in safe Hercules event shape.
+  const { error: eventError } = await supabase
+    .from('hercules_events')
+    .insert({
       session_id: sid,
-      campaign_id: String(campaignId),
       type: 'enemy_added',
       actor_name: creatureName,
-      description: `${creatureName} has entered the combat (initiative roll: ${roll}).`,
-      roll,
-      total: roll,
-      dm_approved: null,
+      actor_id: tokenId,
+      description: `${creatureName} entered the map and rolled initiative: d20 ${roll} = ${turnOrder}.`,
     });
 
-    // Tell VTT to place an enemy token at center of map
-    onPlaceToken?.({
-      label: creatureName.slice(0, 4).toUpperCase(),
-      color: creatureColor(creatureName),
-      type: 'enemy',
-      creatureName,
-    });
+  if (eventError) {
+    console.error('Failed to log creature entry:', eventError);
+  }
 
-    // Reload both panels
-    await Promise.all([loadEvents(sid), loadInitiative(sid)]);
-  }, [session, campaignId, loadEvents, loadInitiative, onPlaceToken]);
+  await Promise.all([loadEvents(sid), loadInitiative(sid)]);
+}, [session, campaignId, loadEvents, loadInitiative, onPlaceToken]);
 
   // Expose addCreature so DMView can call it programmatically (e.g. from VTT token placement)
   useEffect(() => {
@@ -1089,6 +1167,8 @@ const removeCombatantFromTracker = async row => {
                     onCustom={customOutcome}
                   />
                 ))}
+
+                <div ref={eventsBottomRef} />
               </div>
             </div>
 
