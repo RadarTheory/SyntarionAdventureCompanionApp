@@ -91,7 +91,7 @@ function createScribeSuggestion(event) {
   return `${actor}'s ${action} likely fails or creates an opening. Suggested outcome: miss, blocked attempt, enemy advantage, or consequence.`;
 }
 
-function HerculesLogoImage({ hovered = false, darkMode = true, size = '180' }) {
+function HerculesLogoImage({ hovered = false, darkMode = true, size = 56 }) {
   const [failed, setFailed] = useState(false);
 
   if (failed) {
@@ -230,7 +230,7 @@ useEffect(() => {
     .from('hercules_initiative')
     .select('*')
     .eq('session_id', sessionId)
-    .order('created_at', { ascending: true });
+    .order('turn_order', { ascending: false });
 
   if (error) {
     console.error('Failed to load Hercules initiative:', error);
@@ -238,26 +238,13 @@ useEffect(() => {
     return;
   }
 
-  const normalized = (data || [])
-    .map(row => {
-      const rollValue = Number(row.roll ?? row.initiative ?? row.total ?? 0);
-      const modifierValue = Number(row.modifier ?? 0);
-      const totalValue = Number(row.total ?? row.initiative ?? rollValue + modifierValue);
-
-      return {
-        ...row,
-        character_name:
-          row.character_name ||
-          row.actor_name ||
-          row.player_name ||
-          row.name ||
-          'Unknown',
-        roll: rollValue,
-        modifier: modifierValue,
-        total: totalValue,
-      };
-    })
-    .sort((a, b) => Number(b.total || 0) - Number(a.total || 0));
+  const normalized = (data || []).map(row => ({
+    ...row,
+    total: Number(row.turn_order ?? row.roll ?? 0),
+    roll: Number(row.roll ?? 0),
+    modifier: Number(row.modifier ?? 0),
+    character_name: row.character_name || 'Unknown',
+  }));
 
   setInitiative(normalized);
 }, []);
@@ -391,40 +378,41 @@ useEffect(() => {
 
   // FIX 1: was referencing undefined `sid` — use `session.id` consistently
   const endCombat = async () => {
-  if (!campaignId) return;
-
   const sid = session?.id || activeSessionIdRef.current;
+
+  if (!sid) return;
 
   setSaving(true);
 
-  if (sid) {
-    await supabase.from('hercules_events').insert({
-      session_id: sid,
-      campaign_id: String(campaignId),
-      type: 'combat_end',
-      actor_name: 'Dungeon Master',
-      description: 'Combat has ended.',
-      outcome: 'HERCULES combat session closed.',
-      dm_approved: true,
-    });
+  const { error: eventError } = await supabase.from('hercules_events').insert({
+    session_id: sid,
+    type: 'combat_end',
+    actor_name: 'Dungeon Master',
+    description: 'Combat has ended.',
+  });
+
+  if (eventError) {
+    console.error('Failed to log Hercules combat end:', eventError);
   }
 
-  await supabase
+  const { error: sessionError } = await supabase
     .from('hercules_sessions')
     .update({
       status: 'ended',
-      ended_at: new Date().toISOString(),
     })
-    .eq('campaign_id', String(campaignId))
-    .eq('status', 'active');
+    .eq('id', sid);
+
+  if (sessionError) {
+    console.error('Failed to end Hercules combat:', sessionError);
+    setSaving(false);
+    return;
+  }
 
   activeSessionIdRef.current = null;
   setSession(null);
   setEvents([]);
   setInitiative([]);
   setSaving(false);
-
-  await loadSession();
 };
 
   // FIX 2: was an unclosed function that swallowed approveEvent/denyEvent/customOutcome inside it;
@@ -631,7 +619,7 @@ useEffect(() => {
           touchAction: 'none',
         }}
       >
-        <HerculesLogoImage hovered={hovered} darkMode={darkMode} />
+       <HerculesLogoImage hovered={hovered} darkMode={darkMode} size={135} />
       </button>
 
       {open && (
