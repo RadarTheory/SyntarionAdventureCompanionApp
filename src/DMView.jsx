@@ -706,6 +706,17 @@ export default function DMView({ onHome }) {
   const archivedMessages = messages.filter(s => s.archived);
   const displayedMessages = showArchive ? archivedMessages : activeMessages;
   const vttPlaceTokenRef = useRef(null);
+  // 1. Add alongside existing vttPlaceTokenRef:
+  const herculesAddCreature = useRef(null);
+
+// 2. Replace your existing <HerculesCombat ... /> at the bottom:
+<HerculesCombat
+  defaultCampaignId={activeCampaignTab}
+  onPlaceToken={tokenData => {
+    vttPlaceTokenRef.current?.(tokenData);
+  }}
+  onRegisterAddCreature={fn => { herculesAddCreature.current = fn; }}
+/>
 
   const renderTab = () => {
     switch (activeTab) {
@@ -854,6 +865,67 @@ export default function DMView({ onHome }) {
     }
   };
 
+const logDmAstragalToHercules = async payload => {
+  const currentCampaignId = activeCampaignTab;
+
+  const { data: hsession, error: sessionError } = await supabase
+    .from('hercules_sessions')
+    .select('id')
+    .eq('campaign_id', String(currentCampaignId))
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (sessionError || !hsession?.id) {
+    console.error('No active Hercules session found for DM Astragal roll:', sessionError);
+    return;
+  }
+
+  const dice =
+    payload?.diceResults ||
+    payload?.results ||
+    payload?.rolls ||
+    payload?.dice ||
+    [];
+
+  const diceList = Array.isArray(dice)
+    ? dice.map(d => Number(d?.value ?? d?.roll ?? d)).filter(n => !Number.isNaN(n))
+    : [];
+
+  const notation =
+    payload?.notation ||
+    `${payload?.count || diceList.length || 1}d${payload?.sides || payload?.die || 20}`;
+
+  const diceTotal =
+    payload?.diceTotal ??
+    diceList.reduce((sum, value) => sum + value, 0);
+
+  const statModifier = Number(payload?.statModifier ?? payload?.statMod ?? 0);
+  const flatModifier = Number(payload?.flatModifier ?? payload?.modifier ?? 0);
+  const total = Number(payload?.total ?? payload?.result ?? diceTotal + statModifier + flatModifier);
+
+  const diceText = diceList.length ? diceList.join(', ') : 'unknown';
+
+  const { error } = await supabase.from('hercules_events').insert({
+    session_id: hsession.id,
+    type: 'dm_roll',
+    actor_name: 'The Architect',
+    actor_id: null,
+    description:
+      `The Architect rolls the bones: ${notation}. ` +
+      `Dice: ${diceText}. ` +
+      `Dice total: ${diceTotal}. ` +
+      `Stat modifier: ${statModifier >= 0 ? '+' : ''}${statModifier}. ` +
+      `Flat modifier: ${flatModifier >= 0 ? '+' : ''}${flatModifier}. ` +
+      `Collected result: ${total}.`,
+  });
+
+  if (error) {
+    console.error('Failed to log DM Astragal roll to Hercules:', error);
+  }
+};
+
   return (
     <div style={{ minHeight: '100vh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text }}>
       <style>{`
@@ -926,7 +998,8 @@ export default function DMView({ onHome }) {
         </div>
       </div>
       <HerculesCombat defaultCampaignId={activeCampaignTab} />
-      <AstragalButton character={characters?.[0]} />
+      <AstragalButton character={characters?.[0]} onResult={logDmAstragalToHercules} />
     </div>
   );
 }
+
