@@ -1077,6 +1077,7 @@ const removeCombatantFromTracker = async row => {
 
       {open && (
         <div
+          className="hercules-shell combat-shell"
           style={{
             position: 'fixed',
             right: 24,
@@ -1196,6 +1197,7 @@ const removeCombatantFromTracker = async row => {
           </div>
 
           <div
+            className="hercules-main combat-main combat-grid"
             style={{
               display: 'grid',
               gridTemplateColumns: '270px 1fr 320px',
@@ -1204,7 +1206,7 @@ const removeCombatantFromTracker = async row => {
               minHeight: 0,
             }}
           >
-            <div style={panelStyle()}>
+            <div className="hercules-panel initiative-panel" style={panelStyle()}>
               <SectionTitle>Initiative</SectionTitle>
 
               {!session && <EmptyText>No active combat.</EmptyText>}
@@ -1312,7 +1314,7 @@ const removeCombatantFromTracker = async row => {
               </div>
             </div>
 
-            <div style={panelStyle()}>
+            <div className="hercules-panel combat-log-panel" style={panelStyle()}>
               <SectionTitle>Scribe Rulings</SectionTitle>
 
               <div
@@ -1340,7 +1342,7 @@ const removeCombatantFromTracker = async row => {
               </div>
             </div>
 
-            <div style={panelStyle()}>
+            <div className="hercules-panel scribe-panel" style={panelStyle()}>
               <SectionTitle>Bestiary</SectionTitle>
 
               <input
