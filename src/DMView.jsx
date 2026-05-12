@@ -76,24 +76,13 @@ function ChatPanel({ session, onClose, isDM }) {
   const bottomRef = useRef(null);
 
   useEffect(() => {
-    if (!session) return;
-    fetchMessages();
-    const channel = supabase.channel('lobby-updates')
-  .on('postgres_changes',
-    { event: 'INSERT', schema: 'public', table: 'session_checkins' },
-    (payload) => {
-      setCheckedInPlayers(prev => [...prev, payload.new]);
-      setToast({ 
-        name: payload.new.character_name || payload.new.username || 'A player', 
-        content: 'has checked into the lobby.' 
-      });
-      setTimeout(() => setToast(null), 4000);
-    }
-  )
-  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `session_id=eq.${session.session_id}` }, () => fetchMessages())
-  .subscribe();
-    return () => supabase.removeChannel(channel);
-  }, [session]);
+  if (!session) return;
+  fetchMessages();
+  const channel = supabase.channel(`dm-session-${session.session_id}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `session_id=eq.${session.session_id}` }, () => fetchMessages())
+    .subscribe();
+  return () => supabase.removeChannel(channel);
+}, [session]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
@@ -590,7 +579,7 @@ function MusicPanel() {
 // ═════════════════════════════════════════════════════════════════════════════
 const DM_TABS = ['Inbox', 'Characters', 'Campaigns', 'Scribe', 'Memory', 'Catalog', 'Maps', 'VTT'];
 
-export default function VTTCanvas({ campaignId, onRegisterPlaceToken, checkedInPlayers: checkedInPlayersProp = [] }) {
+export default function DMView({ onHome }) {
   const { isMobile } = useDevice();
   const [activeTab, setActiveTab] = useState('Inbox');
   const [characters, setCharacters] = useState([]);
@@ -729,27 +718,7 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken, checkedInP
         onRegisterPlaceToken={fn => { vttPlaceTokenRef.current = fn; }}
         checkedInPlayers={uniqueCheckins}
   />;
-
-  {checkedInPlayers.length > 0 && (
-  <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 14px', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-    <div style={{ ...label8, marginRight: 4, color: COLORS.magic }}>● Active Players</div>
-    {checkedInPlayers.map(p => (
-      <button key={p.id} onClick={() => {
-        if (vttPlaceTokenRef?.current) {
-          vttPlaceTokenRef.current({ label: (p.character_name || 'PC').slice(0, 3), color: '#4a9edd', type: 'player', characterId: p.character_id });
-        } else {
-          setTokens(prev => {
-            const filtered = prev.filter(t => t.characterId !== p.character_id);
-            return [...filtered, { id: uid(), type: 'player', label: (p.character_name || 'PC').slice(0, 3), color: '#4a9edd', characterId: p.character_id, x: 0.5, y: 0.5 }];
-          });
-        }
-      }}
-      style={{ background: 'rgba(74,158,221,0.12)', border: '1px solid #4a9edd55', borderRadius: 6, padding: '5px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.08em', color: '#4a9edd' }}>
-        ⊕ {p.character_name || 'Player'}
-      </button>
-    ))}
-  </div>
-)}       
+     
       case 'Scribe':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', gap: 16 }}>
