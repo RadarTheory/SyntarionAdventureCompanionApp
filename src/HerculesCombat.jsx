@@ -179,6 +179,8 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true, onP
   const [initiative, setInitiative] = useState([]);
   const [creatureSearch, setCreatureSearch] = useState('');
   const [saving, setSaving] = useState(false);
+  const [manualLogText, setManualLogText] = useState('');
+  const [manualCombatantName, setManualCombatantName] = useState('');
 
   const eventsBottomRef = useRef(null);
 
@@ -787,6 +789,73 @@ const markCombatantDead = async row => {
   await loadEvents(sid);
 };
 
+const addManualLogEntry = async () => {
+  const sid = session?.id || activeSessionIdRef.current;
+
+  if (!sid || !manualLogText.trim()) return;
+
+  setSaving(true);
+
+  const { error } = await supabase.from('hercules_events').insert({
+    session_id: sid,
+    type: 'dm_note',
+    actor_name: 'The Architect',
+    actor_id: null,
+    description: manualLogText.trim(),
+  });
+
+  if (error) {
+    console.error('Failed to add manual Hercules log entry:', error);
+    setSaving(false);
+    return;
+  }
+
+  setManualLogText('');
+  await loadEvents(sid);
+
+  setSaving(false);
+};
+
+const addManualCombatant = async () => {
+  const sid = session?.id || activeSessionIdRef.current;
+  const name = manualCombatantName.trim();
+  if (!sid || !name) return;
+
+  setSaving(true);
+
+  const roll = Math.floor(Math.random() * 20) + 1;
+  const modifier = 0;
+  const turnOrder = roll + modifier;
+  const tokenId = crypto.randomUUID();
+
+  const { error } = await supabase.from('hercules_initiative').insert({
+    session_id: sid,
+    character_id: tokenId,
+    character_name: name,
+    roll,
+    modifier,
+    turn_order: turnOrder,
+  });
+
+  if (error) {
+    console.error('Failed to add manual combatant:', error);
+    setSaving(false);
+    return;
+  }
+
+  await supabase.from('hercules_events').insert({
+    session_id: sid,
+    type: 'enemy_added',
+    actor_name: name,
+    actor_id: tokenId,
+    description: `${name} was added manually to combat with initiative d20 ${roll} = ${turnOrder}.`,
+  });
+
+  setManualCombatantName('');
+  await Promise.all([loadInitiative(sid), loadEvents(sid)]);
+  setSaving(false);
+};
+
 const removeCombatantFromTracker = async row => {
   const sid = session?.id || activeSessionIdRef.current;
 
@@ -1196,6 +1265,94 @@ const removeCombatantFromTracker = async row => {
                   fontFamily: 'Georgia, serif',
                 }}
               />
+
+              <SectionTitle>Scribe Rulings</SectionTitle>
+              {session && (
+                <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                  <input
+                    value={manualCombatantName}
+                    onChange={event => setManualCombatantName(event.target.value)}
+                    onKeyDown={event => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        addManualCombatant();
+                      }
+                    }}
+                    placeholder="Add combatant..."
+                    disabled={saving}
+                    style={{
+                      flex: 1,
+                      background: COLORS.card,
+                      border: `1px solid ${COLORS.border}`,
+                      color: COLORS.text,
+                      borderRadius: 6,
+                      padding: '7px 9px',
+                      fontFamily: 'Georgia, serif',
+                      fontSize: 11,
+                      outline: 'none',
+                    }}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={addManualCombatant}
+                    disabled={saving || !manualCombatantName.trim()}
+                    style={{
+                      ...goldButton(),
+                      padding: '7px 9px',
+                      opacity: saving || !manualCombatantName.trim() ? 0.45 : 1,
+                    }}
+                  >
+                    Add
+                  </button>
+                </div>
+              )}
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 8,
+                  marginBottom: 10,
+                  flexShrink: 0,
+                }}
+              >
+                <input
+                  value={manualLogText}
+                  onChange={event => setManualLogText(event.target.value)}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault();
+                      addManualLogEntry();
+                    }
+                  }}
+                  placeholder="Add DM note to combat log..."
+                  disabled={!session || saving}
+                  style={{
+                    flex: 1,
+                    background: COLORS.card,
+                    border: `1px solid ${COLORS.border}`,
+                    color: COLORS.text,
+                    borderRadius: 6,
+                    padding: '8px 10px',
+                    fontFamily: 'Georgia, serif',
+                    fontSize: 12,
+                    outline: 'none',
+                  }}
+                />
+
+                <button
+                  type="button"
+                  onClick={addManualLogEntry}
+                  disabled={!session || saving || !manualLogText.trim()}
+                  style={{
+                    ...goldButton(),
+                    opacity: !session || saving || !manualLogText.trim() ? 0.45 : 1,
+                    cursor: !session || saving || !manualLogText.trim() ? 'default' : 'pointer',
+                  }}
+                >
+                  Add
+                </button>
+              </div>
 
               <div
                 style={{
