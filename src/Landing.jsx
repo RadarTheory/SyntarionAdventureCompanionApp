@@ -5,7 +5,6 @@ import medallion from './assets/medallion.png';
 import CharacterSelect from './CharacterSelect';
 import Wizard from './Wizard';
 import CharacterSheet from './CharacterSheet';
-import PlayDriftstone from './PlayDriftstone';
 import CampaignView from './CampaignView';
 import Roster from './Roster';
 import DMView from './DMView';
@@ -337,10 +336,6 @@ export default function Landing({ user, darkMode, setDarkMode }) {
     />
   );
 
-  if (appView === 'roster') return (
-    <Roster user={user} userChar={savedChars[0] || null} onHome={goHome} />
-  );
-
   if (appView === 'settings') return (
     <Settings user={user} darkMode={darkMode} setDarkMode={setDarkMode} onHome={goHome} />
   );
@@ -357,10 +352,6 @@ export default function Landing({ user, darkMode, setDarkMode }) {
         setSavedChars(prev => prev.map(c => c.id === updated.id ? updated : c));
       }}
     />
-  );
-
-  if (appView === 'driftstone') return (
-    <PlayDriftstone user={user} onHome={goHome} />
   );
 
   // ── Home screen ────────────────────────────────────────────────────────────
@@ -385,13 +376,7 @@ export default function Landing({ user, darkMode, setDarkMode }) {
       sub: 'Enter the age of steam',
       onClick: () => setAppView('campaigns'),
     },
-    {
-      id: 'roster',
-      label: 'ROSTER',
-      sub: 'View all adventurers',
-      onClick: () => setAppView('roster'),
-    },
-    {
+       {
       id: 'settings',
       label: 'SETTINGS',
       sub: 'Preferences & display',
