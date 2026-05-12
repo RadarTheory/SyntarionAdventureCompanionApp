@@ -371,7 +371,7 @@ function ScalesPanel({ char, effectiveStats }) {
       </div>
 
       <div style={{ height: 1, background: COLORS.border, margin: '8px 0 16px' }} />
-      <div style={{ ...label8(), marginBottom: 14 }}>Secondary Axes</div>
+      <div style={{ ...label8(), marginBottom: 14 }}>Adventurer Meters</div>
 
       <div style={{ marginBottom: 14 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
