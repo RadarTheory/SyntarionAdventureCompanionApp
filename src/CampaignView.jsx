@@ -117,9 +117,18 @@ function HerculesLite({ campaignId, char, onClose }) {
   };
 
   const loadEvents = async (sid) => {
-    const { data } = await supabase.from('hercules_events').select('*').eq('session_id', sid).order('created_at', { ascending: true });
-    if (data) setEvents(data);
-  };
+  const { data, error } = await supabase
+    .from('hercules_events')
+    .select('*')
+    .eq('session_id', sid);
+
+  if (error) {
+    console.error('Failed to load Hercules events:', error);
+    return;
+  }
+
+  if (data) setEvents(data);
+};
 
   const loadInitiative = async (sid) => {
   const { data, error } = await supabase
@@ -128,7 +137,7 @@ function HerculesLite({ campaignId, char, onClose }) {
     .eq('session_id', sid)
     .order('turn_order', { ascending: false });
 
-  if (error) {
+    if (error) {
     console.error('Failed to load Hercules initiative:', error);
     return;
   }
@@ -342,8 +351,50 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   const [showHercules, setShowHercules] = useState(false);
   const [astHovered, setAstHovered] = useState(false);
   const [hercHovered, setHercHovered] = useState(false);
+  const [rollingAction, setRollingAction] = useState(null);
   const timer = useSessionTimer(campaign.id);
   const isAssigned = userChar?.campaign === String(campaign.id);
+
+  const rollAction = async (action) => {
+  if (!userChar?.id || !campaign?.id || rollingAction) return;
+
+  setRollingAction(action);
+
+  const roll = Math.floor(Math.random() * 20) + 1;
+  const modifier = Number(userChar.actionBonuses?.[action] || 0);
+  const total = roll + modifier;
+
+  const { data: hsession, error: sessionError } = await supabase
+    .from('hercules_sessions')
+    .select('id')
+    .eq('campaign_id', String(campaign.id))
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (sessionError || !hsession?.id) {
+    console.error('No active Hercules session found for action roll:', sessionError);
+    setRollingAction(null);
+    return;
+  }
+
+  const actorName = userChar.name || 'Player';
+
+  const { error } = await supabase.from('hercules_events').insert({
+    session_id: hsession.id,
+    type: 'action',
+    actor_name: actorName,
+    actor_id: String(userChar.id),
+    description: `${actorName} used ${action}: d20 ${roll}${modifier ? ` + ${modifier}` : ''} = ${total}.`,
+  });
+
+  if (error) {
+    console.error('Failed to log Hercules action roll:', error);
+  }
+
+  setRollingAction(null);
+};
 
   const handleAssign = async () => {
     if (!userChar?.id) return;
@@ -373,10 +424,55 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
                 <div style={{ ...label8(), marginBottom: 8, color: COLORS.dim }}>{category}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                   {actions.map(action => (
-                    <div key={action} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 10px', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6 }}>
-                      <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.text }}>{action}</div>
-                      <div style={{ fontSize: 10, color: userChar.actionBonuses?.[action] ? COLORS.magicText : COLORS.dim }}>{userChar.actionBonuses?.[action] ? `+${userChar.actionBonuses[action]}` : '—'}</div>
-                    </div>
+                    <div
+  key={action}
+  style={{
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 10,
+    padding: '7px 10px',
+    background: COLORS.card,
+    border: `1px solid ${COLORS.border}`,
+    borderRadius: 6,
+  }}
+>
+  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.text }}>
+    {action}
+  </div>
+
+  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div
+      style={{
+        fontSize: 10,
+        color: userChar.actionBonuses?.[action] ? COLORS.magicText : COLORS.dim,
+        minWidth: 24,
+        textAlign: 'right',
+      }}
+    >
+      {userChar.actionBonuses?.[action] ? `+${userChar.actionBonuses[action]}` : '+0'}
+    </div>
+
+    <button
+      type="button"
+      onClick={() => rollAction(action)}
+      disabled={rollingAction === action}
+      style={{
+        background: 'rgba(200,168,74,0.14)',
+        border: '1px solid rgba(200,168,74,0.45)',
+        color: '#e8c84a',
+        borderRadius: 5,
+        padding: '4px 8px',
+        cursor: rollingAction === action ? 'default' : 'pointer',
+        fontFamily: "'Cinzel', serif",
+        fontSize: 8,
+        letterSpacing: '0.08em',
+      }}
+    >
+      {rollingAction === action ? 'Rolling…' : 'Roll'}
+    </button>
+  </div>
+</div>
                   ))}
                 </div>
               </div>
