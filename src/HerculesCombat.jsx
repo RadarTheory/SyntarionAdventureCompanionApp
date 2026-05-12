@@ -758,12 +758,7 @@ const loadInitiative = useCallback(async sid => {
   await loadEvents(sid);
 };
 
-  const clamp = (x, y) => ({
-    x: Math.max(8, Math.min(window.innerWidth - 90, x)),
-    y: Math.max(8, Math.min(window.innerHeight - 90, y)),
-  });
-
-  const startDrag = event => {
+    const startDrag = event => {
     const point = event.touches ? event.touches[0] : event;
 
     dragOffset.current = {
