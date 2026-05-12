@@ -91,7 +91,7 @@ function createScribeSuggestion(event) {
   return `${actor}'s ${action} likely fails or creates an opening. Suggested outcome: miss, blocked attempt, enemy advantage, or consequence.`;
 }
 
-function HerculesLogoImage({ hovered = false, darkMode = true, size = '115' }) {
+function HerculesLogoImage({ hovered = false, darkMode = true, size = '180' }) {
   const [failed, setFailed] = useState(false);
 
   if (failed) {
@@ -121,10 +121,12 @@ function HerculesLogoImage({ hovered = false, darkMode = true, size = '115' }) {
         height: size,
         objectFit: 'contain',
         display: 'block',
+        // brightness pulled back from 1.65/1.45 → 1.1/0.95 so the logo reads
+        // as a proper dark silhouette rather than blowing out to white
         filter: darkMode
           ? hovered
-            ? 'invert(1) brightness(1.65) contrast(1.35) drop-shadow(0 0 14px rgba(232,217,167,0.75))'
-            : 'invert(1) brightness(1.45) contrast(1.25) drop-shadow(0 0 10px rgba(232,217,167,0.55))'
+            ? 'invert(1) brightness(1.1) contrast(1.05) drop-shadow(0 0 10px rgba(232,217,167,0.5))'
+            : 'invert(1) brightness(0.95) contrast(1.0) drop-shadow(0 0 6px rgba(232,217,167,0.35))'
           : hovered
             ? 'brightness(0.42) contrast(1.4) drop-shadow(0 0 8px rgba(60,42,20,0.35))'
             : 'brightness(0.32) contrast(1.35) drop-shadow(0 0 6px rgba(60,42,20,0.25))',
@@ -370,16 +372,33 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true }) {
 
     if (!sid) return;
 
+    // Roll a d20 initiative for the creature automatically
+    const roll = Math.floor(Math.random() * 20) + 1;
+
+    // Insert into initiative so the creature appears in the turn order board
+    await supabase.from('hercules_initiative').insert({
+      session_id: sid,
+      character_name: creatureName,
+      character_id: null,
+      roll,
+      modifier: 0,
+      total: roll,
+    });
+
+    // Insert the combat event for the Scribe rulings panel
     await supabase.from('hercules_events').insert({
       session_id: sid,
       campaign_id: String(campaignId),
       type: 'enemy_added',
       actor_name: creatureName,
-      description: `${creatureName} has entered the combat.`,
+      description: `${creatureName} has entered the combat (initiative roll: ${roll}).`,
+      roll,
+      total: roll,
       dm_approved: null,
     });
 
-    await loadEvents(sid);
+    // Reload both panels
+    await Promise.all([loadEvents(sid), loadInitiative(sid)]);
   };
 
   const approveEvent = async event => {
@@ -634,28 +653,52 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true }) {
 
               {session && initiative.length === 0 && <EmptyText>Waiting for players to roll initiative.</EmptyText>}
 
-              {initiative.map((row, index) => (
-                <div key={row.id} style={initiativeRow(index === 0)}>
-                  <div>
-                    <div
-                      style={{
-                        color: COLORS.text,
-                        fontFamily: "'Cinzel', serif",
-                        fontSize: 11,
-                      }}
-                    >
-                      {index + 1}. {row.character_name}
-                    </div>
-                    <div style={{ color: COLORS.dim, fontSize: 10 }}>
-                      d20 {row.roll} + {row.modifier}
-                    </div>
-                  </div>
+              <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 0 }}>
+                {initiative.map((row, index) => {
+                  const isCreature = !row.character_id;
+                  const displayName = row.character_name || row.actor_name || 'Unknown';
+                  return (
+                    <div key={row.id} style={initiativeRow(index === 0)}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                          <div
+                            style={{
+                              color: COLORS.text,
+                              fontFamily: "'Cinzel', serif",
+                              fontSize: 11,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {index + 1}. {displayName}
+                          </div>
+                          <div style={{
+                            fontSize: 7,
+                            fontFamily: "'Cinzel', serif",
+                            letterSpacing: '0.08em',
+                            color: isCreature ? '#e08b7d' : '#9fe0aa',
+                            background: isCreature ? 'rgba(180,55,45,0.12)' : 'rgba(80,180,100,0.10)',
+                            border: `1px solid ${isCreature ? 'rgba(220,90,70,0.35)' : 'rgba(100,200,120,0.3)'}`,
+                            borderRadius: 3,
+                            padding: '1px 5px',
+                            flexShrink: 0,
+                          }}>
+                            {isCreature ? 'ENEMY' : 'PC'}
+                          </div>
+                        </div>
+                        <div style={{ color: COLORS.dim, fontSize: 10 }}>
+                          d20 {row.roll}{row.modifier ? ` + ${row.modifier}` : ''}
+                        </div>
+                      </div>
 
-                  <div style={{ color: '#e8d9a7', fontSize: 18, fontFamily: 'Georgia, serif' }}>
-                    {row.total}
-                  </div>
-                </div>
-              ))}
+                      <div style={{ color: '#e8d9a7', fontSize: 18, fontFamily: 'Georgia, serif', flexShrink: 0 }}>
+                        {row.total}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             <div style={panelStyle()}>
