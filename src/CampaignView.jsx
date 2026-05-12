@@ -24,7 +24,7 @@ function useSessionTimer(campaignId) {
   useEffect(() => {
     if (!campaignId) return;
     const load = async () => {
-      const { data } = await supabase.from('sessions').select('*').eq('campaign_id', String(campaignId)).eq('status', 'active').order('created_at', { ascending: false }).limit(1).maybeSingle();
+      const { data } = await supabase.from('sessions').select('*').eq('campaign_id', String(campaignId)).eq('status', 'active').order('created_at', { ascending: true }).limit(1).maybeSingle();
       setStartedAt(data?.started_at || data?.created_at || null);
     };
     load();
@@ -248,7 +248,7 @@ function HerculesLite({ campaignId, char, onClose }) {
             <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px', maxHeight: 200, overflowY: 'auto' }}>
               <div style={{ ...label8(), marginBottom: 8 }}>Combat Log</div>
               {events.length === 0 ? <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Awaiting events…</div> :
-                [...events].reverse().map(ev => (
+                events.map(ev => (
                   <div key={ev.id} style={{ borderBottom: `1px solid ${COLORS.border}`, padding: '6px 0' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <div style={{ fontSize: 8, color: COLORS.muted, fontFamily: "'Cinzel', serif" }}>{ev.actor_name}</div>
