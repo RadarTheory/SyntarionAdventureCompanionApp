@@ -415,6 +415,127 @@ const loadInitiative = useCallback(async sid => {
   setSaving(false);
 };
 
+  const rollBoardTokens = useCallback(async () => {
+    const sid = session?.id || activeSessionIdRef.current;
+
+    if (!sid || !campaignId) return;
+
+    setSaving(true);
+
+    const { data: vttSession, error: tokenError } = await supabase
+      .from('vtt_sessions')
+      .select('tokens')
+      .eq('campaign_id', String(campaignId))
+      .maybeSingle();
+
+    if (tokenError) {
+      console.error('Failed to load VTT tokens:', tokenError);
+      setSaving(false);
+      return;
+    }
+
+    const tokens = Array.isArray(vttSession?.tokens) ? vttSession.tokens : [];
+
+    if (tokens.length === 0) {
+      console.warn('No VTT tokens found for campaign:', campaignId);
+      setSaving(false);
+      return;
+    }
+
+    const { data: existingRows, error: initiativeError } = await supabase
+      .from('hercules_initiative')
+      .select('*')
+      .eq('session_id', sid);
+
+    if (initiativeError) {
+      console.error('Failed to load existing initiative:', initiativeError);
+      setSaving(false);
+      return;
+    }
+
+    const alreadyRolled = new Set(
+      (existingRows || []).map(row =>
+        String(row.character_id || row.character_name || '').toLowerCase()
+      )
+    );
+
+    const rowsToInsert = tokens
+      .filter(token => {
+        const tokenId = String(
+          token.id ||
+          token.token_id ||
+          token.character_id ||
+          token.name ||
+          token.label ||
+          ''
+        ).toLowerCase();
+
+        return tokenId && !alreadyRolled.has(tokenId);
+      })
+      .map(token => {
+        const roll = Math.floor(Math.random() * 20) + 1;
+        const modifier = Number(token.initiative_modifier ?? token.modifier ?? 0);
+        const turnOrder = roll + modifier;
+
+        const tokenId = String(
+          token.id ||
+          token.token_id ||
+          token.character_id ||
+          token.name ||
+          token.label ||
+          crypto.randomUUID()
+        );
+
+        const tokenName =
+          token.name ||
+          token.character_name ||
+          token.creatureName ||
+          token.creature_name ||
+          token.label ||
+          'Token';
+
+        return {
+          session_id: sid,
+          character_id: tokenId,
+          character_name: tokenName,
+          roll,
+          modifier,
+          turn_order: turnOrder,
+        };
+      });
+
+    if (rowsToInsert.length === 0) {
+      console.log('All VTT tokens are already in initiative.');
+      setSaving(false);
+      return;
+    }
+
+    const { error: insertError } = await supabase
+      .from('hercules_initiative')
+      .insert(rowsToInsert);
+
+    if (insertError) {
+      console.error('Failed to roll board tokens into initiative:', insertError);
+      setSaving(false);
+      return;
+    }
+
+    await supabase.from('hercules_events').insert(
+      rowsToInsert.map(row => ({
+        session_id: sid,
+        type: 'initiative',
+        actor_name: row.character_name,
+        actor_id: row.character_id,
+        description: `${row.character_name} was rolled into initiative by the DM.`,
+      }))
+    );
+
+    await loadInitiative(sid);
+    await loadEvents(sid);
+
+    setSaving(false);
+  }, [campaignId, loadEvents, loadInitiative, session]);
+
   // FIX 2: was an unclosed function that swallowed approveEvent/denyEvent/customOutcome inside it;
   // FIX 3: was missing the actual creature insert after resolving sid
   const addCreature = useCallback(async creatureName => {
@@ -436,127 +557,6 @@ const loadInitiative = useCallback(async sid => {
     }
 
     if (!sid) return;
-
-    const rollBoardTokens = async () => {
-  const sid = session?.id || activeSessionIdRef.current;
-
-  if (!sid || !campaignId) return;
-
-  setSaving(true);
-
-  const { data: vttSession, error: tokenError } = await supabase
-    .from('vtt_sessions')
-    .select('tokens')
-    .eq('campaign_id', String(campaignId))
-    .maybeSingle();
-
-  if (tokenError) {
-    console.error('Failed to load VTT tokens:', tokenError);
-    setSaving(false);
-    return;
-  }
-
-  const tokens = Array.isArray(vttSession?.tokens) ? vttSession.tokens : [];
-
-  if (tokens.length === 0) {
-    console.warn('No VTT tokens found for campaign:', campaignId);
-    setSaving(false);
-    return;
-  }
-
-  const { data: existingRows, error: initiativeError } = await supabase
-    .from('hercules_initiative')
-    .select('*')
-    .eq('session_id', sid);
-
-  if (initiativeError) {
-    console.error('Failed to load existing initiative:', initiativeError);
-    setSaving(false);
-    return;
-  }
-
-  const alreadyRolled = new Set(
-    (existingRows || []).map(row =>
-      String(row.character_id || row.character_name || '').toLowerCase()
-    )
-  );
-
-  const rowsToInsert = tokens
-  .filter(token => {
-    const tokenId = String(
-      token.id ||
-      token.token_id ||
-      token.character_id ||
-      token.name ||
-      token.label ||
-      ''
-    ).toLowerCase();
-
-    return tokenId && !alreadyRolled.has(tokenId);
-  })
-  .map(token => {
-    const roll = Math.floor(Math.random() * 20) + 1;
-    const modifier = Number(token.initiative_modifier ?? token.modifier ?? 0);
-    const turnOrder = roll + modifier;
-
-    const tokenId = String(
-      token.id ||
-      token.token_id ||
-      token.character_id ||
-      token.name ||
-      token.label ||
-      crypto.randomUUID()
-    );
-
-    const tokenName =
-      token.name ||
-      token.character_name ||
-      token.creatureName ||
-      token.creature_name ||
-      token.label ||
-      'Token';
-
-    return {
-      session_id: sid,
-      character_id: tokenId,
-      character_name: tokenName,
-      roll,
-      modifier,
-      turn_order: turnOrder,
-    };
-  });
-
-  if (rowsToInsert.length === 0) {
-    console.log('All VTT tokens are already in initiative.');
-    setSaving(false);
-    return;
-  }
-
-  const { error: insertError } = await supabase
-    .from('hercules_initiative')
-    .insert(rowsToInsert);
-
-  if (insertError) {
-    console.error('Failed to roll board tokens into initiative:', insertError);
-    setSaving(false);
-    return;
-  }
-
-  await supabase.from('hercules_events').insert(
-    rowsToInsert.map(row => ({
-      session_id: sid,
-      type: 'initiative',
-      actor_name: row.character_name,
-      actor_id: row.character_id,
-      description: `${row.character_name} was rolled into initiative by the DM.`,
-    }))
-  );
-
-  await loadInitiative(sid);
-  await loadEvents(sid);
-
-  setSaving(false);
-};
 
     // Roll a d20 initiative for the creature automatically
     const roll = Math.floor(Math.random() * 20) + 1;
