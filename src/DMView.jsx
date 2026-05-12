@@ -12,7 +12,6 @@ import SessionManager from './SessionManager';
 import MapPanel from './MapPanel';
 import VTTCanvas from './VTTCanvas';
 import HerculesCombat from './HerculesCombat';
-import herculesLogo from '../public/HerculesCombat.png';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -926,7 +925,7 @@ export default function DMView({ onHome }) {
           {loading ? <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 13 }}>Consulting the archives…</div> : renderTab()}
         </div>
       </div>
-
+      <HerculesCombat defaultCampaignId={activeCampaignTab} />
       <AstragalButton character={characters?.[0]} />
     </div>
   );

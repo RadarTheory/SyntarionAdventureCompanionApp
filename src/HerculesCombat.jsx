@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import supabase from './lib/supabase';
 import { COLORS, CAMPAIGNS } from './constants';
 import * as BestiaryModule from './soteria-bestiary';
@@ -400,14 +400,14 @@ export default function HerculesCombat({ defaultCampaignId }) {
         }}
       >
         <img
-  src="/HerculesCombat.png"
-  alt="HERCULES"
-  style={{
-    width: 46,
-    height: 46,
-    objectFit: 'contain',
-    filter: 'drop-shadow(0 0 8px rgba(200,168,74,0.35))',
-  }}
+        src="/HerculesCombat.png"
+        alt="HERCULES"
+        style={{
+            width: 46,
+            height: 46,
+            objectFit: 'contain',
+            filter: 'drop-shadow(0 0 8px rgba(200,168,74,0.35))',
+        }}
 />
       </button>
 
