@@ -507,7 +507,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
       {/* Floating HERCULES button */}
       <FloatButton storageKey="playerHerculesPos" defaultPos={{ x: 24, y: 270 }} onClick={() => setShowHercules(o => !o)} title="HERCULES — Combat Tracker" hovered={hercHovered} onHover={setHercHovered}>
         <img src="/HerculesCombat.png" alt="HERCULES" draggable={false}
-          style={{ width: '80%', height: '80%', objectFit: 'contain', filter: hercHovered ? 'invert(1) brightness(1.45) drop-shadow(0 0 12px rgba(232,217,167,0.65))' : 'invert(1) brightness(1.28) drop-shadow(0 0 9px rgba(232,217,167,0.45))', pointerEvents: 'none' }} />
+          style={{ width: '150%', height: '150', objectFit: 'contain', filter: hercHovered ? 'invert(1) brightness(1.45) drop-shadow(0 0 12px rgba(232,217,167,0.65))' : 'invert(1) brightness(1.28) drop-shadow(0 0 9px rgba(232,217,167,0.45))', pointerEvents: 'none' }} />
       </FloatButton>
 
       {/* Astragal panel */}
