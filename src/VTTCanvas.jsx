@@ -180,6 +180,10 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensCh
   }
 };
 
+  const removeToken = (token) => {
+    setTokens(prev => prev.filter(t => t.id !== token.id));
+  };
+
   useEffect(() => { transformRef.current = transform; }, [transform]);
 
   // Notify HERCULES whenever tokens change
@@ -529,12 +533,53 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensCh
         <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '12px 14px' }}>
           <div style={{ ...label8, marginBottom: 8 }}>Tokens on map — {tokens.length}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {tokens.map(t => (
-              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 6, background: COLORS.card, border: `1px solid ${t.type === 'player' ? '#4a9edd44' : COLORS.border}`, borderRadius: t.type === 'player' ? 4 : 6, padding: '5px 8px' }}>
-                <div style={{ width: 10, height: 10, borderRadius: t.type === 'player' ? 2 : '50%', background: t.color, flexShrink: 0 }} />
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.text }}>{t.label}</div>
-                <button onClick={() => setTokens(prev => prev.filter(x => x.id !== t.id))} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 11, padding: 0, lineHeight: 1 }}>×</button>
-              </div>
+            {tokens.map(token => (
+              <button
+                key={token.id}
+                type="button"
+                onClick={() => conjureTokenToMap(token)}
+                title="Conjure token to map"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: COLORS.card,
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: 6,
+                  padding: '5px 8px',
+                  cursor: 'pointer',
+                  color: COLORS.text,
+                  fontFamily: "'Cinzel', serif",
+                  fontSize: 9,
+                }}
+              >
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: token.color || '#e85d4a',
+                    display: 'inline-block',
+                  }}
+                />
+
+                {token.label || token.name || 'TOKEN'}
+
+                <span
+                  onClick={event => {
+                    event.stopPropagation();
+                    removeToken(token);
+                  }}
+                  title="Remove token"
+                  style={{
+                    color: COLORS.dim,
+                    marginLeft: 4,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ×
+                </span>
+              </button>
             ))}
           </div>
         </div>
