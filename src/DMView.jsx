@@ -78,9 +78,20 @@ function ChatPanel({ session, onClose, isDM }) {
   useEffect(() => {
     if (!session) return;
     fetchMessages();
-    const channel = supabase.channel(`dm-session-${session.session_id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `session_id=eq.${session.session_id}` }, () => fetchMessages())
-      .subscribe();
+    const channel = supabase.channel('lobby-updates')
+  .on('postgres_changes',
+    { event: 'INSERT', schema: 'public', table: 'session_checkins' },
+    (payload) => {
+      setCheckedInPlayers(prev => [...prev, payload.new]);
+      setToast({ 
+        name: payload.new.character_name || payload.new.username || 'A player', 
+        content: 'has checked into the lobby.' 
+      });
+      setTimeout(() => setToast(null), 4000);
+    }
+  )
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `session_id=eq.${session.session_id}` }, () => fetchMessages())
+  .subscribe();
     return () => supabase.removeChannel(channel);
   }, [session]);
 

@@ -3,50 +3,6 @@ import supabase from './lib/supabase';
 import { COLORS, CAMPAIGNS } from './constants';
 import { SOTERIA_BESTIARY } from './soteria-bestiary';
 
-function HerculesLogoImage({ hovered = false, darkMode = true, size = '72%' }) {
-  const [failed, setFailed] = useState(false);
-
-  if (failed) {
-    return (
-      <div
-        style={{
-          width: size,
-          height: size,
-          borderRadius: '50%',
-          background: darkMode ? '#100d0a' : '#f8f6f2',
-          border: darkMode
-            ? '1px solid rgba(201,185,145,0.45)'
-            : '1px solid rgba(70,50,25,0.35)',
-        }}
-      />
-    );
-  }
-
-  return (
-    <img
-      src="/HerculesCombat.png"
-      alt="HERCULES"
-      draggable={false}
-      onError={() => setFailed(true)}
-      style={{
-        width: size,
-        height: size,
-        objectFit: 'contain',
-        display: 'block',
-        filter: darkMode
-        ? hovered
-            ? 'rgba(18,14,10,0.96)'
-            : 'rgba(10,8,6,0.82)'
-        : hovered
-            ? 'rgba(255,255,255,0.96)'
-            : 'rgba(248,246,242,0.88)',
-        transition: 'all 0.18s ease',
-        pointerEvents: 'none',
-        userSelect: 'none',
-      }}
-    />
-  );
-}
 
 function normalizeCampaigns() {
   if (Array.isArray(CAMPAIGNS)) return CAMPAIGNS;
@@ -87,23 +43,26 @@ function parseCreatureNames() {
   const text = getBestiaryText();
   if (!text) return [];
 
-  const names = [];
+  const names = new Set();
 
-  const creatureNameRegex = /CREATURE NAME:\s*([^\n\r]+)/gi;
+  // Format: "- CREATURE NAME — description" or "- CREATURE NAME — description"
+  const bulletRegex = /^[-•]\s+([A-Z][A-Z\s'\/\(\)]+?)(?:\s+[—–-]{1,2}|\s*$)/gm;
   let match;
-
-  while ((match = creatureNameRegex.exec(text)) !== null) {
-    const name = match[1]
-      ?.replace(/["'`]/g, '')
-      .replace(/[,;]+$/g, '')
-      .trim();
-
-    if (name && !name.includes(':')) {
-      names.push(name);
+  while ((match = bulletRegex.exec(text)) !== null) {
+    const name = match[1].trim().replace(/['"`,;]+$/g, '');
+    if (name.length > 2 && name.length < 60 && !name.includes('  ')) {
+      names.add(name);
     }
   }
 
-  return Array.from(new Set(names)).slice(0, 300);
+  // Also catch "CREATURE NAME:" format if ever added
+  const colonRegex = /CREATURE NAME:\s*([^\n\r]+)/gi;
+  while ((match = colonRegex.exec(text)) !== null) {
+    const name = match[1].trim().replace(/['"`,;]+$/g, '');
+    if (name && !name.includes(':')) names.add(name);
+  }
+
+  return Array.from(names).sort().slice(0, 300);
 }
 
 function createScribeSuggestion(event) {
