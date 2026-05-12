@@ -174,7 +174,17 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true, onP
   const [creatureSearch, setCreatureSearch] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const activeSessionId = session?.id;
+  const activeSessionId = session?.id || null;
+const activeSessionIdRef = useRef(null);
+const campaignIdRef = useRef(campaignId || null);
+
+useEffect(() => {
+  activeSessionIdRef.current = session?.id || null;
+}, [session?.id]);
+
+useEffect(() => {
+  campaignIdRef.current = campaignId || null;
+}, [campaignId]);
 
   useEffect(() => {
     localStorage.setItem('herculesButtonPos', JSON.stringify(buttonPos));
@@ -186,44 +196,49 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true, onP
     }
   }, [campaignId, firstCampaignId]);
 
-  const loadEvents = useCallback(
-    async sid => {
-      const sessionId = sid || activeSessionId;
-      if (!sessionId) return;
+  const loadEvents = useCallback(async sid => {
+  const sessionId = sid || activeSessionIdRef.current;
 
-      const { data, error } = await supabase
-        .from('hercules_events')
-        .select('*')
-        .eq('session_id', sessionId)
-        .order('created_at', { ascending: false });
+  if (!sessionId) {
+    setEvents([]);
+    return;
+  }
 
-      if (!error) setEvents(data || []);
-    },
-    [activeSessionId]
-  );
+  const { data, error } = await supabase
+    .from('hercules_events')
+    .select('*')
+    .eq('session_id', sessionId)
+    .order('created_at', { ascending: false });
 
-  const loadInitiative = useCallback(
-    async sid => {
-      const sessionId = sid || activeSessionId;
-      if (!sessionId) return;
+  if (error) {
+    console.error('Failed to load Hercules events:', error);
+    return;
+  }
 
-      const { data, error } = await supabase
-        .from('hercules_initiative')
-        .select('*')
-        .eq('session_id', sessionId)
-        .order('total', { ascending: false });
+  setEvents(data || []);
+}, []);
 
-      if (!error) {
-        const sorted = (data || []).map((row, index) => ({
-          ...row,
-          turn_order: index + 1,
-        }));
+ const loadInitiative = useCallback(async () => {
+  const activeSessionId = activeSessionIdRef.current;
 
-        setInitiative(sorted);
-      }
-    },
-    [activeSessionId]
-  );
+  if (!activeSessionId) {
+    setInitiativeRows([]);
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('hercules_initiative')
+    .select('*')
+    .eq('session_id', activeSessionId)
+    .order('initiative', { ascending: false });
+
+  if (error) {
+    console.error('Failed to load Hercules initiative:', error);
+    return;
+  }
+
+  setInitiativeRows(data || []);
+}, []);
 
   const loadSession = useCallback(async () => {
     if (!campaignId) return;
@@ -261,71 +276,96 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true, onP
   }, [campaignId, loadSession]);
 
   useEffect(() => {
-    if (!activeSessionId) return undefined;
+  const sessionId = session?.id;
 
-    const channel = supabase
-      .channel(`hercules-dm-${activeSessionId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'hercules_events',
-          filter: `session_id=eq.${activeSessionId}`,
-        },
-        () => loadEvents(activeSessionId)
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'hercules_initiative',
-          filter: `session_id=eq.${activeSessionId}`,
-        },
-        () => loadInitiative(activeSessionId)
-      )
-      .subscribe();
+  if (!sessionId) return undefined;
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [activeSessionId, loadEvents, loadInitiative]);
+  activeSessionIdRef.current = sessionId;
 
-  const startCombat = async () => {
-    if (!campaignId) return;
+  const channel = supabase
+    .channel(`hercules-dm-${sessionId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'hercules_events',
+        filter: `session_id=eq.${sessionId}`,
+      },
+      async () => {
+        await loadEvents(sessionId);
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'hercules_initiative',
+        filter: `session_id=eq.${sessionId}`,
+      },
+      async () => {
+        await loadInitiative(sessionId);
+      }
+    )
+    .subscribe();
 
-    setSaving(true);
+  loadEvents(sessionId);
+  loadInitiative(sessionId);
 
-    const { data, error } = await supabase
-      .from('hercules_sessions')
-      .insert({
-        campaign_id: String(campaignId),
-        status: 'active',
-        current_turn: 0,
-      })
-      .select()
-      .single();
-
-    if (!error && data) {
-      setSession(data);
-
-      await supabase.from('hercules_events').insert({
-        session_id: data.id,
-        campaign_id: String(campaignId),
-        type: 'combat_start',
-        actor_name: 'Dungeon Master',
-        description: 'Combat has begun. Initiative requested from all players.',
-        outcome: 'HERCULES combat session opened.',
-        dm_approved: true,
-      });
-
-      await loadEvents(data.id);
-      await loadInitiative(data.id);
-    }
-
-    setSaving(false);
+  return () => {
+    supabase.removeChannel(channel);
   };
+}, [session?.id, loadEvents, loadInitiative]);
+
+ const startCombat = async () => {
+  if (!campaignId) return;
+
+  setSaving(true);
+
+  await supabase
+    .from('hercules_sessions')
+    .update({
+      status: 'ended',
+      ended_at: new Date().toISOString(),
+    })
+    .eq('campaign_id', String(campaignId))
+    .eq('status', 'active');
+
+  const { data, error } = await supabase
+    .from('hercules_sessions')
+    .insert({
+      campaign_id: String(campaignId),
+      status: 'active',
+      current_turn: 0,
+    })
+    .select()
+    .single();
+
+  if (!error && data) {
+    setSession(data);
+    activeSessionIdRef.current = data.id;
+
+    await supabase.from('hercules_events').insert({
+      session_id: data.id,
+      campaign_id: String(campaignId),
+      type: 'combat_start',
+      actor_name: 'Dungeon Master',
+      description: 'Combat has begun. Initiative requested from all players.',
+      outcome: 'HERCULES combat session opened.',
+      dm_approved: true,
+    });
+
+    await loadEvents(data.id);
+    await loadInitiative(data.id);
+  }
+
+  if (error) {
+    console.error('Failed to start Hercules combat:', error);
+  }
+
+  setSaving(false);
+};
 
   // FIX 1: was referencing undefined `sid` — use `session.id` consistently
   const endCombat = async () => {
