@@ -403,7 +403,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
     setAssigning(false); onAssign(String(campaign.id));
   };
 
-  const logRoll = async (payload) => {
+  const logRoll = async payload => {
     const { data: hsession, error: sessionError } = await supabase
       .from('hercules_sessions')
       .select('id')
@@ -442,10 +442,11 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
 
     const total = Number(
       payload?.total ??
+      payload?.result ??
       diceTotal + statModifier + flatModifier
     );
 
-    const diceText = diceList.length ? diceList.join(', ') : 'unknown';
+    const diceText = diceList.length ? diceList.join(', ') : String(total);
     const actorName = userChar?.name || 'Player';
 
     const { error } = await supabase.from('hercules_events').insert({
@@ -453,12 +454,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
       type: 'roll',
       actor_name: actorName,
       actor_id: userChar?.id ? String(userChar.id) : null,
-      description:
-        `${actorName} rolled a ${diceText} in Astragal for a TOTAL of ${total}. ` +
-        `Roll: ${notation}. ` +
-        `Dice total: ${diceTotal}. ` +
-        `Stat modifier: ${statModifier >= 0 ? '+' : ''}${statModifier}. ` +
-        `Flat modifier: ${flatModifier >= 0 ? '+' : ''}${flatModifier}.`,
+      description: `${actorName} rolled a ${diceText} in Astragal for a TOTAL of ${total}.`,
     });
 
     if (error) {
