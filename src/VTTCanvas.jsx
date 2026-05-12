@@ -77,7 +77,13 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   }
 }
 
-export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
+// ─── VTTCanvas ────────────────────────────────────────────────────────────────
+// NEW PROPS:
+//   onTokensChange(tokens)  — called whenever the token list changes so HERCULES
+//                             can sync player tokens into the initiative board
+//   onRegisterPlaceToken(fn) — registers a callback DMView calls to place tokens
+//                              from HERCULES (enemies) or PlayersPanel (PCs)
+export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensChange, checkedInPlayers }) {
   const canvasRef    = useRef(null);
   const mapImgRef    = useRef(null);
   const paintingRef  = useRef(false);
@@ -105,6 +111,11 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
 
   useEffect(() => { transformRef.current = transform; }, [transform]);
 
+  // Notify HERCULES whenever tokens change
+  useEffect(() => {
+    onTokensChange?.(tokens);
+  }, [tokens, onTokensChange]);
+
   useEffect(() => {
     if (!campaignId) return;
     loadSession();
@@ -115,12 +126,32 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
     return () => supabase.removeChannel(sub);
   }, [campaignId]);
 
+  // Register the place-token callback — handles both player PCs and HERCULES enemies.
+  // Enemies land at a slightly randomised position around center so stacking is avoided.
   useEffect(() => {
     if (!onRegisterPlaceToken) return;
     onRegisterPlaceToken((tokenData) => {
       setTokens(prev => {
-        const filtered = prev.filter(t => t.characterId !== tokenData.characterId);
-        return [...filtered, { id: uid(), type: 'player', label: tokenData.label, color: tokenData.color, characterId: tokenData.characterId, x: 0.5, y: 0.5 }];
+        // Deduplicate by characterId for PCs, by creatureName for enemies
+        const filtered = tokenData.characterId
+          ? prev.filter(t => t.characterId !== tokenData.characterId)
+          : prev; // enemies can have multiples
+
+        // Scatter enemies around center so two of the same type don't overlap
+        const scatter = () => 0.38 + Math.random() * 0.24; // 0.38–0.62
+        const x = tokenData.type === 'player' ? 0.5 : scatter();
+        const y = tokenData.type === 'player' ? 0.5 : scatter();
+
+        return [...filtered, {
+          id: uid(),
+          type: tokenData.type || 'enemy',
+          label: tokenData.label,
+          color: tokenData.color,
+          characterId: tokenData.characterId || null,
+          creatureName: tokenData.creatureName || null,
+          x,
+          y,
+        }];
       });
     });
   }, [onRegisterPlaceToken]);
@@ -221,7 +252,6 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-    // Ctrl+drag or Pan tool = pan
     if (tool === 'pan' || e.button === 1 || e.ctrlKey) {
       panRef.current = { active: true, lastX: clientX, lastY: clientY };
       return;
