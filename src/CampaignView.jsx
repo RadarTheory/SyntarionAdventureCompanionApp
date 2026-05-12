@@ -516,7 +516,7 @@ const QUICK_CATALOG = [
   { name: 'Chalk', category: 'Tool', desc: 'For marking paths, writing on stone.' },
 ];
 
-function PackDrawer({ charId, loadedFromDB, packItems, setPackItems, persistPack }) {
+function PackDrawer({ charId, loadedFromDB, packItems, setPackItems, persistPack, isDM = false }) {
   const [open, setOpen]           = useState(false);
   const [view, setView]           = useState('list');   // 'list' | 'catalog' | 'add'
   const [catalogFilter, setCatalogFilter] = useState('All');
@@ -633,14 +633,16 @@ function PackDrawer({ charId, loadedFromDB, packItems, setPackItems, persistPack
             </div>
 
             {/* View toggle */}
-            <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-              {[['list', 'Contents'], ['catalog', 'Browse Catalog']].map(([v, lbl]) => (
-                <button key={v} onClick={() => { setView(v); if (v !== 'add') { setEditIdx(null); setNewItem({ name: '', category: 'Misc', desc: '', qty: 1, weight: 0 }); } }}
-                  style={{ background: view === v ? 'rgba(200,168,74,0.14)' : 'transparent', border: `1px solid ${view === v ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.1em', color: view === v ? '#e8c84a' : COLORS.dim }}>
-                  {lbl}
-                </button>
-              ))}
-            </div>
+            {isDM && (
+              <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+                {[['list', 'Contents'], ['catalog', 'Browse Catalog']].map(([v, lbl]) => (
+                  <button key={v} onClick={() => { setView(v); if (v !== 'add') { setEditIdx(null); setNewItem({ name: '', category: 'Misc', desc: '', qty: 1, weight: 0 }); } }}
+                    style={{ background: view === v ? 'rgba(200,168,74,0.14)' : 'transparent', border: `1px solid ${view === v ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.1em', color: view === v ? '#e8c84a' : COLORS.dim }}>
+                    {lbl}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* ── CONTENTS ── */}
             {view === 'list' && (
@@ -660,13 +662,25 @@ function PackDrawer({ charId, loadedFromDB, packItems, setPackItems, persistPack
                       {item.desc && <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>{item.desc}</div>}
                     </div>
                     {/* Qty controls */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                      <button onClick={() => updateQty(idx, -1)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 3, width: 20, height: 20, cursor: 'pointer', color: COLORS.dim, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-                      <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, minWidth: 18, textAlign: 'center' }}>{item.qty || 1}</div>
-                      <button onClick={() => updateQty(idx, 1)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 3, width: 20, height: 20, cursor: 'pointer', color: COLORS.dim, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
-                    </div>
-                    <button onClick={() => removeItem(idx)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#e05a5a', fontSize: 11, padding: '2px 4px' }}>✕</button>
-                  </div>
+                    {isDM && (
+  <>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+      <button onClick={() => updateQty(idx, -1)}>−</button>
+      <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, minWidth: 18, textAlign: 'center' }}>
+        {item.qty || 1}
+      </div>
+      <button onClick={() => updateQty(idx, 1)}>+</button>
+    </div>
+
+    <button onClick={() => openEdit(idx)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: COLORS.dim, fontSize: 11, padding: '2px 4px' }}>
+      ✎
+    </button>
+
+    <button onClick={() => removeItem(idx)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#e05a5a', fontSize: 11, padding: '2px 4px' }}>
+      ✕
+    </button>
+  </>)}
+       </div>
                 ))}
               </div>
             )}
@@ -765,7 +779,7 @@ function PackDrawer({ charId, loadedFromDB, packItems, setPackItems, persistPack
 }
 
 // ─── INVENTORY PANEL ──────────────────────────────────────────────────────────
-function InventoryPanel({ char, onInventoryChange }) {
+function InventoryPanel({ char, onInventoryChange, isDM = false }) {
   const [items, setItems]         = useState({});
   const [packItems, setPackItems] = useState([]);
   const [editSlot, setEditSlot]   = useState(null);
@@ -864,7 +878,11 @@ function InventoryPanel({ char, onInventoryChange }) {
           const hasItem = item && item.name;
           const isAttuned = hasItem && item.attuned;
           return (
-            <button key={slot} onClick={() => openEdit(slot)}
+            <button
+              key={slot}
+              onClick={() => {
+                if (isDM) openEdit(slot);
+              }}
               style={{ background: hasItem ? (isAttuned ? 'rgba(200,168,74,0.08)' : COLORS.card) : 'transparent', border: `1px solid ${hasItem ? (isAttuned ? 'rgba(200,168,74,0.4)' : COLORS.border) : `${COLORS.border}66`}`, borderRadius: 6, padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', transition: 'all 0.15s' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -887,7 +905,9 @@ function InventoryPanel({ char, onInventoryChange }) {
                   </div>
                 )}
               </div>
-              <div style={{ fontSize: 10, color: COLORS.dim, marginLeft: 8, flexShrink: 0 }}>✎</div>
+              {isDM && (
+  <div style={{ fontSize: 10, color: COLORS.dim, marginLeft: 8, flexShrink: 0 }}>✎</div>
+)}
             </button>
           );
         })}
@@ -908,6 +928,7 @@ function InventoryPanel({ char, onInventoryChange }) {
         packItems={packItems}
         setPackItems={setPackItems}
         persistPack={persistPack}
+        isDM={isDM}
       />
 
       {/* ── EQUIP SLOT EDIT MODAL ── */}
