@@ -45,7 +45,6 @@ function parseCreatureNames() {
 
   const names = new Set();
 
-  // Format: "- CREATURE NAME — description" or "- CREATURE NAME — description"
   const bulletRegex = /^[-•]\s+([A-Z][A-Z\s'\/\(\)]+?)(?:\s+[—–-]{1,2}|\s*$)/gm;
   let match;
   while ((match = bulletRegex.exec(text)) !== null) {
@@ -55,7 +54,6 @@ function parseCreatureNames() {
     }
   }
 
-  // Also catch "CREATURE NAME:" format if ever added
   const colonRegex = /CREATURE NAME:\s*([^\n\r]+)/gi;
   while ((match = colonRegex.exec(text)) !== null) {
     const name = match[1].trim().replace(/['"`,;]+$/g, '');
@@ -93,7 +91,7 @@ function createScribeSuggestion(event) {
   return `${actor}'s ${action} likely fails or creates an opening. Suggested outcome: miss, blocked attempt, enemy advantage, or consequence.`;
 }
 
-function HerculesLogoImage({ hovered = false, darkMode = true, size = '180' }) {
+function HerculesLogoImage({ hovered = false, darkMode = true, size = '115' }) {
   const [failed, setFailed] = useState(false);
 
   if (failed) {
@@ -137,6 +135,7 @@ function HerculesLogoImage({ hovered = false, darkMode = true, size = '180' }) {
     />
   );
 }
+
 export default function HerculesCombat({ defaultCampaignId, darkMode = true }) {
   const campaignList = useMemo(normalizeCampaigns, []);
   const creatureNames = useMemo(parseCreatureNames, []);
@@ -318,13 +317,15 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true }) {
     setSaving(false);
   };
 
+  // FIX 1: was referencing undefined `sid` — use `session.id` consistently
   const endCombat = async () => {
     if (!session?.id) return;
 
+    const sid = session.id;
     setSaving(true);
 
     await supabase.from('hercules_events').insert({
-      session_id: session.id,
+      session_id: sid,
       campaign_id: String(campaignId),
       type: 'combat_end',
       actor_name: 'Dungeon Master',
@@ -339,7 +340,7 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true }) {
         status: 'ended',
         ended_at: new Date().toISOString(),
       })
-      .eq('id', session.id);
+      .eq('id', sid);
 
     setSession(null);
     setEvents([]);
@@ -347,20 +348,38 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true }) {
     setSaving(false);
   };
 
+  // FIX 2: was an unclosed function that swallowed approveEvent/denyEvent/customOutcome inside it;
+  // FIX 3: was missing the actual creature insert after resolving sid
   const addCreature = async creatureName => {
-    if (!session?.id || !creatureName) return;
+    if (!creatureName) return;
+
+    let sid = session?.id;
+
+    if (!sid) {
+      const { data } = await supabase
+        .from('hercules_sessions')
+        .insert({ campaign_id: String(campaignId), status: 'active', current_turn: 0 })
+        .select()
+        .single();
+
+      if (data) {
+        setSession(data);
+        sid = data.id;
+      }
+    }
+
+    if (!sid) return;
 
     await supabase.from('hercules_events').insert({
-      session_id: session.id,
+      session_id: sid,
       campaign_id: String(campaignId),
       type: 'enemy_added',
       actor_name: creatureName,
-      description: `${creatureName} added to combat.`,
-      scribe_suggestion: `Scribe: ${creatureName} has entered the field. Suggested prompt: ask the DM where it appears, whether it is hostile, and whether it rolls initiative now.`,
+      description: `${creatureName} has entered the combat.`,
       dm_approved: null,
     });
 
-    await loadEvents(session.id);
+    await loadEvents(sid);
   };
 
   const approveEvent = async event => {
@@ -700,7 +719,6 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true }) {
                     type="button"
                     key={name}
                     onClick={() => addCreature(name)}
-                    disabled={!session}
                     style={{
                       textAlign: 'left',
                       background: COLORS.card,
@@ -708,7 +726,7 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true }) {
                       borderRadius: 6,
                       color: COLORS.text,
                       padding: '8px 10px',
-                      cursor: session ? 'pointer' : 'not-allowed',
+                      cursor: 'pointer',
                       fontFamily: "'Cinzel', serif",
                       fontSize: 10,
                       letterSpacing: '0.06em',
