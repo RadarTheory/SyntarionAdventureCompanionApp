@@ -17,36 +17,6 @@ function normalizeCampaigns() {
   return [];
 }
 
-function IconButton({ children, title, onClick, disabled = false, border, color }) {
-  return (
-    <button
-      type="button"
-      title={title}
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        width: 24,
-        height: 24,
-        minWidth: 24,
-        padding: 0,
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: disabled ? 'rgba(255,255,255,0.035)' : 'rgba(255,255,255,0.045)',
-        border: `1px solid ${border}`,
-        color,
-        borderRadius: 5,
-        cursor: disabled ? 'default' : 'pointer',
-        fontSize: 12,
-        lineHeight: 1,
-        opacity: disabled ? 0.45 : 1,
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
 function getBestiaryText() {
   if (typeof SOTERIA_BESTIARY === 'string') return SOTERIA_BESTIARY;
 
@@ -1036,63 +1006,44 @@ const loadInitiative = useCallback(async sid => {
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                        <button
-                          type="button"
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                        <IconButton
+                          title="Roll action"
                           onClick={() => rollCombatantAction(row)}
-                          style={{
-                            background: 'rgba(200,168,74,0.14)',
-                            border: '1px solid rgba(200,168,74,0.45)',
-                            color: '#e8c84a',
-                            borderRadius: 5,
-                            padding: '4px 7px',
-                            cursor: 'pointer',
-                            fontFamily: "'Cinzel', serif",
-                            fontSize: 8,
-                            letterSpacing: '0.08em',
-                          }}
+                          border="rgba(200,168,74,0.45)"
+                          color="#e8c84a"
                         >
-                          Roll
-                        </button>
+                          🎲
+                        </IconButton>
 
-                        <button
-                          type="button"
+                        <IconButton
+                          title="Mark dead"
                           onClick={() => markCombatantDead(row)}
                           disabled={row.status === 'dead'}
-                          style={{
-                            background: 'rgba(180,55,45,0.12)',
-                            border: '1px solid rgba(220,90,70,0.45)',
-                            color: '#e0a092',
-                            borderRadius: 5,
-                            padding: '4px 7px',
-                            cursor: row.status === 'dead' ? 'default' : 'pointer',
-                            fontFamily: "'Cinzel', serif",
-                            fontSize: 8,
-                            letterSpacing: '0.08em',
-                          }}
+                          border="rgba(220,90,70,0.45)"
+                          color="#e0a092"
                         >
-                          Dead
-                        </button>
+                          ☠
+                        </IconButton>
 
-                        <button
-                          type="button"
+                        <IconButton
+                          title="Remove from tracker"
                           onClick={() => removeCombatantFromTracker(row)}
+                          border="rgba(220,90,70,0.35)"
+                          color="#b98a7f"
+                        >
+                          ✕
+                        </IconButton>
+
+                        <div
                           style={{
-                            background: 'transparent',
-                            border: '1px solid rgba(220,90,70,0.35)',
-                            color: '#b98a7f',
-                            borderRadius: 5,
-                            padding: '4px 7px',
-                            cursor: 'pointer',
-                            fontFamily: "'Cinzel', serif",
-                            fontSize: 8,
-                            letterSpacing: '0.08em',
+                            color: '#e8d9a7',
+                            fontSize: 18,
+                            fontFamily: 'Georgia, serif',
+                            minWidth: 24,
+                            textAlign: 'right',
                           }}
                         >
-                          Remove
-                        </button>
-
-                        <div style={{ color: '#e8d9a7', fontSize: 18, fontFamily: 'Georgia, serif', minWidth: 22, textAlign: 'right' }}>
                           {row.total}
                         </div>
                       </div>
@@ -1423,7 +1374,7 @@ function plainButton() {
   };
 }
 
-function IconButton({ title, onClick, disabled, border, color, children }) {
+function IconButton({ children, title, onClick, disabled = false, border, color }) {
   return (
     <button
       type="button"
@@ -1431,19 +1382,21 @@ function IconButton({ title, onClick, disabled, border, color, children }) {
       onClick={onClick}
       disabled={disabled}
       style={{
-        width: 28,
-        height: 28,
-        borderRadius: '50%',
-        border: `1px solid ${border}`,
-        background: disabled ? 'rgba(50,50,50,0.3)' : 'rgba(0,0,0,0.2)',
-        color,
-        cursor: disabled ? 'default' : 'pointer',
-        display: 'flex',
+        width: 24,
+        height: 24,
+        minWidth: 24,
+        padding: 0,
+        display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: 14,
-        transition: 'all 0.15s ease',
-        flexShrink: 0,
+        background: disabled ? 'rgba(255,255,255,0.035)' : 'rgba(255,255,255,0.045)',
+        border: `1px solid ${border}`,
+        color,
+        borderRadius: 5,
+        cursor: disabled ? 'default' : 'pointer',
+        fontSize: 12,
+        lineHeight: 1,
+        opacity: disabled ? 0.45 : 1,
       }}
     >
       {children}
