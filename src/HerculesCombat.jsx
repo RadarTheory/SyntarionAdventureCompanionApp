@@ -138,7 +138,15 @@ function HerculesLogoImage({ hovered = false, darkMode = true, size = '180' }) {
   );
 }
 
-export default function HerculesCombat({ defaultCampaignId, darkMode = true }) {
+// Stable enemy token colors cycled by creature name hash
+const ENEMY_COLORS = ['#e85d4a', '#fb923c', '#c084fc', '#f472b6', '#f87171', '#fbbf24'];
+function creatureColor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return ENEMY_COLORS[h % ENEMY_COLORS.length];
+}
+
+export default function HerculesCombat({ defaultCampaignId, darkMode = true, onPlaceToken, onRegisterAddCreature }) {
   const campaignList = useMemo(normalizeCampaigns, []);
   const creatureNames = useMemo(parseCreatureNames, []);
   const firstCampaignId = campaignList?.[0]?.id || '';
@@ -352,7 +360,7 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true }) {
 
   // FIX 2: was an unclosed function that swallowed approveEvent/denyEvent/customOutcome inside it;
   // FIX 3: was missing the actual creature insert after resolving sid
-  const addCreature = async creatureName => {
+  const addCreature = useCallback(async creatureName => {
     if (!creatureName) return;
 
     let sid = session?.id;
@@ -397,9 +405,22 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true }) {
       dm_approved: null,
     });
 
+    // Tell VTT to place an enemy token at center of map
+    onPlaceToken?.({
+      label: creatureName.slice(0, 4).toUpperCase(),
+      color: creatureColor(creatureName),
+      type: 'enemy',
+      creatureName,
+    });
+
     // Reload both panels
     await Promise.all([loadEvents(sid), loadInitiative(sid)]);
-  };
+  }, [session, campaignId, loadEvents, loadInitiative, onPlaceToken]);
+
+  // Expose addCreature so DMView can call it programmatically (e.g. from VTT token placement)
+  useEffect(() => {
+    onRegisterAddCreature?.(addCreature);
+  }, [addCreature, onRegisterAddCreature]);
 
   const approveEvent = async event => {
     if (!event?.id) return;
