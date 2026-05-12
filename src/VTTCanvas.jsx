@@ -10,6 +10,31 @@ const MAX_SCALE = 10;
 
 function uid() { return Math.random().toString(36).slice(2, 9); }
 
+function getMapRect(canvas, mapImg) {
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const imgRatio = mapImg.width / mapImg.height;
+  const canvasRatio = W / H;
+
+  let drawW;
+  let drawH;
+
+  if (imgRatio > canvasRatio) {
+    drawW = W;
+    drawH = W / imgRatio;
+  } else {
+    drawH = H;
+    drawW = H * imgRatio;
+  }
+
+  return {
+    x: (W - drawW) / 2,
+    y: (H - drawH) / 2,
+    w: drawW,
+    h: drawH,
+  };
+}
 function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, transform }) {
   if (!canvas || !mapImg) return;
   const ctx = canvas.getContext('2d');
@@ -19,7 +44,8 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   ctx.clearRect(0, 0, W, H);
   ctx.save();
   ctx.setTransform(transform.scale, 0, 0, transform.scale, transform.x, transform.y);
-  ctx.drawImage(mapImg, 0, 0, W, H);
+  const mapRect = getMapRect(canvas, mapImg);
+ctx.drawImage(mapImg, mapRect.x, mapRect.y, mapRect.w, mapRect.h);
 
   const fogCanvas = document.createElement('canvas');
   fogCanvas.width = W; fogCanvas.height = H;
@@ -29,7 +55,9 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   fogCtx.globalCompositeOperation = 'destination-out';
   fogZones.forEach(zone => {
     if (zone.type === 'reveal') {
-      const cx = zone.x * W, cy = zone.y * H, r = zone.r * W;
+      const cx = mapRect.x + zone.x * mapRect.w;
+const cy = mapRect.y + zone.y * mapRect.h;
+const r = zone.r * mapRect.w;
       const feather = zone.feather ?? 0;
       const grad = fogCtx.createRadialGradient(cx, cy, r * (1 - feather), cx, cy, r);
       grad.addColorStop(0, 'rgba(0,0,0,1)');
@@ -45,14 +73,22 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   fogZones.forEach(zone => {
     if (zone.type === 'hide') {
       fogCtx.beginPath();
-      fogCtx.arc(zone.x * W, zone.y * H, zone.r * W, 0, Math.PI * 2);
+      fogCtx.arc(
+  mapRect.x + zone.x * mapRect.w,
+  mapRect.y + zone.y * mapRect.h,
+  zone.r * mapRect.w,
+  0,
+  Math.PI * 2
+);
       fogCtx.fill();
     }
   });
   ctx.drawImage(fogCanvas, 0, 0);
 
   tokens.forEach(tok => {
-    const tx = tok.x * W, ty = tok.y * H, r = 14;
+    const tx = mapRect.x + tok.x * mapRect.w;
+const ty = mapRect.y + tok.y * mapRect.h;
+const r = 14;
     ctx.save();
     if (tok.type === 'player') { ctx.beginPath(); ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4); }
     else { ctx.beginPath(); ctx.arc(tx, ty, r, 0, Math.PI * 2); }
@@ -307,9 +343,15 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensCh
     const rect = canvas.getBoundingClientRect();
     const t = transformRef.current;
     const scaleRatio = canvas.width / rect.width;
+
+    const canvasX = ((clientX - rect.left) * scaleRatio - t.x) / t.scale;
+    const canvasY = ((clientY - rect.top) * scaleRatio - t.y) / t.scale;
+
+    const mapRect = getMapRect(canvas, mapImgRef.current);
+
     return {
-      x: ((clientX - rect.left) * scaleRatio - t.x) / (t.scale * canvas.width),
-      y: ((clientY - rect.top) * scaleRatio - t.y) / (t.scale * canvas.height),
+      x: (canvasX - mapRect.x) / mapRect.w,
+      y: (canvasY - mapRect.y) / mapRect.h,
     };
   };
 
