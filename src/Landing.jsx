@@ -404,9 +404,6 @@ export default function Landing({ user, darkMode, setDarkMode }) {
       padding: isMobile ? '32px 20px' : '40px 24px',
     }}>
 
-      {/* ── Movable Button Placement ─────────────────────────────────────── */}
-      <DriftstoneButton isMobile={isMobile} onClick={() => setAppView('driftstone')} />
-
       {/* Vignette */}
       <div style={{
         position: 'absolute', inset: 0,
