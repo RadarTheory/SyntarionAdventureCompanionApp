@@ -1,11 +1,138 @@
-* { box-sizing: border-box; }
-body { margin: 0; }
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+}
 
 #root {
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
   min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  .hercules-shell,
+  .hercules-container,
+  .hercules-panel,
+  .combat-shell {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  .hercules-main,
+  .combat-main,
+  .combat-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    gap: 16px;
+  }
+
+  .initiative-panel,
+  .scribe-panel,
+  .combat-log-panel {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .initiative-panel {
+    order: 1;
+  }
+
+  .scribe-panel {
+    order: 2;
+  }
+
+  .combat-log-panel {
+    order: 3;
+  }
+
+  .initiative-row,
+  .combatant-row {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .initiative-name,
+  .combatant-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .hercules-shell,
+  .hercules-container,
+  .hercules-panel,
+  .combat-shell {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  .hercules-main,
+  .combat-main,
+  .combat-grid {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    gap: 16px;
+  }
+
+  .initiative-panel,
+  .scribe-panel,
+  .combat-log-panel {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .scribe-panel {
+    order: 2;
+  }
+
+  .initiative-panel {
+    order: 1;
+  }
+
+  .initiative-row,
+  .combatant-row {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .initiative-name,
+  .combatant-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.combat-grid {
   display: flex;
   flex-direction: column;
 }
