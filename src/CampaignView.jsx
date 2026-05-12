@@ -232,7 +232,7 @@ function CampaignMapTab({ campaign }) {
 }
 
 // ─── CAMPAIGN DASHBOARD ───────────────────────────────────────────────────────
-const TABS = ['Map', 'Roster', 'Sheet', 'Actions', 'Log', 'Combat'];
+const TABS = ['Map', 'Sheet', 'Actions', 'Log', 'Combat'];
 
 function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   const { isMobile } = useDevice();
