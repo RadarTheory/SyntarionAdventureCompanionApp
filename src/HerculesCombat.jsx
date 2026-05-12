@@ -174,7 +174,11 @@ const markCombatantDead = async row => {
 
 const removeCombatantFromTracker = async row => {
   const sid = session?.id || activeSessionIdRef.current;
-  if (!sid || !row) return;
+
+  if (!sid || !row?.id) {
+    console.error('Missing session or initiative row:', { sid, row });
+    return;
+  }
 
   const actorName = row.character_name || row.actor_name || 'Combatant';
 
@@ -183,71 +187,25 @@ const removeCombatantFromTracker = async row => {
 
   setSaving(true);
 
-  let deletedRows = [];
+  const { data, error } = await supabase
+    .from('hercules_initiative')
+    .delete()
+    .eq('id', row.id)
+    .select();
 
-  if (row.id) {
-    const { data, error } = await supabase
-      .from('hercules_initiative')
-      .delete()
-      .eq('id', row.id)
-      .select();
-
-    if (error) {
-      console.error('Failed to remove combatant by id:', error);
-      setSaving(false);
-      return;
-    }
-
-    deletedRows = data || [];
-  }
-
-  if (deletedRows.length === 0 && row.character_id) {
-    const { data, error } = await supabase
-      .from('hercules_initiative')
-      .delete()
-      .eq('session_id', sid)
-      .eq('character_id', String(row.character_id))
-      .select();
-
-    if (error) {
-      console.error('Failed to remove combatant by character_id:', error);
-      setSaving(false);
-      return;
-    }
-
-    deletedRows = data || [];
-  }
-
-  if (deletedRows.length === 0 && row.character_name) {
-    const { data, error } = await supabase
-      .from('hercules_initiative')
-      .delete()
-      .eq('session_id', sid)
-      .eq('character_name', row.character_name)
-      .select();
-
-    if (error) {
-      console.error('Failed to remove combatant by character_name:', error);
-      setSaving(false);
-      return;
-    }
-
-    deletedRows = data || [];
-  }
-
-  if (deletedRows.length === 0) {
-    console.warn('No initiative row was removed:', row);
+  if (error) {
+    console.error('Failed to remove combatant from tracker:', error);
     setSaving(false);
     return;
   }
 
-  setInitiative(prev =>
-    prev.filter(item =>
-      item.id !== row.id &&
-      String(item.character_id || '') !== String(row.character_id || '') &&
-      item.character_name !== row.character_name
-    )
-  );
+  if (!data || data.length === 0) {
+    console.warn('No initiative row was deleted:', row);
+    setSaving(false);
+    return;
+  }
+
+  setInitiative(prev => prev.filter(item => item.id !== row.id));
 
   await supabase.from('hercules_events').insert({
     session_id: sid,
