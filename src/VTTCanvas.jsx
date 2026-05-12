@@ -369,8 +369,12 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensCh
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-    if (e.ctrlKey && e.button === 0) {
-      resetView();
+    if (e.ctrlKey && (e.button === 0 || e.buttons === 1)) {
+      panRef.current = {
+        active: true,
+        lastX: clientX,
+        lastY: clientY,
+      };
       return;
     }
 
@@ -478,8 +482,26 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensCh
   const handlePointerLeave = useCallback(() => {
     setBrushPreview(null);
     paintingRef.current = false;
-    panRef.current.active = false;
   }, []);
+
+  useEffect(() => {
+    const handleWindowMove = (e) => {
+      if (!panRef.current.active) return;
+      handlePointerMove(e);
+    };
+    const handleWindowUp = () => {
+      if (!panRef.current.active) return;
+      handlePointerUp();
+    };
+
+    window.addEventListener('mousemove', handleWindowMove);
+    window.addEventListener('mouseup', handleWindowUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleWindowMove);
+      window.removeEventListener('mouseup', handleWindowUp);
+    };
+  }, [handlePointerMove, handlePointerUp]);
 
   const addEnemyToken = () => {
     if (!pendingClick || !newTokenLabel.trim()) return;

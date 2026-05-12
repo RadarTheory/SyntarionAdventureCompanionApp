@@ -244,7 +244,9 @@ const loadInitiative = useCallback(async sid => {
     .from('hercules_initiative')
     .select('*')
     .eq('session_id', sessionId)
-    .order('turn_order', { ascending: false });
+    .order('turn_order', { ascending: false })
+    .order('tie_breaker', { ascending: false })
+    .order('created_at', { ascending: true });
 
   if (error) {
     console.error('Failed to load Hercules initiative:', error);
@@ -262,6 +264,76 @@ const loadInitiative = useCallback(async sid => {
 
   setInitiative(normalized);
 }, []);
+
+const getTiedInitiativeGroups = () => {
+  const groups = initiative.reduce((acc, row) => {
+    const score = Number(row.total ?? row.turn_order ?? row.roll ?? 0);
+    if (!acc[score]) acc[score] = [];
+    acc[score].push(row);
+    return acc;
+  }, {});
+
+  return Object.values(groups).filter(group => group.length > 1);
+};
+
+const hasInitiativeTies = getTiedInitiativeGroups().length > 0;
+
+const resolveArchitectsEdict = useCallback(async () => {
+  const sid = session?.id || activeSessionIdRef.current;
+  if (!sid) return;
+
+  const tiedGroups = getTiedInitiativeGroups();
+  if (tiedGroups.length === 0) {
+    console.log('No initiative ties to resolve.');
+    return;
+  }
+
+  setSaving(true);
+
+  for (const group of tiedGroups) {
+    const results = group.map(row => ({
+      row,
+      tieBreaker: Math.floor(Math.random() * 20) + 1,
+    }));
+
+    for (const result of results) {
+      const { error } = await supabase
+        .from('hercules_initiative')
+        .update({ tie_breaker: result.tieBreaker })
+        .eq('id', result.row.id);
+
+      if (error) {
+        console.error('Failed to apply Architect Edict:', error);
+      }
+    }
+
+    const names = results
+      .map(result => {
+        const name = result.row.character_name || result.row.actor_name || 'Combatant';
+        return `${name} ${result.tieBreaker}`;
+      })
+      .join(', ');
+
+    const tiedScore = Number(group[0].total ?? group[0].turn_order ?? group[0].roll ?? 0);
+
+    const { error: eventError } = await supabase.from('hercules_events').insert({
+      session_id: sid,
+      type: 'architect_edict',
+      actor_name: 'The Architect',
+      actor_id: null,
+      description: `Architect's Edict resolves an initiative tie at ${tiedScore}: ${names}.`,
+    });
+
+    if (eventError) {
+      console.error('Failed to log Architect Edict:', eventError);
+    }
+  }
+
+  await loadInitiative(sid);
+  await loadEvents(sid);
+
+  setSaving(false);
+}, [session, loadEvents, loadInitiative]);
 
   const loadSession = useCallback(async () => {
     if (!campaignId) return;
@@ -1102,6 +1174,22 @@ const removeCombatantFromTracker = async row => {
             </button>
             )}
 
+            {session && (
+            <button
+                type="button"
+                onClick={resolveArchitectsEdict}
+                disabled={!hasInitiativeTies || saving}
+                title="Resolve tied initiative rolls"
+                style={{
+                  ...goldButton(),
+                  opacity: !hasInitiativeTies || saving ? 0.45 : 1,
+                  cursor: !hasInitiativeTies || saving ? 'default' : 'pointer',
+                }}
+            >
+                Architect's Edict
+            </button>
+            )}
+
             <button type="button" onClick={() => setOpen(false)} style={plainButton()}>
               Close
             </button>
@@ -1199,6 +1287,12 @@ const removeCombatantFromTracker = async row => {
                             >
                             ✕
                             </IconButton>
+
+                        {Number(row.tie_breaker || 0) > 0 && (
+                          <span style={{ color: '#e8c84a', marginLeft: 6, fontSize: 10 }}>
+                            Edict {row.tie_breaker}
+                          </span>
+                        )}
 
                         <div
                           style={{
