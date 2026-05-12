@@ -117,7 +117,6 @@ DOCILE / FRIENDLY:
 - DRYT — A shy woodland spirit that tends roots, streams, and wounded trees.
 - CRIMSON RAUK — A scarlet-plumed highland rauk that rides the wind like an omen, known for its piercing cry and watchful circles above the forest trees.
 - LITHOPHANT — A massive stone-skinned grazer whose migrations shape trails and clearings.
-- MANTICORE (woodland) — A proud great beast whose fearsome form hides a measured temperament.
 - UNICORN — A rare horned creature of untouched glades, tied to calm and purity.
 - WUID — A tiny feral woodland creature known for sudden speed, sharp instincts, and mischievous cruelty.
 - BRAMBLEHOUND — A wolf-like creature with bramble-covered fur that blends into thorny underbrush.
@@ -130,6 +129,7 @@ DOCILE / FRIENDLY:
 - CANOPY RAVEN — A large glossy-black bird of the upper forest. Highly intelligent, mimics voices with unnerving accuracy, and is believed by some Pa'morph Kra'ark to be a distant cousin. Considered a trickster omen.
 
 AGGRESSIVE / PREDATORY:
+- MANTICORE (woodland) — A proud great beast whose fearsome form hides a measured temperament.
 - MAULWASP — A colossal winged predator of ridge and wildwood, feared for venom and fury.
 - WHYLL — A beautiful woodland lure that sings travelers off the path to be devoured.
 - ROOST ROC — A colossal sky predator feared for its talons and massive beak.
@@ -188,6 +188,8 @@ AGGRESSIVE / PREDATORY:
 - VELDT OGRE / THE ALDERMORE GIANT — A massive monolithic titan with weathered stone-like skin cracked by the relentless glare of the three suns; a jagged sentinel over scorched open country.
 - PRAIRIEHOLLOW — A grass-armored plains guardian that crushes intruders.
 - PLAINS VULTURE — A large carrion bird that circles dying creatures and fresh battlefields. Non-aggressive unless feeding is interrupted. Larger than expected. Their presence in numbers reliably indicates recent death within a half-mile radius.
+- JACK PACKRAPTOR - A small, agile predator that hunts in packs and is known for taking down its oponents using team work. It uses small leaps and its ferocious mandables and claws to make much larger prey sorry they encountered them. 
+- GREATER JACK PACKRAPTOR — A larger, more formidable version of the jack packraptor, with enhanced strength and a more aggressive hunting style. Its thick hide keeps it protected and it is typically the leader of larger packs of jack packraptors.
 
 SMALLER / GAME:
 - DUSTRAT — A small scrubland rodent with quick paws and sharp instincts; known for burrowing beneath dry earth and vanishing at the first sign of danger.
@@ -197,14 +199,14 @@ SMALLER / GAME:
 - SCALEBACK LIGER — A powerful plains predator with leonine frame and scaled hide along its spine; feared for speed, strength, and relentless pursuit.
 - FAECOLT — A small enchanted horse of glade and grove, known for its speed and gentle temperament.
 - BRINDLECALF — A small sure-footed grazer of meadow and brush, known for its gentle nature.
-- ANUBITAPH — A fierce jackal-like plains predator with long ears, lean muscle, and a hunter's cunning; feared for stalking the grasslands in disciplined packs.
+- ANUBITAPH — A fierce bipedal jackal-like plains predator with long ears, lean muscle, and a hunter's cunning; feared for stalking the grasslands in disciplined packs. They use weapons like khopesh swords and long square shields.
 - ALAMIR HARE — A long-eared plains hare prized for its speed and as a food source. Considered good luck to release one if caught alive.
 - GRASSLAND ADDER — A thick-bodied venomous snake that basks on sun-warmed stones and road surfaces. Responsible for more traveler injuries than any predator in the province records. Venom causes intense localized pain and moderate swelling.
 - FIELD CROW — Common black bird of open country. Highly adaptable, found near settlements, farms, and rail depots. Feeds on grain, carrion, and anything poorly secured. Considered a pest in most agricultural provinces.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━═════════════════════════════
 FUNGAL FOREST
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━
 
 DOCILE / FRIENDLY:
 - CAP RAUK — A mushroom-plumed fungal rauk that slips soundlessly through dim groves and cavern roots; often taken as an omen of damp rot and hidden growth.
