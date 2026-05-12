@@ -174,22 +174,80 @@ const markCombatantDead = async row => {
 
 const removeCombatantFromTracker = async row => {
   const sid = session?.id || activeSessionIdRef.current;
-  if (!sid || !row?.id) return;
+  if (!sid || !row) return;
 
-  const actorName = row.character_name || 'Combatant';
+  const actorName = row.character_name || row.actor_name || 'Combatant';
 
   const confirmed = window.confirm(`Remove ${actorName} from initiative?`);
   if (!confirmed) return;
 
-  const { error } = await supabase
-    .from('hercules_initiative')
-    .delete()
-    .eq('id', row.id);
+  setSaving(true);
 
-  if (error) {
-    console.error('Failed to remove combatant from tracker:', error);
+  let deletedRows = [];
+
+  if (row.id) {
+    const { data, error } = await supabase
+      .from('hercules_initiative')
+      .delete()
+      .eq('id', row.id)
+      .select();
+
+    if (error) {
+      console.error('Failed to remove combatant by id:', error);
+      setSaving(false);
+      return;
+    }
+
+    deletedRows = data || [];
+  }
+
+  if (deletedRows.length === 0 && row.character_id) {
+    const { data, error } = await supabase
+      .from('hercules_initiative')
+      .delete()
+      .eq('session_id', sid)
+      .eq('character_id', String(row.character_id))
+      .select();
+
+    if (error) {
+      console.error('Failed to remove combatant by character_id:', error);
+      setSaving(false);
+      return;
+    }
+
+    deletedRows = data || [];
+  }
+
+  if (deletedRows.length === 0 && row.character_name) {
+    const { data, error } = await supabase
+      .from('hercules_initiative')
+      .delete()
+      .eq('session_id', sid)
+      .eq('character_name', row.character_name)
+      .select();
+
+    if (error) {
+      console.error('Failed to remove combatant by character_name:', error);
+      setSaving(false);
+      return;
+    }
+
+    deletedRows = data || [];
+  }
+
+  if (deletedRows.length === 0) {
+    console.warn('No initiative row was removed:', row);
+    setSaving(false);
     return;
   }
+
+  setInitiative(prev =>
+    prev.filter(item =>
+      item.id !== row.id &&
+      String(item.character_id || '') !== String(row.character_id || '') &&
+      item.character_name !== row.character_name
+    )
+  );
 
   await supabase.from('hercules_events').insert({
     session_id: sid,
@@ -201,6 +259,8 @@ const removeCombatantFromTracker = async row => {
 
   await loadInitiative(sid);
   await loadEvents(sid);
+
+  setSaving(false);
 };
 
 // Stable enemy token colors cycled by creature name hash
@@ -1027,13 +1087,13 @@ const loadInitiative = useCallback(async sid => {
                         </IconButton>
 
                         <IconButton
-                          title="Remove from tracker"
-                          onClick={() => removeCombatantFromTracker(row)}
-                          border="rgba(220,90,70,0.35)"
-                          color="#b98a7f"
-                        >
-                          ✕
-                        </IconButton>
+                            title="Remove from tracker"
+                            onClick={() => removeCombatantFromTracker(row)}
+                            border="rgba(220,90,70,0.35)"
+                            color="#b98a7f"
+                            >
+                            ✕
+                            </IconButton>
 
                         <div
                           style={{
