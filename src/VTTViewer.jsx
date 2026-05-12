@@ -89,12 +89,13 @@ export default function VTTViewer({ campaignId }) {
   const loadSession = async () => {
     const { data } = await supabase.from('vtt_sessions').select('*').eq('campaign_id', campaignId).maybeSingle();
     if (data) {
-  setFogZones(data.fog_zones || []);
-  setTokens(data.tokens || []);
-  if (data.view_transform) setTransform(data.view_transform);
-  setMapFilename(data.map_filename); // set filename last so image load uses correct transform
-}
-}
+      setFogZones(data.fog_zones || []);
+      setTokens(data.tokens || []);
+      setMapFilename(data.map_filename);
+      if (data.view_transform) setTransform(data.view_transform);
+    }
+  };
+
   useEffect(() => {
     if (!mapFilename) return;
     setMapLoaded(false);

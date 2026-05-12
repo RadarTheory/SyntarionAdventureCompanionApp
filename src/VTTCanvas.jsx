@@ -221,17 +221,9 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-    if (e.ctrlKey) {
-      setMapFilename(null);
-      setMapLoaded(false);
-      setFogZones([]);
-      setTokens([]);
-      return;
-    }
-
     // Ctrl+drag or Pan tool = pan
-    if (tool === 'pan' || e.button === 1) {
-      panRef.current = { active: false, pending: true, lastX: clientX, lastY: clientY };
+    if (tool === 'pan' || e.button === 1 || e.ctrlKey) {
+      panRef.current = { active: true, lastX: clientX, lastY: clientY };
       return;
     }
 
@@ -246,7 +238,6 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
       setFogZones(prev => {
         const next = [...prev, zone];
         if (tool === 'fog-reveal') {
-          // Remove hide zones whose center falls within this reveal brush
           return next.filter(z => {
             if (z.id === zone.id) return true;
             if (z.type !== 'hide') return true;
@@ -286,9 +277,7 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken }) {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-    if (panRef.current.active || panRef.current.pending) {
-      panRef.current.active = true;
-      panRef.current.pending = false;
+    if (panRef.current.active) {
       const canvas = canvasRef.current;
       const rect = canvas.getBoundingClientRect();
       const scaleRatio = canvas.width / rect.width;
