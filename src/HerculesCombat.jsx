@@ -17,6 +17,36 @@ function normalizeCampaigns() {
   return [];
 }
 
+function IconButton({ children, title, onClick, disabled = false, border, color }) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        width: 24,
+        height: 24,
+        minWidth: 24,
+        padding: 0,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: disabled ? 'rgba(255,255,255,0.035)' : 'rgba(255,255,255,0.045)',
+        border: `1px solid ${border}`,
+        color,
+        borderRadius: 5,
+        cursor: disabled ? 'default' : 'pointer',
+        fontSize: 12,
+        lineHeight: 1,
+        opacity: disabled ? 0.45 : 1,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
 function getBestiaryText() {
   if (typeof SOTERIA_BESTIARY === 'string') return SOTERIA_BESTIARY;
 
@@ -70,6 +100,10 @@ function createScribeSuggestion(event) {
 
   if (event.type === 'initiative') {
     return `${actor} enters the fray with initiative ${total}. Suggested outcome: place them in descending turn order and begin tracking their actions.`;
+  }
+
+  if (event.type === 'action') {
+    return `${actor} attempts an action. Suggested outcome: review the roll in the description and apply success, failure, partial success, or a complication.`;
   }
 
   if (event.type === 'enemy_added') {
@@ -1347,10 +1381,6 @@ function initiativeRow(active) {
   };
 }
 
-if (event.type === 'action') {
-  return `${actor} attempts an action. Suggested outcome: review the roll in the description and apply success, failure, partial success, or a complication.`;
-}
-
 function goldButton() {
   return {
     background: 'rgba(200,168,74,0.16)',
@@ -1391,4 +1421,32 @@ function plainButton() {
     fontSize: 10,
     letterSpacing: '0.08em',
   };
+}
+
+function IconButton({ title, onClick, disabled, border, color, children }) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        width: 28,
+        height: 28,
+        borderRadius: '50%',
+        border: `1px solid ${border}`,
+        background: disabled ? 'rgba(50,50,50,0.3)' : 'rgba(0,0,0,0.2)',
+        color,
+        cursor: disabled ? 'default' : 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 14,
+        transition: 'all 0.15s ease',
+        flexShrink: 0,
+      }}
+    >
+      {children}
+    </button>
+  );
 }
