@@ -404,9 +404,66 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   };
 
   const logRoll = async (payload) => {
-    const { data: hsession } = await supabase.from('hercules_sessions').select('id').eq('campaign_id', String(campaign.id)).eq('status', 'active').order('created_at', { ascending: false }).limit(1).maybeSingle();
-    if (!hsession?.id) return;
-    await supabase.from('hercules_events').insert({ session_id: hsession.id, campaign_id: String(campaign.id), type: 'roll', actor_name: userChar?.name || 'Player', actor_id: userChar?.id || null, description: `${userChar?.name || 'Player'} rolled ${payload.notation}.`, roll: payload.diceResults[0], total: payload.total, dm_approved: null });
+    const { data: hsession, error: sessionError } = await supabase
+      .from('hercules_sessions')
+      .select('id')
+      .eq('campaign_id', String(campaign.id))
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (sessionError || !hsession?.id) {
+      console.error('No active Hercules session found for Astragal roll:', sessionError);
+      return;
+    }
+
+    const dice =
+      payload?.diceResults ||
+      payload?.results ||
+      payload?.rolls ||
+      payload?.dice ||
+      [];
+
+    const diceList = Array.isArray(dice)
+      ? dice.map(d => Number(d?.value ?? d?.roll ?? d)).filter(n => !Number.isNaN(n))
+      : [];
+
+    const notation =
+      payload?.notation ||
+      `${payload?.count || diceList.length || 1}d${payload?.sides || payload?.die || 20}`;
+
+    const diceTotal =
+      payload?.diceTotal ??
+      diceList.reduce((sum, value) => sum + value, 0);
+
+    const statModifier = Number(payload?.statModifier ?? payload?.statMod ?? 0);
+    const flatModifier = Number(payload?.flatModifier ?? payload?.modifier ?? 0);
+
+    const total = Number(
+      payload?.total ??
+      diceTotal + statModifier + flatModifier
+    );
+
+    const diceText = diceList.length ? diceList.join(', ') : 'unknown';
+    const actorName = userChar?.name || 'Player';
+
+    const { error } = await supabase.from('hercules_events').insert({
+      session_id: hsession.id,
+      type: 'roll',
+      actor_name: actorName,
+      actor_id: userChar?.id ? String(userChar.id) : null,
+      description:
+        `${actorName} rolled a ${diceText} in Astragal for a TOTAL of ${total}. ` +
+        `Roll: ${notation}. ` +
+        `Dice total: ${diceTotal}. ` +
+        `Stat modifier: ${statModifier >= 0 ? '+' : ''}${statModifier}. ` +
+        `Flat modifier: ${flatModifier >= 0 ? '+' : ''}${flatModifier}.`,
+    });
+
+    if (error) {
+      console.error('Failed to log Hercules Astragal roll:', error);
+    }
   };
 
   const renderTab = () => {
@@ -507,7 +564,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
       {/* Floating HERCULES button */}
       <FloatButton storageKey="playerHerculesPos" defaultPos={{ x: 24, y: 270 }} onClick={() => setShowHercules(o => !o)} title="HERCULES — Combat Tracker" hovered={hercHovered} onHover={setHercHovered}>
         <img src="/HerculesCombat.png" alt="HERCULES" draggable={false}
-          style={{ width: '150%', height: '150', objectFit: 'contain', filter: hercHovered ? 'invert(1) brightness(1.45) drop-shadow(0 0 12px rgba(232,217,167,0.65))' : 'invert(1) brightness(1.28) drop-shadow(0 0 9px rgba(232,217,167,0.45))', pointerEvents: 'none' }} />
+          style={{ width: '150%', height: '150%', objectFit: 'contain', filter: hercHovered ? 'invert(1) brightness(1.45) drop-shadow(0 0 12px rgba(232,217,167,0.65))' : 'invert(1) brightness(1.28) drop-shadow(0 0 9px rgba(232,217,167,0.45))', pointerEvents: 'none' }} />
       </FloatButton>
 
       {/* Astragal panel */}
