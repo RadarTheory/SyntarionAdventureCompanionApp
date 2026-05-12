@@ -986,8 +986,181 @@ function InventoryPanel({ char, onInventoryChange }) {
   );
 }
 
+// ─── LOOTBOX PANEL ────────────────────────────────────────────────────────────
+function LootboxPanel({ campaignId, userChar, onClaimed }) {
+  const [boxes, setBoxes]       = useState([]);
+  const [expanded, setExpanded] = useState(null);  // box id
+  const [boxItems, setBoxItems] = useState({});     // { boxId: [...] }
+  const [claiming, setClaiming] = useState(null);   // box id being claimed
+  const [claimDone, setClaimDone] = useState([]);   // claimed box ids this session
+
+  const load = async () => {
+    const { data } = await supabase
+      .from('lootboxes')
+      .select('*')
+      .eq('claimed', false)
+      .or(`campaign_id.eq.${campaignId},campaign_id.is.null`)
+      .order('created_at', { ascending: false });
+    if (data) setBoxes(data);
+  };
+
+  useEffect(() => {
+    load();
+    const sub = supabase.channel(`lootboxes-${campaignId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lootboxes' }, load)
+      .subscribe();
+    return () => supabase.removeChannel(sub);
+  }, [campaignId]);
+
+  const loadItems = async (boxId) => {
+    if (boxItems[boxId]) return; // already loaded
+    const { data } = await supabase
+      .from('lootbox_items')
+      .select('*')
+      .eq('lootbox_id', boxId)
+      .order('created_at', { ascending: true });
+    if (data) setBoxItems(prev => ({ ...prev, [boxId]: data }));
+  };
+
+  const toggleExpand = (boxId) => {
+    if (expanded === boxId) { setExpanded(null); return; }
+    setExpanded(boxId);
+    loadItems(boxId);
+  };
+
+  const claimBox = async (box) => {
+    if (!userChar?.id || claiming) return;
+    setClaiming(box.id);
+
+    const items = boxItems[box.id] || [];
+
+    // Write all items to character's pack
+    const rows = items.map(item => ({
+      character_id: String(userChar.id),
+      slot: `pack__${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+      name: item.item_name,
+      description: `${item.item_category}|${item.item_desc}${item.note ? ' — ' + item.note : ''}`,
+      attuned: false,
+      bonuses: {},
+      weight: item.qty || 1,
+    }));
+
+    if (rows.length > 0) {
+      await supabase.from('character_items').insert(rows);
+    }
+
+    // Mark box claimed
+    await supabase.from('lootboxes').update({
+      claimed: true,
+      claimed_by: String(userChar.id),
+      claimed_at: new Date().toISOString(),
+    }).eq('id', box.id);
+
+    // Send receipt message
+    const itemList = items.map(i => `• ${i.item_name}${i.qty > 1 ? ` ×${i.qty}` : ''}`).join('\n');
+    await supabase.from('messages').insert({
+      type: 'dm',
+      is_dm: true,
+      sender_name: 'The Architect',
+      character_id: String(userChar.id),
+      campaign_id: campaignId,
+      content: `You claimed **${box.name}**:\n\n${itemList}\n\nItems added to your pack.`,
+      session_id: null,
+    });
+
+    setClaimDone(prev => [...prev, box.id]);
+    setBoxes(prev => prev.filter(b => b.id !== box.id));
+    setClaiming(null);
+    onClaimed?.();
+  };
+
+  if (boxes.length === 0 && claimDone.length === 0) {
+    return (
+      <div style={{ background: COLORS.card, border: `1px dashed ${COLORS.border}`, borderRadius: 8, padding: '40px 20px', textAlign: 'center' }}>
+        <div style={{ fontSize: 14, marginBottom: 10 }}>⬡</div>
+        <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+          No lootboxes waiting. The Architect will place rewards here.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {claimDone.length > 0 && (
+        <div style={{ background: 'rgba(200,168,74,0.06)', border: '1px solid rgba(200,168,74,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: 10, color: COLORS.magic, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+          ✦ {claimDone.length} box{claimDone.length > 1 ? 'es' : ''} claimed this session — items added to your pack.
+        </div>
+      )}
+
+      {boxes.map(box => {
+        const isOpen    = expanded === box.id;
+        const items     = boxItems[box.id] || [];
+        const isClaiming = claiming === box.id;
+
+        return (
+          <div key={box.id} style={{ background: COLORS.card, border: '1px solid rgba(180,122,58,0.35)', borderRadius: 10, overflow: 'hidden' }}>
+            {/* Box header */}
+            <button onClick={() => toggleExpand(box.id)}
+              style={{ width: '100%', background: 'rgba(180,122,58,0.06)', border: 'none', borderBottom: isOpen ? '1px solid rgba(180,122,58,0.2)' : 'none', padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ fontSize: 18, lineHeight: 1 }}>⬡</div>
+                <div>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8a84a', letterSpacing: '0.08em' }}>{box.name}</div>
+                  {box.campaign_id && (
+                    <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", marginTop: 2, letterSpacing: '0.1em' }}>
+                      Campaign {box.campaign_id}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+                  {isOpen && items.length > 0 ? `${items.length} item${items.length > 1 ? 's' : ''}` : 'Tap to inspect'}
+                </div>
+                <div style={{ color: '#e8a84a', fontSize: 10, transition: 'transform 0.2s', transform: isOpen ? 'rotate(180deg)' : 'none' }}>▾</div>
+              </div>
+            </button>
+
+            {/* Box contents */}
+            {isOpen && (
+              <div style={{ padding: '14px 16px' }}>
+                {items.length === 0 ? (
+                  <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '8px 0' }}>Loading contents…</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+                    {items.map((item, i) => (
+                      <div key={item.id || i} style={{ display: 'flex', gap: 10, padding: '8px 10px', background: COLORS.surface, borderRadius: 6, border: `1px solid ${COLORS.border}` }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.text }}>{item.item_name}</div>
+                            {item.item_category && <div style={{ fontSize: 7, color: COLORS.muted, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em' }}>{item.item_category}</div>}
+                            {item.qty > 1 && <div style={{ fontSize: 8, color: '#e8c84a', fontFamily: "'Cinzel', serif" }}>×{item.qty}</div>}
+                          </div>
+                          {item.item_desc && <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 3 }}>{item.item_desc}</div>}
+                          {item.note && <div style={{ fontSize: 9, color: COLORS.magic, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 3 }}>"{item.note}"</div>}
+                          {item.item_meta && <div style={{ fontSize: 8, color: COLORS.deity, marginTop: 3 }}>{item.item_meta}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <button onClick={() => claimBox(box)} disabled={isClaiming || !userChar}
+                  style={{ width: '100%', background: isClaiming ? 'transparent' : 'rgba(180,122,58,0.18)', border: `1px solid ${isClaiming ? COLORS.border : 'rgba(180,122,58,0.6)'}`, borderRadius: 8, padding: '11px', cursor: (isClaiming || !userChar) ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: isClaiming ? COLORS.dim : '#e8a84a', fontWeight: 700, letterSpacing: '0.12em', transition: 'all 0.15s' }}>
+                  {isClaiming ? 'Claiming…' : !userChar ? 'No character loaded' : `⬡ Claim ${box.name}`}
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── CAMPAIGN DASHBOARD ───────────────────────────────────────────────────────
-const TABS = ['Map', 'Sheet', 'Scales', 'Actions', 'Inventory', 'Log'];
+const TABS = ['Map', 'Sheet', 'Scales', 'Actions', 'Inventory', 'Loot', 'Log'];
 
 function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   const { isMobile } = useDevice();
@@ -999,8 +1172,26 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   const [hercHovered, setHercHovered] = useState(false);
   const [rollingAction, setRollingAction] = useState(null);
   const [inventory, setInventory]     = useState({});
+  const [lootboxCount, setLootboxCount] = useState(0);
   const timer = useSessionTimer(campaign.id);
   const isAssigned = userChar?.campaign === String(campaign.id);
+
+  // Poll lootbox count for badge
+  useEffect(() => {
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from('lootboxes')
+        .select('*', { count: 'exact', head: true })
+        .eq('claimed', false)
+        .or(`campaign_id.eq.${campaign.id},campaign_id.is.null`);
+      setLootboxCount(count || 0);
+    };
+    fetchCount();
+    const sub = supabase.channel(`loot-badge-${campaign.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lootboxes' }, fetchCount)
+      .subscribe();
+    return () => supabase.removeChannel(sub);
+  }, [campaign.id]);
 
   // Compute effective stats = base stats + attuned item bonuses
   const effectiveStats = (() => {
@@ -1108,6 +1299,18 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
           ? <InventoryPanel char={userChar} onInventoryChange={setInventory} />
           : <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12 }}>No character loaded.</div>;
 
+      case 'Loot':
+        return (
+          <div>
+            <div style={{ ...label8(), marginBottom: 14 }}>Lootboxes</div>
+            <LootboxPanel
+              campaignId={String(campaign.id)}
+              userChar={userChar}
+              onClaimed={() => setLootboxCount(c => Math.max(0, c - 1))}
+            />
+          </div>
+        );
+
       case 'Log':
         return (
           <div>
@@ -1174,8 +1377,13 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
           const isActive = tab === activeTab;
           return (
             <button key={tab} onClick={() => setActiveTab(tab)}
-              style={{ background: 'transparent', border: 'none', borderBottom: `2px solid ${isActive ? COLORS.text : 'transparent'}`, padding: isMobile ? '10px 10px' : '12px 16px', fontFamily: "'Cinzel', serif", fontSize: isMobile ? 7 : 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: isActive ? COLORS.text : COLORS.dim, fontWeight: isActive ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              style={{ background: 'transparent', border: 'none', borderBottom: `2px solid ${isActive ? COLORS.text : 'transparent'}`, padding: isMobile ? '10px 10px' : '12px 16px', fontFamily: "'Cinzel', serif", fontSize: isMobile ? 7 : 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: isActive ? COLORS.text : COLORS.dim, fontWeight: isActive ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap', position: 'relative' }}>
               {tab}
+              {tab === 'Loot' && lootboxCount > 0 && (
+                <span style={{ position: 'absolute', top: 6, right: 4, background: '#e8a84a', color: '#120e0a', borderRadius: '50%', width: 14, height: 14, fontSize: 7, fontFamily: 'monospace', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
+                  {lootboxCount > 9 ? '9+' : lootboxCount}
+                </span>
+              )}
             </button>
           );
         })}
