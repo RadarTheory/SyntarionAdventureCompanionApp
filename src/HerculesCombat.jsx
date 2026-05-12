@@ -142,85 +142,6 @@ function HerculesLogoImage({ hovered = false, darkMode = true, size = 56 }) {
   );
 }
 
-const markCombatantDead = async row => {
-  const sid = session?.id || activeSessionIdRef.current;
-  if (!sid || !row?.id) return;
-
-  const actorName = row.character_name || 'Combatant';
-
-  const { error } = await supabase
-    .from('hercules_initiative')
-    .update({
-      status: 'dead',
-    })
-    .eq('id', row.id);
-
-  if (error) {
-    console.error('Failed to mark combatant dead:', error);
-    return;
-  }
-
-  await supabase.from('hercules_events').insert({
-    session_id: sid,
-    type: 'death',
-    actor_name: actorName,
-    actor_id: row.character_id ? String(row.character_id) : null,
-    description: `${actorName} has been marked dead.`,
-  });
-
-  await loadInitiative(sid);
-  await loadEvents(sid);
-};
-
-const removeCombatantFromTracker = async row => {
-  const sid = session?.id || activeSessionIdRef.current;
-
-  if (!sid || !row?.id) {
-    console.error('Missing session or initiative row:', { sid, row });
-    return;
-  }
-
-  const actorName = row.character_name || row.actor_name || 'Combatant';
-
-  const confirmed = window.confirm(`Remove ${actorName} from initiative?`);
-  if (!confirmed) return;
-
-  setSaving(true);
-
-  const { data, error } = await supabase
-    .from('hercules_initiative')
-    .delete()
-    .eq('id', row.id)
-    .select();
-
-  if (error) {
-    console.error('Failed to remove combatant from tracker:', error);
-    setSaving(false);
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    console.warn('No initiative row was deleted:', row);
-    setSaving(false);
-    return;
-  }
-
-  setInitiative(prev => prev.filter(item => item.id !== row.id));
-
-  await supabase.from('hercules_events').insert({
-    session_id: sid,
-    type: 'removed',
-    actor_name: actorName,
-    actor_id: row.character_id ? String(row.character_id) : null,
-    description: `${actorName} was removed from the initiative tracker.`,
-  });
-
-  await loadInitiative(sid);
-  await loadEvents(sid);
-
-  setSaving(false);
-};
-
 // Stable enemy token colors cycled by creature name hash
 const ENEMY_COLORS = ['#e85d4a', '#fb923c', '#c084fc', '#f472b6', '#f87171', '#fbbf24'];
 function creatureColor(name) {
@@ -756,6 +677,85 @@ const loadInitiative = useCallback(async sid => {
   }
 
   await loadEvents(sid);
+};
+
+const markCombatantDead = async row => {
+  const sid = session?.id || activeSessionIdRef.current;
+  if (!sid || !row?.id) return;
+
+  const actorName = row.character_name || 'Combatant';
+
+  const { error } = await supabase
+    .from('hercules_initiative')
+    .update({
+      status: 'dead',
+    })
+    .eq('id', row.id);
+
+  if (error) {
+    console.error('Failed to mark combatant dead:', error);
+    return;
+  }
+
+  await supabase.from('hercules_events').insert({
+    session_id: sid,
+    type: 'death',
+    actor_name: actorName,
+    actor_id: row.character_id ? String(row.character_id) : null,
+    description: `${actorName} has been marked dead.`,
+  });
+
+  await loadInitiative(sid);
+  await loadEvents(sid);
+};
+
+const removeCombatantFromTracker = async row => {
+  const sid = session?.id || activeSessionIdRef.current;
+
+  if (!sid || !row?.id) {
+    console.error('Missing session or initiative row:', { sid, row });
+    return;
+  }
+
+  const actorName = row.character_name || row.actor_name || 'Combatant';
+
+  const confirmed = window.confirm(`Remove ${actorName} from initiative?`);
+  if (!confirmed) return;
+
+  setSaving(true);
+
+  const { data, error } = await supabase
+    .from('hercules_initiative')
+    .delete()
+    .eq('id', row.id)
+    .select();
+
+  if (error) {
+    console.error('Failed to remove combatant from tracker:', error);
+    setSaving(false);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    console.warn('No initiative row was deleted:', row);
+    setSaving(false);
+    return;
+  }
+
+  setInitiative(prev => prev.filter(item => item.id !== row.id));
+
+  await supabase.from('hercules_events').insert({
+    session_id: sid,
+    type: 'removed',
+    actor_name: actorName,
+    actor_id: row.character_id ? String(row.character_id) : null,
+    description: `${actorName} was removed from the initiative tracker.`,
+  });
+
+  await loadInitiative(sid);
+  await loadEvents(sid);
+
+  setSaving(false);
 };
 
     const startDrag = event => {
