@@ -89,6 +89,7 @@ function HerculesLite({ campaignId, char, onClose }) {
   const [initiative, setInitiative] = useState([]);
   const [rolling, setRolling] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedRoll, setSubmittedRoll] = useState(null);
   const bottomRef = useRef(null);
   const sessionRef = useRef(null);
 
@@ -121,19 +122,74 @@ function HerculesLite({ campaignId, char, onClose }) {
   };
 
   const loadInitiative = async (sid) => {
-    const { data } = await supabase.from('hercules_initiative').select('*').eq('session_id', sid).order('roll', { ascending: false });
-    if (data) setInitiative(data);
-  };
+  const { data, error } = await supabase
+    .from('hercules_initiative')
+    .select('*')
+    .eq('session_id', sid)
+    .order('turn_order', { ascending: false });
+
+  if (error) {
+    console.error('Failed to load Hercules initiative:', error);
+    return;
+  }
+
+  if (data) setInitiative(data);
+};
 
   const rollInitiative = async () => {
-    if (!session?.id || rolling) return;
-    setRolling(true);
-    const roll = Math.floor(Math.random() * 20) + 1;
-    await supabase.from('hercules_initiative').insert({ session_id: session.id, character_id: char?.id || null, character_name: char?.name || 'Player', roll, modifier: 0, total: roll });
-    await supabase.from('hercules_events').insert({ session_id: session.id, campaign_id: String(campaignId), type: 'initiative', actor_name: char?.name || 'Player', actor_id: char?.id || null, description: `${char?.name || 'Player'} rolled initiative.`, roll, total: roll });
-    setSubmitted(true); setRolling(false);
-    loadInitiative(session.id);
-  };
+  if (!session?.id || rolling) return;
+
+  setRolling(true);
+
+  const roll = Math.floor(Math.random() * 20) + 1;
+  const modifier = Number(char?.initiative_modifier ?? char?.dex_mod ?? 0);
+  const turnOrder = roll + modifier;
+
+  const { data: initiativeRow, error: initiativeError } = await supabase
+    .from('hercules_initiative')
+    .insert({
+      session_id: session.id,
+      character_id: char?.id ? String(char.id) : null,
+      character_name: char?.name || char?.character_name || 'Player',
+      roll,
+      modifier,
+      turn_order: turnOrder,
+    })
+    .select()
+    .single();
+
+  if (initiativeError) {
+    console.error('Failed to submit Hercules initiative:', initiativeError);
+    setRolling(false);
+    return;
+  }
+
+  const { error: eventError } = await supabase
+    .from('hercules_events')
+    .insert({
+      session_id: session.id,
+      type: 'initiative',
+      actor_name: char?.name || char?.character_name || 'Player',
+      actor_id: char?.id ? String(char.id) : null,
+      description: `${char?.name || char?.character_name || 'Player'} rolled initiative.`,
+    });
+
+  if (eventError) {
+    console.error('Failed to log Hercules initiative event:', eventError);
+  }
+
+  console.log('Hercules initiative submitted:', initiativeRow);
+
+  setSubmitted(true);
+  setSubmittedRoll({
+    roll,
+    modifier,
+    total: turnOrder,
+  });
+
+  setRolling(false);
+  await loadInitiative(session.id);
+};
 
   const alreadyRolled = submitted || initiative.some(r => r.character_id === char?.id);
 
@@ -159,7 +215,15 @@ function HerculesLite({ campaignId, char, onClose }) {
                 </button>
               </div>
             ) : (
-              <div style={{ fontSize: 10, color: COLORS.magic, fontFamily: "'Cinzel', serif", textAlign: 'center' }}>✓ Initiative submitted</div>
+              <div style={{ fontSize: 10, color: COLORS.magic, fontFamily: "'Cinzel', serif", textAlign: 'center' }}>
+              ✓ Initiative submitted
+              {submittedRoll && (
+                <span style={{ color: '#e8c84a' }}>
+                  {' '}— {submittedRoll.total}
+                  {' '}({submittedRoll.roll}{submittedRoll.modifier ? ` + ${submittedRoll.modifier}` : ''})
+                </span>
+              )}
+            </div>
             )}
             {initiative.length > 0 && (
               <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px' }}>
@@ -167,7 +231,7 @@ function HerculesLite({ campaignId, char, onClose }) {
                 {initiative.map((row, i) => (
                   <div key={row.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 6px', background: row.character_id === char?.id ? 'rgba(200,168,74,0.1)' : 'transparent', borderRadius: 4, marginBottom: 2 }}>
                     <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color: row.character_id === char?.id ? '#e8c84a' : COLORS.text }}>{i + 1}. {row.character_name}</div>
-                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, color: '#e8c84a' }}>{row.total || row.roll}</div>
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, color: '#e8c84a' }}>{row.turn_order || row.roll}</div>
                   </div>
                 ))}
               </div>
