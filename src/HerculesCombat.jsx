@@ -93,20 +93,43 @@ function createScribeSuggestion(event) {
   return `${actor}'s ${action} likely fails or creates an opening. Suggested outcome: miss, blocked attempt, enemy advantage, or consequence.`;
 }
 
-function HerculesLogoImage({ hovered = false, size = '72%' }) {
+function HerculesLogoImage({ hovered = false, darkMode = true, size = '96%' }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <div
+        style={{
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          background: darkMode ? '#e8d9a7' : '#100d0a',
+          border: darkMode
+            ? '1px solid rgba(232,217,167,0.75)'
+            : '1px solid rgba(70,50,25,0.45)',
+        }}
+      />
+    );
+  }
+
   return (
     <img
       src="/HerculesCombat.png"
       alt="HERCULES"
       draggable={false}
+      onError={() => setFailed(true)}
       style={{
         width: size,
         height: size,
         objectFit: 'contain',
         display: 'block',
-        filter: hovered
-          ? 'brightness(1.18) drop-shadow(0 0 10px rgba(201,185,145,0.45))'
-          : 'brightness(1) drop-shadow(0 0 8px rgba(200,168,74,0.25))',
+        filter: darkMode
+          ? hovered
+            ? 'invert(1) brightness(1.65) contrast(1.35) drop-shadow(0 0 14px rgba(232,217,167,0.75))'
+            : 'invert(1) brightness(1.45) contrast(1.25) drop-shadow(0 0 10px rgba(232,217,167,0.55))'
+          : hovered
+            ? 'brightness(0.42) contrast(1.4) drop-shadow(0 0 8px rgba(60,42,20,0.35))'
+            : 'brightness(0.32) contrast(1.35) drop-shadow(0 0 6px rgba(60,42,20,0.25))',
         transition: 'all 0.18s ease',
         pointerEvents: 'none',
         userSelect: 'none',
@@ -114,7 +137,6 @@ function HerculesLogoImage({ hovered = false, size = '72%' }) {
     />
   );
 }
-
 export default function HerculesCombat({ defaultCampaignId, darkMode = true }) {
   const campaignList = useMemo(normalizeCampaigns, []);
   const creatureNames = useMemo(parseCreatureNames, []);
