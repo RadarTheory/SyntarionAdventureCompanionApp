@@ -13,6 +13,7 @@ import MapPanel from './MapPanel';
 import VTTCanvas from './VTTCanvas';
 import HerculesCombat from './HerculesCombat';
 
+
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
 You are assisting the Dungeon Master (Architect) of this world.

@@ -53,9 +53,23 @@ function GrantModal({ item, onClose }) {
   const CAMPAIGN_NAMES = { I: 'Veinrunner', II: 'Keys of Aerithos', III: 'Prints from Gamdon', IV: 'Veyline' };
 
   useEffect(() => {
-    // Load approved characters
-    supabase.from('characters').select('id, name, campaign, race, cid').not('status', 'eq', 'rejected').then(({ data }) => {
-      if (data) setChars(data);
+    // Load approved characters — name/campaign live inside the `data` jsonb blob
+    supabase.from('characters').select('id, data, status, campaign_id').not('status', 'eq', 'rejected').then(({ data: rows }) => {
+      if (rows) {
+        const parsed = rows.map(row => {
+          // data is stored as a stringified JSON string
+          let d = {};
+          try { d = typeof row.data === 'string' ? JSON.parse(row.data) : (row.data || {}); } catch (_) {}
+          return {
+            id: row.id,
+            name: d.name || `${d.fn || ''} ${d.ln || ''}`.trim() || 'Unnamed',
+            campaign: d.campaign || row.campaign_id || null,
+            race: d.race || '',
+            cid: d.cid || '',
+          };
+        });
+        setChars(parsed);
+      }
     });
     // Load lootboxes
     supabase.from('lootboxes').select('*').eq('claimed', false).order('created_at', { ascending: false }).then(({ data }) => {
