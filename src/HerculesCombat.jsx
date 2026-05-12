@@ -138,6 +138,67 @@ function HerculesLogoImage({ hovered = false, darkMode = true, size = 56 }) {
   );
 }
 
+const markCombatantDead = async row => {
+  const sid = session?.id || activeSessionIdRef.current;
+  if (!sid || !row?.id) return;
+
+  const actorName = row.character_name || 'Combatant';
+
+  const { error } = await supabase
+    .from('hercules_initiative')
+    .update({
+      status: 'dead',
+    })
+    .eq('id', row.id);
+
+  if (error) {
+    console.error('Failed to mark combatant dead:', error);
+    return;
+  }
+
+  await supabase.from('hercules_events').insert({
+    session_id: sid,
+    type: 'death',
+    actor_name: actorName,
+    actor_id: row.character_id ? String(row.character_id) : null,
+    description: `${actorName} has been marked dead.`,
+  });
+
+  await loadInitiative(sid);
+  await loadEvents(sid);
+};
+
+const removeCombatantFromTracker = async row => {
+  const sid = session?.id || activeSessionIdRef.current;
+  if (!sid || !row?.id) return;
+
+  const actorName = row.character_name || 'Combatant';
+
+  const confirmed = window.confirm(`Remove ${actorName} from initiative?`);
+  if (!confirmed) return;
+
+  const { error } = await supabase
+    .from('hercules_initiative')
+    .delete()
+    .eq('id', row.id);
+
+  if (error) {
+    console.error('Failed to remove combatant from tracker:', error);
+    return;
+  }
+
+  await supabase.from('hercules_events').insert({
+    session_id: sid,
+    type: 'removed',
+    actor_name: actorName,
+    actor_id: row.character_id ? String(row.character_id) : null,
+    description: `${actorName} was removed from the initiative tracker.`,
+  });
+
+  await loadInitiative(sid);
+  await loadEvents(sid);
+};
+
 // Stable enemy token colors cycled by creature name hash
 const ENEMY_COLORS = ['#e85d4a', '#fb923c', '#c084fc', '#f472b6', '#f87171', '#fbbf24'];
 function creatureColor(name) {
@@ -645,6 +706,36 @@ const loadInitiative = useCallback(async sid => {
     await loadEvents();
   };
 
+  const rollCombatantAction = async row => {
+  const sid = session?.id || activeSessionIdRef.current;
+
+  if (!sid || !row) return;
+
+  const actorName = row.character_name || row.actor_name || 'Combatant';
+  const actionName = window.prompt(`What is ${actorName} doing?`, 'Attack');
+
+  if (!actionName?.trim()) return;
+
+  const roll = Math.floor(Math.random() * 20) + 1;
+  const modifier = 0;
+  const total = roll + modifier;
+
+  const { error } = await supabase.from('hercules_events').insert({
+    session_id: sid,
+    type: 'action',
+    actor_name: actorName,
+    actor_id: row.character_id ? String(row.character_id) : null,
+    description: `${actorName} used ${actionName.trim()}: d20 ${roll}${modifier ? ` + ${modifier}` : ''} = ${total}.`,
+  });
+
+  if (error) {
+    console.error('Failed to log combatant action:', error);
+    return;
+  }
+
+  await loadEvents(sid);
+};
+
   const clamp = (x, y) => ({
     x: Math.max(8, Math.min(window.innerWidth - 90, x)),
     y: Math.max(8, Math.min(window.innerHeight - 90, y)),
@@ -867,8 +958,17 @@ const loadInitiative = useCallback(async sid => {
                 {initiative.map((row, index) => {
                   const isCreature = !row.character_id;
                   const displayName = row.character_name || row.actor_name || 'Unknown';
+                  const isDead = row.status === 'dead';
+
                   return (
-                    <div key={row.id} style={initiativeRow(index === 0)}>
+                    <div
+                      key={row.id}
+                      style={{
+                        ...initiativeRow(index === 0),
+                        opacity: isDead ? 0.45 : 1,
+                        textDecoration: isDead ? 'line-through' : 'none',
+                      }}
+                    >
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                           <div
@@ -902,8 +1002,65 @@ const loadInitiative = useCallback(async sid => {
                         </div>
                       </div>
 
-                      <div style={{ color: '#e8d9a7', fontSize: 18, fontFamily: 'Georgia, serif', flexShrink: 0 }}>
-                        {row.total}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          onClick={() => rollCombatantAction(row)}
+                          style={{
+                            background: 'rgba(200,168,74,0.14)',
+                            border: '1px solid rgba(200,168,74,0.45)',
+                            color: '#e8c84a',
+                            borderRadius: 5,
+                            padding: '4px 7px',
+                            cursor: 'pointer',
+                            fontFamily: "'Cinzel', serif",
+                            fontSize: 8,
+                            letterSpacing: '0.08em',
+                          }}
+                        >
+                          Roll
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => markCombatantDead(row)}
+                          disabled={row.status === 'dead'}
+                          style={{
+                            background: 'rgba(180,55,45,0.12)',
+                            border: '1px solid rgba(220,90,70,0.45)',
+                            color: '#e0a092',
+                            borderRadius: 5,
+                            padding: '4px 7px',
+                            cursor: row.status === 'dead' ? 'default' : 'pointer',
+                            fontFamily: "'Cinzel', serif",
+                            fontSize: 8,
+                            letterSpacing: '0.08em',
+                          }}
+                        >
+                          Dead
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => removeCombatantFromTracker(row)}
+                          style={{
+                            background: 'transparent',
+                            border: '1px solid rgba(220,90,70,0.35)',
+                            color: '#b98a7f',
+                            borderRadius: 5,
+                            padding: '4px 7px',
+                            cursor: 'pointer',
+                            fontFamily: "'Cinzel', serif",
+                            fontSize: 8,
+                            letterSpacing: '0.08em',
+                          }}
+                        >
+                          Remove
+                        </button>
+
+                        <div style={{ color: '#e8d9a7', fontSize: 18, fontFamily: 'Georgia, serif', minWidth: 22, textAlign: 'right' }}>
+                          {row.total}
+                        </div>
                       </div>
                     </div>
                   );
@@ -1188,6 +1345,10 @@ function initiativeRow(active) {
     padding: '9px 10px',
     marginBottom: 8,
   };
+}
+
+if (event.type === 'action') {
+  return `${actor} attempts an action. Suggested outcome: review the roll in the description and apply success, failure, partial success, or a complication.`;
 }
 
 function goldButton() {
