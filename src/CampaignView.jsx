@@ -634,7 +634,7 @@ function PackDrawer({ charId, loadedFromDB, packItems, setPackItems, persistPack
 
             {/* View toggle */}
             <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-              {[['list', 'Contents'], ['catalog', 'Browse Catalog'], ['add', editIdx !== null ? 'Edit Item' : 'Add Custom']].map(([v, lbl]) => (
+              {[['list', 'Contents'], ['catalog', 'Browse Catalog']].map(([v, lbl]) => (
                 <button key={v} onClick={() => { setView(v); if (v !== 'add') { setEditIdx(null); setNewItem({ name: '', category: 'Misc', desc: '', qty: 1, weight: 0 }); } }}
                   style={{ background: view === v ? 'rgba(200,168,74,0.14)' : 'transparent', border: `1px solid ${view === v ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.1em', color: view === v ? '#e8c84a' : COLORS.dim }}>
                   {lbl}
@@ -647,7 +647,7 @@ function PackDrawer({ charId, loadedFromDB, packItems, setPackItems, persistPack
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {packItems.length === 0 && (
                   <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '20px 0' }}>
-                    Pack is empty. Browse the catalog or add a custom item.
+                    Pack is empty. Browse the catalog to add approved items.
                   </div>
                 )}
                 {packItems.map((item, idx) => (
@@ -665,7 +665,6 @@ function PackDrawer({ charId, loadedFromDB, packItems, setPackItems, persistPack
                       <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, minWidth: 18, textAlign: 'center' }}>{item.qty || 1}</div>
                       <button onClick={() => updateQty(idx, 1)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 3, width: 20, height: 20, cursor: 'pointer', color: COLORS.dim, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
                     </div>
-                    <button onClick={() => openEdit(idx)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: COLORS.dim, fontSize: 11, padding: '2px 4px' }}>✎</button>
                     <button onClick={() => removeItem(idx)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#e05a5a', fontSize: 11, padding: '2px 4px' }}>✕</button>
                   </div>
                 ))}
