@@ -93,7 +93,7 @@ function createScribeSuggestion(event) {
   return `${actor}'s ${action} likely fails or creates an opening. Suggested outcome: miss, blocked attempt, enemy advantage, or consequence.`;
 }
 
-function HerculesLogoImage({ hovered = false, darkMode = true, size = '96%' }) {
+function HerculesLogoImage({ hovered = false, darkMode = true, size = '180' }) {
   const [failed, setFailed] = useState(false);
 
   if (failed) {
