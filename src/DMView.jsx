@@ -590,7 +590,7 @@ function MusicPanel() {
 // ═════════════════════════════════════════════════════════════════════════════
 const DM_TABS = ['Inbox', 'Characters', 'Campaigns', 'Scribe', 'Memory', 'Catalog', 'Maps', 'VTT'];
 
-export default function VTTCanvas({ campaignId, onRegisterPlaceToken, checkedInPlayers = [] }) {
+export default function VTTCanvas({ campaignId, onRegisterPlaceToken, checkedInPlayers: checkedInPlayersProp = [] }) {
   const { isMobile } = useDevice();
   const [activeTab, setActiveTab] = useState('Inbox');
   const [characters, setCharacters] = useState([]);
