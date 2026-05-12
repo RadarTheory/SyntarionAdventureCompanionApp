@@ -491,48 +491,335 @@ function CharacterSheetInline({ char, effectiveStats }) {
   );
 }
 
-// ─── INVENTORY PANEL ──────────────────────────────────────────────────────────
-// Items stored per-character in Supabase `character_items` table.
-// Schema: { id, character_id, slot, name, description, attuned, bonuses: {stat: number, ...}, weight }
-// If no table yet, we fall back to localStorage keyed by char.id for offline use.
+// ─── PACK DRAWER ─────────────────────────────────────────────────────────────
+// Standalone catalog items for the pack — not tied to equipment slots.
+// Stored under slot key 'pack__<uuid>' in character_items.
 
+const PACK_ITEM_CATEGORIES = ['All', 'Armor', 'Weapons', 'Consumable', 'Tool', 'Artifact', 'Misc'];
+
+// Small catalog of common Soterianized pack items players can quickly add
+const QUICK_CATALOG = [
+  { name: 'Healing Draught', category: 'Consumable', desc: 'Restores vitality. Common in field kits.' },
+  { name: 'Torch', category: 'Tool', desc: 'Burns for one hour.' },
+  { name: 'Rope (50ft)', category: 'Tool', desc: 'Sturdy Kra\'ark-braided rope.' },
+  { name: 'Ration Pack', category: 'Consumable', desc: 'Three days of preserved travel rations.' },
+  { name: 'Lockpick Set', category: 'Tool', desc: 'Six picks and a tension wrench.' },
+  { name: 'Antitoxin Vial', category: 'Consumable', desc: 'Counters most natural poisons.' },
+  { name: 'Spyglass', category: 'Tool', desc: 'Extends sight range in open terrain.' },
+  { name: 'Grimoire Page', category: 'Artifact', desc: 'A loose page from an arcane text. Partially legible.' },
+  { name: 'Iron Spike', category: 'Tool', desc: 'Useful for spiking doors or anchoring ropes.' },
+  { name: 'Smoke Vial', category: 'Consumable', desc: 'Fills a 10ft area with dense smoke on impact.' },
+  { name: 'Signal Mirror', category: 'Tool', desc: 'Can flash coded signals up to a mile in daylight.' },
+  { name: 'Velstone Shard', category: 'Artifact', desc: 'A fragment of Lunar energy. Useful for certain mechanisms.' },
+  { name: 'Bandages', category: 'Consumable', desc: 'Stops bleeding. Common issue.' },
+  { name: 'Oil Flask', category: 'Tool', desc: 'Lubricant or accelerant. Two uses.' },
+  { name: 'Chalk', category: 'Tool', desc: 'For marking paths, writing on stone.' },
+];
+
+function PackDrawer({ charId, loadedFromDB, packItems, setPackItems, persistPack }) {
+  const [open, setOpen]           = useState(false);
+  const [view, setView]           = useState('list');   // 'list' | 'catalog' | 'add'
+  const [catalogFilter, setCatalogFilter] = useState('All');
+  const [catalogSearch, setCatalogSearch] = useState('');
+  const [newItem, setNewItem]     = useState({ name: '', category: 'Misc', desc: '', qty: 1, weight: 0 });
+  const [coin, setCoin]           = useState('');
+  const [weight, setWeight]       = useState('');
+  const [misc, setMisc]           = useState('');
+  const [editIdx, setEditIdx]     = useState(null);
+  const PACK_META_KEY = `syntarion_pack_meta_${charId}`;
+
+  // Load pack meta (coin/weight/misc) from localStorage
+  useEffect(() => {
+    try {
+      const m = JSON.parse(localStorage.getItem(PACK_META_KEY) || '{}');
+      if (m.coin    !== undefined) setCoin(m.coin);
+      if (m.weight  !== undefined) setWeight(m.weight);
+      if (m.misc    !== undefined) setMisc(m.misc);
+    } catch (_) {}
+  }, [charId]);
+
+  const saveMeta = (field, val) => {
+    const updates = { coin, weight, misc, [field]: val };
+    localStorage.setItem(PACK_META_KEY, JSON.stringify(updates));
+  };
+
+  const addFromCatalog = (catalogItem) => {
+    const item = { id: Date.now(), name: catalogItem.name, category: catalogItem.category, desc: catalogItem.desc, qty: 1, weight: 0 };
+    const next = [...packItems, item];
+    setPackItems(next);
+    persistPack(next);
+    setView('list');
+  };
+
+  const addCustomItem = () => {
+    if (!newItem.name.trim()) return;
+    const item = { id: Date.now(), ...newItem, qty: Number(newItem.qty) || 1, weight: Number(newItem.weight) || 0 };
+    const next = editIdx !== null
+      ? packItems.map((p, i) => i === editIdx ? item : p)
+      : [...packItems, item];
+    setPackItems(next);
+    persistPack(next);
+    setNewItem({ name: '', category: 'Misc', desc: '', qty: 1, weight: 0 });
+    setEditIdx(null);
+    setView('list');
+  };
+
+  const removeItem = (idx) => {
+    const next = packItems.filter((_, i) => i !== idx);
+    setPackItems(next);
+    persistPack(next);
+  };
+
+  const updateQty = (idx, delta) => {
+    const next = packItems.map((p, i) => i === idx ? { ...p, qty: Math.max(0, (p.qty || 1) + delta) } : p).filter(p => p.qty > 0);
+    setPackItems(next);
+    persistPack(next);
+  };
+
+  const openEdit = (idx) => {
+    setNewItem({ ...packItems[idx] });
+    setEditIdx(idx);
+    setView('add');
+  };
+
+  const totalWeight = packItems.reduce((sum, p) => sum + (Number(p.weight) || 0) * (p.qty || 1), 0);
+
+  const filteredCatalog = QUICK_CATALOG.filter(item => {
+    const matchCat = catalogFilter === 'All' || item.category === catalogFilter;
+    const matchSearch = !catalogSearch || item.name.toLowerCase().includes(catalogSearch.toLowerCase());
+    return matchCat && matchSearch;
+  });
+
+  const categoryColor = cat => ({
+    Consumable: '#e08a5a', Tool: COLORS.tech, Artifact: COLORS.deity,
+    Armor: COLORS.muted, Weapons: '#e05a5a', Misc: COLORS.dim
+  }[cat] || COLORS.dim);
+
+  return (
+    <>
+      {/* Pack section header — always visible */}
+      <div style={{ marginTop: 4 }}>
+        <button onClick={() => setOpen(o => !o)}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'transparent', border: 'none', borderTop: `1px solid ${COLORS.border}`, borderBottom: open ? 'none' : `1px solid ${COLORS.border}`, padding: '14px 0', cursor: 'pointer' }}>
+          <div style={{ ...label8() }}>Pack</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {packItems.length > 0 && (
+              <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif' }}>{packItems.length} item{packItems.length !== 1 ? 's' : ''}</div>
+            )}
+            <div style={{ fontSize: 10, color: COLORS.dim, transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none' }}>▾</div>
+          </div>
+        </button>
+
+        {open && (
+          <div style={{ borderBottom: `1px solid ${COLORS.border}`, paddingBottom: 20 }}>
+
+            {/* Coin / Weight / Misc quick fields */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16, marginTop: 4 }}>
+              {[
+                { label: 'Consumables', value: packItems.filter(p => p.category === 'Consumable').length + ' in pack', readOnly: true },
+                { label: 'Coin', value: coin, onChange: v => { setCoin(v); saveMeta('coin', v); }, placeholder: 'GP, SP, CP…' },
+                { label: 'Weight', value: totalWeight > 0 ? `${totalWeight} + manual` : weight, onChange: v => { setWeight(v); saveMeta('weight', v); }, placeholder: 'lbs / units…' },
+                { label: 'Misc', value: misc, onChange: v => { setMisc(v); saveMeta('misc', v); }, placeholder: 'Other notes…' },
+              ].map(({ label, value, onChange, placeholder, readOnly }) => (
+                <div key={label} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px' }}>
+                  <div style={{ ...label8(), marginBottom: 4 }}>{label}</div>
+                  {readOnly
+                    ? <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{value}</div>
+                    : <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+                        style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, padding: 0 }} />
+                  }
+                </div>
+              ))}
+            </div>
+
+            {/* View toggle */}
+            <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+              {[['list', 'Contents'], ['catalog', 'Browse Catalog'], ['add', editIdx !== null ? 'Edit Item' : 'Add Custom']].map(([v, lbl]) => (
+                <button key={v} onClick={() => { setView(v); if (v !== 'add') { setEditIdx(null); setNewItem({ name: '', category: 'Misc', desc: '', qty: 1, weight: 0 }); } }}
+                  style={{ background: view === v ? 'rgba(200,168,74,0.14)' : 'transparent', border: `1px solid ${view === v ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.1em', color: view === v ? '#e8c84a' : COLORS.dim }}>
+                  {lbl}
+                </button>
+              ))}
+            </div>
+
+            {/* ── CONTENTS ── */}
+            {view === 'list' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {packItems.length === 0 && (
+                  <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '20px 0' }}>
+                    Pack is empty. Browse the catalog or add a custom item.
+                  </div>
+                )}
+                {packItems.map((item, idx) => (
+                  <div key={item.id || idx} style={{ display: 'flex', alignItems: 'center', gap: 8, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                        <div style={{ fontSize: 7, color: categoryColor(item.category), fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', flexShrink: 0 }}>{item.category}</div>
+                      </div>
+                      {item.desc && <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>{item.desc}</div>}
+                    </div>
+                    {/* Qty controls */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                      <button onClick={() => updateQty(idx, -1)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 3, width: 20, height: 20, cursor: 'pointer', color: COLORS.dim, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                      <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, minWidth: 18, textAlign: 'center' }}>{item.qty || 1}</div>
+                      <button onClick={() => updateQty(idx, 1)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 3, width: 20, height: 20, cursor: 'pointer', color: COLORS.dim, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                    </div>
+                    <button onClick={() => openEdit(idx)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: COLORS.dim, fontSize: 11, padding: '2px 4px' }}>✎</button>
+                    <button onClick={() => removeItem(idx)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#e05a5a', fontSize: 11, padding: '2px 4px' }}>✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* ── CATALOG BROWSE ── */}
+            {view === 'catalog' && (
+              <div>
+                <input value={catalogSearch} onChange={e => setCatalogSearch(e.target.value)}
+                  placeholder="Search items…"
+                  style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none', marginBottom: 10 }} />
+                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 12 }}>
+                  {PACK_ITEM_CATEGORIES.map(cat => (
+                    <button key={cat} onClick={() => setCatalogFilter(cat)}
+                      style={{ background: catalogFilter === cat ? 'rgba(200,168,74,0.14)' : 'transparent', border: `1px solid ${catalogFilter === cat ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: catalogFilter === cat ? '#e8c84a' : COLORS.dim }}>
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {filteredCatalog.map(item => {
+                    const alreadyIn = packItems.some(p => p.name === item.name);
+                    return (
+                      <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: 8, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <div style={{ fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text }}>{item.name}</div>
+                            <div style={{ fontSize: 7, color: categoryColor(item.category), fontFamily: "'Cinzel', serif" }}>{item.category}</div>
+                          </div>
+                          <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>{item.desc}</div>
+                        </div>
+                        <button onClick={() => addFromCatalog(item)}
+                          style={{ background: alreadyIn ? 'transparent' : 'rgba(200,168,74,0.14)', border: `1px solid ${alreadyIn ? COLORS.border : 'rgba(200,168,74,0.45)'}`, borderRadius: 5, padding: '4px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: alreadyIn ? COLORS.dim : '#e8c84a', flexShrink: 0 }}>
+                          {alreadyIn ? 'Add Again' : '+ Add'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                  {filteredCatalog.length === 0 && (
+                    <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '16px 0' }}>No items match.</div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── ADD / EDIT CUSTOM ── */}
+            {view === 'add' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div>
+                  <div style={{ ...label8(), marginBottom: 5 }}>Item Name</div>
+                  <input value={newItem.name} onChange={e => setNewItem(n => ({ ...n, name: e.target.value }))}
+                    placeholder="e.g. Kra'ark Rope"
+                    style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', fontFamily: 'Georgia, serif', fontSize: 12, color: COLORS.text, outline: 'none' }} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                  <div>
+                    <div style={{ ...label8(), marginBottom: 5 }}>Category</div>
+                    <select value={newItem.category} onChange={e => setNewItem(n => ({ ...n, category: e.target.value }))}
+                      style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 8px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none' }}>
+                      {PACK_ITEM_CATEGORIES.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <div style={{ ...label8(), marginBottom: 5 }}>Qty</div>
+                    <input type="number" min={1} value={newItem.qty} onChange={e => setNewItem(n => ({ ...n, qty: e.target.value }))}
+                      style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 8px', fontFamily: 'monospace', fontSize: 12, color: COLORS.text, outline: 'none', textAlign: 'center' }} />
+                  </div>
+                  <div>
+                    <div style={{ ...label8(), marginBottom: 5 }}>Weight</div>
+                    <input type="number" min={0} step={0.1} value={newItem.weight} onChange={e => setNewItem(n => ({ ...n, weight: e.target.value }))}
+                      style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 8px', fontFamily: 'monospace', fontSize: 12, color: COLORS.text, outline: 'none', textAlign: 'center' }} />
+                  </div>
+                </div>
+                <div>
+                  <div style={{ ...label8(), marginBottom: 5 }}>Notes</div>
+                  <textarea value={newItem.desc} onChange={e => setNewItem(n => ({ ...n, desc: e.target.value }))}
+                    rows={2} placeholder="Description, special properties…"
+                    style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none', resize: 'vertical' }} />
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={addCustomItem}
+                    style={{ flex: 1, background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 7, padding: '9px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.magicText, fontWeight: 700, letterSpacing: '0.1em' }}>
+                    {editIdx !== null ? '✦ Save Changes' : '✦ Add to Pack'}
+                  </button>
+                  <button onClick={() => { setView('list'); setEditIdx(null); setNewItem({ name: '', category: 'Misc', desc: '', qty: 1, weight: 0 }); }}
+                    style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: '9px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.dim }}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// ─── INVENTORY PANEL ──────────────────────────────────────────────────────────
 function InventoryPanel({ char, onInventoryChange }) {
-  // items: { [slot]: { name, description, attuned, bonuses } }
   const [items, setItems]         = useState({});
+  const [packItems, setPackItems] = useState([]);
   const [editSlot, setEditSlot]   = useState(null);
   const [saving, setSaving]       = useState(false);
   const [draft, setDraft]         = useState(null);
   const [loadedFromDB, setLoadedFromDB] = useState(false);
 
-  const STORAGE_KEY = `syntarion_inv_${char?.id}`;
+  const STORAGE_KEY     = `syntarion_inv_${char?.id}`;
+  const PACK_STORAGE_KEY = `syntarion_pack_${char?.id}`;
 
-  // Load items on mount
+  // Load equipped items
   useEffect(() => {
     if (!char?.id) return;
     (async () => {
-      // Try Supabase first
       try {
         const { data, error } = await supabase
           .from('character_items')
           .select('*')
           .eq('character_id', String(char.id));
         if (!error && data) {
-          const mapped = {};
-          data.forEach(row => { mapped[row.slot] = { name: row.name, description: row.description || '', attuned: !!row.attuned, bonuses: row.bonuses || {} }; });
-          setItems(mapped);
+          const equipped = {};
+          const pack = [];
+          data.forEach(row => {
+            if (row.slot.startsWith('pack__')) {
+              pack.push({ id: row.id, ...row.bonuses, name: row.name, category: row.description?.split('|')[0] || 'Misc', desc: row.description?.split('|')[1] || '', qty: Number(row.weight) || 1, weight: 0 });
+            } else {
+              equipped[row.slot] = { name: row.name, description: row.description || '', attuned: !!row.attuned, bonuses: row.bonuses || {} };
+            }
+          });
+          setItems(equipped);
+          setPackItems(pack);
           setLoadedFromDB(true);
-          onInventoryChange(mapped);
+          onInventoryChange(equipped);
           return;
         }
       } catch (_) {}
-      // Fallback: localStorage
+      // localStorage fallback
       try {
         const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
         setItems(stored);
         onInventoryChange(stored);
       } catch (_) {}
+      try {
+        const storedPack = JSON.parse(localStorage.getItem(PACK_STORAGE_KEY) || '[]');
+        setPackItems(storedPack);
+      } catch (_) {}
     })();
   }, [char?.id]);
+
+  const persistPack = (next) => {
+    localStorage.setItem(PACK_STORAGE_KEY, JSON.stringify(next));
+    // Could also upsert to Supabase if needed
+  };
 
   const openEdit = (slot) => {
     const existing = items[slot] || { name: '', description: '', attuned: false, bonuses: {} };
@@ -541,30 +828,18 @@ function InventoryPanel({ char, onInventoryChange }) {
   };
 
   const saveItem = async () => {
-    if (!editSlot) return;
+    if (!editSlot || !draft) return;
     setSaving(true);
     const newItems = { ...items, [editSlot]: { ...draft } };
-    // Remove empty slots
     if (!draft.name.trim()) delete newItems[editSlot];
     setItems(newItems);
     onInventoryChange(newItems);
-
-    // Persist
     try {
       if (loadedFromDB) {
-        // Upsert into Supabase
-        const row = {
-          character_id: String(char.id),
-          slot: editSlot,
-          name: draft.name.trim(),
-          description: draft.description,
-          attuned: draft.attuned,
-          bonuses: draft.bonuses,
-        };
         if (!draft.name.trim()) {
           await supabase.from('character_items').delete().eq('character_id', String(char.id)).eq('slot', editSlot);
         } else {
-          await supabase.from('character_items').upsert(row, { onConflict: 'character_id,slot' });
+          await supabase.from('character_items').upsert({ character_id: String(char.id), slot: editSlot, name: draft.name.trim(), description: draft.description, attuned: draft.attuned, bonuses: draft.bonuses }, { onConflict: 'character_id,slot' });
         }
       } else {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(newItems));
@@ -603,7 +878,6 @@ function InventoryPanel({ char, onInventoryChange }) {
                   )}
                   {!hasItem && <div style={{ fontSize: 10, color: `${COLORS.dim}66`, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Empty</div>}
                 </div>
-                {/* Bonus preview */}
                 {hasItem && item.bonuses && Object.entries(item.bonuses).some(([,v]) => v !== 0) && (
                   <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
                     {Object.entries(item.bonuses).filter(([,v]) => v !== 0).map(([k, v]) => (
@@ -628,7 +902,16 @@ function InventoryPanel({ char, onInventoryChange }) {
       {renderSlotGroup('Weapons', WEAPON_SLOTS)}
       {renderSlotGroup('Accessories', ACCESSORY_SLOTS)}
 
-      {/* Edit modal */}
+      {/* ── PACK DRAWER ── */}
+      <PackDrawer
+        charId={char?.id}
+        loadedFromDB={loadedFromDB}
+        packItems={packItems}
+        setPackItems={setPackItems}
+        persistPack={persistPack}
+      />
+
+      {/* ── EQUIP SLOT EDIT MODAL ── */}
       {editSlot !== null && draft && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', zIndex: 300000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: '#120e0a', border: `1px solid ${COLORS.border}`, borderRadius: 14, width: '100%', maxWidth: 440, maxHeight: '90vh', overflowY: 'auto', padding: 24 }}>
@@ -639,7 +922,6 @@ function InventoryPanel({ char, onInventoryChange }) {
               </div>
               <button onClick={() => { setEditSlot(null); setDraft(null); }} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
             </div>
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
                 <div style={{ ...label8(), marginBottom: 6 }}>Item Name</div>
@@ -647,72 +929,52 @@ function InventoryPanel({ char, onInventoryChange }) {
                   placeholder="e.g. Silverweave Cowl"
                   style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', fontFamily: 'Georgia, serif', fontSize: 12, color: COLORS.text, outline: 'none' }} />
               </div>
-
               <div>
                 <div style={{ ...label8(), marginBottom: 6 }}>Description / Notes</div>
                 <textarea value={draft.description} onChange={e => setDraft(d => ({ ...d, description: e.target.value }))}
                   rows={3} placeholder="Item lore, special properties…"
                   style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none', resize: 'vertical' }} />
               </div>
-
-              {/* Attuned toggle */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <button onClick={() => setDraft(d => ({ ...d, attuned: !d.attuned }))}
                   style={{ background: draft.attuned ? 'rgba(200,168,74,0.18)' : 'transparent', border: `1px solid ${draft.attuned ? 'rgba(200,168,74,0.6)' : COLORS.border}`, borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: draft.attuned ? '#e8c84a' : COLORS.dim, letterSpacing: '0.1em' }}>
                   {draft.attuned ? '⬡ Attuned' : '⬢ Not Attuned'}
                 </button>
-                <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
-                  {draft.attuned ? 'Bonuses active' : 'Bonuses inactive'}
-                </div>
+                <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{draft.attuned ? 'Bonuses active' : 'Bonuses inactive'}</div>
               </div>
-
-              {/* Stat bonuses */}
               <div>
                 <div style={{ ...label8(), marginBottom: 10 }}>Stat Bonuses (applies when attuned)</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {ALL_EIGHT.map(s => (
                     <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, color: axisText(s.axis), width: 50 }}>{s.label}</div>
-                      <input
-                        type="number"
-                        value={draft.bonuses?.[s.key] || 0}
-                        onChange={e => setBonusStat(s.key, e.target.value)}
-                        style={{ width: 48, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 6px', fontFamily: 'monospace', fontSize: 11, color: COLORS.text, outline: 'none', textAlign: 'center' }}
-                      />
+                      <input type="number" value={draft.bonuses?.[s.key] || 0} onChange={e => setBonusStat(s.key, e.target.value)}
+                        style={{ width: 48, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 6px', fontFamily: 'monospace', fontSize: 11, color: COLORS.text, outline: 'none', textAlign: 'center' }} />
                     </div>
                   ))}
                 </div>
               </div>
-
-              {/* Discipline bonuses */}
               <div>
                 <div style={{ ...label8(), marginBottom: 10 }}>Discipline Pool Bonuses</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {DISCIPLINE_KEYS.map(k => (
                     <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <div style={{ fontFamily: "'Cinzel', serif", fontSize: 7, color: COLORS.deity, width: 60, letterSpacing: '0.08em' }}>{k}</div>
-                      <input
-                        type="number"
-                        value={draft.bonuses?.[k] || 0}
-                        onChange={e => setBonusStat(k, e.target.value)}
-                        style={{ width: 48, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 6px', fontFamily: 'monospace', fontSize: 11, color: COLORS.text, outline: 'none', textAlign: 'center' }}
-                      />
+                      <input type="number" value={draft.bonuses?.[k] || 0} onChange={e => setBonusStat(k, e.target.value)}
+                        style={{ width: 48, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 6px', fontFamily: 'monospace', fontSize: 11, color: COLORS.text, outline: 'none', textAlign: 'center' }} />
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
               <button onClick={saveItem} disabled={saving}
                 style={{ flex: 1, background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 8, padding: '10px', cursor: saving ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.magicText, fontWeight: 700, letterSpacing: '0.1em' }}>
                 {saving ? 'Saving…' : '✦ Save Item'}
               </button>
-              {(items[editSlot]?.name) && (
-                <button onClick={async () => {
-                  setDraft(d => ({ ...d, name: '' }));
-                  await saveItem();
-                }} style={{ background: 'rgba(224,90,90,0.1)', border: '1px solid rgba(224,90,90,0.3)', borderRadius: 8, padding: '10px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: '#e05a5a' }}>
+              {items[editSlot]?.name && (
+                <button onClick={async () => { setDraft(d => ({ ...d, name: '' })); setTimeout(saveItem, 0); }}
+                  style={{ background: 'rgba(224,90,90,0.1)', border: '1px solid rgba(224,90,90,0.3)', borderRadius: 8, padding: '10px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: '#e05a5a' }}>
                   Remove
                 </button>
               )}
