@@ -89,7 +89,6 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensCh
   const paintingRef  = useRef(false);
   const panRef       = useRef({ active: false, lastX: 0, lastY: 0 });
   const transformRef = useRef({ scale: 1, x: 0, y: 0 });
-
   const [transform, setTransform]             = useState({ scale: 1, x: 0, y: 0 });
   const [vttSession, setVttSession]           = useState(null);
   const [fogZones, setFogZones]               = useState([]);
@@ -108,6 +107,78 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensCh
   const [mapSearch, setMapSearch]             = useState('');
   const [showCommitPicker, setShowCommitPicker] = useState(false);
   const [feather, setFeather]                 = useState(0.3);
+
+  const conjureTokenToMap = async token => {
+  if (!token?.id && !token?.token_id && !token?.name && !token?.label) return;
+  const sessionId = vttSession?.id;
+  if (!sessionId) {
+    console.error('No active VTT session to place token into');
+    return;
+  }
+
+  const tokenKey = String(
+    token.id ||
+    token.token_id ||
+    token.character_id ||
+    token.name ||
+    token.label
+  );
+
+  let found = false;
+  const updatedTokens = tokens.map(t => {
+    const currentKey = String(
+      t.id ||
+      t.token_id ||
+      t.character_id ||
+      t.name ||
+      t.label
+    );
+
+    if (currentKey !== tokenKey) return t;
+    found = true;
+
+    return {
+      ...t,
+      id: t.id || tokenKey,
+      token_id: t.token_id || tokenKey,
+      x: 0.5,
+      y: 0.5,
+      visible: true,
+      on_map: true,
+    };
+  });
+
+  const finalTokens = found ? updatedTokens : [
+    ...tokens,
+    {
+      id: tokenKey,
+      token_id: tokenKey,
+      type: token.type || 'enemy',
+      label: token.label || token.name || 'Token',
+      color: token.color || '#4a9edd',
+      characterId: token.characterId || token.character_id || null,
+      creatureName: token.creatureName || token.name || null,
+      x: 0.5,
+      y: 0.5,
+      visible: true,
+      on_map: true,
+    },
+  ];
+
+  setTokens(finalTokens);
+
+  const { error } = await supabase
+    .from('vtt_sessions')
+    .update({
+      tokens: finalTokens,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', sessionId);
+
+  if (error) {
+    console.error('Failed to conjure token to map:', error);
+  }
+};
 
   useEffect(() => { transformRef.current = transform; }, [transform]);
 
@@ -252,7 +323,12 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensCh
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-    if (tool === 'pan' || e.button === 1 || e.ctrlKey) {
+    if (e.ctrlKey && e.button === 0) {
+      resetView();
+      return;
+    }
+
+    if (tool === 'pan' || e.button === 1) {
       panRef.current = { active: true, lastX: clientX, lastY: clientY };
       return;
     }
