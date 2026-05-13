@@ -8,7 +8,7 @@ function label8() {
 
 const AXIS_COLOR = { magic: COLORS.magic, tech: COLORS.tech };
 
-export default function CastorDMPanel({ onPendingChange }) {
+export default function CastorDMPanel({ onPendingChange, onClose }) {
   const [requests, setRequests]     = useState([]);
   const [filter, setFilter]         = useState('pending'); // 'pending' | 'all'
   const [campaignFilter, setCampaignFilter] = useState('all');
@@ -86,6 +86,9 @@ export default function CastorDMPanel({ onPendingChange }) {
           ))}
         </div>
       </div>
+      {onClose && (
+  <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
+)}
 
       {/* Campaign filter */}
       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 14 }}>
