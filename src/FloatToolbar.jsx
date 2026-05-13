@@ -283,7 +283,15 @@ export default function FloatToolbar({ buttons }) {
             moved.current = false;
             setDragging(true);
           }}
-          onClick={() => { if (!moved.current) setCollapsed(c => !c); }}
+          onClick={() => {
+              if (!moved.current) {
+                if (Object.keys(undocked).length > 0) {
+                  setUndocked({});
+                } else {
+                  setCollapsed(c => !c);
+                }
+              }
+            }}
           style={{
             width: 28, height: 28, borderRadius: '50%',
             background: 'rgba(201,185,145,0.08)',

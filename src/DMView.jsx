@@ -12,7 +12,8 @@ import SessionManager from './SessionManager';
 import MapPanel from './MapPanel';
 import VTTCanvas from './VTTCanvas';
 import HerculesCombat from './HerculesCombat';
-
+import FloatToolbar from './FloatToolbar';
+import CastorDMPanel from './CastorDMPanel';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -75,6 +76,7 @@ function ChatPanel({ session, onClose, isDM }) {
   const [sending, setSending] = useState(false);
   const [sessionEnded, setSessionEnded] = useState(false);
   const bottomRef = useRef(null);
+  
 
   useEffect(() => {
   if (!session) return;
@@ -597,6 +599,12 @@ export default function DMView({ onHome }) {
   const [showArchive, setShowArchive] = useState(false);
   const [toast, setToast] = useState(null);
   const [sessionTimerLabel, setSessionTimerLabel] = useState(null);
+  const [castorPendingCount, setCastorPendingCount] = useState(0);
+  const [showCastor, setShowCastor]   = useState(false);
+  const [castorBadge, setCastorBadge] = useState(0);
+  const [showHercules, setShowHercules] = useState(false);
+  const [showAstragal, setShowAstragal] = useState(false);
+  
   
   // LOBBY STATE
   const [checkedInPlayers, setCheckedInPlayers] = useState([]);
@@ -998,9 +1006,46 @@ const logDmAstragalToHercules = async payload => {
           {loading ? <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 13 }}>Consulting the archives…</div> : renderTab()}
         </div>
       </div>
-      <HerculesCombat defaultCampaignId={activeCampaignTab} />
-      <AstragalButton character={characters?.[0]} onResult={logDmAstragalToHercules} />
+      {showHercules && <HerculesCombat defaultCampaignId={activeCampaignTab} onClose={() => setShowHercules(false)} />}
+{showAstragal && <AstragalButton character={characters?.[0]} onResult={logDmAstragalToHercules} onClose={() => setShowAstragal(false)} />}
+{showCastor && (
+  <div style={{ position: 'fixed', bottom: 24, left: 108, width: 400, maxHeight: '80vh', zIndex: 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: '1px solid rgba(56,189,248,0.3)', borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
+    <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(56,189,248,0.14)', background: 'rgba(56,189,248,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+      <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#7dd3fc', letterSpacing: '0.18em', fontWeight: 700 }}>CASTOR</div>
+      <button onClick={() => setShowCastor(false)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
+    </div>
+    <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
+      <CastorDMPanel onPendingChange={setCastorBadge} />
+    </div>
+  </div>
+)}
+
+<FloatToolbar buttons={[
+  {
+    id: 'astragal-dm',
+    title: 'Astragal — Roll the dice',
+    onClick: () => setShowAstragal(o => !o),
+    children: (
+      <svg viewBox="0 0 40 40" style={{ width: '60%', height: '60%' }}>
+        <polygon points="20,2 38,12 38,28 20,38 2,28 2,12" fill="none" stroke="#c9b991" strokeWidth="1.5"/>
+        <text x="20" y="25" textAnchor="middle" fill="#c9b991" fontSize="12" fontFamily="serif" fontWeight="bold">20</text>
+      </svg>
+    ),
+  },
+  {
+    id: 'hercules-dm',
+    title: 'HERCULES — Combat Tracker',
+    onClick: () => setShowHercules(o => !o),
+    children: <img src="/HerculesCombat.png" alt="HERCULES" draggable={false} style={{ width: '150%', height: '150%', objectFit: 'contain', filter: 'invert(1) brightness(1.28)', pointerEvents: 'none' }} />,
+  },
+  {
+    id: 'castor-dm',
+    title: 'CASTOR — Cast Requests',
+    onClick: () => setShowCastor(o => !o),
+    badge: castorBadge,
+    children: <img src="/castoricon.png" alt="CASTOR" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+  },
+]} />
     </div>
   );
 }
-

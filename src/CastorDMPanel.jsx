@@ -23,6 +23,24 @@ export default function CastorDMPanel({ onPendingChange, onClose }) {
     return () => supabase.removeChannel(sub);
   }, []);
 
+  useEffect(() => {
+  const channel = supabase.channel('castor-dm-incoming')
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'cast_requests'
+    }, (payload) => {
+      const req = payload.new;
+      setToast({
+        name: req.character_name || 'A player',
+        content: `Requests to cast ${req.ability_name} [${req.discipline_label}]`,
+        type: 'castor',
+      });
+      setTimeout(() => setToast(null), 5000);
+      setCastorBadge(n => n + 1);
+    })
+    .subscribe();
+  return () => supabase.removeChannel(channel);
+}, []);
+
   const loadRequests = async () => {
     const { data } = await supabase.from('cast_requests').select('*')
       .order('created_at', { ascending: false }).limit(100);
