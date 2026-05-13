@@ -1,5 +1,78 @@
 export const COLLECTABLES = [
+  // ── MAGIC REAGENTS ──
 
+  { category: 'Collectables', type: 'Reagent', name: 'Sanctus Orb',
+    desc: 'A smooth sphere of compressed divine resonance, faintly warm to the touch. Scribe theologians believe each orb is a crystallized moment of genuine faith — prayer made solid. They pulse once when held by a true believer and go dark in the hands of the faithless.',
+    tags: ['collectable','reagent','discipline','magic','sanctus','divine'],
+    meta: 'rarity: Uncommon; discipline: Divine (Sanctus); axis: Magic; origin: Temple Vaults, Devotional Sites' },
+
+  { category: 'Collectables', type: 'Reagent', name: 'Sacral Will',
+    desc: 'A translucent filament of bound spirit-energy, coiled like a sleeping creature inside a small glass vial. Those who can perceive resonance report it occasionally shifting position on its own. Harvested only at liminal hours — dusk, dawn, or the moment of death.',
+    tags: ['collectable','reagent','discipline','magic','sacral','spirit'],
+    meta: 'rarity: Uncommon; discipline: Spirit (Sacral); axis: Magic; origin: Liminal Thresholds, Ancestral Sites' },
+
+  { category: 'Collectables', type: 'Reagent', name: 'Mana Wisp',
+    desc: 'A hovering mote of raw magical potential, contained in a stoppered vial of darkened glass. Without the vial it drifts freely, attracted to written language and open flames. The oldest alchemical texts describe Mana Wisps as the first substance — older than matter, younger than intent.',
+    tags: ['collectable','reagent','discipline','magic','mana'],
+    meta: 'rarity: Common; discipline: Magic (Mana); axis: Magic; origin: Arcane Confluences, Ley Intersections' },
+
+  { category: 'Collectables', type: 'Reagent', name: 'Essence Seed',
+    desc: 'A hard, dark seed no larger than a thumbnail, etched with growth-spiral patterns too fine to have been cut by hand. When buried in living soil it does not grow — it dissolves, leaving the surrounding earth unnaturally fertile for a season. Botanists in the Soterianized highland groves collect and trade them as both reagent and curiosity.',
+    tags: ['collectable','reagent','discipline','magic','essence','nature'],
+    meta: 'rarity: Common; discipline: Nature (Essence); axis: Magic; origin: Old Growth Forests, Druic Groves' },
+
+  { category: 'Collectables', type: 'Reagent', name: 'Glyphstone',
+    desc: 'A flat chip of pale grey stone bearing a single inscribed glyph that shifts position when observed indirectly. No two Glyphstones carry the same symbol. Glyph scholars spend careers arguing whether the stones generate their own script or simply reveal what was always written within them.',
+    tags: ['collectable','reagent','discipline','magic','gnosis','glyph'],
+    meta: 'rarity: Uncommon; discipline: Glyph (Gnosis); axis: Magic; origin: Ruin Excavations, Scribe Vaults' },
+
+  { category: 'Collectables', type: 'Reagent', name: 'Shaeid Shard',
+    desc: 'A sliver of crystallized lunar light, harvested from reflective cave surfaces during a full Shaeid eclipse. It holds a permanent internal glow that does not dim with time or distance from its source. Collectors note that Shaeid Shards cast shadows in directions the light should not reach.',
+    tags: ['collectable','reagent','discipline','magic','shaeid','light'],
+    meta: 'rarity: Rare; discipline: Light (Shaeid); axis: Magic; origin: Lunar Eclipse Sites, Shaeid Cave Formations' },
+
+  { category: 'Collectables', type: 'Reagent', name: 'Felldrop',
+    desc: 'A single bead of shadow-essence, solid enough to handle but fluid enough to roll against gravity on a tilted surface. It leaves no residue and casts no reflection. Wraill practitioners harvest Felldrops from the deepest shadows of places where violence and forgetting have pooled together for generations.',
+    tags: ['collectable','reagent','discipline','magic','wraill','shadow'],
+    meta: 'rarity: Rare; discipline: Shadow (Wraill); axis: Magic; origin: Wraill Hollows, Massacre Sites, Forgotten Tombs' },
+
+  // ── TECH REAGENTS ──
+
+  { category: 'Collectables', type: 'Reagent', name: 'Ion Cap',
+    desc: 'A small brass-ringed disc that stores a stable charge of ion energy. Standard-issue in most Veinrunner technical kits, though field operatives frequently hoard extras. When depleted it collapses inward, leaving a faint scorch ring. Fully charged ones hum at a frequency most people feel rather than hear.',
+    tags: ['collectable','reagent','discipline','tech','gain','ion'],
+    meta: 'rarity: Common; discipline: Ion (Gain); axis: Tech; origin: Veinrunner Supply Lines, Industrial Districts' },
+
+  { category: 'Collectables', type: 'Reagent', name: 'Steam Core',
+    desc: 'A sealed pressure vessel the size of a fist, packed with compressed thermal reagent. The casing is always warm. Improperly stored ones are known to whistle, rattle, or — on rare occasions — detonate. Engineers carry them in padded harnesses and treat the worn ones with the same suspicion a soldier gives a dull blade.',
+    tags: ['collectable','reagent','discipline','tech','grit','steam'],
+    meta: 'rarity: Common; discipline: Steam (Grit); axis: Tech; origin: Forge Districts, Rail Depots, Frontier Workshops' },
+
+  { category: 'Collectables', type: 'Reagent', name: 'Element Charm',
+    desc: 'A small etched disc inlaid with elemental notation around its rim — fire, water, stone, wind marked at four cardinal points. It grows warm near its corresponding element and goes cold near its opposite. Elemental practitioners carry one tuned to their dominant affinity and a spare for emergencies.',
+    tags: ['collectable','reagent','discipline','tech','focus','element'],
+    meta: 'rarity: Uncommon; discipline: Element (Focus); axis: Tech; origin: Elemental Research Stations, Field Kits' },
+
+  { category: 'Collectables', type: 'Reagent', name: 'Arc Spore',
+    desc: 'A dry, dormant spore encased in a thin conductive membrane. In its inert state it resembles a pale seed pod. Once activated it conducts arc energy with near-perfect efficiency for several minutes before burning out. Matter engineers grow them in controlled substrate vats; wild Arc Spores are occasionally found near collapsed Grid conduits.',
+    tags: ['collectable','reagent','discipline','tech','matter','arc'],
+    meta: 'rarity: Uncommon; discipline: Arc (Matter); axis: Tech; origin: Grid Collapse Zones, Matter Engineering Labs' },
+
+  { category: 'Collectables', type: 'Reagent', name: 'Rad Cell',
+    desc: 'A compact cylindrical power cell with a faintly iridescent casing. Standard-specification Rad Cells are marked with output ratings stamped into the base; black-market variants carry no markings at all. They power everything from surgical instruments to transit locks, and a depleted one is worth nearly as much as a full one for parts.',
+    tags: ['collectable','reagent','discipline','tech','reason','cell'],
+    meta: 'rarity: Common; discipline: Cell (Reason); axis: Tech; origin: Technical Supply Houses, Scavenged Equipment' },
+
+  { category: 'Collectables', type: 'Reagent', name: 'Lithium Lens',
+    desc: 'A ground disc of refined lithium crystal, optically perfect and surprisingly heavy for its size. When held to a light source it refracts into a concentrated cutting beam. Fortitude practitioners use them as both tool and reagent — the same lens that slices metal stabilizes biological tissue when held at the correct angle.',
+    tags: ['collectable','reagent','discipline','tech','fortitude','lithium'],
+    meta: 'rarity: Uncommon; discipline: Lithium (Fortitude); axis: Tech; origin: Lens-Grinders Guilds, Medical Supply Chains' },
+
+  { category: 'Collectables', type: 'Reagent', name: 'Nullid',
+    desc: 'A matte-black patch roughly the size of a coin, neither magnetic nor conductive to any known test. When pressed against an active magical or technical effect it suppresses it briefly before dissolving. Null engineers produce them in small batches from a proprietary process no guild has successfully reverse-engineered. The black market price fluctuates wildly with political tensions.',
+    tags: ['collectable','reagent','discipline','tech','ingenuity','null'],
+    meta: 'rarity: Rare; discipline: Null (Ingenuity); axis: Tech; origin: Null Engineering Ateliers, Contraband Markets' },
+    
   // COLLECTABLES — Currency & Tokens
   { category: 'Collectables', type: 'Currency', name: 'Scribe Coin', desc: 'A brass-black token issued by regional Scribe offices and stamped with archival sigils. Often collected for the year, Bastion mark, or unusual misprints.', tags: ['collectable','coin','scribe'], meta: 'rarity: Common; origin: Scribe Orders' },
   { category: 'Collectables', type: 'Currency', name: 'Broken Veinrunner Token', desc: 'A fractured transit token from the earliest Veinrunner rail lines. Some still carry faint Grid resonance when heated.', tags: ['collectable','rail','token'], meta: 'rarity: Uncommon; origin: Veinrunner Authority' },
