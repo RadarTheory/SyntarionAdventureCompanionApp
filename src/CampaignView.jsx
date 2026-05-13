@@ -5,6 +5,7 @@ import { COLORS, CAMPAIGNS, ALL_STATS, ALL_CLASSES, ACTIONS, getRaceDisplay } fr
 import { LOCATIONS } from './MapPanel';
 import VTTViewer from './VTTViewer';
 import Astragal from './Astragal';
+import AbilitiesPanel from './AbilitiesPanel';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -1180,7 +1181,7 @@ function LootboxPanel({ campaignId, userChar, onClaimed }) {
 }
 
 // ─── CAMPAIGN DASHBOARD ───────────────────────────────────────────────────────
-const TABS = ['Map', 'Sheet', 'Scales', 'Actions', 'Inventory', 'Loot', 'Log'];
+const TABS = ['Map', 'Sheet', 'Scales', 'Actions', 'Abilities', 'Inventory', 'Loot', 'Log'];
 
 function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   const { isMobile } = useDevice();
@@ -1245,6 +1246,23 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
     await supabase.from('hercules_events').insert({ session_id: hsession.id, type: 'action', actor_name: userChar.name || 'Player', actor_id: String(userChar.id), description: `${userChar.name || 'Player'} used ${action}: d20 ${roll}${modifier ? ` + ${modifier}` : ''} = ${total}.` });
     setRollingAction(null);
   };
+  
+  const rollAbility = async (entry, modifier) => {
+  const roll = Math.floor(Math.random() * 20) + 1;
+  const total = roll + modifier;
+  const { data: hsession } = await supabase
+    .from('hercules_sessions').select('id')
+    .eq('campaign_id', String(campaign.id)).eq('status', 'active')
+    .order('created_at', { ascending: false }).limit(1).maybeSingle();
+  if (!hsession?.id) return;
+  await supabase.from('hercules_events').insert({
+    session_id: hsession.id,
+    type: 'ability',
+    actor_name: userChar?.name || 'Player',
+    actor_id: userChar?.id ? String(userChar.id) : null,
+    description: `${userChar?.name || 'Player'} used ${entry.name} [${entry.disciplineLabel}]: d20 ${roll} ${modifier >= 0 ? '+' : ''}${modifier} = ${total}.`,
+  });
+};
 
   const handleAssign = async () => {
     if (!userChar?.id) return;
@@ -1313,6 +1331,11 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
             })}
           </div>
         ) : <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12 }}>No character loaded.</div>;
+
+        case 'Abilities':
+        return userChar
+    ? <AbilitiesPanel char={userChar} campaignId={String(campaign.id)} onRoll={rollAbility} />
+    : <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12 }}>No character loaded.</div>;
 
       case 'Inventory':
         return userChar
