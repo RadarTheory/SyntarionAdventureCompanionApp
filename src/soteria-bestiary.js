@@ -54,29 +54,21 @@ Known resonance classifications:
 NATURAL
 - ordinary ecological resonance
 - stable environmental integration
-
 SPIRIT-BOUND
 - tied to localized spirits or sacred regions
-
 NULL-ADJACENT
 - resistant to resonance influence
 - difficult to perceive spiritually
-
 VOID-TAINTED
 - influenced by Tophet or anti-reality phenomena
-
 TITANIC
 - altered by Titan presence or ancient primordial pressure
-
 ECHOING
 - capable of memory persistence after death
-
 GLYPHIC
 - affected by artificial resonance engineering
-
 DRAETHIC
 - corrupted through collapsed Veylines or resonance instability
-
 GRIMRITE-SATURATED
 - warped by prolonged exposure to raw grimrite ore
 - exhibits physical mutation, behavioral instability, and resonance bleed
@@ -119,7 +111,6 @@ DOCILE / FRIENDLY:
 - LITHOPHANT — A massive stone-skinned grazer whose migrations shape trails and clearings.
 - UNICORN — A rare horned creature of untouched glades, tied to calm and purity.
 - WUID — A tiny feral woodland creature known for sudden speed, sharp instincts, and mischievous cruelty.
-- BRAMBLEHOUND — A wolf-like creature with bramble-covered fur that blends into thorny underbrush.
 - GLIMROOT — A sentient glowing root-system that entangles intruders.
 - HUSH — An animal spirit often seen as a quiet guide through wood and wild.
 - GREY WOLF (SOTERIAN) — The common wolf of Soteria's forests and hills. Larger than expected, pack-coordinated, and known to avoid Dybuk-touched territory entirely. Hunters read wolf absence as a spiritual warning. Pack sizes range from four to sixteen.
@@ -129,7 +120,6 @@ DOCILE / FRIENDLY:
 - CANOPY RAVEN — A large glossy-black bird of the upper forest. Highly intelligent, mimics voices with unnerving accuracy, and is believed by some Pa'morph Kra'ark to be a distant cousin. Considered a trickster omen.
 
 AGGRESSIVE / PREDATORY:
-- MANTICORE (woodland) — A proud great beast whose fearsome form hides a measured temperament.
 - MAULWASP — A colossal winged predator of ridge and wildwood, feared for venom and fury.
 - WHYLL — A beautiful woodland lure that sings travelers off the path to be devoured.
 - ROOST ROC — A colossal sky predator feared for its talons and massive beak.
@@ -140,8 +130,7 @@ AGGRESSIVE / PREDATORY:
 - CANIVINE — A woodland hound wreathed in creeping vines and thorned jaws, known for silent stalking and sudden vicious lunges. Can creep into cities.
 - CEDAR OGRE — A towering bark-skinned giant wreathed in living cedar boughs; sentinel of the ancient woods, crushing those who threaten the sanctity of the grove.
 - WOODHOLLOW — A bark-armored forest guardian that crushes intruders in sacred groves.
-- RAZORPACK WOLF — A grimrite-saturated wolf whose bones have partially externalized through its hide as jagged mineral spurs. Hunts in packs of three to five. Resonance: Grimrite-Saturated. Found near old mine collapse sites.
-- HOLLOW BEAR — An ashbear whose interior has been partially consumed by Draethic resonance from a collapsed Veyline. The cavity in its chest glows faintly in darkness. Attacks are driven by pain rather than hunger.
+- HOLLOWBEAR — An ashbear whose interior has been partially consumed by Draethic resonance from a collapsed Veyline. The cavity in its chest glows faintly in darkness. Attacks are driven by pain rather than hunger.
 
 SMALLER / GAME:
 - RECLUSE WISKARI — Soft blue-beige fur, bright orange markings, enormous black eyes, feather-like antennae between tall bat-like ears.
@@ -165,7 +154,6 @@ GRASSLAND / PLAINS
 DOCILE / FRIENDLY:
 - OAKEN WOODSPIDER — An arachnid with a wooden body and branch-like legs that blends into forests.
 - GWYLLION — A ragged crone appearing as an old woman who misleads travelers with echoing cries, yet may seek hearth and shelter when treated kindly.
-- COBALT RAUK — A sapphire-plumed grassland rauk that glides over open country; often taken as an omen where the plains fall silent beneath its shadow.
 - OYAMMOTH — A towering prairie elephant with sweeping tusks and thunderous gait.
 - TRIDENT TAILED LYNX — A silver-furred lynx that can turn nearly invisible in shadow; its large tail splits into three.
 - RIMEWILD — A pale grassland beast known for swift footing, sharp senses, and a cold wary nature.
@@ -188,14 +176,12 @@ AGGRESSIVE / PREDATORY:
 - VELDT OGRE / THE ALDERMORE GIANT — A massive monolithic titan with weathered stone-like skin cracked by the relentless glare of the three suns; a jagged sentinel over scorched open country.
 - PRAIRIEHOLLOW — A grass-armored plains guardian that crushes intruders.
 - PLAINS VULTURE — A large carrion bird that circles dying creatures and fresh battlefields. Non-aggressive unless feeding is interrupted. Larger than expected. Their presence in numbers reliably indicates recent death within a half-mile radius.
-- JACK PACKRAPTOR - A small, agile predator that hunts in packs and is known for taking down its oponents using team work. It uses small leaps and its ferocious mandables and claws to make much larger prey sorry they encountered them. 
-- GREATER JACK PACKRAPTOR — A larger, more formidable version of the jack packraptor, with enhanced strength and a more aggressive hunting style. Its thick hide keeps it protected and it is typically the leader of larger packs of jack packraptors.
 
 SMALLER / GAME:
 - DUSTRAT — A small scrubland rodent with quick paws and sharp instincts; known for burrowing beneath dry earth and vanishing at the first sign of danger.
 - DUNSHR IKE — A lean, long-legged plains grazer.
 - SHARDBOAR — A boar with crystalline tusks that can shatter stone.
-- SUNSBACK ORANGUTANG — A broad-shouldered grassland ape with suns-warmed fur and immense strength; known for wary intelligence and dominance over scrub and tallgrass.
+- SUNSBACK ORANGUTAN — A broad-shouldered grassland ape with suns-warmed fur and immense strength; known for wary intelligence and dominance over scrub and tallgrass.
 - SCALEBACK LIGER — A powerful plains predator with leonine frame and scaled hide along its spine; feared for speed, strength, and relentless pursuit.
 - FAECOLT — A small enchanted horse of glade and grove, known for its speed and gentle temperament.
 - BRINDLECALF — A small sure-footed grazer of meadow and brush, known for its gentle nature.
@@ -500,47 +486,148 @@ SMALLER / GAME:
 - SPARK MOTH — A small moth attracted to Grid discharge points and active electrical infrastructure. Non-dangerous alone. In large swarms near active Grid nodes their collective wing interference can disrupt sensitive instruments and telegraph equipment.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ADDITIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- CARRIONZELLE — A wasteland-dwelling, carrion-feeding gazelle-like creature with ragged horns, blackened hooves, and a taste for battlefield remains. Skittish when alone, but dangerous in numbers when a herd begins stripping the dead before larger predators arrive.
+- FURBACK EURYPTI — A broad, many-legged subterranean predator with coarse fur along its plated back and grasping forelimbs adapted for tight tunnels. It waits half-buried in loose stone, then surges forward to seize prey and drag it into narrow cracks.
+- WASTELAND GAROON — A heavy-backed scavenger-beast adapted to chemical flats and ruined scrublands. Its cracked hide resists toxins, and it follows the scent of carrion, leaking machinery, and wounded travelers across long distances.
+- FOG-O-WAR — A jellyfish-like cicada horror that gathers where fear, smoke, and unresolved violence linger. It manifests as a low crawling fog filled with half-seen limbs, muffled commands, and sudden grasping shapes.
+- THISTLEWING — A woodland rabbit with winged ears and a penchant for gliding short distances between trees. It is often seen flitting between branches, its wings catching the light as it moves.
+- NOCRAT — A nocturnal owl-rat of unusual size and cunning, known for chewing through packs, ration crates, leather straps, and exposed wiring. Nocrat swarms are a serious threat to sleeping camps and isolated rail outposts.
+- WRAILL LEAPER — a cursed frog like bramble beast. It hops through the undergrowth, its croaking calls echoing in the darkness.
+- LEAPER — A smaller leaping frog with powerful hind legs, fly trap mouth, and a habit of attacking from brush, broken stone, or uneven ground. Usually dangerous in pairs or packs rather than alone.
+- IJIRIKI — A large moose-like beast with ornate branching antlers that resemble carved ivory and old rootwork. Generally peaceful, but territorial during rutting season; its antlers are prized in ceremonial carving and dangerous enough to break shields.
+- CLOUDSCYTHE MANTIS — A high-altitude mantis predator with pale cloud-colored plating and long hooked forelimbs. It clings to cliff faces, floating ruins, and mist-wrapped trees, striking from concealment with scything cuts before vanishing into fog.
+- PETALMAW — A large,deceptive floral predator whose open jaws resemble layered blossoms. It waits among dense flowers or root-choked groves, releasing a sweet scent before snapping shut on birds, small beasts, or careless hands.
+- BEBELITH — A spiderlike horror with cruel intelligence, hooked limbs, and a hunger for sanctified flesh. It is most often found near desecrated shrines, abandoned temples, or places where protective rites failed. It mostly covers its face with a set of grotesque hands, but if it looks directly at a victim, they are immediately stunned. 
+- GLASS PHARAOH — A Titan-Shed construct of fused desert glass and ancient bone that believes itself the ruler of all sand. It “taxes” travelers by extracting water and memories.
+
+// Pack Raptors
+- JACK PACKRAPTOR — A small, agile pack predator known for coordinated attacks, short bounding leaps, hooked claws, and ferocious mandibles. Though individually manageable, a full pack can bring down prey many times its size through harassment, flanking, and relentless teamwork.
+- GREATER JACK PACKRAPTOR — A larger and more formidable Jack Packraptor variant with thicker hide, heavier jaws, and dominant pack behavior. Greater Jack Packraptors often serve as leaders among smaller Jack packs, driving the hunt and punishing wounded prey that attempts to break away.
+- AMETHYSTWING PACKRAPTOR — A Packraptor variant with violet wing-frills used for threat display and pack signaling. It hunts along cliff paths, scree slopes, and mineral-streaked terrain where its coloration blends with stone.
+- GRANULE PACKRAPTOR — A dust-colored Packraptor with rough pebble-like scales along its spine and shoulders. It often rolls through loose soil to mask its scent before ambushing herd animals and lone travelers.
+- SAPPHIRESCALE PACKRAPTOR — A subaquatic Packraptor variant with blue reflective scales that shimmer like moving water. It hunts near reeds, flooded trails, and shallow crossings where prey is slowed by unstable footing.
+- VESUVIAN PACKRAPTOR — A heat-hardened Packraptor variant with dark basalt scales and ember-colored throat markings. Its packs drive prey toward unstable ground, ash clouds, and choking smoke.
+- JADE PACKRAPTOR — A green-scaled Packraptor adapted to highland mountains, wet passes, and dense vegetation. It uses cover and angled terrain to break prey away from groups.
+- SAFFRONHIDE PACKRAPTOR — A dry-country Packraptor variant with yellow-orange hide that blends into sunburnt grass and late-season plains. It hunts in loose packs, using stillness and sudden bursts of speed to surround isolated prey.
+- GREATER PACKRAPTOR — A large alpha-class Packraptor capable of leading mixed packs across plains, scrublands, and badland edges. Its heavier frame makes it less agile than smaller variants but far more dangerous once it closes distance.
+- IVORY PACKRAPTOR — A pale coldland Packraptor with ivory scales, low posture, and silent pack movement across snow and frozen scrub. Its hunting strategy relies on patience, flanking, and driving prey into exhaustion.
+
+// Golems
+- CINDER GOLEM — A Fire-aligned construct of kiln-stone, iron ribs, and furnace-glass veins. Its body smolders constantly, shedding ember flakes as it moves; damaged plates expose molten heat beneath the frame.
+- TIDEGLASS GOLEM — A Water-aligned construct made from blue-green glass, river stones, coral, and suspended water. Its body bends and reforms like a current, allowing it to absorb blows and force enemies into drowning grips.
+- GRAVEMASS GOLEM — An Earth-aligned construct of packed clay, stone, root, bone fragments, and buried metal. It moves like a walking hill torn from an old battlefield, reshaping terrain as it advances.
+- GALE-RIB GOLEM — An Air-aligned construct of light wood, silver wire, sailcloth, and hollow bone. Much of its body is invisible pressure and compressed wind, making its strikes difficult to read.
+- AETHERIUM GOLEM — An Aether-aligned construct of white metal, crystal joints, and floating inner rings. It appears only partly present, with portions of its body phasing behind the world.
+- HOLLOW GOLEM — A Void-aligned construct of black stone, dead glass, and negative space. Parts of its body appear missing, yet those absences strike with terrible force.
+- MOONMARROW GOLEM — A Lunar-aligned construct of moonstone, silver dust, ivory, and reflective lacquer. Its form subtly shifts with moonlight, becoming thin, ghostlike, or crowned with pale radiance.
+- SUNWROUGHT GOLEM — A Solar-aligned construct of gold-bronze plates and sun-dial markings. Its core brightens in the presence of deception, corruption, or broken oaths.
+- THREADBOUND GOLEM — A Loom-aligned construct woven from bone needles, brass spindles, knotted cord, hair, silk, and fate-scripted thread. It binds, pulls, and repositions enemies as if combat itself were a pattern to be corrected.
+- STILLSTONE GOLEM — A Still-aligned construct of cold stone, frost-veined metal, and unmoving dust. The air around it becomes muted and slow, turning motion into effort.
+- VOLTAIC GOLEM — A Spark-aligned construct of copper, iron, glass coils, magnetized plates, and storm-captured lightning. Its movements are sharp, twitching, and violently sudden.
+- BURDEN GOLEM — A Weight-aligned construct of lead, black granite, dense iron, and pressure-runes. The ground buckles under it even when it stands still, and enemies nearby feel their own bodies become heavier.
+- HAEROBURROW — A burrowing insectoid predator that tunnels beneath loose soil, rotten roots, and old foundations. Its arrival is often heard before it is seen: a dry scraping beneath the ground followed by sudden collapse.
+
+// Ghostcrabs
+- GLACIAL GHOSTCRAB — A translucent ice-shelled crab that nests in cracks beneath glaciers and frozen coastal shelves. Its body is nearly invisible against blue ice, and its claws can numb exposed flesh with prolonged contact.
+- MOLTEN GHOSTCRAB — A heat-adapted ghostcrab with a black glass shell veined by dull orange glow. It skitters across cooled lava fields and volcanic shorelines, hiding beneath brittle crust before erupting upward in bursts of heat and claw.
+- REEF GHOSTCRAB — A semi-translucent coastal crab that flickers in and out of sight among tide pools, coral shelves, and wreckage-strewn shallows. Its shell reflects surrounding water and stone, allowing it to ambush fish, seabirds, and careless hands with sudden snapping claws.
+- MOUNTAIN GHOSTCRAB — A strange high-altitude crab found in mineral springs, wet cave mouths, and mist-heavy cliffs. Its shell mimics stone and lichen, making it almost impossible to spot until it moves sideways across the rock.
+- DESERT GHOSTCRAB — A sand-pale ghostcrab that burrows beneath dune crusts and dry salt flats. It emerges at night to scavenge insects, lizards, and carrion, leaving delicate sideways tracks that vanish with the first wind.
+- FOREST GHOSTCRAB — A moss-backed ghostcrab found in damp hollows, old wells, and rain-swollen root systems far from the sea. Scribes believe its ancestors followed underground waterways inland and never returned.
+- CAVERNOUS GHOSTCRAB — A blind, pale ghostcrab that inhabits underground streams and flooded cavern shelves. It navigates by vibration and retreats into cracks too narrow for most predators to follow.
+
+// Blighted
+- BLIGHTED — A broad classification for beings overtaken by rot, curse-growth, hostile natural resonance, or failed cleansing rites.
+- REVENANT — A death-marked being retaining fragments of purpose, anger, memory, or unfinished obligation.
+- CENTAUR — A fierce plains hunter whose speed, pride, and territorial violence make it dangerous to cross.
+- DAEMONTAR — A fiend-touched lineage marked by horns, warped temperaments, unstable spiritual pressure, and violent instinct.
+- DUERGAR — A deep-dwelling lineage shaped by pressure, darkness, subterranean corruption, and old bitterness beneath the earth.
+- FANKOON — A malformed scavenger lineage known for cruel social structures, territorial shrieking, and opportunistic violence.
+- FERRABORNE / SAVAGES — Iron-marked beings shaped by metal exposure, violence, and social collapse.
+- GHROTHMOGG — A hulking lineage associated with brute force, hunger, clan-like predatory groups, and ruinous endurance.
+- GNOLL — A hyena-like lineage known for pack cruelty, carrion rites, aggressive raids, and battlefield scavenging.
+- GOBLIN — Small cunning humanoids known for scavenging, ambush tactics, traps, crude ingenuity, and dangerous coordination in numbers.
+- KHAASTA — Agile alligator-like reptilian predators with leathery hides, cliff ambush tactics, and coordinated pack hunting.
+- KITE — A goblinoid or gliding scavenger lineage associated with cliff nests, battlefield circling, and opportunistic attacks on the wounded. they are often seen circling battlefields, waiting for the right moment to strike.
+- KOBOLD — A small burrowing lineage known for tunnels, traps, territorial colonies, and dangerous numbers.
+- MALITH — A venomous or curse-marked lineage associated with malice, hidden settlements, old grudges, and sudden betrayal.
+- MYCELION — A fungal lineage altered by spore networks, shared instinct, damp underworld growth, and slow communal thought.
+- PIXIES — Small fey-like entities whose playfulness often turns manipulative, cruel, or dangerous depending on mood and territory.
+- HARPIES — Winged fey-like predators with woman top halves and bird-like lower halves, known for their aerial agility, sharp talons, and hunting in coordinated groups.
+- SIRENS - Melodic and dangerous water-dwellers known for their enchanting songs that can drive sailors to their doom.
+- DAMPYR - A vampiric lineage that feeds on the life force of the living, often found in dark, secluded places.
+- QUICKLING — A speed-warped lineage that moves too quickly for ordinary sight and delights in harassment, theft, and sudden cuts.
+- SAHUAGIN — A shark-folk lineage adapted to blood-scent, coastal raids, underwater violence, and predatory group assaults.
+- VISCOPHYTES — Rootwraught Tel’ari transformed into gelatinous plantlike humanoids that engulf and dissolve prey.
+- VYRLYPH — Ooze-like humanoids whose bodies do not hold stable shape for long and whose movements leave slick residue behind.
+- URSAROK — A bear-like lineage known for immense strength, territorial rage, brutal endurance, and devastating close-range violence.
+- WEMIC — A lion-bodied lineage associated with pride structures, open-country hunting, martial dominance, and territorial law.
+- GRINCOIL — A brightly marked arboreal serpent with a pale clown-like face, crimson crown-scales, and a wide painted-looking mouth that resembles a cruel grin. It coils around trunks and branches, swaying like a performer before striking with sudden speed. Its venom causes disorientation, laughter-like spasms, vivid false colors, and eventual paralysis.
+- HEIRESS NAGA — A regal serpentine lure-predator with a humanlike upper body and a great constrictor’s tail. It drapes itself across branches, ruined balconies, garden walls, and river stones like nobility at rest, feigning weakness, sleep, or indifference until prey approaches. Its voice carries a soft commanding resonance that makes victims feel protective, honored, or chosen before the coils tighten.
+- DRAUGR — A grave-bound undead or Rootwraught horror associated with burial sites, cold memory, and violent refusal to remain dead. Draugr are often found near old barrows, battlefield graves, frozen ruins, and places where the dead were not properly witnessed.
+- METAMAPORH - A being that is cursed with transforming into the state of another being. This state can be permanent if the afflicted do not find a cure or change back within a specific timeframe.
+
+// Ubiquitous
+- SUNDERLING - A small, agile creature that is often found in groups, known for its ability to split into multiple smaller versions of itself when threatened.
+- JACK PACKRAPTOR - A small, agile predator that hunts in packs and is known for taking down its oponents using team work. It uses small leaps and its ferocious mandables and claws to make much larger prey sorry they encountered them. 
+- GREATER JACK PACKRAPTOR — A larger, more formidable version of the jack packraptor, with enhanced strength and a more aggressive hunting style. Its thick hide keeps it protected and it is typically the leader of larger packs of jack packraptors.
+- SHADOWMOTE — A small, shadowy creature that moves in the dark and is known for its ability to blend into the background, making it difficult to spot. It attempts to possess the minds of those it attacks and use them for its own will. 
+- GRAFTWRIGHT — A predatory falsework creature that grafts itself into objects, rooms, and structures, taking the form of what victims expect to find before latching, swallowing, or absorbing them. Often mistaken for chests, doors, shrines, books, tools, wagons, or relics. Older specimens can become part of an entire room.
+- GREATER GRAFTWRIGHT — A more powerful and dangerous version of the Graftwright, with a stronger ability to integrate into and control its surroundings. It can manipulate the environment more effectively and is often found in more complex or elaborate structures.
+
+//Wolves
+- BRAMBLEHOUND — A disorienting woodland stalker that leads prey in endless looping trails, its shifting fur and misleading scent causing travelers to walk willingly into ambushes.
+- DUNEWOLF — A desert pack hunter whose sand-colored fur and flattened silhouette make it nearly invisible until it erupts from dunes in a storm of teeth and dust.
+- SHARDBACK WOLF — A badlands and coastal predator with a hide studded in razor-sharp mineral shards that detach on impact, turning every charge into a spray of living shrapnel.
+- SLEET CUR — A tundra and arctic hunter whose ice-crusted coat and freezing breath blend into blizzards, wearing down prey with relentless cold and sleet before the final strike.
+- COGDOG — A grimforge industrial hound with exposed gears and pistons beneath patchy fur, patrolling rail yards and factories with a clicking, wheezing gait.
+- MISTWOLF — A marsh and river predator that dissolves into fog between attacks, rising from still water to drag victims under while they are still conscious.
+- CAIRNWOLF — A mountain sentinel that lies motionless among stone piles and cairns, erupting into motion to trigger rockslides and crush isolated prey.
+- SUMMIT WARG — A massive high-peak titan whose howls echo like avalanches, driving prey off cliffs and narrow ledges with cold, calculating pack tactics.
+- KILN MASTIFF — A volcanic brute with smoldering hide and forge-glowing jaws that ignites its surroundings, hunting amid ash flows and leaving trails of blackened glass.
+- RAZORPACK WOLF — A grimrite-saturated wolf whose bones have partially externalized through its hide as jagged mineral spurs. Hunts in packs of three to five. Resonance: Grimrite-Saturated. Found near old mine collapse sites.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INSECT
+━━━━━━━━━━━━═════════════════════════════════════════
+
+- HAEROBURROW — A burrowing insectoid predator that tunnels beneath loose soil, rotten roots, or clothing. it can be mistaken for a small plant prickle. Its arrival is often heard before it is seen: a dry scraping beneath the skin before the victim can feel the creature's presence. Haeroburrows are dangerous because they cause infestations that can last for months or full anui before they're eradicated. 
+
+━━━━━━━━━━━
 UNDEAD
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 NOTE: Undead in Soteria are not a natural phenomenon. They are the result of specific resonance conditions — Echoing resonance, Void contamination, failed Sanctus rites, collapsed Veylines, or deliberate necromantic intervention. They are always a symptom of something larger.
+- RISEN — The most common undead. A body that has been reanimated by proximity to a strong Echoing resonance source or Void contamination. No intelligence. No memory. Driven by a residual resonance impression that functions as a crude behavioral loop. Found near battlefield sites, mass graves, abandoned settlements, and collapsed Veyline zones. Low-to-Medium threat individually. The problem is scale — they cluster.
+- HOLLOW — A Risen that has been occupied by a minor Void fragment rather than a full Dybuk. More coordinated than standard Risen. Retains basic spatial awareness and primitive targeting. Does not feel pain. Eyes reflect light incorrectly. Resonance: Void-Tainted. Medium threat.
+- ECHOING DEAD — A rare form of undead in which the deceased's resonance impression is so strong that it persists as a semi-autonomous presence in and around the body. Not reanimated in the traditional sense — the body moves because the resonance has not accepted that it should stop. Often found at sites of tremendous emotional significance — last stands, executions, places of profound betrayal. High threat. They remember who they were and that memory makes them unpredictable.
+- BONE CONSTRUCT — Deliberately assembled undead created through Magister or Necromancer intervention. Not arising naturally. Require an active will to maintain their animation. If the controlling intelligence is removed they cease functioning. Used as guardians, laborers, and weapons depending on the practitioner. Medium threat alone; campaign-level threat in organized groups under intelligent command.
+- DROWNED — A specific Echoing undead type found near significant water features where drowning deaths have occurred in numbers. Semi-aquatic. Slower on land. Extremely dangerous in water where their resonance allows them to move without buoyancy limitations. Found along Soteria's river trading routes where historical piracy and floods have left significant resonance impressions. Resonance: Echoing.
+- ASHEN REVENANT — A rare and dangerous undead formed when a highly spiritually significant individual dies in proximity to a collapsed Veyline. The Veyline corruption and the individual's personal resonance combine into something that retains memory, intent, and growing intelligence. Unlike standard undead, an Ashen Revenant can form goals. It can make plans. It remembers who it was and has decided what it wants to do about what happened to it. High to Campaign-level threat depending on who they were in life. The Scribe recommends treating any confirmed Ashen Revenant sighting as a campaign-level event.
+- DYBUK-HOST (LATE STAGE) — When a Dybuk has occupied a host long enough, the host body begins to physically change. Veins blacken visibly. Temperature drops measurably. The host's original personality is effectively consumed. At this stage the Dybuk is no longer hiding — it is wearing the body as territory. The host cannot be saved through conventional means. Resonance: Void-Tainted. High threat.
 
-RISEN — The most common undead. A body that has been reanimated by proximity to a strong Echoing resonance source or Void contamination. No intelligence. No memory. Driven by a residual resonance impression that functions as a crude behavioral loop. Found near battlefield sites, mass graves, abandoned settlements, and collapsed Veyline zones. Low-to-Medium threat individually. The problem is scale — they cluster.
-
-HOLLOW — A Risen that has been occupied by a minor Void fragment rather than a full Dybuk. More coordinated than standard Risen. Retains basic spatial awareness and primitive targeting. Does not feel pain. Eyes reflect light incorrectly. Resonance: Void-Tainted. Medium threat.
-
-ECHOING DEAD — A rare form of undead in which the deceased's resonance impression is so strong that it persists as a semi-autonomous presence in and around the body. Not reanimated in the traditional sense — the body moves because the resonance has not accepted that it should stop. Often found at sites of tremendous emotional significance — last stands, executions, places of profound betrayal. High threat. They remember who they were and that memory makes them unpredictable.
-
-BONE CONSTRUCT — Deliberately assembled undead created through Magister or Necromancer intervention. Not arising naturally. Require an active will to maintain their animation. If the controlling intelligence is removed they cease functioning. Used as guardians, laborers, and weapons depending on the practitioner. Medium threat alone; campaign-level threat in organized groups under intelligent command.
-
-DROWNED — A specific Echoing undead type found near significant water features where drowning deaths have occurred in numbers. Semi-aquatic. Slower on land. Extremely dangerous in water where their resonance allows them to move without buoyancy limitations. Found along Soteria's river trading routes where historical piracy and floods have left significant resonance impressions. Resonance: Echoing.
-
-ASHEN REVENANT — A rare and dangerous undead formed when a highly spiritually significant individual dies in proximity to a collapsed Veyline. The Veyline corruption and the individual's personal resonance combine into something that retains memory, intent, and growing intelligence. Unlike standard undead, an Ashen Revenant can form goals. It can make plans. It remembers who it was and has decided what it wants to do about what happened to it. High to Campaign-level threat depending on who they were in life. The Scribe recommends treating any confirmed Ashen Revenant sighting as a campaign-level event.
-
-DYBUK-HOST (LATE STAGE) — When a Dybuk has occupied a host long enough, the host body begins to physically change. Veins blacken visibly. Temperature drops measurably. The host's original personality is effectively consumed. At this stage the Dybuk is no longer hiding — it is wearing the body as territory. The host cannot be saved through conventional means. Resonance: Void-Tainted. High threat.
+// Haunted
+- RAGWOLD — A rag-wrapped doll shaped horror that drags itself through abandoned homes, nurseries, and plague houses. It steals warmth from rooms before attacking, leaving victims stiff, silent, and wrapped in their own torn bedding.
+- TOYTAKER — A small predatory horror associated with missing children, broken toys, and rooms that should not be locked from the inside. It imitates play sounds to lure victims closer before striking from cupboards, crawlspaces, or beneath beds.
+- PROSOPON — A child-sized masked humanoid horror whose face is never seen directly. It mimics gestures, voices, and expressions stolen from others, often appearing first as someone familiar before the mask’s false emotion begins to crack.
+- AWAKENED JADE GARGOYLE — A carved jade guardian given predatory animation through corrupted resonance or failed warding rites. Unlike ordinary gargoyles, it remembers the place it was made to protect and may continue enforcing commands long after their meaning has been lost.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 HUMANOID THREATS — FACTION REFERENCE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 NOTE: These are not bestiary creatures. They are organized human, Othrod, Durinak, and mixed-race threat groups the party may encounter. They have politics, hierarchies, and reasons for what they do.
-
 ROAD BRIGANDS — Opportunistic criminals operating along trade roads and rail access routes. Lightly armed. Motivated by profit. Will negotiate if cornered and outmatched. Low-to-Medium threat. Most active in the gap between provincial enforcement zones.
-
 RAIL PIRATES — Organized criminal groups that target Veinrunner freight. More sophisticated than road brigands — they have inside information, timing knowledge, and often a legitimate front operation somewhere along the line. Medium threat. Some are former Veinrunner employees.
-
 BOUNTY CREW — Licensed or unlicensed individuals hunting a specific target. Professional, focused, and unlikely to be deterred by the party's involvement unless the party makes itself the more difficult problem. Medium threat. Variable equipment.
-
 CULT ENFORCERS — Armed operatives of any of Soteria's active cult structures (the Verdant Spiral, the Harrow-adjacent practitioners, the Stonecutter Clan, etc.). True believers are more dangerous than mercenaries — they do not negotiate around their core objective. Medium-to-High threat depending on the cult.
-
 PROVINCIAL GUARD — The legal military authority of a given province or city-state. Not automatically hostile. Become hostile when the party has outstanding warrants, is operating without sanction, or is caught somewhere they should not be. Heavily armed. Backed by infrastructure. High threat if fully mobilized against the party.
-
 SOVEREIGN MILITARY — The armed forces of the Sovereign Kingdom. Professional soldiers with standardized equipment and organized command. Not to be engaged directly if avoidable. High threat.
-
 MOLOCHEAN OPERATIVES — Agents of the Molochean Hand. Covert, patient, and operating toward objectives the party may not be aware of. They do not always announce themselves as threats. Some appear as allies until they are not. Medium-to-High threat. Campaign-level if the party has drawn the Hand's specific attention.
-
 HARROW PRACTITIONERS — Wielders of blood-adjacent or corruption-adjacent magic. Variable threat depending on training and access to materials. Some are desperate individuals who made bad decisions. Others are deliberate architects of harm. The distinction matters for how the party approaches them.
-
 GRIMRITE POACHERS — Illegal grimrite extraction crews operating outside licensed Durinak or Veinrunner Authority zones. Armed. Paranoid. Willing to use violence to protect their operation. Medium threat. Know the terrain better than the party.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -548,15 +635,10 @@ NAMED / UNIQUE CREATURES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 NOTE: These are singular entities. They have histories, territories, and reputations. Encountering them is never accidental from a narrative standpoint.
-
 THE ALDERMORE GIANT — See Veldt Ogre entry. Distinguished from ordinary Veldt Ogres by scale and apparent age. Believed to be the original specimen from which the Ogre Evolution Theory was first developed. Has not moved from its known territory in recorded history. The territory has changed around it three times.
-
 THE WHISPERING FROSTWRAITH OF THE FALORN FJORDS — A near-Titan scale Frostwraith that has inhabited the Falorn Fjords for longer than Ködan oral history extends. Does not hunt in the conventional sense. Its presence simply makes the region lethal through cold, disorientation, and the suppression of warmth-based resonance. Titan-adjacent threat. Do not deploy without full campaign context.
-
 THE MURKHARTHOMEL OF THE SUNKEN ROAD — A specific Murkharthomel that has claimed the underwater channel between two major port cities as its territory. Named in Nazari shipping records as the primary cause of the Sunken Road being considered impassable. Campaign-level threat. Several expeditions have attempted to clear it. None have reported back definitively.
-
 THE PATIENT ONE — A Grimrite Wolf of extraordinary age and size whose pack has inhabited the Corren Mountain Mine collapse zone for generations. Unlike normal Grimrite Wolves whose behavior is destabilized by saturation, the Patient One has reached a state of crystalline calm. It does not rush. It does not waste movement. It has killed eleven documented expeditions and is believed to be waiting for something specific, though no scholar has survived long enough to determine what.
-
 VESSEL — A Dybuk-Host in late stage who has been in that state long enough to develop independent goals beyond simple feeding. No longer operating on despair alone. The original host was someone significant enough that their memory and the Dybuk's hunger have merged into something new. The Scribe recommends extreme caution. Campaign-level threat. Can pass as human in dim light.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -564,7 +646,6 @@ THE OGRE EVOLUTION THEORY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Ogres are believed to be ancient adaptive megafauna shaped directly by environmental resonance pressure.
-
 Unlike ordinary creatures, Ogres exhibit:
 - terrain mimicry,
 - environmental synchronization,
@@ -572,12 +653,9 @@ Unlike ordinary creatures, Ogres exhibit:
 - and ecosystem-level territorial behavior.
 
 Some scholars argue Ogres are not separate species at all.
-
 Instead, they may represent:
 "the same primordial organism repeatedly rewritten by different regions of Soteria."
-
 This theory remains heavily disputed.
-
 Wyth scholars classify Ogre emergence zones as:
 HIGH RESONANCE STRESS ENVIRONMENTS.
 

@@ -166,6 +166,17 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true, onP
   })();
 
   const [buttonPos, setButtonPos] = useState(savedPos || { x: 24, y: 140 });
+  const savedWindowPos = (() => {
+  try {
+    return JSON.parse(localStorage.getItem('herculesWindowPos'));
+  } catch {
+    return null;
+  }
+})();
+
+const [windowPos, setWindowPos] = useState(savedWindowPos || { x: 120, y: 76 });
+const [isWindowDragging, setIsWindowDragging] = useState(false);
+const windowDragOffset = useRef({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [open, setOpen] = useState(false);
@@ -203,6 +214,10 @@ useEffect(() => {
   useEffect(() => {
     localStorage.setItem('herculesButtonPos', JSON.stringify(buttonPos));
   }, [buttonPos]);
+
+  useEffect(() => {
+  localStorage.setItem('herculesWindowPos', JSON.stringify(windowPos));
+}, [windowPos]);
 
   useEffect(() => {
     if (!campaignId && firstCampaignId) {
@@ -988,6 +1003,41 @@ const removeCombatantFromTracker = async row => {
     moved.current = false;
     setIsDragging(true);
   };
+
+  const startWindowDrag = event => {
+  const point = event.touches ? event.touches[0] : event;
+
+  windowDragOffset.current = {
+    x: point.clientX - windowPos.x,
+    y: point.clientY - windowPos.y,
+  };
+
+  setIsWindowDragging(true);
+};
+
+const onWindowMove = useCallback(
+  event => {
+    if (!isWindowDragging) return;
+
+    const point = event.touches ? event.touches[0] : event;
+
+    const shellWidth = Math.min(1100, window.innerWidth - 48);
+    const shellHeight = Math.min(760, window.innerHeight - 110);
+
+    const nextX = point.clientX - windowDragOffset.current.x;
+    const nextY = point.clientY - windowDragOffset.current.y;
+
+    setWindowPos({
+      x: Math.max(8, Math.min(window.innerWidth - shellWidth - 8, nextX)),
+      y: Math.max(8, Math.min(window.innerHeight - shellHeight - 8, nextY)),
+    });
+  },
+  [isWindowDragging, windowPos.x, windowPos.y]
+);
+
+const stopWindowDrag = useCallback(() => {
+  setIsWindowDragging(false);
+}, []);
 
   const onMove = useCallback(
     event => {
