@@ -1198,6 +1198,8 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   const [showCastor, setShowCastor]       = useState(false);
   const [castorHovered, setCastorHovered] = useState(false);
   const [castorBadge, setCastorBadge]     = useState(0);
+  const timer      = useSessionTimer(campaign.id);
+  const isAssigned = userChar?.campaign === String(campaign.id);
 
   // Poll lootbox count for badge
   useEffect(() => {
