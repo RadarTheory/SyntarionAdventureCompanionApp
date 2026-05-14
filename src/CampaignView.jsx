@@ -9,6 +9,8 @@ import AbilitiesPanel from './AbilitiesPanel';
 import CastorPanel from './CastorPanel';
 import FloatToolbar from './FloatToolbar';
 import ArgusPlayerPanel from './Argus';
+import BestiaryPanel from './BestiaryPanel';
+import { ScribePlayerPanel } from './ScribePanel';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -1491,6 +1493,12 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
       />
     ),
   },
+  {
+  id: 'scribe',
+  title: 'The Scribe — Archives',
+  onClick: () => setShowScribe(o => !o),
+  children: <img src="/scribeicon.png" alt="Scribe" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+},
 ]} />
    
       {/* Astragal panel */}
@@ -1509,17 +1517,20 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   </DraggablePanel>
 )}
 
-        {showCastor && (
-      <CastorPanel
-        char={userChar}
-        campaignId={String(campaign.id)}
-        onClose={() => setShowCastor(false)}
-        onBadgeChange={setCastorBadge}
-      />
-    )}
+       {showCastor && (
+  <DraggablePanel defaultX={108} defaultY={160} onClose={() => setShowCastor(false)} title="CASTOR · Spell-Casting & Schematics" width={360} accentColor="rgba(56,189,248,0.35)">
+    <CastorPanel char={userChar} campaignId={String(campaign.id)} onClose={() => setShowCastor(false)} onBadgeChange={setCastorBadge} embedded />
+  </DraggablePanel>
+)}
 
     {showArgus && (
   <ArgusPlayerPanel char={userChar} onClose={() => setShowArgus(false)} />
+)}
+
+    {showBestiary && (
+  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowBestiary(false)} title="BESTIARY · Creatures of Soteria" width={380} accentColor="rgba(168,230,163,0.3)">
+    <BestiaryPanel isDM={false} campaignId={String(campaign.id)} embedded />
+  </DraggablePanel>
 )}
 
       {/* Header */}
@@ -1570,7 +1581,6 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   );
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
 export default function CampaignView({ userChar, onHome, onAssign }) {
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   if (selectedCampaign) {

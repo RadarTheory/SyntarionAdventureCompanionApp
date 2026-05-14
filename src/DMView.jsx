@@ -16,6 +16,7 @@ import FloatToolbar from './FloatToolbar';
 import CastorDMPanel from './CastorDMPanel';
 import { ArgusDMPanel } from './Argus';
 import BestiaryPanel from './BestiaryPanel';
+import { ScribeDMPanel } from './ScribePanel';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -578,7 +579,6 @@ function MusicPanel() {
   );
 }
 
-
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN DM VIEW
 // ═════════════════════════════════════════════════════════════════════════════
@@ -1003,7 +1003,7 @@ const logDmAstragalToHercules = async payload => {
         })}
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+             <div style={{ flex: 1, overflowY: 'auto' }}>
         <div style={{ padding: isMobile ? '20px 16px' : '28px 32px', maxWidth: 740, width: '100%', margin: '0 auto' }}>
           {loading ? <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 13 }}>Consulting the archives…</div> : renderTab()}
         </div>
@@ -1021,6 +1021,12 @@ const logDmAstragalToHercules = async payload => {
       <CastorDMPanel onPendingChange={setCastorBadge} />
     </div>
   </div>
+)}
+
+{showScribe && (
+  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribe(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
+    <ScribePlayerPanel char={userChar} campaignId={String(campaign.id)} onUpdateChar={char => onAssign(char.campaign)} embedded />
+  </DraggablePanel>
 )}
 
 <FloatToolbar buttons={[
@@ -1123,11 +1129,13 @@ const logDmAstragalToHercules = async payload => {
   id: 'bestiary',
   title: 'Bestiary — Creatures of Soteria',
   onClick: () => setShowBestiary(o => !o),
-  children: (
-    <svg viewBox="0 0 40 40" style={{ width: '65%', height: '65%', pointerEvents: 'none' }}>
-      <text x="20" y="28" textAnchor="middle" fill="#a8e6a3" fontSize="24" fontFamily="serif">☽</text>
-    </svg>
-  ),
+  children: <img src="/bestiaryicon.png" alt="Bestiary" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+},
+{
+  id: 'scribe',
+  title: 'The Scribe — Archives',
+  onClick: () => setShowScribePanel(o => !o),
+  children: <img src="/scribeicon.png" alt="Scribe" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
 },
 ]} />
     </div>
