@@ -15,6 +15,7 @@ import HerculesCombat from './HerculesCombat';
 import FloatToolbar from './FloatToolbar';
 import CastorDMPanel from './CastorDMPanel';
 import { ArgusDMPanel } from './Argus';
+import BestiaryPanel from './BestiaryPanel';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -1118,6 +1119,16 @@ const logDmAstragalToHercules = async payload => {
       />
     ),
   },
+  {
+  id: 'bestiary',
+  title: 'Bestiary — Creatures of Soteria',
+  onClick: () => setShowBestiary(o => !o),
+  children: (
+    <svg viewBox="0 0 40 40" style={{ width: '65%', height: '65%', pointerEvents: 'none' }}>
+      <text x="20" y="28" textAnchor="middle" fill="#a8e6a3" fontSize="24" fontFamily="serif">☽</text>
+    </svg>
+  ),
+},
 ]} />
     </div>
   );
