@@ -1221,6 +1221,8 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   const [showAstragal, setShowAstragal] = useState(false);
   const [showHercules, setShowHercules] = useState(false);
   const [showArgus, setShowArgus] = useState(false);
+  const [showBestiary, setShowBestiary] = useState(false);
+  const [showScribe, setShowScribe]     = useState(false);
   
   // Poll lootbox count for badge
   useEffect(() => {
@@ -1399,27 +1401,6 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
 
 <FloatToolbar buttons={[
   {
-    id: 'home',
-    title: 'Campaigns',
-    onClick: onBack,
-    children: (
-      <div style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#c9b991',
-        fontFamily: "'Cinzel', serif",
-        fontSize: 16,
-        lineHeight: 1,
-        pointerEvents: 'none',
-      }}>
-        ^
-      </div>
-    ),
-  },
-  {
   id: 'astragal',
   title: 'Astragal — Roll the dice',
   onClick: () => setShowAstragal(o => !o),
@@ -1494,6 +1475,12 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
     ),
   },
   {
+  id: 'bestiary',
+  title: 'Bestiary — Creatures of Soteria',
+  onClick: () => setShowBestiary(o => !o),
+  children: <img src="/bestiaryicon.png" alt="Bestiary" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+},
+  {
   id: 'scribe',
   title: 'The Scribe — Archives',
   onClick: () => setShowScribe(o => !o),
@@ -1530,6 +1517,12 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
     {showBestiary && (
   <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowBestiary(false)} title="BESTIARY · Creatures of Soteria" width={380} accentColor="rgba(168,230,163,0.3)">
     <BestiaryPanel isDM={false} campaignId={String(campaign.id)} embedded />
+  </DraggablePanel>
+)}
+
+{showScribe && (
+  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribe(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
+    <ScribePlayerPanel char={userChar} campaignId={String(campaign.id)} onUpdateChar={char => onAssign(char.campaign)} embedded />
   </DraggablePanel>
 )}
 

@@ -1030,28 +1030,7 @@ const logDmAstragalToHercules = async payload => {
 )}
 
 <FloatToolbar buttons={[
-  {
-    id: 'home',
-    title: 'Home',
-    onClick: onHome,
-    children: (
-      <div style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#c9b991',
-        fontFamily: "'Cinzel', serif",
-        fontSize: 16,
-        lineHeight: 1,
-        pointerEvents: 'none',
-      }}>
-        ^
-      </div>
-    ),
-  },
-  {
+ {
   id: 'astragal',
   title: 'Astragal — Roll the dice',
   onClick: () => setShowAstragal(o => !o),
