@@ -20,7 +20,7 @@ const CAT_COLOR = {
 };
 
 const CAMPAIGNS = ['I', 'II', 'III', 'IV'];
-const CAMPAIGN_NAMES = { I: 'Veinrunner', II: 'Keys of Aerithos', III: 'Prints from Gamdon', IV: 'Veyline' };
+const CAMPAIGN_NAMES = { I: 'Veinrunner', II: 'Keys of Aerifthos', III: 'Prints from Gamdon', IV: 'Veyline' };
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -341,8 +341,8 @@ export function ArgusPlayerPanel({ char, onClose }) {
       <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(200,168,74,0.15)', background: 'rgba(200,168,74,0.04)', flexShrink: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#e8c84a', letterSpacing: '0.16em', fontWeight: 700 }}>ARGUS</div>
-            <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>{char?.name || 'Unknown'} · Pack & Equipment</div>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#e8c84a', letterSpacing: '0.16em', fontWeight: 700 }}>{char?.name || 'Unknown'}</div>
+            <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>ARGUS · Pack & Equipment</div>
           </div>
           <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
         </div>
