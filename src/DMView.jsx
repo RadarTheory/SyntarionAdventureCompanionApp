@@ -603,7 +603,7 @@ export default function DMView({ onHome }) {
   const [showCastor, setShowCastor]   = useState(false);
   const [castorBadge, setCastorBadge] = useState(0);
   const [showHercules, setShowHercules] = useState(false);
-  const [showAstragal, setShowAstragal] = useState(false);
+const [showAstragal, setShowAstragal] = useState(false);
   
   
   // LOBBY STATE
