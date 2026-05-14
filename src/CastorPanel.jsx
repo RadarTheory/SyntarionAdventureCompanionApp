@@ -1,3 +1,55 @@
+// ─── CASTOR ───────────────────────────────────────────────────────────────────
+// Spell-Casting & Schematics approval system — player side.
+//
+// INTEGRATION into CampaignView.jsx:
+//
+// 1. Import at top:
+//    import CastorPanel from './CastorPanel';
+//
+// 2. Add state in CampaignDashboard:
+//    const [showCastor, setShowCastor]       = useState(false);
+//    const [castorHovered, setCastorHovered] = useState(false);
+//    const [castorBadge, setCastorBadge]     = useState(0);
+//
+// 3. Add FloatButton (after the HERCULES FloatButton):
+//    <FloatButton storageKey="playerCastorPos" defaultPos={{ x: 24, y: 360 }}
+//      onClick={() => setShowCastor(o => !o)} title="CASTOR — Cast Request"
+//      hovered={castorHovered} onHover={setCastorHovered}>
+//      <img src="/castoricon.png" alt="CASTOR" draggable={false}
+//        style={{ width: '100%', height: '100%', objectFit: 'cover',
+//          filter: castorHovered
+//            ? 'brightness(1.3) drop-shadow(0 0 10px rgba(56,189,248,0.7))'
+//            : 'brightness(1.0) drop-shadow(0 0 6px rgba(56,189,248,0.3))',
+//          pointerEvents: 'none' }} />
+//      {castorBadge > 0 && (
+//        <span style={{ position: 'absolute', top: 4, right: 4,
+//          background: COLORS.magic, color: '#120e0a', borderRadius: '50%',
+//          width: 16, height: 16, fontSize: 8, fontFamily: 'monospace',
+//          fontWeight: 700, display: 'flex', alignItems: 'center',
+//          justifyContent: 'center', lineHeight: 1 }}>
+//          {castorBadge > 9 ? '9+' : castorBadge}
+//        </span>
+//      )}
+//    </FloatButton>
+//
+// 4. Add panel (after HerculesLite panel):
+//    {showCastor && (
+//      <CastorPanel
+//        char={userChar}
+//        campaignId={String(campaign.id)}
+//        onClose={() => setShowCastor(false)}
+//        onBadgeChange={setCastorBadge}
+//      />
+//    )}
+//
+// 5. Update AbilitiesPanel cast button — pass onCastRequest prop and call it
+//    instead of onRoll when submitting. See submitCastRequest() below for the
+//    insert shape.
+//
+// 6. Push:
+//    git add .; git commit -m "feat: CastorPanel — cast request system player side"; git push
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { useState, useEffect, useRef } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
