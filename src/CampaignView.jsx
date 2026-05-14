@@ -1201,6 +1201,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   const isAssigned = userChar?.campaign === String(campaign.id);
   const [showAstragal, setShowAstragal] = useState(false);
   const [showHercules, setShowHercules] = useState(false);
+  const [showArgus, setShowArgus] = useState(false);
   
 
   // Poll lootbox count for badge
@@ -1378,27 +1379,109 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
     <div style={{ minHeight: '100vh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap'); * { box-sizing: border-box; } body { margin: 0; }`}</style>
 
-      <FloatToolbar buttons={[
+<FloatToolbar buttons={[
   {
-    id: 'astragal', title: 'Astragal — Roll the dice',
+    id: 'home',
+    title: 'Campaigns',
+    onClick: onBack,
+    children: (
+      <div style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#c9b991',
+        fontFamily: "'Cinzel', serif",
+        fontSize: 16,
+        lineHeight: 1,
+        pointerEvents: 'none',
+      }}>
+        ^
+      </div>
+    ),
+  },
+  {
+    id: 'astragal',
+    title: 'Astragal — Roll the dice',
     onClick: () => setShowAstragal(o => !o),
     children: (
       <svg viewBox="0 0 40 40" style={{ width: '60%', height: '60%' }}>
-        <polygon points="20,2 38,12 38,28 20,38 2,28 2,12" fill="none" stroke="#c9b991" strokeWidth="1.5"/>
-        <text x="20" y="25" textAnchor="middle" fill="#c9b991" fontSize="12" fontFamily="serif" fontWeight="bold">20</text>
+        <polygon
+          points="20,2 38,12 38,28 20,38 2,28 2,12"
+          fill="none"
+          stroke="#c9b991"
+          strokeWidth="1.5"
+        />
+        <text
+          x="20"
+          y="25"
+          textAnchor="middle"
+          fill="#c9b991"
+          fontSize="12"
+          fontFamily="serif"
+          fontWeight="bold"
+        >
+          20
+        </text>
       </svg>
     ),
   },
   {
-    id: 'hercules', title: 'HERCULES — Combat Tracker',
+    id: 'hercules',
+    title: 'HERCULES — Combat Tracker',
     onClick: () => setShowHercules(o => !o),
-    children: <img src="/HerculesCombat.png" alt="HERCULES" draggable={false} style={{ width: '150%', height: '150%', objectFit: 'contain', filter: 'invert(1) brightness(1.28)', pointerEvents: 'none' }} />,
+    children: (
+      <img
+        src="/HerculesCombat.png"
+        alt="HERCULES"
+        draggable={false}
+        style={{
+          width: '150%',
+          height: '150%',
+          objectFit: 'contain',
+          filter: 'invert(1) brightness(1.28)',
+          pointerEvents: 'none',
+        }}
+      />
+    ),
   },
   {
-    id: 'castor', title: 'CASTOR — Cast Request',
+    id: 'argus',
+    title: 'ARGUS — My Gear, Pack, and Revealed Chests',
+    onClick: () => setShowArgus(o => !o),
+    children: (
+      <img
+        src="/Backpackicon.png"
+        alt="ARGUS"
+        draggable={false}
+        style={{
+          width: '105%',
+          height: '105%',
+          objectFit: 'contain',
+          pointerEvents: 'none',
+        }}
+      />
+    ),
+  },
+  {
+    id: 'castor',
+    title: 'CASTOR — Cast Request',
     onClick: () => setShowCastor(o => !o),
     badge: castorBadge,
-    children: <img src="/castoricon.png" alt="CASTOR" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+    children: (
+      <img
+        src="/castoricon.png"
+        alt="CASTOR"
+        draggable={false}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          pointerEvents: 'none',
+        }}
+      />
+    ),
   },
 ]} />
    

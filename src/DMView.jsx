@@ -603,8 +603,8 @@ export default function DMView({ onHome }) {
   const [showCastor, setShowCastor]   = useState(false);
   const [castorBadge, setCastorBadge] = useState(0);
   const [showHercules, setShowHercules] = useState(false);
-const [showAstragal, setShowAstragal] = useState(false);
-  
+  const [showAstragal, setShowAstragal] = useState(false);
+  const [showArgus, setShowArgus] = useState(false);
   
   // LOBBY STATE
   const [checkedInPlayers, setCheckedInPlayers] = useState([]);
@@ -1006,6 +1006,7 @@ const logDmAstragalToHercules = async payload => {
           {loading ? <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 13 }}>Consulting the archives…</div> : renderTab()}
         </div>
       </div>
+      {showArgus && <ArgusPanel onClose={() => setShowArgus(false)} />}
       {showHercules && <HerculesCombat defaultCampaignId={activeCampaignTab} onClose={() => setShowHercules(false)} />}
 {showAstragal && <AstragalButton character={characters?.[0]} onResult={logDmAstragalToHercules} onClose={() => setShowAstragal(false)} />}
 {showCastor && (
@@ -1022,28 +1023,107 @@ const logDmAstragalToHercules = async payload => {
 
 <FloatToolbar buttons={[
   {
-    id: 'astragal-dm',
+    id: 'home',
+    title: 'Campaigns',
+    onClick: onBack,
+    children: (
+      <div style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#c9b991',
+        fontFamily: "'Cinzel', serif",
+        fontSize: 16,
+        lineHeight: 1,
+        pointerEvents: 'none',
+      }}>
+        ^
+      </div>
+    ),
+  },
+  {
+    id: 'astragal',
     title: 'Astragal — Roll the dice',
     onClick: () => setShowAstragal(o => !o),
     children: (
       <svg viewBox="0 0 40 40" style={{ width: '60%', height: '60%' }}>
-        <polygon points="20,2 38,12 38,28 20,38 2,28 2,12" fill="none" stroke="#c9b991" strokeWidth="1.5"/>
-        <text x="20" y="25" textAnchor="middle" fill="#c9b991" fontSize="12" fontFamily="serif" fontWeight="bold">20</text>
+        <polygon
+          points="20,2 38,12 38,28 20,38 2,28 2,12"
+          fill="none"
+          stroke="#c9b991"
+          strokeWidth="1.5"
+        />
+        <text
+          x="20"
+          y="25"
+          textAnchor="middle"
+          fill="#c9b991"
+          fontSize="12"
+          fontFamily="serif"
+          fontWeight="bold"
+        >
+          20
+        </text>
       </svg>
     ),
   },
   {
-    id: 'hercules-dm',
+    id: 'hercules',
     title: 'HERCULES — Combat Tracker',
     onClick: () => setShowHercules(o => !o),
-    children: <img src="/HerculesCombat.png" alt="HERCULES" draggable={false} style={{ width: '150%', height: '150%', objectFit: 'contain', filter: 'invert(1) brightness(1.28)', pointerEvents: 'none' }} />,
+    children: (
+      <img
+        src="/HerculesCombat.png"
+        alt="HERCULES"
+        draggable={false}
+        style={{
+          width: '150%',
+          height: '150%',
+          objectFit: 'contain',
+          filter: 'invert(1) brightness(1.28)',
+          pointerEvents: 'none',
+        }}
+      />
+    ),
   },
   {
-    id: 'castor-dm',
-    title: 'CASTOR — Cast Requests',
+    id: 'argus',
+    title: 'ARGUS — My Gear, Pack, and Revealed Chests',
+    onClick: () => setShowArgus(o => !o),
+    children: (
+      <img
+        src="/Backpackicon.png"
+        alt="ARGUS"
+        draggable={false}
+        style={{
+          width: '105%',
+          height: '105%',
+          objectFit: 'contain',
+          pointerEvents: 'none',
+        }}
+      />
+    ),
+  },
+  {
+    id: 'castor',
+    title: 'CASTOR — Cast Request',
     onClick: () => setShowCastor(o => !o),
     badge: castorBadge,
-    children: <img src="/castoricon.png" alt="CASTOR" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+    children: (
+      <img
+        src="/castoricon.png"
+        alt="CASTOR"
+        draggable={false}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          pointerEvents: 'none',
+        }}
+      />
+    ),
   },
 ]} />
     </div>
