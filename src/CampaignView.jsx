@@ -8,6 +8,7 @@ import Astragal from './Astragal';
 import AbilitiesPanel from './AbilitiesPanel';
 import CastorPanel from './CastorPanel';
 import FloatToolbar from './FloatToolbar';
+import ArgusPlayerPanel from './Argus';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -1203,7 +1204,6 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   const [showHercules, setShowHercules] = useState(false);
   const [showArgus, setShowArgus] = useState(false);
   
-
   // Poll lootbox count for badge
   useEffect(() => {
     const fetchCount = async () => {
@@ -1402,31 +1402,23 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
     ),
   },
   {
-    id: 'astragal',
-    title: 'Astragal — Roll the dice',
-    onClick: () => setShowAstragal(o => !o),
-    children: (
-      <svg viewBox="0 0 40 40" style={{ width: '60%', height: '60%' }}>
-        <polygon
-          points="20,2 38,12 38,28 20,38 2,28 2,12"
-          fill="none"
-          stroke="#c9b991"
-          strokeWidth="1.5"
-        />
-        <text
-          x="20"
-          y="25"
-          textAnchor="middle"
-          fill="#c9b991"
-          fontSize="12"
-          fontFamily="serif"
-          fontWeight="bold"
-        >
-          20
-        </text>
-      </svg>
-    ),
-  },
+  id: 'astragal',
+  title: 'Astragal — Roll the dice',
+  onClick: () => setShowAstragal(o => !o),
+  children: (
+    <img
+      src="/AstragalButton.png"
+      alt="Astragal"
+      draggable={false}
+      style={{
+        width: '118%',
+        height: '118%',
+        objectFit: 'contain',
+        pointerEvents: 'none',
+      }}
+    />
+  ),
+},
   {
     id: 'hercules',
     title: 'HERCULES — Combat Tracker',
@@ -1448,7 +1440,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   },
   {
     id: 'argus',
-    title: 'ARGUS — My Gear, Pack, and Revealed Chests',
+    title: 'ARGUS — My Gear, Pack & Equipment',
     onClick: () => setShowArgus(o => !o),
     children: (
       <img
@@ -1509,6 +1501,10 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
         onBadgeChange={setCastorBadge}
       />
     )}
+
+    {showArgus && (
+  <ArgusPlayerPanel char={userChar} onClose={() => setShowArgus(false)} />
+)}
 
       {/* Header */}
       <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>

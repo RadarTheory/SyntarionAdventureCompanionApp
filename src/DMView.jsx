@@ -14,6 +14,7 @@ import VTTCanvas from './VTTCanvas';
 import HerculesCombat from './HerculesCombat';
 import FloatToolbar from './FloatToolbar';
 import CastorDMPanel from './CastorDMPanel';
+import { ArgusDMPanel } from './Argus';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -1006,7 +1007,7 @@ const logDmAstragalToHercules = async payload => {
           {loading ? <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 13 }}>Consulting the archives…</div> : renderTab()}
         </div>
       </div>
-      {showArgus && <ArgusPanel onClose={() => setShowArgus(false)} />}
+      {showArgus && <ArgusDMPanel onClose={() => setShowArgus(false)} />}
       {showHercules && <HerculesCombat defaultCampaignId={activeCampaignTab} onClose={() => setShowHercules(false)} />}
 {showAstragal && <AstragalButton character={characters?.[0]} onResult={logDmAstragalToHercules} onClose={() => setShowAstragal(false)} />}
 {showCastor && (
