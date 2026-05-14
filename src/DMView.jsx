@@ -582,7 +582,7 @@ function MusicPanel() {
 // ═════════════════════════════════════════════════════════════════════════════
 const DM_TABS = ['Inbox', 'Characters', 'Campaigns', 'Scribe', 'Memory', 'Catalog', 'Maps', 'VTT'];
 
-export default function DMView({ onHome }) {
+export default function DMView({ user, session, onHome }) {
   const { isMobile } = useDevice();
   const [activeTab, setActiveTab] = useState('Inbox');
   const [characters, setCharacters] = useState([]);
@@ -1024,8 +1024,8 @@ const logDmAstragalToHercules = async payload => {
 <FloatToolbar buttons={[
   {
     id: 'home',
-    title: 'Campaigns',
-    onClick: onBack,
+    title: 'Home',
+    onClick: onHome,
     children: (
       <div style={{
         width: '100%',
@@ -1044,31 +1044,23 @@ const logDmAstragalToHercules = async payload => {
     ),
   },
   {
-    id: 'astragal',
-    title: 'Astragal — Roll the dice',
-    onClick: () => setShowAstragal(o => !o),
-    children: (
-      <svg viewBox="0 0 40 40" style={{ width: '60%', height: '60%' }}>
-        <polygon
-          points="20,2 38,12 38,28 20,38 2,28 2,12"
-          fill="none"
-          stroke="#c9b991"
-          strokeWidth="1.5"
-        />
-        <text
-          x="20"
-          y="25"
-          textAnchor="middle"
-          fill="#c9b991"
-          fontSize="12"
-          fontFamily="serif"
-          fontWeight="bold"
-        >
-          20
-        </text>
-      </svg>
-    ),
-  },
+  id: 'astragal',
+  title: 'Astragal — Roll the dice',
+  onClick: () => setShowAstragal(o => !o),
+  children: (
+    <img
+      src="/AstragalButton.png"
+      alt="Astragal"
+      draggable={false}
+      style={{
+        width: '118%',
+        height: '118%',
+        objectFit: 'contain',
+        pointerEvents: 'none',
+      }}
+    />
+  ),
+},
   {
     id: 'hercules',
     title: 'HERCULES — Combat Tracker',
