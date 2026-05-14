@@ -7,6 +7,7 @@ import VTTViewer from './VTTViewer';
 import Astragal from './Astragal';
 import AbilitiesPanel from './AbilitiesPanel';
 import CastorPanel from './CastorPanel';
+import FloatToolbar from './FloatToolbar';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -1188,8 +1189,6 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   const { isMobile } = useDevice();
   const [activeTab, setActiveTab]     = useState('Map');
   const [assigning, setAssigning]     = useState(false);
-  const [showAstragal, setShowAstragal] = useState(false);
-  const [showHercules, setShowHercules] = useState(false);
   const [astHovered, setAstHovered]   = useState(false);
   const [hercHovered, setHercHovered] = useState(false);
   const [rollingAction, setRollingAction] = useState(null);
@@ -1200,6 +1199,9 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   const [castorBadge, setCastorBadge]     = useState(0);
   const timer      = useSessionTimer(campaign.id);
   const isAssigned = userChar?.campaign === String(campaign.id);
+  const [showAstragal, setShowAstragal] = useState(false);
+  const [showHercules, setShowHercules] = useState(false);
+  
 
   // Poll lootbox count for badge
   useEffect(() => {
@@ -1376,40 +1378,29 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
     <div style={{ minHeight: '100vh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap'); * { box-sizing: border-box; } body { margin: 0; }`}</style>
 
-      {/* Floating Astragal button */}
-      <FloatButton storageKey="playerAstragalPos" defaultPos={{ x: 24, y: 180 }} onClick={() => setShowAstragal(o => !o)} title="Astragal — Roll the dice" hovered={astHovered} onHover={setAstHovered}>
-        <svg viewBox="0 0 40 40" style={{ width: '60%', height: '60%' }}>
-          <polygon points="20,2 38,12 38,28 20,38 2,28 2,12" fill="none" stroke={astHovered ? '#e8d9a7' : '#c9b991'} strokeWidth="1.5"/>
-          <text x="20" y="25" textAnchor="middle" fill={astHovered ? '#e8d9a7' : '#c9b991'} fontSize="12" fontFamily="serif" fontWeight="bold">20</text>
-        </svg>
-      </FloatButton>
-
-      {/* Floating HERCULES button */}
-      <FloatButton storageKey="playerHerculesPos" defaultPos={{ x: 24, y: 270 }} onClick={() => setShowHercules(o => !o)} title="HERCULES — Combat Tracker" hovered={hercHovered} onHover={setHercHovered}>
-        <img src="/HerculesCombat.png" alt="HERCULES" draggable={false}
-          style={{ width: '150%', height: '150%', objectFit: 'contain', filter: hercHovered ? 'invert(1) brightness(1.45) drop-shadow(0 0 12px rgba(232,217,167,0.65))' : 'invert(1) brightness(1.28) drop-shadow(0 0 9px rgba(232,217,167,0.45))', pointerEvents: 'none' }} />
-      </FloatButton>
-
-{/* Floating Castor button */}
-      <FloatButton storageKey="playerCastorPos" defaultPos={{ x: 24, y: 360 }}
-      onClick={() => setShowCastor(o => !o)} title="CASTOR — Cast Request"
-      hovered={castorHovered} onHover={setCastorHovered}>
-      <img src="/castoricon.png" alt="CASTOR" draggable={false}
-        style={{ width: '100%', height: '100%', objectFit: 'cover',
-          filter: castorHovered
-            ? 'brightness(1.3) drop-shadow(0 0 10px rgba(56,189,248,0.7))'
-            : 'brightness(1.0) drop-shadow(0 0 6px rgba(56,189,248,0.3))',
-          pointerEvents: 'none' }} />
-      {castorBadge > 0 && (
-        <span style={{ position: 'absolute', top: 4, right: 4,
-          background: COLORS.magic, color: '#120e0a', borderRadius: '50%',
-          width: 16, height: 16, fontSize: 8, fontFamily: 'monospace',
-          fontWeight: 700, display: 'flex', alignItems: 'center',
-          justifyContent: 'center', lineHeight: 1 }}>
-          {castorBadge > 9 ? '9+' : castorBadge}
-       </span>
-      )}
-    </FloatButton>
+      <FloatToolbar buttons={[
+  {
+    id: 'astragal', title: 'Astragal — Roll the dice',
+    onClick: () => setShowAstragal(o => !o),
+    children: (
+      <svg viewBox="0 0 40 40" style={{ width: '60%', height: '60%' }}>
+        <polygon points="20,2 38,12 38,28 20,38 2,28 2,12" fill="none" stroke="#c9b991" strokeWidth="1.5"/>
+        <text x="20" y="25" textAnchor="middle" fill="#c9b991" fontSize="12" fontFamily="serif" fontWeight="bold">20</text>
+      </svg>
+    ),
+  },
+  {
+    id: 'hercules', title: 'HERCULES — Combat Tracker',
+    onClick: () => setShowHercules(o => !o),
+    children: <img src="/HerculesCombat.png" alt="HERCULES" draggable={false} style={{ width: '150%', height: '150%', objectFit: 'contain', filter: 'invert(1) brightness(1.28)', pointerEvents: 'none' }} />,
+  },
+  {
+    id: 'castor', title: 'CASTOR — Cast Request',
+    onClick: () => setShowCastor(o => !o),
+    badge: castorBadge,
+    children: <img src="/castoricon.png" alt="CASTOR" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+  },
+]} />
    
       {/* Astragal panel */}
       {showAstragal && (
