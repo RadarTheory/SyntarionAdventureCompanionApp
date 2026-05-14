@@ -117,6 +117,29 @@ function FloatButton({ storageKey, defaultPos, children, onClick, title, hovered
   );
 }
 
+function DraggablePanel({ defaultX, defaultY, onClose, title, width, accentColor, children }) {
+  const [pos, setPos] = useState({ x: defaultX, y: defaultY });
+  const dragging = useRef(false);
+  const offset = useRef({ x: 0, y: 0 });
+  const onMouseDown = (e) => { dragging.current = true; offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }; e.preventDefault(); };
+  const onTouchStart = (e) => { dragging.current = true; const t = e.touches[0]; offset.current = { x: t.clientX - pos.x, y: t.clientY - pos.y }; };
+  useEffect(() => {
+    const onMove = (e) => { if (!dragging.current) return; const p = e.touches ? e.touches[0] : e; setPos({ x: Math.max(0, Math.min(window.innerWidth - width - 8, p.clientX - offset.current.x)), y: Math.max(0, Math.min(window.innerHeight - 80, p.clientY - offset.current.y)) }); };
+    const onUp = () => { dragging.current = false; };
+    window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp); window.addEventListener('touchmove', onMove, { passive: false }); window.addEventListener('touchend', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onUp); };
+  }, [width]);
+  return (
+    <div style={{ position: 'fixed', left: pos.x, top: pos.y, width, maxHeight: '80vh', zIndex: 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: `1px solid ${accentColor}`, borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
+      <div onMouseDown={onMouseDown} onTouchStart={onTouchStart} style={{ padding: '10px 14px', borderBottom: `1px solid ${accentColor}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'grab', background: 'rgba(255,255,255,0.03)', flexShrink: 0, userSelect: 'none' }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8d9a7', letterSpacing: '0.12em' }}>⠿ {title}</div>
+        <button onClick={onClose} style={{ background: 'transparent', border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 4, padding: '3px 7px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto' }}>{children}</div>
+    </div>
+  );
+}
+
 // ─── HERCULES LITE ────────────────────────────────────────────────────────────
 function HerculesLite({ campaignId, char, onClose }) {
   const [session, setSession]         = useState(null);
@@ -181,15 +204,8 @@ function HerculesLite({ campaignId, char, onClose }) {
   const alreadyRolled = submitted || initiative.some(r => r.character_id === char?.id);
 
   return (
-    <div style={{ position: 'fixed', bottom: 24, left: 108, width: 340, maxHeight: 560, zIndex: 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: '1px solid rgba(200,168,74,0.35)', borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(200,168,74,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(200,168,74,0.06)' }}>
-        <div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#e8d9a7', letterSpacing: '0.14em' }}>HERCULES</div>
-          <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{session ? 'Combat Active' : 'Awaiting Combat'}</div>
-        </div>
-        <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
-      </div>
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {!session ? (
           <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', marginTop: 20 }}>No active combat. The Architect will call for battle.</div>
         ) : (
@@ -1479,19 +1495,19 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
    
       {/* Astragal panel */}
       {showAstragal && (
-        <div style={{ position: 'fixed', bottom: 24, left: 108, width: 320, zIndex: 200000, background: '#13100d', border: `1px solid rgba(240,238,235,0.12)`, borderRadius: 14, boxShadow: '0 24px 64px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
-          <div style={{ padding: '10px 14px', borderBottom: `1px solid rgba(240,238,235,0.08)`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.deity, letterSpacing: '0.1em' }}>Astragal — Fate Cast in Bone</div>
-            <button onClick={() => setShowAstragal(false)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '3px 7px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
-          </div>
-          <div style={{ padding: 14 }}>
-            <Astragal character={userChar} actionName="Astragal Roll" statKey="will" onResult={logRoll} />
-          </div>
-        </div>
-      )}
+  <DraggablePanel defaultX={108} defaultY={300} onClose={() => setShowAstragal(false)} title="Astragal — Fate Cast in Bone" width={320} accentColor="rgba(240,238,235,0.12)">
+    <div style={{ padding: 14 }}>
+      <Astragal character={userChar} actionName="Astragal Roll" statKey="will" onResult={logRoll} />
+    </div>
+  </DraggablePanel>
+)}
 
       {/* HERCULES lite panel */}
-      {showHercules && <HerculesLite campaignId={String(campaign.id)} char={userChar} onClose={() => setShowHercules(false)} />}
+      {showHercules && (
+  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowHercules(false)} title="HERCULES" width={340} accentColor="rgba(200,168,74,0.35)">
+    <HerculesLite campaignId={String(campaign.id)} char={userChar} onClose={() => setShowHercules(false)} embedded />
+  </DraggablePanel>
+)}
 
         {showCastor && (
       <CastorPanel
