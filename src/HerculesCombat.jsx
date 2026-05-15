@@ -67,7 +67,7 @@ function createScribeSuggestion(event) {
   const total = Number(event.total ?? event.roll ?? 0);
   const action = event.description || event.type || 'action';
   const actor = event.actor_name || 'The combatant';
-  
+
 
   if (event.type === 'initiative') {
     return `${actor} enters the fray with initiative ${total}. Suggested outcome: place them in descending turn order and begin tracking their actions.`;
@@ -96,22 +96,12 @@ function createScribeSuggestion(event) {
   return `${actor}'s ${action} likely fails or creates an opening. Suggested outcome: miss, blocked attempt, enemy advantage, or consequence.`;
 }
 
-function HerculesLogoImage({ hovered = false, darkMode = true, size = 56 }) {
+function HerculesLogoImage({ size = 56 }) {
   const [failed, setFailed] = useState(false);
 
   if (failed) {
     return (
-      <div
-        style={{
-          width: size,
-          height: size,
-          borderRadius: '50%',
-          background: darkMode ? '#e8d9a7' : '#100d0a',
-          border: darkMode
-            ? '1px solid rgba(232,217,167,0.75)'
-            : '1px solid rgba(70,50,25,0.45)',
-        }}
-      />
+      <div style={{ width: size, height: size, borderRadius: '50%', background: '#1a1410', border: '1px solid rgba(232,217,167,0.3)' }} />
     );
   }
 
@@ -121,24 +111,7 @@ function HerculesLogoImage({ hovered = false, darkMode = true, size = 56 }) {
       alt="HERCULES"
       draggable={false}
       onError={() => setFailed(true)}
-      style={{
-        width: size,
-        height: size,
-        objectFit: 'contain',
-        display: 'block',
-        // brightness pulled back from 1.65/1.45 → 1.1/0.95 so the logo reads
-        // as a proper dark silhouette rather than blowing out to white
-        filter: darkMode
-          ? hovered
-            ? 'invert(1) brightness(1.1) contrast(1.05) drop-shadow(0 0 10px rgba(232,217,167,0.5))'
-            : 'invert(1) brightness(0.95) contrast(1.0) drop-shadow(0 0 6px rgba(232,217,167,0.35))'
-          : hovered
-            ? 'brightness(0.42) contrast(1.4) drop-shadow(0 0 8px rgba(60,42,20,0.35))'
-            : 'brightness(0.32) contrast(1.35) drop-shadow(0 0 6px rgba(60,42,20,0.25))',
-        transition: 'all 0.18s ease',
-        pointerEvents: 'none',
-        userSelect: 'none',
-      }}
+      style={{ width: size, height: size, objectFit: 'contain', display: 'block', pointerEvents: 'none', userSelect: 'none' }}
     />
   );
 }
@@ -155,7 +128,7 @@ function VitalsPanel({ row, onClose, campaignId }) {
   const isCreature = !row.character_id || row.character_id === row.character_name;
   const VITALS_KEY = `syntarion_vitals_${row.character_id}`;
   const load = (k, def) => { try { return JSON.parse(localStorage.getItem(VITALS_KEY) || '{}')[k] ?? def; } catch { return def; } };
-  const [vitals,  setVitals]  = useState({ current: load('vitals',  null), max: load('vitalsMax',  null) });
+  const [vitals, setVitals] = useState({ current: load('vitals', null), max: load('vitalsMax', null) });
   const [stamina, setStamina] = useState({ current: load('stamina', null), max: load('staminaMax', null) });
   const [resolve, setResolve] = useState({ current: load('resolve', null), max: load('resolveMax', null) });
 
@@ -165,10 +138,10 @@ function VitalsPanel({ row, onClose, campaignId }) {
         if (!data?.data) return;
         const d = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
         const s = d.stats || {};
-        const v = (s.body||8)+(s.will||8), st = (s.body||8)+(s.whim||8), r = (s.soul||8)+(s.dream||8);
-        setVitals(p  => ({ current: p.current  ?? v,  max: p.max  ?? v  }));
-        setStamina(p => ({ current: p.current  ?? st, max: p.max  ?? st }));
-        setResolve(p => ({ current: p.current  ?? r,  max: p.max  ?? r  }));
+        const v = (s.body || 8) + (s.will || 8), st = (s.body || 8) + (s.whim || 8), r = (s.soul || 8) + (s.dream || 8);
+        setVitals(p => ({ current: p.current ?? v, max: p.max ?? v }));
+        setStamina(p => ({ current: p.current ?? st, max: p.max ?? st }));
+        setResolve(p => ({ current: p.current ?? r, max: p.max ?? r }));
       });
     }
   }, [row.character_id]);
@@ -179,35 +152,35 @@ function VitalsPanel({ row, onClose, campaignId }) {
 
   const Tracker = ({ label, color, state, setState, others }) => {
     const cur = state.current ?? 0, max = state.max ?? 0;
-    const pct = max > 0 ? Math.max(0, Math.min(100, (cur/max)*100)) : 0;
-    const upd = (next) => { setState(next); save(label==='Vitals'?next:vitals, label==='Stamina'?next:stamina, label==='Resolve'?next:resolve); };
+    const pct = max > 0 ? Math.max(0, Math.min(100, (cur / max) * 100)) : 0;
+    const upd = (next) => { setState(next); save(label === 'Vitals' ? next : vitals, label === 'Stamina' ? next : stamina, label === 'Resolve' ? next : resolve); };
     return (
       <div style={{ marginBottom: 12 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-          <div style={{ fontFamily:"'Cinzel',serif", fontSize: 9, color, letterSpacing:'0.1em' }}>{label}</div>
-          <div style={{ display:'flex', alignItems:'center', gap: 4 }}>
-            <button onClick={() => upd({...state, current: Math.max(0,(state.current??0)-1)})} style={{ width:20,height:20,borderRadius:4,background:'rgba(224,90,90,0.15)',border:'1px solid rgba(224,90,90,0.4)',color:'#e05a5a',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center' }}>−</button>
-            <input type="number" value={state.current??''} onChange={e => upd({...state,current:parseInt(e.target.value)||0})} style={{ width:36,textAlign:'center',background:'rgba(0,0,0,0.3)',border:`1px solid ${color}44`,borderRadius:4,color,fontFamily:"'Cinzel',serif",fontSize:13,fontWeight:700,outline:'none',padding:'2px 0' }} />
-            <span style={{ color:'#555', fontSize:10 }}>/</span>
-            <input type="number" value={state.max??''} onChange={e => upd({...state,max:parseInt(e.target.value)||0})} style={{ width:36,textAlign:'center',background:'rgba(0,0,0,0.2)',border:`1px solid ${COLORS.border}`,borderRadius:4,color:COLORS.dim,fontFamily:"'Cinzel',serif",fontSize:11,outline:'none',padding:'2px 0' }} />
-            <button onClick={() => upd({...state, current: Math.min(state.max??999,(state.current??0)+1)})} style={{ width:20,height:20,borderRadius:4,background:'rgba(121,245,167,0.1)',border:'1px solid rgba(121,245,167,0.35)',color:'#79f5a7',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center' }}>+</button>
+          <div style={{ fontFamily: "'Cinzel',serif", fontSize: 9, color, letterSpacing: '0.1em' }}>{label}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button onClick={() => upd({ ...state, current: Math.max(0, (state.current ?? 0) - 1) })} style={{ width: 20, height: 20, borderRadius: 4, background: 'rgba(224,90,90,0.15)', border: '1px solid rgba(224,90,90,0.4)', color: '#e05a5a', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+            <input type="number" value={state.current ?? ''} onChange={e => upd({ ...state, current: parseInt(e.target.value) || 0 })} style={{ width: 36, textAlign: 'center', background: 'rgba(0,0,0,0.3)', border: `1px solid ${color}44`, borderRadius: 4, color, fontFamily: "'Cinzel',serif", fontSize: 13, fontWeight: 700, outline: 'none', padding: '2px 0' }} />
+            <span style={{ color: '#555', fontSize: 10 }}>/</span>
+            <input type="number" value={state.max ?? ''} onChange={e => upd({ ...state, max: parseInt(e.target.value) || 0 })} style={{ width: 36, textAlign: 'center', background: 'rgba(0,0,0,0.2)', border: `1px solid ${COLORS.border}`, borderRadius: 4, color: COLORS.dim, fontFamily: "'Cinzel',serif", fontSize: 11, outline: 'none', padding: '2px 0' }} />
+            <button onClick={() => upd({ ...state, current: Math.min(state.max ?? 999, (state.current ?? 0) + 1) })} style={{ width: 20, height: 20, borderRadius: 4, background: 'rgba(121,245,167,0.1)', border: '1px solid rgba(121,245,167,0.35)', color: '#79f5a7', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
           </div>
         </div>
-        <div style={{ height:4,background:`${color}22`,borderRadius:3,overflow:'hidden' }}>
-          <div style={{ height:'100%',width:`${pct}%`,background:color,borderRadius:3,transition:'width 0.2s ease' }} />
+        <div style={{ height: 4, background: `${color}22`, borderRadius: 3, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 3, transition: 'width 0.2s ease' }} />
         </div>
       </div>
     );
   };
 
   return (
-    <div style={{ background:'rgba(20,14,10,0.95)',border:'1px solid rgba(224,90,90,0.3)',borderRadius:10,padding:'12px 14px',marginBottom:6 }}>
-      <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10 }}>
-        <div style={{ fontFamily:"'Cinzel',serif",fontSize:11,color:COLORS.text }}>{row.character_name} — Health</div>
-        <button onClick={onClose} style={{ background:'transparent',border:`1px solid ${COLORS.border}`,borderRadius:4,padding:'2px 6px',cursor:'pointer',fontSize:9,color:COLORS.dim }}>✕</button>
+    <div style={{ background: 'rgba(20,14,10,0.95)', border: '1px solid rgba(224,90,90,0.3)', borderRadius: 10, padding: '12px 14px', marginBottom: 6 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <div style={{ fontFamily: "'Cinzel',serif", fontSize: 11, color: COLORS.text }}>{row.character_name} — Health</div>
+        <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '2px 6px', cursor: 'pointer', fontSize: 9, color: COLORS.dim }}>✕</button>
       </div>
-      {isCreature && <div style={{ fontSize:8,color:COLORS.dim,fontFamily:'Georgia,serif',fontStyle:'italic',marginBottom:8 }}>Set max manually for this enemy.</div>}
-      <Tracker label="Vitals"  color="#e05a5a" state={vitals}  setState={setVitals}  />
+      {isCreature && <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: 'Georgia,serif', fontStyle: 'italic', marginBottom: 8 }}>Set max manually for this enemy.</div>}
+      <Tracker label="Vitals" color="#e05a5a" state={vitals} setState={setVitals} />
       <Tracker label="Stamina" color="#e08a5a" state={stamina} setState={setStamina} />
       <Tracker label="Resolve" color="#79f5a7" state={resolve} setState={setResolve} />
     </div>
@@ -232,16 +205,16 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true, onP
 
   const [buttonPos, setButtonPos] = useState(savedPos || { x: 24, y: 140 });
   const savedWindowPos = (() => {
-  try {
-    return JSON.parse(localStorage.getItem('herculesWindowPos'));
-  } catch {
-    return null;
-  }
-})();
+    try {
+      return JSON.parse(localStorage.getItem('herculesWindowPos'));
+    } catch {
+      return null;
+    }
+  })();
 
-const [windowPos, setWindowPos] = useState(savedWindowPos || { x: 120, y: 76 });
-const [isWindowDragging, setIsWindowDragging] = useState(false);
-const windowDragOffset = useRef({ x: 0, y: 0 });
+  const [windowPos, setWindowPos] = useState(savedWindowPos || { x: 120, y: 76 });
+  const [isWindowDragging, setIsWindowDragging] = useState(false);
+  const windowDragOffset = useRef({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [open, setOpen] = useState(false);
@@ -262,24 +235,24 @@ const windowDragOffset = useRef({ x: 0, y: 0 });
   }, [events.length]);
 
   const activeSessionId = session?.id || null;
-const activeSessionIdRef = useRef(null);
-const campaignIdRef = useRef(campaignId || null);
+  const activeSessionIdRef = useRef(null);
+  const campaignIdRef = useRef(campaignId || null);
 
-useEffect(() => {
-  activeSessionIdRef.current = session?.id || null;
-}, [session?.id]);
+  useEffect(() => {
+    activeSessionIdRef.current = session?.id || null;
+  }, [session?.id]);
 
-useEffect(() => {
-  campaignIdRef.current = campaignId || null;
-}, [campaignId]);
+  useEffect(() => {
+    campaignIdRef.current = campaignId || null;
+  }, [campaignId]);
 
   useEffect(() => {
     localStorage.setItem('herculesButtonPos', JSON.stringify(buttonPos));
   }, [buttonPos]);
 
   useEffect(() => {
-  localStorage.setItem('herculesWindowPos', JSON.stringify(windowPos));
-}, [windowPos]);
+    localStorage.setItem('herculesWindowPos', JSON.stringify(windowPos));
+  }, [windowPos]);
 
   useEffect(() => {
     if (!campaignId && firstCampaignId) {
@@ -288,160 +261,160 @@ useEffect(() => {
   }, [campaignId, firstCampaignId]);
 
   const loadEvents = useCallback(async sid => {
-  const sessionId = sid || activeSessionIdRef.current;
+    const sessionId = sid || activeSessionIdRef.current;
 
-  if (!sessionId) {
-    setEvents([]);
-    return;
-  }
+    if (!sessionId) {
+      setEvents([]);
+      return;
+    }
 
-  const { data, error } = await supabase
-    .from('hercules_events')
-    .select('*')
-    .eq('session_id', sessionId)
-    .order('created_at', { ascending: true });
+    const { data, error } = await supabase
+      .from('hercules_events')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: true });
 
-  if (error) {
-    console.error('Failed to load Hercules events:', error);
-    return;
-  }
+    if (error) {
+      console.error('Failed to load Hercules events:', error);
+      return;
+    }
 
-  setEvents(data || []);
-}, []);
+    setEvents(data || []);
+  }, []);
 
-const loadInitiative = useCallback(async sid => {
-  const sessionId = sid || activeSessionIdRef.current;
+  const loadInitiative = useCallback(async sid => {
+    const sessionId = sid || activeSessionIdRef.current;
 
-  if (!sessionId) {
-    setInitiative([]);
-    return;
-  }
+    if (!sessionId) {
+      setInitiative([]);
+      return;
+    }
 
-  const { data, error } = await supabase
-    .from('hercules_initiative')
-    .select('*')
-    .eq('session_id', sessionId)
-    .order('turn_order', { ascending: false })
-    .order('tie_breaker', { ascending: false })
-    .order('created_at', { ascending: true });
+    const { data, error } = await supabase
+      .from('hercules_initiative')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('turn_order', { ascending: false })
+      .order('tie_breaker', { ascending: false })
+      .order('created_at', { ascending: true });
 
-  if (error) {
-    console.error('Failed to load Hercules initiative:', error);
-    setInitiative([]);
-    return;
-  }
+    if (error) {
+      console.error('Failed to load Hercules initiative:', error);
+      setInitiative([]);
+      return;
+    }
 
-  const normalized = (data || []).map(row => ({
-    ...row,
-    total: Number(row.turn_order ?? row.roll ?? 0),
-    roll: Number(row.roll ?? 0),
-    modifier: Number(row.modifier ?? 0),
-    character_name: row.character_name || 'Unknown',
-  }));
-
-  setInitiative(normalized);
-}, []);
-
-const getTiedInitiativeGroups = () => {
-  const groups = initiative.reduce((acc, row) => {
-    const score = Number(row.total ?? row.turn_order ?? row.roll ?? 0);
-    if (!acc[score]) acc[score] = [];
-    acc[score].push(row);
-    return acc;
-  }, {});
-
-  return Object.values(groups).filter(group => group.length > 1);
-};
-
-const hasInitiativeTies = getTiedInitiativeGroups().length > 0;
-
-const nextTurn = async () => {
-  const sid = session?.id || activeSessionIdRef.current;
-  if (!sid || initiative.length === 0) return;
-  setSaving(true);
-
-  // Skip dead combatants
-  const alive = initiative.filter(r => r.status !== 'dead');
-  if (alive.length === 0) { setSaving(false); return; }
-
-  const currentIndex = session?.current_turn ?? 0;
-  const currentInAlive = alive.findIndex((r, i) => {
-    const globalIndex = initiative.indexOf(r);
-    return globalIndex >= currentIndex;
-  });
-  const nextAliveIndex = (currentInAlive + 1) % alive.length;
-  const nextCombatant  = alive[nextAliveIndex];
-  const nextGlobalIndex = initiative.indexOf(nextCombatant);
-
-  await supabase.from('hercules_sessions').update({ current_turn: nextGlobalIndex }).eq('id', sid);
-
-  await supabase.from('hercules_events').insert({
-    session_id:  sid,
-    type:        'turn_advance',
-    actor_name:  'The Architect',
-    description: `Turn advances to ${nextCombatant.character_name}.`,
-  });
-
-  await loadSession();
-  setSaving(false);
-};
-
-const resolveArchitectsEdict = useCallback(async () => {
-  const sid = session?.id || activeSessionIdRef.current;
-  if (!sid) return;
-
-  const tiedGroups = getTiedInitiativeGroups();
-  if (tiedGroups.length === 0) {
-    console.log('No initiative ties to resolve.');
-    return;
-  }
-
-  setSaving(true);
-
-  for (const group of tiedGroups) {
-    const results = group.map(row => ({
-      row,
-      tieBreaker: Math.floor(Math.random() * 20) + 1,
+    const normalized = (data || []).map(row => ({
+      ...row,
+      total: Number(row.turn_order ?? row.roll ?? 0),
+      roll: Number(row.roll ?? 0),
+      modifier: Number(row.modifier ?? 0),
+      character_name: row.character_name || 'Unknown',
     }));
 
-    for (const result of results) {
-      const { error } = await supabase
-        .from('hercules_initiative')
-        .update({ tie_breaker: result.tieBreaker })
-        .eq('id', result.row.id);
+    setInitiative(normalized);
+  }, []);
 
-      if (error) {
-        console.error('Failed to apply Architect Edict:', error);
+  const getTiedInitiativeGroups = () => {
+    const groups = initiative.reduce((acc, row) => {
+      const score = Number(row.total ?? row.turn_order ?? row.roll ?? 0);
+      if (!acc[score]) acc[score] = [];
+      acc[score].push(row);
+      return acc;
+    }, {});
+
+    return Object.values(groups).filter(group => group.length > 1);
+  };
+
+  const hasInitiativeTies = getTiedInitiativeGroups().length > 0;
+
+  const nextTurn = async () => {
+    const sid = session?.id || activeSessionIdRef.current;
+    if (!sid || initiative.length === 0) return;
+    setSaving(true);
+
+    // Skip dead combatants
+    const alive = initiative.filter(r => r.status !== 'dead');
+    if (alive.length === 0) { setSaving(false); return; }
+
+    const currentIndex = session?.current_turn ?? 0;
+    const currentInAlive = alive.findIndex((r, i) => {
+      const globalIndex = initiative.indexOf(r);
+      return globalIndex >= currentIndex;
+    });
+    const nextAliveIndex = (currentInAlive + 1) % alive.length;
+    const nextCombatant = alive[nextAliveIndex];
+    const nextGlobalIndex = initiative.indexOf(nextCombatant);
+
+    await supabase.from('hercules_sessions').update({ current_turn: nextGlobalIndex }).eq('id', sid);
+
+    await supabase.from('hercules_events').insert({
+      session_id: sid,
+      type: 'turn_advance',
+      actor_name: 'The Architect',
+      description: `Turn advances to ${nextCombatant.character_name}.`,
+    });
+
+    await loadSession();
+    setSaving(false);
+  };
+
+  const resolveArchitectsEdict = useCallback(async () => {
+    const sid = session?.id || activeSessionIdRef.current;
+    if (!sid) return;
+
+    const tiedGroups = getTiedInitiativeGroups();
+    if (tiedGroups.length === 0) {
+      console.log('No initiative ties to resolve.');
+      return;
+    }
+
+    setSaving(true);
+
+    for (const group of tiedGroups) {
+      const results = group.map(row => ({
+        row,
+        tieBreaker: Math.floor(Math.random() * 20) + 1,
+      }));
+
+      for (const result of results) {
+        const { error } = await supabase
+          .from('hercules_initiative')
+          .update({ tie_breaker: result.tieBreaker })
+          .eq('id', result.row.id);
+
+        if (error) {
+          console.error('Failed to apply Architect Edict:', error);
+        }
+      }
+
+      const names = results
+        .map(result => {
+          const name = result.row.character_name || result.row.actor_name || 'Combatant';
+          return `${name} ${result.tieBreaker}`;
+        })
+        .join(', ');
+
+      const tiedScore = Number(group[0].total ?? group[0].turn_order ?? group[0].roll ?? 0);
+
+      const { error: eventError } = await supabase.from('hercules_events').insert({
+        session_id: sid,
+        type: 'architect_edict',
+        actor_name: 'The Architect',
+        actor_id: null,
+        description: `Architect's Edict resolves an initiative tie at ${tiedScore}: ${names}.`,
+      });
+
+      if (eventError) {
+        console.error('Failed to log Architect Edict:', eventError);
       }
     }
 
-    const names = results
-      .map(result => {
-        const name = result.row.character_name || result.row.actor_name || 'Combatant';
-        return `${name} ${result.tieBreaker}`;
-      })
-      .join(', ');
+    await loadInitiative(sid);
+    await loadEvents(sid);
 
-    const tiedScore = Number(group[0].total ?? group[0].turn_order ?? group[0].roll ?? 0);
-
-    const { error: eventError } = await supabase.from('hercules_events').insert({
-      session_id: sid,
-      type: 'architect_edict',
-      actor_name: 'The Architect',
-      actor_id: null,
-      description: `Architect's Edict resolves an initiative tie at ${tiedScore}: ${names}.`,
-    });
-
-    if (eventError) {
-      console.error('Failed to log Architect Edict:', eventError);
-    }
-  }
-
-  await loadInitiative(sid);
-  await loadEvents(sid);
-
-  setSaving(false);
-}, [session, loadEvents, loadInitiative]);
+    setSaving(false);
+  }, [session, loadEvents, loadInitiative]);
 
   const loadSession = useCallback(async () => {
     if (!campaignId) return;
@@ -479,135 +452,135 @@ const resolveArchitectsEdict = useCallback(async () => {
   }, [campaignId, loadSession]);
 
   useEffect(() => {
-  const sessionId = session?.id;
+    const sessionId = session?.id;
 
-  if (!sessionId) return undefined;
+    if (!sessionId) return undefined;
 
-  activeSessionIdRef.current = sessionId;
+    activeSessionIdRef.current = sessionId;
 
-  const channel = supabase
-    .channel(`hercules-dm-${sessionId}`)
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'hercules_events',
-        filter: `session_id=eq.${sessionId}`,
-      },
-      async () => {
-        await loadEvents(sessionId);
-      }
-    )
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'hercules_initiative',
-        filter: `session_id=eq.${sessionId}`,
-      },
-      async () => {
-        await loadInitiative(sessionId);
-      }
-    )
-    .subscribe();
+    const channel = supabase
+      .channel(`hercules-dm-${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'hercules_events',
+          filter: `session_id=eq.${sessionId}`,
+        },
+        async () => {
+          await loadEvents(sessionId);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'hercules_initiative',
+          filter: `session_id=eq.${sessionId}`,
+        },
+        async () => {
+          await loadInitiative(sessionId);
+        }
+      )
+      .subscribe();
 
-  loadEvents(sessionId);
-  loadInitiative(sessionId);
+    loadEvents(sessionId);
+    loadInitiative(sessionId);
 
-  return () => {
-    supabase.removeChannel(channel);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session?.id, loadEvents, loadInitiative]);
+
+  const startCombat = async () => {
+    if (!campaignId) return;
+
+    setSaving(true);
+
+    await supabase
+      .from('hercules_sessions')
+      .update({
+        status: 'ended',
+        ended_at: new Date().toISOString(),
+      })
+      .eq('campaign_id', String(campaignId))
+      .eq('status', 'active');
+
+    const { data, error } = await supabase
+      .from('hercules_sessions')
+      .insert({
+        campaign_id: String(campaignId),
+        status: 'active',
+        current_turn: 0,
+      })
+      .select()
+      .single();
+
+    if (!error && data) {
+      setSession(data);
+      activeSessionIdRef.current = data.id;
+
+      await supabase.from('hercules_events').insert({
+        session_id: data.id,
+        campaign_id: String(campaignId),
+        type: 'combat_start',
+        actor_name: 'Dungeon Master',
+        description: 'Combat has begun. Initiative requested from all players.',
+        outcome: 'HERCULES combat session opened.',
+        dm_approved: true,
+      });
+
+      await loadEvents(data.id);
+      await loadInitiative(data.id);
+    }
+
+    if (error) {
+      console.error('Failed to start Hercules combat:', error);
+    }
+
+    setSaving(false);
   };
-}, [session?.id, loadEvents, loadInitiative]);
-
- const startCombat = async () => {
-  if (!campaignId) return;
-
-  setSaving(true);
-
-  await supabase
-    .from('hercules_sessions')
-    .update({
-      status: 'ended',
-      ended_at: new Date().toISOString(),
-    })
-    .eq('campaign_id', String(campaignId))
-    .eq('status', 'active');
-
-  const { data, error } = await supabase
-    .from('hercules_sessions')
-    .insert({
-      campaign_id: String(campaignId),
-      status: 'active',
-      current_turn: 0,
-    })
-    .select()
-    .single();
-
-  if (!error && data) {
-    setSession(data);
-    activeSessionIdRef.current = data.id;
-
-    await supabase.from('hercules_events').insert({
-      session_id: data.id,
-      campaign_id: String(campaignId),
-      type: 'combat_start',
-      actor_name: 'Dungeon Master',
-      description: 'Combat has begun. Initiative requested from all players.',
-      outcome: 'HERCULES combat session opened.',
-      dm_approved: true,
-    });
-
-    await loadEvents(data.id);
-    await loadInitiative(data.id);
-  }
-
-  if (error) {
-    console.error('Failed to start Hercules combat:', error);
-  }
-
-  setSaving(false);
-};
 
   // FIX 1: was referencing undefined `sid` — use `session.id` consistently
   const endCombat = async () => {
-  const sid = session?.id || activeSessionIdRef.current;
+    const sid = session?.id || activeSessionIdRef.current;
 
-  if (!sid) return;
+    if (!sid) return;
 
-  setSaving(true);
+    setSaving(true);
 
-  const { error: eventError } = await supabase.from('hercules_events').insert({
-    session_id: sid,
-    type: 'combat_end',
-    actor_name: 'Dungeon Master',
-    description: 'Combat has ended.',
-  });
+    const { error: eventError } = await supabase.from('hercules_events').insert({
+      session_id: sid,
+      type: 'combat_end',
+      actor_name: 'Dungeon Master',
+      description: 'Combat has ended.',
+    });
 
-  if (eventError) {
-    console.error('Failed to log Hercules combat end:', eventError);
-  }
+    if (eventError) {
+      console.error('Failed to log Hercules combat end:', eventError);
+    }
 
-  const { error: sessionError } = await supabase
-    .from('hercules_sessions')
-    .update({
-      status: 'ended',
-    })
-    .eq('id', sid);
+    const { error: sessionError } = await supabase
+      .from('hercules_sessions')
+      .update({
+        status: 'ended',
+      })
+      .eq('id', sid);
 
-  if (sessionError) {
-    console.error('Failed to end Hercules combat:', sessionError);
+    if (sessionError) {
+      console.error('Failed to end Hercules combat:', sessionError);
+      setSaving(false);
+      return;
+    }
+
+    activeSessionIdRef.current = null;
+    setSession(null);
+    setEvents([]);
+    setInitiative([]);
     setSaving(false);
-    return;
-  }
-
-  activeSessionIdRef.current = null;
-  setSession(null);
-  setEvents([]);
-  setInitiative([]);
-  setSaving(false);
-};
+  };
 
   const rollBoardTokens = useCallback(async () => {
     const sid = session?.id || activeSessionIdRef.current;
@@ -733,131 +706,131 @@ const resolveArchitectsEdict = useCallback(async () => {
   // FIX 2: was an unclosed function that swallowed approveEvent/denyEvent/customOutcome inside it;
   // FIX 3: was missing the actual creature insert after resolving sid
   const addCreature = useCallback(async creatureName => {
-  if (!creatureName || !campaignId) return;
+    if (!creatureName || !campaignId) return;
 
-  let sid = session?.id || activeSessionIdRef.current;
+    let sid = session?.id || activeSessionIdRef.current;
 
-  if (!sid) {
-    const { data, error } = await supabase
-      .from('hercules_sessions')
+    if (!sid) {
+      const { data, error } = await supabase
+        .from('hercules_sessions')
+        .insert({
+          campaign_id: String(campaignId),
+          status: 'active',
+          current_turn: 0,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Failed to create Hercules session for creature:', error);
+        return;
+      }
+
+      if (data) {
+        setSession(data);
+        activeSessionIdRef.current = data.id;
+        sid = data.id;
+      }
+    }
+
+    if (!sid) return;
+
+    const tokenId = crypto.randomUUID();
+    const tokenLabel = creatureName.slice(0, 4).toUpperCase();
+
+    // 1. Create token on the VTT board.
+    const { data: vttSession, error: vttLoadError } = await supabase
+      .from('vtt_sessions')
+      .select('*')
+      .eq('campaign_id', String(campaignId))
+      .maybeSingle();
+
+    if (vttLoadError) {
+      console.error('Failed to load VTT session for creature token:', vttLoadError);
+    }
+
+    const existingTokens = Array.isArray(vttSession?.tokens) ? vttSession.tokens : [];
+
+    const newToken = {
+      id: tokenId,
+      token_id: tokenId,
+      name: creatureName,
+      label: tokenLabel,
+      creatureName,
+      type: 'enemy',
+      color: creatureColor(creatureName),
+      x: 50,
+      y: 50,
+    };
+
+    if (vttSession?.id) {
+      const { error: vttUpdateError } = await supabase
+        .from('vtt_sessions')
+        .update({
+          tokens: [...existingTokens, newToken],
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', vttSession.id);
+
+      if (vttUpdateError) {
+        console.error('Failed to add creature token to VTT session:', vttUpdateError);
+      }
+    } else {
+      const { error: vttInsertError } = await supabase
+        .from('vtt_sessions')
+        .insert({
+          campaign_id: String(campaignId),
+          tokens: [newToken],
+          fog_zones: [],
+          pending_moves: [],
+        });
+
+      if (vttInsertError) {
+        console.error('Failed to create VTT session with creature token:', vttInsertError);
+      }
+    }
+
+    // Also call the live VTT callback if DMView/VTTCanvas has it wired.
+    onPlaceToken?.(newToken);
+
+    // 2. Auto-roll initiative for that token.
+    const roll = Math.floor(Math.random() * 20) + 1;
+    const modifier = 0;
+    const turnOrder = roll + modifier;
+
+    const { error: initiativeError } = await supabase
+      .from('hercules_initiative')
       .insert({
-        campaign_id: String(campaignId),
-        status: 'active',
-        current_turn: 0,
-      })
-      .select()
-      .single();
+        session_id: sid,
+        character_id: tokenId,
+        character_name: creatureName,
+        roll,
+        modifier,
+        turn_order: turnOrder,
+      });
 
-    if (error) {
-      console.error('Failed to create Hercules session for creature:', error);
+    if (initiativeError) {
+      console.error('Failed to add creature to initiative:', initiativeError);
       return;
     }
 
-    if (data) {
-      setSession(data);
-      activeSessionIdRef.current = data.id;
-      sid = data.id;
-    }
-  }
-
-  if (!sid) return;
-
-  const tokenId = crypto.randomUUID();
-  const tokenLabel = creatureName.slice(0, 4).toUpperCase();
-
-  // 1. Create token on the VTT board.
-  const { data: vttSession, error: vttLoadError } = await supabase
-    .from('vtt_sessions')
-    .select('*')
-    .eq('campaign_id', String(campaignId))
-    .maybeSingle();
-
-  if (vttLoadError) {
-    console.error('Failed to load VTT session for creature token:', vttLoadError);
-  }
-
-  const existingTokens = Array.isArray(vttSession?.tokens) ? vttSession.tokens : [];
-
-  const newToken = {
-    id: tokenId,
-    token_id: tokenId,
-    name: creatureName,
-    label: tokenLabel,
-    creatureName,
-    type: 'enemy',
-    color: creatureColor(creatureName),
-    x: 50,
-    y: 50,
-  };
-
-  if (vttSession?.id) {
-    const { error: vttUpdateError } = await supabase
-      .from('vtt_sessions')
-      .update({
-        tokens: [...existingTokens, newToken],
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', vttSession.id);
-
-    if (vttUpdateError) {
-      console.error('Failed to add creature token to VTT session:', vttUpdateError);
-    }
-  } else {
-    const { error: vttInsertError } = await supabase
-      .from('vtt_sessions')
+    // 3. Log event in safe Hercules event shape.
+    const { error: eventError } = await supabase
+      .from('hercules_events')
       .insert({
-        campaign_id: String(campaignId),
-        tokens: [newToken],
-        fog_zones: [],
-        pending_moves: [],
+        session_id: sid,
+        type: 'enemy_added',
+        actor_name: creatureName,
+        actor_id: tokenId,
+        description: `${creatureName} entered the map and rolled initiative: d20 ${roll} = ${turnOrder}.`,
       });
 
-    if (vttInsertError) {
-      console.error('Failed to create VTT session with creature token:', vttInsertError);
+    if (eventError) {
+      console.error('Failed to log creature entry:', eventError);
     }
-  }
 
-  // Also call the live VTT callback if DMView/VTTCanvas has it wired.
-  onPlaceToken?.(newToken);
-
-  // 2. Auto-roll initiative for that token.
-  const roll = Math.floor(Math.random() * 20) + 1;
-  const modifier = 0;
-  const turnOrder = roll + modifier;
-
-  const { error: initiativeError } = await supabase
-    .from('hercules_initiative')
-    .insert({
-      session_id: sid,
-      character_id: tokenId,
-      character_name: creatureName,
-      roll,
-      modifier,
-      turn_order: turnOrder,
-    });
-
-  if (initiativeError) {
-    console.error('Failed to add creature to initiative:', initiativeError);
-    return;
-  }
-
-  // 3. Log event in safe Hercules event shape.
-  const { error: eventError } = await supabase
-    .from('hercules_events')
-    .insert({
-      session_id: sid,
-      type: 'enemy_added',
-      actor_name: creatureName,
-      actor_id: tokenId,
-      description: `${creatureName} entered the map and rolled initiative: d20 ${roll} = ${turnOrder}.`,
-    });
-
-  if (eventError) {
-    console.error('Failed to log creature entry:', eventError);
-  }
-
-  await Promise.all([loadEvents(sid), loadInitiative(sid)]);
-}, [session, campaignId, loadEvents, loadInitiative, onPlaceToken]);
+    await Promise.all([loadEvents(sid), loadInitiative(sid)]);
+  }, [session, campaignId, loadEvents, loadInitiative, onPlaceToken]);
 
   // Expose addCreature so DMView can call it programmatically (e.g. from VTT token placement)
   useEffect(() => {
@@ -910,182 +883,182 @@ const resolveArchitectsEdict = useCallback(async () => {
   };
 
   const rollCombatantAction = async row => {
-  const sid = session?.id || activeSessionIdRef.current;
+    const sid = session?.id || activeSessionIdRef.current;
 
-  if (!sid || !row) return;
+    if (!sid || !row) return;
 
-  const actorName = row.character_name || row.actor_name || 'Combatant';
-  const actionName = window.prompt(`What is ${actorName} doing?`, 'Attack');
+    const actorName = row.character_name || row.actor_name || 'Combatant';
+    const actionName = window.prompt(`What is ${actorName} doing?`, 'Attack');
 
-  if (!actionName?.trim()) return;
+    if (!actionName?.trim()) return;
 
-  const roll = Math.floor(Math.random() * 20) + 1;
-  const modifier = 0;
-  const total = roll + modifier;
+    const roll = Math.floor(Math.random() * 20) + 1;
+    const modifier = 0;
+    const total = roll + modifier;
 
-  const { error } = await supabase.from('hercules_events').insert({
-    session_id: sid,
-    type: 'action',
-    actor_name: actorName,
-    actor_id: row.character_id ? String(row.character_id) : null,
-    description: `${actorName} used ${actionName.trim()}: d20 ${roll}${modifier ? ` + ${modifier}` : ''} = ${total}.`,
-  });
+    const { error } = await supabase.from('hercules_events').insert({
+      session_id: sid,
+      type: 'action',
+      actor_name: actorName,
+      actor_id: row.character_id ? String(row.character_id) : null,
+      description: `${actorName} used ${actionName.trim()}: d20 ${roll}${modifier ? ` + ${modifier}` : ''} = ${total}.`,
+    });
 
-  if (error) {
-    console.error('Failed to log combatant action:', error);
-    return;
-  }
+    if (error) {
+      console.error('Failed to log combatant action:', error);
+      return;
+    }
 
-  await loadEvents(sid);
-};
+    await loadEvents(sid);
+  };
 
-const markCombatantDead = async row => {
-  const sid = session?.id || activeSessionIdRef.current;
-  if (!sid || !row?.id) return;
+  const markCombatantDead = async row => {
+    const sid = session?.id || activeSessionIdRef.current;
+    if (!sid || !row?.id) return;
 
-  const actorName = row.character_name || 'Combatant';
+    const actorName = row.character_name || 'Combatant';
 
-  const { error } = await supabase
-    .from('hercules_initiative')
-    .update({
-      status: 'dead',
-    })
-    .eq('id', row.id);
+    const { error } = await supabase
+      .from('hercules_initiative')
+      .update({
+        status: 'dead',
+      })
+      .eq('id', row.id);
 
-  if (error) {
-    console.error('Failed to mark combatant dead:', error);
-    return;
-  }
+    if (error) {
+      console.error('Failed to mark combatant dead:', error);
+      return;
+    }
 
-  await supabase.from('hercules_events').insert({
-    session_id: sid,
-    type: 'death',
-    actor_name: actorName,
-    actor_id: row.character_id ? String(row.character_id) : null,
-    description: `${actorName} has been marked dead.`,
-  });
+    await supabase.from('hercules_events').insert({
+      session_id: sid,
+      type: 'death',
+      actor_name: actorName,
+      actor_id: row.character_id ? String(row.character_id) : null,
+      description: `${actorName} has been marked dead.`,
+    });
 
-  await loadInitiative(sid);
-  await loadEvents(sid);
-};
+    await loadInitiative(sid);
+    await loadEvents(sid);
+  };
 
-const addManualLogEntry = async () => {
-  const sid = session?.id || activeSessionIdRef.current;
+  const addManualLogEntry = async () => {
+    const sid = session?.id || activeSessionIdRef.current;
 
-  if (!sid || !manualLogText.trim()) return;
+    if (!sid || !manualLogText.trim()) return;
 
-  setSaving(true);
+    setSaving(true);
 
-  const { error } = await supabase.from('hercules_events').insert({
-    session_id: sid,
-    type: 'dm_note',
-    actor_name: 'The Architect',
-    actor_id: null,
-    description: manualLogText.trim(),
-  });
+    const { error } = await supabase.from('hercules_events').insert({
+      session_id: sid,
+      type: 'dm_note',
+      actor_name: 'The Architect',
+      actor_id: null,
+      description: manualLogText.trim(),
+    });
 
-  if (error) {
-    console.error('Failed to add manual Hercules log entry:', error);
+    if (error) {
+      console.error('Failed to add manual Hercules log entry:', error);
+      setSaving(false);
+      return;
+    }
+
+    setManualLogText('');
+    await loadEvents(sid);
+
     setSaving(false);
-    return;
-  }
+  };
 
-  setManualLogText('');
-  await loadEvents(sid);
+  const addManualCombatant = async () => {
+    const sid = session?.id || activeSessionIdRef.current;
+    const name = manualCombatantName.trim();
+    if (!sid || !name) return;
 
-  setSaving(false);
-};
+    setSaving(true);
 
-const addManualCombatant = async () => {
-  const sid = session?.id || activeSessionIdRef.current;
-  const name = manualCombatantName.trim();
-  if (!sid || !name) return;
+    const roll = Math.floor(Math.random() * 20) + 1;
+    const modifier = 0;
+    const turnOrder = roll + modifier;
+    const tokenId = crypto.randomUUID();
 
-  setSaving(true);
+    const { error } = await supabase.from('hercules_initiative').insert({
+      session_id: sid,
+      character_id: tokenId,
+      character_name: name,
+      roll,
+      modifier,
+      turn_order: turnOrder,
+    });
 
-  const roll = Math.floor(Math.random() * 20) + 1;
-  const modifier = 0;
-  const turnOrder = roll + modifier;
-  const tokenId = crypto.randomUUID();
+    if (error) {
+      console.error('Failed to add manual combatant:', error);
+      setSaving(false);
+      return;
+    }
 
-  const { error } = await supabase.from('hercules_initiative').insert({
-    session_id: sid,
-    character_id: tokenId,
-    character_name: name,
-    roll,
-    modifier,
-    turn_order: turnOrder,
-  });
+    await supabase.from('hercules_events').insert({
+      session_id: sid,
+      type: 'enemy_added',
+      actor_name: name,
+      actor_id: tokenId,
+      description: `${name} was added manually to combat with initiative d20 ${roll} = ${turnOrder}.`,
+    });
 
-  if (error) {
-    console.error('Failed to add manual combatant:', error);
+    setManualCombatantName('');
+    await Promise.all([loadInitiative(sid), loadEvents(sid)]);
     setSaving(false);
-    return;
-  }
+  };
 
-  await supabase.from('hercules_events').insert({
-    session_id: sid,
-    type: 'enemy_added',
-    actor_name: name,
-    actor_id: tokenId,
-    description: `${name} was added manually to combat with initiative d20 ${roll} = ${turnOrder}.`,
-  });
+  const removeCombatantFromTracker = async row => {
+    const sid = session?.id || activeSessionIdRef.current;
 
-  setManualCombatantName('');
-  await Promise.all([loadInitiative(sid), loadEvents(sid)]);
-  setSaving(false);
-};
+    if (!sid || !row?.id) {
+      console.error('Missing session or initiative row:', { sid, row });
+      return;
+    }
 
-const removeCombatantFromTracker = async row => {
-  const sid = session?.id || activeSessionIdRef.current;
+    const actorName = row.character_name || row.actor_name || 'Combatant';
 
-  if (!sid || !row?.id) {
-    console.error('Missing session or initiative row:', { sid, row });
-    return;
-  }
+    const confirmed = window.confirm(`Remove ${actorName} from initiative?`);
+    if (!confirmed) return;
 
-  const actorName = row.character_name || row.actor_name || 'Combatant';
+    setSaving(true);
 
-  const confirmed = window.confirm(`Remove ${actorName} from initiative?`);
-  if (!confirmed) return;
+    const { data, error } = await supabase
+      .from('hercules_initiative')
+      .delete()
+      .eq('id', row.id)
+      .select();
 
-  setSaving(true);
+    if (error) {
+      console.error('Failed to remove combatant from tracker:', error);
+      setSaving(false);
+      return;
+    }
 
-  const { data, error } = await supabase
-    .from('hercules_initiative')
-    .delete()
-    .eq('id', row.id)
-    .select();
+    if (!data || data.length === 0) {
+      console.warn('No initiative row was deleted:', row);
+      setSaving(false);
+      return;
+    }
 
-  if (error) {
-    console.error('Failed to remove combatant from tracker:', error);
+    setInitiative(prev => prev.filter(item => item.id !== row.id));
+
+    await supabase.from('hercules_events').insert({
+      session_id: sid,
+      type: 'removed',
+      actor_name: actorName,
+      actor_id: row.character_id ? String(row.character_id) : null,
+      description: `${actorName} was removed from the initiative tracker.`,
+    });
+
+    await loadInitiative(sid);
+    await loadEvents(sid);
+
     setSaving(false);
-    return;
-  }
+  };
 
-  if (!data || data.length === 0) {
-    console.warn('No initiative row was deleted:', row);
-    setSaving(false);
-    return;
-  }
-
-  setInitiative(prev => prev.filter(item => item.id !== row.id));
-
-  await supabase.from('hercules_events').insert({
-    session_id: sid,
-    type: 'removed',
-    actor_name: actorName,
-    actor_id: row.character_id ? String(row.character_id) : null,
-    description: `${actorName} was removed from the initiative tracker.`,
-  });
-
-  await loadInitiative(sid);
-  await loadEvents(sid);
-
-  setSaving(false);
-};
-
-    const startDrag = event => {
+  const startDrag = event => {
     const point = event.touches ? event.touches[0] : event;
 
     dragOffset.current = {
@@ -1098,39 +1071,39 @@ const removeCombatantFromTracker = async row => {
   };
 
   const startWindowDrag = event => {
-  const point = event.touches ? event.touches[0] : event;
-
-  windowDragOffset.current = {
-    x: point.clientX - windowPos.x,
-    y: point.clientY - windowPos.y,
-  };
-
-  setIsWindowDragging(true);
-};
-
-const onWindowMove = useCallback(
-  event => {
-    if (!isWindowDragging) return;
-
     const point = event.touches ? event.touches[0] : event;
 
-    const shellWidth = Math.min(1100, window.innerWidth - 48);
-    const shellHeight = Math.min(760, window.innerHeight - 110);
+    windowDragOffset.current = {
+      x: point.clientX - windowPos.x,
+      y: point.clientY - windowPos.y,
+    };
 
-    const nextX = point.clientX - windowDragOffset.current.x;
-    const nextY = point.clientY - windowDragOffset.current.y;
+    setIsWindowDragging(true);
+  };
 
-    setWindowPos({
-      x: Math.max(8, Math.min(window.innerWidth - shellWidth - 8, nextX)),
-      y: Math.max(8, Math.min(window.innerHeight - shellHeight - 8, nextY)),
-    });
-  },
-  [isWindowDragging, windowPos.x, windowPos.y]
-);
+  const onWindowMove = useCallback(
+    event => {
+      if (!isWindowDragging) return;
 
-const stopWindowDrag = useCallback(() => {
-  setIsWindowDragging(false);
-}, []);
+      const point = event.touches ? event.touches[0] : event;
+
+      const shellWidth = Math.min(1100, window.innerWidth - 48);
+      const shellHeight = Math.min(760, window.innerHeight - 110);
+
+      const nextX = point.clientX - windowDragOffset.current.x;
+      const nextY = point.clientY - windowDragOffset.current.y;
+
+      setWindowPos({
+        x: Math.max(8, Math.min(window.innerWidth - shellWidth - 8, nextX)),
+        y: Math.max(8, Math.min(window.innerHeight - shellHeight - 8, nextY)),
+      });
+    },
+    [isWindowDragging, windowPos.x, windowPos.y]
+  );
+
+  const stopWindowDrag = useCallback(() => {
+    setIsWindowDragging(false);
+  }, []);
 
   const onMove = useCallback(
     event => {
@@ -1215,7 +1188,7 @@ const stopWindowDrag = useCallback(() => {
           touchAction: 'none',
         }}
       >
-       <HerculesLogoImage hovered={hovered} darkMode={darkMode} size={135} />
+        <HerculesLogoImage hovered={hovered} darkMode={darkMode} size={135} />
       </button>
 
       {open && (
@@ -1308,22 +1281,22 @@ const stopWindowDrag = useCallback(() => {
             )}
 
             {session && (
-            <button
+              <button
                 type="button"
                 onClick={rollBoardTokens}
                 disabled={saving}
                 style={goldButton()}
-            >
+              >
                 Roll Board Tokens
-            </button>
+              </button>
             )}
-              {session && initiative.length > 0 && (
+            {session && initiative.length > 0 && (
               <button type="button" onClick={nextTurn} disabled={saving} style={{ ...goldButton(), background: 'rgba(200,168,74,0.28)', border: '1px solid rgba(200,168,74,0.8)', fontWeight: 700 }}>
                 Next Turn ▶
               </button>
             )}
             {session && (
-            <button
+              <button
                 type="button"
                 onClick={resolveArchitectsEdict}
                 disabled={!hasInitiativeTies || saving}
@@ -1333,9 +1306,9 @@ const stopWindowDrag = useCallback(() => {
                   opacity: !hasInitiativeTies || saving ? 0.45 : 1,
                   cursor: !hasInitiativeTies || saving ? 'default' : 'pointer',
                 }}
-            >
+              >
                 Architect's Edict
-            </button>
+              </button>
             )}
 
             <button type="button" onClick={() => setOpen(false)} style={plainButton()}>
@@ -1413,7 +1386,7 @@ const stopWindowDrag = useCallback(() => {
                           d20 {row.roll}{row.modifier ? ` + ${row.modifier}` : ''}
                         </div>
                       </div>
-                            
+
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
                         <IconButton
                           title="Roll action"
@@ -1439,9 +1412,9 @@ const stopWindowDrag = useCallback(() => {
                           onClick={() => removeCombatantFromTracker(row)}
                           border="rgba(220,90,70,0.35)"
                           color="#b98a7f"
-                          >
+                        >
                           ✕
-                          </IconButton>
+                        </IconButton>
 
                         {Number(row.tie_breaker || 0) > 0 && (
                           <span style={{ color: '#e8c84a', marginLeft: 6, fontSize: 10 }}>
