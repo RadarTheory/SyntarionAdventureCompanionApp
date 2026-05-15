@@ -72,6 +72,29 @@ function StatusBadge({ status }) {
   );
 }
 
+function DraggablePanel({ defaultX, defaultY, onClose, title, width, accentColor, children }) {
+  const [pos, setPos] = useState({ x: defaultX, y: defaultY });
+  const dragging = useRef(false);
+  const offset = useRef({ x: 0, y: 0 });
+  const onMouseDown = (e) => { dragging.current = true; offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }; e.preventDefault(); };
+  const onTouchStart = (e) => { dragging.current = true; const t = e.touches[0]; offset.current = { x: t.clientX - pos.x, y: t.clientY - pos.y }; };
+  useEffect(() => {
+    const onMove = (e) => { if (!dragging.current) return; const p = e.touches ? e.touches[0] : e; setPos({ x: Math.max(0, Math.min(window.innerWidth - width - 8, p.clientX - offset.current.x)), y: Math.max(0, Math.min(window.innerHeight - 80, p.clientY - offset.current.y)) }); };
+    const onUp = () => { dragging.current = false; };
+    window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp); window.addEventListener('touchmove', onMove, { passive: false }); window.addEventListener('touchend', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onUp); };
+  }, [width]);
+  return (
+    <div style={{ position: 'fixed', left: pos.x, top: pos.y, width, maxHeight: '80vh', zIndex: 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: `1px solid ${accentColor}`, borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
+      <div onMouseDown={onMouseDown} onTouchStart={onTouchStart} style={{ padding: '10px 14px', borderBottom: `1px solid ${accentColor}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'grab', background: 'rgba(255,255,255,0.03)', flexShrink: 0, userSelect: 'none' }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8d9a7', letterSpacing: '0.12em' }}>⠿ {title}</div>
+        <button onClick={onClose} style={{ background: 'transparent', border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 4, padding: '3px 7px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto' }}>{children}</div>
+    </div>
+  );
+}
+
 // ─── CHAT PANEL (Player ↔ DM) ─────────────────────────────────────────────────
 function ChatPanel({ session, onClose, isDM }) {
   const [messages, setMessages] = useState([]);
@@ -594,7 +617,7 @@ export default function DMView({ user, session, onHome }) {
   const [activeCampaignTab, setActiveCampaignTab] = useState('I');
   const [campaignSubTab, setCampaignSubTab] = useState('log');
   const [activeSession, setActiveSession] = useState(null);
-  const [showScribePanel, setShowScribePanel] = useState(false);
+  const [showScribe, setShowScribe] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCampaign, setFilterCampaign] = useState('all');
   const [unreadCount, setUnreadCount] = useState(0);
@@ -607,6 +630,8 @@ export default function DMView({ user, session, onHome }) {
   const [showHercules, setShowHercules] = useState(false);
   const [showAstragal, setShowAstragal] = useState(false);
   const [showArgus, setShowArgus] = useState(false);
+  const [showBestiary, setShowBestiary] = useState(false);
+  const [showScribePanel, setShowScribePanel] = useState(false);
   
   // LOBBY STATE
   const [checkedInPlayers, setCheckedInPlayers] = useState([]);
@@ -748,7 +773,7 @@ export default function DMView({ user, session, onHome }) {
             <div style={{ fontSize: 12, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', maxWidth: 320 }}>
               An ancient archival intelligence, bound to answer the Architect alone. Open a consult to query the Soteria archives.
             </div>
-            <button onClick={() => setShowScribePanel(true)} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 8, padding: '12px 28px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.deityText, marginTop: 8 }}>
+            <button onClick={() => setShowScribe(true)} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 8, padding: '12px 28px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.deityText, marginTop: 8 }}>
               ✦ Open Consult
             </button>
           </div>
@@ -947,7 +972,11 @@ const logDmAstragalToHercules = async payload => {
 
       {editingChar && <CharacterEditor char={editingChar} onSave={() => { setEditingChar(null); fetchCharacters(); }} onClose={() => setEditingChar(null)} />}
       {activeSession && <ChatPanel session={activeSession} onClose={() => setActiveSession(null)} isDM={true} />}
-      {showScribePanel && <ScribePanel onClose={() => setShowScribePanel(false)} />}
+      {showScribePanel && (
+  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribePanel(false)} title="THE SCRIBE · Architect Access" width={420} accentColor={`${COLORS.deity}55`}>
+    <ScribeDMPanel embedded activeCampaignId={activeCampaignTab} />
+  </DraggablePanel>
+)}
       <PlayersPanel
         onOpenCharacter={(char) => setEditingChar(char)}
         onMessage={(session) => setActiveSession(session)}
@@ -1115,8 +1144,8 @@ const logDmAstragalToHercules = async payload => {
   );
 }
 
-{showScribePanel && (
-  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribePanel(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
+{showScribe && (
+  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribe(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
     <ScribePlayerPanel char={userChar} campaignId={String(campaign.id)} onUpdateChar={char => onAssign(char.campaign)} embedded />
   </DraggablePanel>
 )}
