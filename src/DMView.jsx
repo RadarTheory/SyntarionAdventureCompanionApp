@@ -947,7 +947,7 @@ const logDmAstragalToHercules = async payload => {
 
       {editingChar && <CharacterEditor char={editingChar} onSave={() => { setEditingChar(null); fetchCharacters(); }} onClose={() => setEditingChar(null)} />}
       {activeSession && <ChatPanel session={activeSession} onClose={() => setActiveSession(null)} isDM={true} />}
-      {showScribe && <ScribePanel onClose={() => setShowScribe(false)} />}
+      {showScribePanel && <ScribePanel onClose={() => setShowScribePanel(false)} />}
       <PlayersPanel
         onOpenCharacter={(char) => setEditingChar(char)}
         onMessage={(session) => setActiveSession(session)}
@@ -1115,8 +1115,8 @@ const logDmAstragalToHercules = async payload => {
   );
 }
 
-{showScribe && (
-  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribe(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
+{showScribePanel && (
+  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribePanel(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
     <ScribePlayerPanel char={userChar} campaignId={String(campaign.id)} onUpdateChar={char => onAssign(char.campaign)} embedded />
   </DraggablePanel>
 )}
