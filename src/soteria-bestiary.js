@@ -102,7 +102,7 @@ DOCILE / FRIENDLY:
 - WOOLSNOUT SHAGGYSWINE — A stout, wool-covered domestic beast with a soft trunk-like snout for rooting through soil and snow; bonds strongly to households, remembers voices and locked cupboards, and screams loud enough to wake a hamlet when threatened. Common among northern herders and traveling families.
 - REEDBACK SHAGGYSWINE — An oily, water-resistant marsh strain of Shaggyswine that forages along riverbanks for shellfish, reeds, and buried eggs. Smells terrible when wet but nearly impossible to chill.
 - CRADLECRAG BOULDER-WOMBAT — A mountain strain of Boulder-Wombat with thicker hide and stone-dusted shoulder plates; often mistaken for fallen boulders during fog.
-- DUSTMOUND BOULDER-WOMBAT — A plains strain that digs wide, shallow tunnel networks; disliked by ranchers whose livestock break legs in old burrow roofs, but valued by farmers for soil-turning. and a penchant for gliding short distances between trees. Often seen flitting between branches.
+- DUSTMOUND BOULDER-WOMBAT — A plains strain that digs wide, shallow tunnel networks; disliked by ranchers whose livestock break legs in old burrow roofs, but valued by farmers for soil-turning.
 
 AGGRESSIVE / PREDATORY:
 - MAULWASP — A colossal winged predator of ridge and wildwood, feared for venom and fury.
@@ -124,7 +124,7 @@ AGGRESSIVE / PREDATORY:
 - MAWLOAM — A towering saber-clawed ground sloth of ancient forest and highland grove, armed like an executioner but built like a grazer; does not kill out of hunger but because something forgot who the forest belonged to. Rises to full height as a territorial warning before closing with terrifying speed.
 - GREENMANE MAWLOAM — A common woodland strain of Mawloam armored in wiry fur layered with moss, lichen, and burrs; elder specimens may be mistaken for hillocks until their heads lift from undergrowth.
 - HOARFELL MAWLOAM — A pale, frost-furred northern strain of Mawloam with blue-edged teeth from mineral staining; moves silently through snow and vanishes into blizzard banks. Villages warn children never to approach a snow mound with breath.
-- BLACKWOOD APEX-URUS — A massive pursuit-predator bear of dense forest with dark greenish-grey fur and natural markings resembling broken script; moves through heavy timber with surprising quiet. Unlike ordinary bears, it runs prey down. Most often found near desecrated shrines, abandoned temples, or places where protective rites failed. Covers its face with a set of grotesque hands; if it looks directly at a victim they are immediately stunned.
+- BLACKWOOD APEX-URUS — A massive pursuit-predator bear of dense forest with dark greenish-grey fur and natural markings resembling broken script; moves through heavy timber with surprising quiet. Unlike ordinary bears, it runs prey down.
 
 SMALLER / GAME:
 - RECLUSE WISKARI — Soft blue-beige fur, bright orange markings, enormous black eyes, feather-like antennae between tall bat-like ears.
@@ -181,7 +181,7 @@ AGGRESSIVE / PREDATORY:
 - GOLDGRASS GRAVEBEAK — A towering flightless predator with a sledgehammer beak and a curved killing point; the classic man-killer strain of open savannah, often seen as a dark shape cutting through high grass before the head drops like a smith's hammer.
 - GOLDPLUME CLAWSTRUTH — A feathered ostrich-like predator with a retractable killing claw on each foot; hunts in loose packs using dust clouds to confuse prey, fast enough to overtake a horse over short ground.
 - SALTJAW MARROWCRUNCHER — A pale, lean, long-legged desert Bone-Cruncher that follows exhausted caravans and digs up shallow graves after sandstorms.
-- CARRION-SAIL CLOUD-VULTURE — A vast gas-bladdered battlefield scavenger whose shadow over a road is considered a bad omen by soldiers; its presence in numbers means something has already died nearby or soon will. and crushing mandibles capable of splintering timber and bone alike. Drawn toward vibration; erupts violently from beneath loose earth when disturbed.
+- CARRION-SAIL CLOUD-VULTURE — A vast gas-bladdered battlefield scavenger whose shadow over a road is considered a bad omen by soldiers; its presence in numbers means something has already died nearby or soon will.
 
 SMALLER / GAME:
 - DUSTRAT — A small scrubland rodent with quick paws and sharp instincts; known for burrowing beneath dry earth.
@@ -210,7 +210,7 @@ AGGRESSIVE / PREDATORY:
 - STEPPE OGRE — See Ogre Family entry.
 - PRIDE LION (SOTERIAN) — Larger than natural lions, with a resonance sensitivity that makes them instinctively avoid Dybuk-touched areas. Prides of eight to twelve. Apex predators of open savannah.
 - VENOMHIDE GREAT-LURK — A twenty-foot monitor lizard with venom that turns shallow bites into slow disasters; strikes once, withdraws, and follows wounded prey until venom, infection, and exhaustion do the work. "The ground is listening" means a Great-Lurk is nearby.
-- CLAWSTRUTH RAPTOR-STRUTHIO — A feathered pursuit predator with a retractable killing claw; sprints in terrifying bursts, slashes, retreats, circles, and repeats until prey collapses. Packs can bring down riders and livestock., with a resonance sensitivity that makes them instinctively avoid Dybuk-touched areas. Prides of eight to twelve. Apex predators of open savannah.
+- CLAWSTRUTH RAPTOR-STRUTHIO — A feathered pursuit predator with a retractable killing claw; sprints in terrifying bursts, slashes, retreats, circles, and repeats until prey collapses. Packs can bring down riders and livestock.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 4. JUNGLE / RAINFOREST
@@ -287,7 +287,7 @@ AGGRESSIVE / PREDATORY:
 - FROSTMANE SPIRALHORN — A massive tundra-adapted beast with a huge spiral horn that bores into frozen ground and bears a crown of ice crystals after feeding; its charge twists rather than simply impales.
 - CRAG-RUNE APEX-URUS — A mountain strain of the great Runebear with dark brown or slate fur and heavier forelimbs for climbing broken slopes; notorious for appearing above travelers rather than behind them.
 - CRAGSPOT SKY-NECK — A colossal cliff-nesting pterosaur with a giraffe-long neck and mottled grey-rust hide; uses its reach to pluck prey from ledges and ruins without committing its full body to danger.
-- CRAGWING RAZORGALE — A lean mountain pterosaur specialized in knocking prey from ledges rather than carrying them away; nests in sheer cliff cracks and is nearly invisible against stone., wet passes, and dense vegetation. Uses cover and angled terrain to break prey away from groups.
+- CRAGWING RAZORGALE — A lean mountain pterosaur specialized in knocking prey from ledges rather than carrying them away; nests in sheer cliff cracks and is nearly invisible against stone.
 
 SMALLER / GAME:
 - MOUNTAIN HARE — A white-furred hare of high-altitude terrain. Fast, agile, and a primary food source for mountain predators. Its coloring shifts with the season.
@@ -334,7 +334,7 @@ AGGRESSIVE / PREDATORY:
 - PRISM-WING — A small feathered saurian with layered feathers that shift color in sunlight; prized in noble aviaries across Soteria, a rare specimen can be worth more than a trained horse. When frightened, erupts into sudden color and sound to confuse predators.
 - GROVE PRISM-WING — A green, gold, and blue forest strain of Prism-Wing whose song mimics woodland birds and running water, making it nearly impossible to locate by ear.
 - TIDEGLASS PRISM-WING — A pearl, teal, and coral island strain of Prism-Wing; favored as court gifts but becomes melancholy if kept away from sea wind.
-- HIGHGLINT PRISM-WING — A silver, violet, and pale rose mountain strain of Prism-Wing whose feathers shine brightest in thin mountain air and dawn frost., riding lightning-charged updrafts with unusual physical tolerance for electrical discharge. Attacks are preceded by the smell of ozone.
+- HIGHGLINT PRISM-WING — A silver, violet, and pale rose mountain strain of Prism-Wing whose feathers shine brightest in thin mountain air and dawn frost.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 10. UNDERGROUND
@@ -355,14 +355,14 @@ AGGRESSIVE / PREDATORY:
 - HOLLOWJAW MARROWCRUNCHER — A cave strain of Bone-Cruncher with dark fur, enlarged ears, and a damp echoing call; cave explorers fear its silence more than its cry.
 - GLOWHORN PALEHIDE — A subterranean drill-rhino strain with pale skin, poor eyesight, and a faintly bioluminescent horn; when the hornlight appears in a tunnel, the safest path is usually backward.
 - MARROWJAW BONE-CRUNCHER — A night-roving scavenger-predator with jaws shaped like iron bolt-cutters; leaves almost no evidence after feeding. A battlefield visited by Marrowjaws may be mistaken for a clean burial ground until one notices the absence of bones.
-- BLINDPLATE MAW — A pale, eyeless armored cave fish guided by vibration; haunts flooded caverns and strikes at anything that disturbs the water. with coarse fur along its plated back and grasping forelimbs adapted for tight tunnels. Waits half-buried in loose stone, then surges forward to seize prey and drag it into narrow cracks.
+- BLINDPLATE MAW — A pale, eyeless armored cave fish guided by vibration; haunts flooded caverns and strikes at anything that disturbs the water.
 - CAVERNOUS GHOSTCRAB — A blind, pale ghostcrab that inhabits underground streams and flooded cavern shelves. Navigates by vibration and retreats into cracks too narrow for most predators to follow.
 
 SMALLER / GAME:
 - CAVE FISH — Blind, pale fish found in underground waterways. Primary food source in long underground expeditions. Nutritious and surprisingly easy to catch in still water.
 - TUNNEL RAT — A large, aggressive underground rodent that competes with miners for stored food. Disease vector. Bites through most glove materials.
 - GLOW WORM — A small bioluminescent larva found in cave ceilings in large colonies. Their combined light is sufficient to navigate by. Harvested and used in small lantern capsules by underground workers.
-- MERESICKLE SHRIMP — A freshwater lake arthropod with broad greenish sickle-claws; a hazard to fishermen cleaning nets by hand in weedy still water. in large colonies. Their combined light is sufficient to navigate by. Harvested and used in small lantern capsules by underground workers.
+- MERESICKLE SHRIMP — A freshwater lake arthropod with broad greenish sickle-claws; a hazard to fishermen cleaning nets by hand in weedy still water.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 11. CAVERNOUS
@@ -393,7 +393,7 @@ AGGRESSIVE / PREDATORY:
 - IVORY PACKRAPTOR — A pale coldland Packraptor with ivory scales, low posture, and silent pack movement across snow and frozen scrub. Hunting strategy relies on patience, flanking, and driving prey into exhaustion.
 - WHITE-RUNE APEX-URUS — A pale tundra strain of the great Runebear with black claws and a roar that carries for miles over snow; stalks caribou, mammoth-calves, and unwary sled teams.
 - RIMEJAW MARROWCRUNCHER — A thick-furred tundra Bone-Cruncher that caches frozen bones beneath snow and returns to the same buried carcass for months.
-- RIMEWING RAZORGALE — A pale, narrow-bodied tundra pterosaur nearly invisible against winter skies; wing edges carry frost that glitters just before a dive. with ivory scales, low posture, and silent pack movement across snow and frozen scrub. Hunting strategy relies on patience, flanking, and driving prey into exhaustion.
+- RIMEWING RAZORGALE — A pale, narrow-bodied tundra pterosaur nearly invisible against winter skies; wing edges carry frost that glitters just before a dive.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 13. ARCTIC
@@ -403,7 +403,7 @@ DOCILE / FRIENDLY:
 - ICE SEAL — A large marine mammal of arctic coasts. Docile and curious. Primary food source for arctic communities. Their fat provides fuel, their hide provides waterproofing, and their presence indicates open water nearby.
 - GLACIAL GHOSTCRAB — A translucent ice-shelled crab that nests in cracks beneath glaciers and frozen coastal shelves. Its body is nearly invisible against blue ice, and its claws can numb exposed flesh with prolonged contact.
 - ICEWRITHE SERPENT-WHALE — A pale-scarred cold-water massive sea-serpent; surfaces among ice floes and is often mistaken for a moving ice ridge. When Icewrithes pass, smart captains stay ashore.
-- FROSTSHELL GLACIER-TURTLE — A colossal ancient sea turtle carrying ice, pale barnacles, and frost algae across its shell; sleeping specimens are mistaken for small ice floes in cold seas. that nests in cracks beneath glaciers and frozen coastal shelves. Its body is nearly invisible against blue ice, and its claws can numb exposed flesh with prolonged contact.
+- FROSTSHELL GLACIER-TURTLE — A colossal ancient sea turtle carrying ice, pale barnacles, and frost algae across its shell; sleeping specimens are mistaken for small ice floes in cold seas.
 
 AGGRESSIVE / PREDATORY:
 - RHIME OGRE — See Ogre Family entry.
@@ -428,7 +428,7 @@ AGGRESSIVE / PREDATORY:
 - SANDHIDE GREAT-LURK — A twenty-foot desert monitor that buries itself beneath loose sand with only nostrils and eyes exposed; venom turns shallow bites into slow disasters.
 - DUNECLAW RAPTOR-STRUTHIO — A pale-feathered desert pursuit predator that hunts at dawn and dusk when shadows make its sprint harder to read.
 - ASHDUNE GRAVEBEAK — A lean, pale desert strain of the great hammer-billed flightless predator; can go long periods without water by feeding on blood and organ meat.
-- DUNESTRIDE SKY-NECK — See Sky entry. along its spine and shoulders. Often rolls through loose soil to mask its scent before ambushing prey.
+- DUNESTRIDE SKY-NECK — See Sky entry.
 
 SMALLER / GAME:
 - SAND MOUSE — A small nocturnal rodent of the desert floor. Extremely fast. Primary prey for desert predators. Known to carry water reserves in specialized internal pouches.
@@ -469,7 +469,7 @@ DOCILE / FRIENDLY:
 - WHITECOIL SERPENT-SWAN — A long-necked aquatic reptile clothed in pale feathering along the neck and upper body; peaceful and graceful but strikes with its neck like a whip when nesting. Its presence is considered fortunate in lakeside cultures.
 - MIRRORLAKE SERPENT-SWAN — The most revered strain, found in clear mountain lakes with silver-appearing feathers at sunrise.
 - REEDCOIL SERPENT-SWAN — A tan-and-green river strain less shy than lake variants; sometimes follows boats upstream.
-- PEARLHAVEN SERPENT-SWAN — A pearl-white island strain whose nesting pair is considered a sign that waters are clean and fish will return., old wells, and rain-swollen root systems far from the sea. Scribes believe its ancestors followed underground waterways inland and never returned.
+- PEARLHAVEN SERPENT-SWAN — A pearl-white island strain whose nesting pair is considered a sign that waters are clean and fish will return.
 
 AGGRESSIVE / PREDATORY:
 - RIVER SERPENT — A massive non-venomous constrictor of slow-moving rivers and lake margins. Ambushes from underwater. Lengths of six to twelve feet are common. Campaign-level specimens approaching twenty feet have been reported.
@@ -483,7 +483,7 @@ AGGRESSIVE / PREDATORY:
 - SALTMAW DREAD-CROC — A coastal saltwater Dread-Croc that patrols mangroves, reefs, and harbor mouths; feared more than sharks because it learns boat routes.
 - WHIPSICKLE SCYTHE-SHRIMP — A three-foot ancient arthropod with two spiked whip-like appendages; a single one is dangerous to swimmers, a feeding cluster is a butcher's storm in the water.
 - BRINESICKLE SHRIMP — A blue-grey reef-channel Scythe-Shrimp that follows larger predators to feed on scraps.
-- TIDEHOOK SCYTHE-SHRIMP — A red-brown-black mottled Scythe-Shrimp from tide pools and volcanic lagoons; nearly invisible against wet stone. with blue reflective scales that shimmer like moving water. Hunts near reeds, flooded trails, and shallow crossings where prey is slowed by unstable footing.
+- TIDEHOOK SCYTHE-SHRIMP — A red-brown-black mottled Scythe-Shrimp from tide pools and volcanic lagoons; nearly invisible against wet stone.
 
 SMALLER / GAME:
 - COMMON FISH — Perch, carp, and river trout equivalents found in most Soterian waterways. Primary freshwater food source.
@@ -521,7 +521,7 @@ AGGRESSIVE / PREDATORY:
 - REEFSHELL GLACIER-TURTLE — A Shellglacier Turtle that grows coral gardens and bright anemones; fish shelter around it as though it were a moving reef.
 - ISLEBACK GLACIER-TURTLE — A legendary Shellglacier Turtle large enough for seabirds to nest on its shell during long migrations.
 - TIDEHIDE GREAT-LURK — A darker, stronger-swimming island monitor that raids nests, beaches, and fishing camps with patient precision; more tolerant of saltwater than inland strains.
-- PAINTED GRAVEBEAK — A smaller island strain of the hammer-billed flightless predator with bright island plumage; more territorial than mainland strains, especially during nesting season. veined by dull orange glow. Skitters across cooled lava fields and volcanic shorelines, hiding beneath brittle crust before erupting upward.
+- PAINTED GRAVEBEAK — A smaller island strain of the hammer-billed flightless predator with bright island plumage; more territorial than mainland strains, especially during nesting season.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 19. CITY / URBAN
@@ -540,6 +540,7 @@ AGGRESSIVE / PREDATORY:
 - CANIVINE (URBAN) — The same woodland canivine that has followed rail and trade roads into city margins. More cautious than its woodland counterpart. No less dangerous.
 - VEINSPINNER — A mechanized arachnid that weaves intricate webs of glowing threads. Formidable in combat, using its mechanical limbs to strike with precision and power.
 - CARRION KITE — A large bird of prey that feeds on carrion. Often seen circling above battlefields, waiting for its next meal.
+- CARRION WINGED KITE — A larger variant of the Carrion Kite with broader wings, allowing it to soar higher and cover more ground in search of food. Often arrives at battlefields before standard Carrion Kites and departs last.
 - GLOAMWING — A large bat with wings that shimmer like the twilight sky. Nocturnal, feeds on insects and small mammals.
 - SHADOWMOTE — A small, shadowy creature that moves in the dark, known for its ability to blend into the background. Attempts to possess the minds of those it attacks.
 - GRAFTWRIGHT — A predatory falsework creature that grafts itself into objects, rooms, and structures, taking the form of what victims expect to find before latching, swallowing, or absorbing them. Often mistaken for chests, doors, shrines, books, tools, wagons, or relics. Older specimens can become part of an entire room.
@@ -607,6 +608,8 @@ Feeding: Dybuks feed on live despair — not death itself, but the sustained exp
 Possession signs: Discoloration of veins, coldness of skin, eyes that reflect light incorrectly, uncharacteristic calm followed by sudden violence.
 
 Weaknesses: True spiritual alignment, Sanctus discipline, Caelyn pact-bonds, genuine Nullite, sunlight during Ba'el (Dawn pass).
+Strengths: Isolation, silence, false Nullite, broken oaths, grieving spaces.
+Threat Level: Medium solo / High when possessing a powerful or named NPC / Campaign-level when organized.
 
 Combat behavior: A Dybuk fights using the host's memories, abilities, and relationships — it will exploit all of them. It targets witnesses and allies first to isolate the party. Avoids direct confrontation with Divine-aligned characters. If the host body is destroyed, the Dybuk is expelled but not destroyed — it seeks a new host immediately. True destruction requires a Caelyn severing the Veyline connection, a Sanctus exorcism, or a binding ritual returning it to Tophet.
 
@@ -811,7 +814,7 @@ NOTE: These are singular entities. Encountering them is never accidental from a 
 - PLATEWYRME ARMOR-CRAWLER — See Underground entry.
 - MARROWJAW BONE-CRUNCHER — A night-roving scavenger-predator with iron bolt-cutter jaws that leaves almost no evidence. A battlefield visited by Marrowjaws may be mistaken for a clean burial ground until one notices the absence of bones.
 - CLAWSTRUTH RAPTOR-STRUTHIO — See Savannah entry.
-- MAWLOAM — See Woodland entry. Island children consider spotting one before a voyage to be a sign of good luck.
+- MAWLOAM — See Woodland entry.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ENCOUNTER CALIBRATION

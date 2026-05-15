@@ -1802,7 +1802,8 @@ function panelStyle() {
     borderRadius: 12,
     padding: 12,
     minHeight: 0,
-    overflow: 'hidden',
+    overflow: 'hidden',        // was 'hidden'
+    overflowY: 'auto',         // ADD THIS
     display: 'flex',
     flexDirection: 'column',
   };
