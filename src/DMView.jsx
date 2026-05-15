@@ -594,7 +594,7 @@ export default function DMView({ user, session, onHome }) {
   const [activeCampaignTab, setActiveCampaignTab] = useState('I');
   const [campaignSubTab, setCampaignSubTab] = useState('log');
   const [activeSession, setActiveSession] = useState(null);
-  const [showScribe, setShowScribe] = useState(false);
+  const [showScribePanel, setShowScribePanel] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCampaign, setFilterCampaign] = useState('all');
   const [unreadCount, setUnreadCount] = useState(0);
@@ -748,7 +748,7 @@ export default function DMView({ user, session, onHome }) {
             <div style={{ fontSize: 12, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', maxWidth: 320 }}>
               An ancient archival intelligence, bound to answer the Architect alone. Open a consult to query the Soteria archives.
             </div>
-            <button onClick={() => setShowScribe(true)} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 8, padding: '12px 28px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.deityText, marginTop: 8 }}>
+            <button onClick={() => setShowScribePanel(true)} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 8, padding: '12px 28px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.deityText, marginTop: 8 }}>
               ✦ Open Consult
             </button>
           </div>

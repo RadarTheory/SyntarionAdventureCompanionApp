@@ -67,8 +67,7 @@ function createScribeSuggestion(event) {
   const total = Number(event.total ?? event.roll ?? 0);
   const action = event.description || event.type || 'action';
   const actor = event.actor_name || 'The combatant';
-  const dragOffset = useRef({ x: 0, y: 0 });
-    const moved = useRef(false);
+  
 
   if (event.type === 'initiative') {
     return `${actor} enters the fray with initiative ${total}. Suggested outcome: place them in descending turn order and begin tracking their actions.`;
@@ -292,6 +291,37 @@ const getTiedInitiativeGroups = () => {
 };
 
 const hasInitiativeTies = getTiedInitiativeGroups().length > 0;
+
+const nextTurn = async () => {
+  const sid = session?.id || activeSessionIdRef.current;
+  if (!sid || initiative.length === 0) return;
+  setSaving(true);
+
+  // Skip dead combatants
+  const alive = initiative.filter(r => r.status !== 'dead');
+  if (alive.length === 0) { setSaving(false); return; }
+
+  const currentIndex = session?.current_turn ?? 0;
+  const currentInAlive = alive.findIndex((r, i) => {
+    const globalIndex = initiative.indexOf(r);
+    return globalIndex >= currentIndex;
+  });
+  const nextAliveIndex = (currentInAlive + 1) % alive.length;
+  const nextCombatant  = alive[nextAliveIndex];
+  const nextGlobalIndex = initiative.indexOf(nextCombatant);
+
+  await supabase.from('hercules_sessions').update({ current_turn: nextGlobalIndex }).eq('id', sid);
+
+  await supabase.from('hercules_events').insert({
+    session_id:  sid,
+    type:        'turn_advance',
+    actor_name:  'The Architect',
+    description: `Turn advances to ${nextCombatant.character_name}.`,
+  });
+
+  await loadSession();
+  setSaving(false);
+};
 
 const resolveArchitectsEdict = useCallback(async () => {
   const sid = session?.id || activeSessionIdRef.current;
@@ -1224,7 +1254,11 @@ const stopWindowDrag = useCallback(() => {
                 Roll Board Tokens
             </button>
             )}
-
+              {session && initiative.length > 0 && (
+              <button type="button" onClick={nextTurn} disabled={saving} style={{ ...goldButton(), background: 'rgba(200,168,74,0.28)', border: '1px solid rgba(200,168,74,0.8)', fontWeight: 700 }}>
+                Next Turn ▶
+              </button>
+            )}
             {session && (
             <button
                 type="button"
@@ -1268,21 +1302,27 @@ const stopWindowDrag = useCallback(() => {
                   const isCreature = !row.character_id;
                   const displayName = row.character_name || row.actor_name || 'Unknown';
                   const isDead = row.status === 'dead';
+                  const isActiveTurn = index === (session?.current_turn ?? 0) && !isDead;
 
                   return (
                     <div
                       key={row.id}
                       style={{
-                        ...initiativeRow(index === 0),
+                        ...initiativeRow(isActiveTurn),
                         opacity: isDead ? 0.45 : 1,
                         textDecoration: isDead ? 'line-through' : 'none',
+                        boxShadow: isActiveTurn ? '0 0 0 2px rgba(200,168,74,0.55)' : 'none',
                       }}
                     >
                       <div style={{ flex: 1, minWidth: 0 }}>
+                        {isActiveTurn && (
+                          <div style={{ fontSize: 7, color: '#e8c84a', fontFamily: "'Cinzel', serif", letterSpacing: '0.12em', marginBottom: 2 }}>▶ ACTIVE TURN</div>
+                        )}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                           <div
                             style={{
-                              color: COLORS.text,
+                              color: isActiveTurn ? '#e8c84a' : COLORS.text,
+                              fontWeight: isActiveTurn ? 700 : 400,
                               fontFamily: "'Cinzel', serif",
                               fontSize: 11,
                               overflow: 'hidden',
