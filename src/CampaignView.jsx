@@ -1223,6 +1223,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   const [showScribeCV, setShowScribeCV] = useState(false);
   const [showBestiary, setShowBestiary] = useState(false);
   const [showScribe, setShowScribe]     = useState(false);
+  const [showArgus, setShowArgus] = useState(false);
   
   // Poll lootbox count for badge
   useEffect(() => {
