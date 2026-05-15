@@ -9,7 +9,6 @@ export default function LoadingScreen() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        overflow: 'hidden',
       }}
     >
       <video
@@ -20,9 +19,9 @@ export default function LoadingScreen() {
         playsInline
         preload="auto"
         style={{
-          width: '100vw',
-          height: '100vh',
-          objectFit: 'cover',
+          width: 180,
+          height: 180,
+          objectFit: 'contain',
           mixBlendMode: 'screen',
           pointerEvents: 'none',
         }}
