@@ -1335,120 +1335,24 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true, onP
 
               <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 0 }}>
                 {initiative.map((row, index) => {
-                  const isCreature = !row.character_id;
-                  const displayName = row.character_name || row.actor_name || 'Unknown';
-                  const isDead = row.status === 'dead';
-                  const isActiveTurn = index === (session?.current_turn ?? 0) && !isDead;
+  // ...
+  return (
+    <div key={row.id}>  {/* ← NEW wrapper div */}
+      <div style={{
+        ...initiativeRow(isActiveTurn),
+        // remove flexWrap from here
+      }}>
+        {/* all the existing row content — name, badges, buttons, score */}
+        {/* DELETE the vitalsOpen block from inside here */}
+      </div>
 
-                  return (
-                    <div
-                      key={row.id}
-                      style={{
-                        ...initiativeRow(isActiveTurn),
-                        opacity: isDead ? 0.45 : 1,
-                        textDecoration: isDead ? 'line-through' : 'none',
-                        boxShadow: isActiveTurn ? '0 0 0 2px rgba(200,168,74,0.55)' : 'none',
-                      }}
-                    >
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        {isActiveTurn && (
-                          <div style={{ fontSize: 7, color: '#e8c84a', fontFamily: "'Cinzel', serif", letterSpacing: '0.12em', marginBottom: 2 }}>▶ ACTIVE TURN</div>
-                        )}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                          <div
-                            style={{
-                              color: isActiveTurn ? '#e8c84a' : COLORS.text,
-                              fontWeight: isActiveTurn ? 700 : 400,
-                              fontFamily: "'Cinzel', serif",
-                              fontSize: 11,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {index + 1}. {displayName}
-                          </div>
-                          <div style={{
-                            fontSize: 7,
-                            fontFamily: "'Cinzel', serif",
-                            letterSpacing: '0.08em',
-                            color: isCreature ? '#e08b7d' : '#9fe0aa',
-                            background: isCreature ? 'rgba(180,55,45,0.12)' : 'rgba(80,180,100,0.10)',
-                            border: `1px solid ${isCreature ? 'rgba(220,90,70,0.35)' : 'rgba(100,200,120,0.3)'}`,
-                            borderRadius: 3,
-                            padding: '1px 5px',
-                            flexShrink: 0,
-                          }}>
-                            {isCreature ? 'ENEMY' : 'PC'}
-                          </div>
-                        </div>
-                        <div style={{ color: COLORS.dim, fontSize: 10 }}>
-                          d20 {row.roll}{row.modifier ? ` + ${row.modifier}` : ''}
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-                        <IconButton
-                          title="Roll action"
-                          onClick={() => rollCombatantAction(row)}
-                          border="rgba(200,168,74,0.45)"
-                          color="#e8c84a"
-                        >
-                          🎲
-                        </IconButton>
-
-                        <IconButton
-                          title="Mark dead"
-                          onClick={() => markCombatantDead(row)}
-                          disabled={row.status === 'dead'}
-                          border="rgba(220,90,70,0.45)"
-                          color="#e0a092"
-                        >
-                          ☠
-                        </IconButton>
-
-                        <IconButton
-                          title="Remove from tracker"
-                          onClick={() => removeCombatantFromTracker(row)}
-                          border="rgba(220,90,70,0.35)"
-                          color="#b98a7f"
-                        >
-                          ✕
-                        </IconButton>
-
-                        {Number(row.tie_breaker || 0) > 0 && (
-                          <span style={{ color: '#e8c84a', marginLeft: 6, fontSize: 10 }}>
-                            Edict {row.tie_breaker}
-                          </span>
-                        )}
-
-                        <IconButton
-                          title="Vitals / Stamina / Resolve"
-                          onClick={() => setVitalsOpen(v => v === row.id ? null : row.id)}
-                          border={vitalsOpen === row.id ? 'rgba(224,90,90,0.7)' : 'rgba(224,90,90,0.3)'}
-                          color={vitalsOpen === row.id ? '#f08080' : '#c07070'}
-                        >
-                          ♥
-                        </IconButton>
-
-                        <div
-                          style={{
-                            color: '#e8d9a7',
-                            fontSize: 18,
-                            fontFamily: 'Georgia, serif',
-                            minWidth: 24,
-                            textAlign: 'right',
-                          }}
-                        >
-                          {row.total}
-                        </div>
-                      </div>
-                      {vitalsOpen === row.id && (
-                        <VitalsPanel row={row} onClose={() => setVitalsOpen(null)} campaignId={campaignId} />
-                      )}
-                    </div>
-                  );
-                })}
+      {/* VitalsPanel OUTSIDE the row, inside the wrapper */}
+      {vitalsOpen === row.id && (
+        <VitalsPanel row={row} onClose={() => setVitalsOpen(null)} campaignId={campaignId} />
+      )}
+    </div>
+  );
+})}
               </div>
             </div>
 
@@ -1795,20 +1699,6 @@ function EmptyText({ children }) {
   );
 }
 
-function panelStyle() {
-  return {
-    background: 'rgba(255,255,255,0.025)',
-    border: '1px solid rgba(200,168,74,0.18)',
-    borderRadius: 12,
-    padding: 12,
-    minHeight: 0,
-    overflow: 'hidden',        // was 'hidden'
-    overflowY: 'auto',         // ADD THIS
-    display: 'flex',
-    flexDirection: 'column',
-  };
-}
-
 function initiativeRow(active) {
   return {
     display: 'flex',
@@ -1818,7 +1708,7 @@ function initiativeRow(active) {
     border: `1px solid ${active ? 'rgba(200,168,74,0.35)' : COLORS.border}`,
     borderRadius: 8,
     padding: '9px 10px',
-    marginBottom: 8,
+    marginBottom: 4,
   };
 }
 
