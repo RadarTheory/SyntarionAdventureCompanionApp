@@ -615,6 +615,15 @@ NOTE: Undead in Soteria are not a natural phenomenon. They are the result of spe
 - PROSOPON — A child-sized masked humanoid horror whose face is never seen directly. It mimics gestures, voices, and expressions stolen from others, often appearing first as someone familiar before the mask’s false emotion begins to crack.
 - AWAKENED JADE GARGOYLE — A carved jade guardian given predatory animation through corrupted resonance or failed warding rites. Unlike ordinary gargoyles, it remembers the place it was made to protect and may continue enforcing commands long after their meaning has been lost.
 
+// Expanded
+- HEARTHWOOL SHAGGYSWINE — Extremely thick white or cream wool, often kept in cold settlements as a living bedwarmer. Its wool sheds in heavy seasonal clumps and is woven into mitts, boot-liners, and infant blankets.
+- MOSSBACK BOULDER-WOMBAT — A squat, heavily built beast that carries green moss, mushrooms, and seedlings in its fur. Druids sometimes follow them to locate healthy old-growth soil.
+- REED-SAIL SKINK — Features blue-green markings and a narrow sail. It dives when threatened and can cling to submerged roots to hide.
+- TAWNYROOT SHAGGYSWINE — Possesses shorter tan wool and stronger legs, making it better suited for open country. Common among caravan farmers and agrarian communities.
+- GOLDSTEP TITAN-HOPPER — The most common strain of Titan-Hopper, featuring wheat-colored fur and strong migratory instincts. Its herds move like living weather across open country.
+- JEWELBACK SUNSAIL SKINK — Brightly colored with emerald, violet, or red sail patterns. Island children consider spotting one before a voyage to be a sign of good luck.
+
+export { soterianBestiaryPage1 };
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 HUMANOID THREATS — FACTION REFERENCE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -658,6 +667,8 @@ Instead, they may represent:
 This theory remains heavily disputed.
 Wyth scholars classify Ogre emergence zones as:
 HIGH RESONANCE STRESS ENVIRONMENTS.
+
+
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 COSMIC / VOID / ASTRAL

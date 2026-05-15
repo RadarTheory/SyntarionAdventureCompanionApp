@@ -1484,7 +1484,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   {
   id: 'scribe',
   title: 'The Scribe — Archives',
-  onClick: () => setShowScribe(o => !o),
+  onClick: () => setShowScribeCV(o => !o),
   children: <img src="/scribeicon.png" alt="Scribe" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
 },
 ]} />
@@ -1522,7 +1522,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
 )}
 
 {showScribeCV && (
-  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribe(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
+  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribeCV(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
     <ScribePlayerPanel char={userChar} campaignId={String(campaign.id)} onUpdateChar={char => onAssign(char.campaign)} embedded />
   </DraggablePanel>
 )}
