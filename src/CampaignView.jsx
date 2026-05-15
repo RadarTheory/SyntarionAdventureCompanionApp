@@ -1220,7 +1220,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   const isAssigned = userChar?.campaign === String(campaign.id);
   const [showAstragal, setShowAstragal] = useState(false);
   const [showHercules, setShowHercules] = useState(false);
-  const [showArgus, setShowArgus] = useState(false);
+  const [showScribeCV, setShowScribeCV] = useState(false);
   const [showBestiary, setShowBestiary] = useState(false);
   const [showScribe, setShowScribe]     = useState(false);
   
@@ -1520,7 +1520,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   </DraggablePanel>
 )}
 
-{showScribe && (
+{showScribeCV && (
   <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribe(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
     <ScribePlayerPanel char={userChar} campaignId={String(campaign.id)} onUpdateChar={char => onAssign(char.campaign)} embedded />
   </DraggablePanel>
