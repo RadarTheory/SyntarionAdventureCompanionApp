@@ -151,6 +151,69 @@ function creatureColor(name) {
   return ENEMY_COLORS[h % ENEMY_COLORS.length];
 }
 
+function VitalsPanel({ row, onClose, campaignId }) {
+  const isCreature = !row.character_id || row.character_id === row.character_name;
+  const VITALS_KEY = `syntarion_vitals_${row.character_id}`;
+  const load = (k, def) => { try { return JSON.parse(localStorage.getItem(VITALS_KEY) || '{}')[k] ?? def; } catch { return def; } };
+  const [vitals,  setVitals]  = useState({ current: load('vitals',  null), max: load('vitalsMax',  null) });
+  const [stamina, setStamina] = useState({ current: load('stamina', null), max: load('staminaMax', null) });
+  const [resolve, setResolve] = useState({ current: load('resolve', null), max: load('resolveMax', null) });
+
+  useEffect(() => {
+    if (!isCreature) {
+      supabase.from('characters').select('data').eq('id', String(row.character_id)).maybeSingle().then(({ data }) => {
+        if (!data?.data) return;
+        const d = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+        const s = d.stats || {};
+        const v = (s.body||8)+(s.will||8), st = (s.body||8)+(s.whim||8), r = (s.soul||8)+(s.dream||8);
+        setVitals(p  => ({ current: p.current  ?? v,  max: p.max  ?? v  }));
+        setStamina(p => ({ current: p.current  ?? st, max: p.max  ?? st }));
+        setResolve(p => ({ current: p.current  ?? r,  max: p.max  ?? r  }));
+      });
+    }
+  }, [row.character_id]);
+
+  const save = (v, s, r) => localStorage.setItem(VITALS_KEY, JSON.stringify({
+    vitals: v.current, vitalsMax: v.max, stamina: s.current, staminaMax: s.max, resolve: r.current, resolveMax: r.max
+  }));
+
+  const Tracker = ({ label, color, state, setState, others }) => {
+    const cur = state.current ?? 0, max = state.max ?? 0;
+    const pct = max > 0 ? Math.max(0, Math.min(100, (cur/max)*100)) : 0;
+    const upd = (next) => { setState(next); save(label==='Vitals'?next:vitals, label==='Stamina'?next:stamina, label==='Resolve'?next:resolve); };
+    return (
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+          <div style={{ fontFamily:"'Cinzel',serif", fontSize: 9, color, letterSpacing:'0.1em' }}>{label}</div>
+          <div style={{ display:'flex', alignItems:'center', gap: 4 }}>
+            <button onClick={() => upd({...state, current: Math.max(0,(state.current??0)-1)})} style={{ width:20,height:20,borderRadius:4,background:'rgba(224,90,90,0.15)',border:'1px solid rgba(224,90,90,0.4)',color:'#e05a5a',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center' }}>−</button>
+            <input type="number" value={state.current??''} onChange={e => upd({...state,current:parseInt(e.target.value)||0})} style={{ width:36,textAlign:'center',background:'rgba(0,0,0,0.3)',border:`1px solid ${color}44`,borderRadius:4,color,fontFamily:"'Cinzel',serif",fontSize:13,fontWeight:700,outline:'none',padding:'2px 0' }} />
+            <span style={{ color:'#555', fontSize:10 }}>/</span>
+            <input type="number" value={state.max??''} onChange={e => upd({...state,max:parseInt(e.target.value)||0})} style={{ width:36,textAlign:'center',background:'rgba(0,0,0,0.2)',border:`1px solid ${COLORS.border}`,borderRadius:4,color:COLORS.dim,fontFamily:"'Cinzel',serif",fontSize:11,outline:'none',padding:'2px 0' }} />
+            <button onClick={() => upd({...state, current: Math.min(state.max??999,(state.current??0)+1)})} style={{ width:20,height:20,borderRadius:4,background:'rgba(121,245,167,0.1)',border:'1px solid rgba(121,245,167,0.35)',color:'#79f5a7',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center' }}>+</button>
+          </div>
+        </div>
+        <div style={{ height:4,background:`${color}22`,borderRadius:3,overflow:'hidden' }}>
+          <div style={{ height:'100%',width:`${pct}%`,background:color,borderRadius:3,transition:'width 0.2s ease' }} />
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ background:'rgba(20,14,10,0.95)',border:'1px solid rgba(224,90,90,0.3)',borderRadius:10,padding:'12px 14px',marginBottom:6 }}>
+      <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10 }}>
+        <div style={{ fontFamily:"'Cinzel',serif",fontSize:11,color:COLORS.text }}>{row.character_name} — Health</div>
+        <button onClick={onClose} style={{ background:'transparent',border:`1px solid ${COLORS.border}`,borderRadius:4,padding:'2px 6px',cursor:'pointer',fontSize:9,color:COLORS.dim }}>✕</button>
+      </div>
+      {isCreature && <div style={{ fontSize:8,color:COLORS.dim,fontFamily:'Georgia,serif',fontStyle:'italic',marginBottom:8 }}>Set max manually for this enemy.</div>}
+      <Tracker label="Vitals"  color="#e05a5a" state={vitals}  setState={setVitals}  />
+      <Tracker label="Stamina" color="#e08a5a" state={stamina} setState={setStamina} />
+      <Tracker label="Resolve" color="#79f5a7" state={resolve} setState={setResolve} />
+    </div>
+  );
+}
+
 export default function HerculesCombat({ defaultCampaignId, darkMode = true, onPlaceToken, onRegisterAddCreature }) {
   const campaignList = useMemo(normalizeCampaigns, []);
   const creatureNames = useMemo(parseCreatureNames, []);
