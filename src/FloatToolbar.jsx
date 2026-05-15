@@ -97,28 +97,18 @@ export function FloatButton({ storageKey, defaultPos, children, onClick, title, 
 }
 
 // ─── Toolbar button (docked inside toolbar) ───────────────────────────────────
-const btnSize = mobile ? Math.max(36, Math.min(52, Math.floor((window.innerWidth - 48 - (dockedButtons.length - 1) * 8) / Math.max(1, dockedButtons.length)))) : 56;
+function ToolbarButton({ children, onClick, title, badge, onDragOut }) {
   const [pressing, setPressing] = useState(false);
   const [hovered, setHovered]   = useState(false);
   const startPos = useRef(null);
   const moved    = useRef(false);
   const DRAG_THRESHOLD = 12;
 
-  const onTouchStart = (e) => {
-    const t = e.touches[0];
-    startPos.current = { x: t.clientX, y: t.clientY };
+  const onMouseDown = (e) => {
+    startPos.current = { x: e.clientX, y: e.clientY };
     moved.current = false;
     setPressing(true);
   };
-  const onTouchMove = useCallback((e) => {
-    if (!pressing || !startPos.current) return;
-    const t = e.touches[0];
-    const dx = t.clientX - startPos.current.x, dy = t.clientY - startPos.current.y;
-    if (!moved.current && Math.sqrt(dx*dx+dy*dy) > 10) {
-      moved.current = true; setPressing(false);
-      onDragOut?.({ x: t.clientX - size/2, y: t.clientY - size/2 });
-    }
-  }, [pressing, onDragOut, size]);
 
   const onMouseMove = useCallback((e) => {
     if (!pressing || !startPos.current) return;
@@ -141,16 +131,12 @@ const btnSize = mobile ? Math.max(36, Math.min(52, Math.floor((window.innerWidth
     if (pressing) {
       window.addEventListener('mousemove', onMouseMove);
       window.addEventListener('mouseup', onMouseUp);
-      window.addEventListener('touchmove', onTouchMove, { passive: false });
-      window.addEventListener('touchend', onMouseUp);
     }
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchend', onMouseUp);
     };
-  }, [pressing, onMouseMove, onMouseUp, onTouchMove]);
+  }, [pressing, onMouseMove, onMouseUp]);
 
   return (
     <button
@@ -255,12 +241,6 @@ export default function FloatToolbar({ buttons }) {
 
   const dockedButtons  = buttons.filter(b => !undocked[b.id]);
   const undockedButtons = buttons.filter(b =>  undocked[b.id]);
-  const btnSize = (() => {
-    if (!mobile) return 56;
-    const count = dockedButtons.length || 1;
-    const available = window.innerWidth - 40 - (count - 1) * 8;
-    return Math.max(36, Math.min(52, Math.floor(available / count)));
-  })();
 
   // Toolbar orientation: vertical on desktop, horizontal on mobile
   const isHorizontal = mobile;
@@ -303,15 +283,7 @@ export default function FloatToolbar({ buttons }) {
             moved.current = false;
             setDragging(true);
           }}
-          onClick={() => {
-              if (!moved.current) {
-                if (Object.keys(undocked).length > 0) {
-                  setUndocked({});
-                } else {
-                  setCollapsed(c => !c);
-                }
-              }
-            }}
+          onClick={() => { if (!moved.current) setCollapsed(c => !c); }}
           style={{
             width: 28, height: 28, borderRadius: '50%',
             background: 'rgba(201,185,145,0.08)',
