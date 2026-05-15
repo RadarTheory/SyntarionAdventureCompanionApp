@@ -17,47 +17,47 @@ function label8() {
 }
 
 const FULL_TITLES = {
-  'I':   'The Investigation of the Corren Mountain Mines',
-  'II':  'The Search of Cielo Dorado',
+  'I': 'The Investigation of the Corren Mountain Mines',
+  'II': 'The Search of Cielo Dorado',
   'III': 'An Offering to Aeirhyd',
-  'IV':  'Frigid Dirge in Galekgarde',
+  'IV': 'Frigid Dirge in Galekgarde',
 };
 
 // ─── EIGHT STATS ──────────────────────────────────────────────────────────────
 const MAGIC_STATS = [
-  { key: 'spirit',  label: 'Spirit',  equiv: 'Charisma',     axis: 'magic' },
-  { key: 'soul',    label: 'Soul',    equiv: 'Faith',        axis: 'magic' },
-  { key: 'body',    label: 'Body',    equiv: 'Constitution', axis: 'magic' },
-  { key: 'essence', label: 'Essence', equiv: 'Wisdom',       axis: 'magic' },
+  { key: 'spirit', label: 'Spirit', equiv: 'Charisma', axis: 'magic' },
+  { key: 'soul', label: 'Soul', equiv: 'Faith', axis: 'magic' },
+  { key: 'body', label: 'Body', equiv: 'Constitution', axis: 'magic' },
+  { key: 'essence', label: 'Essence', equiv: 'Wisdom', axis: 'magic' },
 ];
 const TECH_STATS = [
-  { key: 'will',  label: 'Will',  equiv: 'Strength',     axis: 'tech' },
-  { key: 'whim',  label: 'Whim',  equiv: 'Dexterity',    axis: 'tech' },
-  { key: 'mind',  label: 'Mind',  equiv: 'Intelligence', axis: 'tech' },
-  { key: 'dream', label: 'Dream', equiv: 'Intent',       axis: 'tech' },
+  { key: 'will', label: 'Will', equiv: 'Strength', axis: 'tech' },
+  { key: 'whim', label: 'Whim', equiv: 'Dexterity', axis: 'tech' },
+  { key: 'mind', label: 'Mind', equiv: 'Intelligence', axis: 'tech' },
+  { key: 'dream', label: 'Dream', equiv: 'Intent', axis: 'tech' },
 ];
 const ALL_EIGHT = [...MAGIC_STATS, ...TECH_STATS];
 
 // Equipment slot definitions
-const APPAREL_SLOTS  = ['Head', 'Torso', 'Waist', 'Hands', 'Greaves', 'Boots'];
-const WEAPON_SLOTS   = ['Main Hand', 'Off-Hand', 'Side-Weapon', 'Heavy'];
+const APPAREL_SLOTS = ['Head', 'Torso', 'Waist', 'Hands', 'Greaves', 'Boots'];
+const WEAPON_SLOTS = ['Main Hand', 'Off-Hand', 'Side-Weapon', 'Heavy'];
 const ACCESSORY_SLOTS = ['Ring I', 'Ring II', 'Neck', 'Charm', 'Relic', 'Artifact'];
 
 // All stat keys for item bonus selectors
 const STAT_KEYS = ALL_EIGHT.map(s => s.key);
 const DISCIPLINE_KEYS = [
-  'sanctus','chiasma','mana','gnosis','wraill','shaeid',
-  'gain','grit','focus','matter','ingenuity','fortitude','reason',
+  'sanctus', 'chiasma', 'mana', 'gnosis', 'wraill', 'shaeid',
+  'gain', 'grit', 'focus', 'matter', 'ingenuity', 'fortitude', 'reason',
 ];
 
 // axis colors
 const axisColor = axis => axis === 'magic' ? COLORS.magic : COLORS.tech;
-const axisText  = axis => axis === 'magic' ? COLORS.magicText : COLORS.techText;
+const axisText = axis => axis === 'magic' ? COLORS.magicText : COLORS.techText;
 
 // ─── SESSION TIMER ────────────────────────────────────────────────────────────
 function useSessionTimer(campaignId) {
   const [startedAt, setStartedAt] = useState(null);
-  const [elapsed, setElapsed]     = useState(0);
+  const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
     if (!campaignId) return;
     const load = async () => {
@@ -77,16 +77,16 @@ function useSessionTimer(campaignId) {
   }, [startedAt]);
   if (!startedAt) return null;
   const h = Math.floor(elapsed / 3600), m = Math.floor((elapsed % 3600) / 60), s = elapsed % 60;
-  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
 // ─── DRAGGABLE FLOAT BUTTON ───────────────────────────────────────────────────
 function FloatButton({ storageKey, defaultPos, children, onClick, title, hovered, onHover }) {
   const saved = (() => { try { return JSON.parse(localStorage.getItem(storageKey)); } catch { return null; } })();
-  const [pos, setPos]       = useState(saved || defaultPos);
+  const [pos, setPos] = useState(saved || defaultPos);
   const [dragging, setDragging] = useState(false);
   const offset = useRef({ x: 0, y: 0 });
-  const moved  = useRef(false);
+  const moved = useRef(false);
 
   useEffect(() => { localStorage.setItem(storageKey, JSON.stringify(pos)); }, [pos]);
 
@@ -144,13 +144,13 @@ function DraggablePanel({ defaultX, defaultY, onClose, title, width, accentColor
 
 // ─── HERCULES LITE ────────────────────────────────────────────────────────────
 function HerculesLite({ campaignId, char, onClose }) {
-  const [session, setSession]         = useState(null);
-  const [events, setEvents]           = useState([]);
-  const [initiative, setInitiative]   = useState([]);
-  const [rolling, setRolling]         = useState(false);
-  const [submitted, setSubmitted]     = useState(false);
+  const [session, setSession] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [initiative, setInitiative] = useState([]);
+  const [rolling, setRolling] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [submittedRoll, setSubmittedRoll] = useState(null);
-  const bottomRef  = useRef(null);
+  const bottomRef = useRef(null);
   const sessionRef = useRef(null);
 
   useEffect(() => { sessionRef.current = session; }, [session]);
@@ -282,7 +282,7 @@ function CampaignList({ onSelect, userChar, onHome }) {
               onMouseLeave={e => { e.currentTarget.style.boxShadow = ''; e.currentTarget.style.transform = 'none'; }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(26,23,20,0.35)' }}>Campaign {['I','II','III','IV'][i]}</div>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(26,23,20,0.35)' }}>Campaign {['I', 'II', 'III', 'IV'][i]}</div>
                   {isAssigned && <div style={{ fontSize: 8, fontFamily: "'Cinzel', serif", color: COLORS.magic, background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 4, padding: '1px 6px' }}>✓ Your Campaign</div>}
                 </div>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 16 : 19, fontWeight: 700, color: '#1a1714', marginBottom: 4 }}>{c.subtitle}</div>
@@ -299,9 +299,9 @@ function CampaignList({ onSelect, userChar, onHome }) {
 
 // ─── STAT BAR ─────────────────────────────────────────────────────────────────
 function StatBar({ stat, baseVal, itemBonus, conditionBonus }) {
-  const total   = baseVal + itemBonus + conditionBonus;
-  const pct     = Math.round(((total - 8) / 8) * 100);
-  const color   = axisColor(stat.axis);
+  const total = baseVal + itemBonus + conditionBonus;
+  const pct = Math.round(((total - 8) / 8) * 100);
+  const color = axisColor(stat.axis);
   const textCol = axisText(stat.axis);
   return (
     <div style={{ background: COLORS.card, border: `1px solid ${color}22`, borderRadius: 8, padding: '10px 12px' }}>
@@ -328,15 +328,15 @@ function StatBar({ stat, baseVal, itemBonus, conditionBonus }) {
 
 // ─── SCALES PANEL ─────────────────────────────────────────────────────────────
 function ScalesPanel({ char, effectiveStats }) {
-  const vitals  = (effectiveStats.body  || 8) + (effectiveStats.will  || 8);
-  const stamina = (effectiveStats.body  || 8) + (effectiveStats.whim  || 8);
-  const resolve = (effectiveStats.soul  || 8) + (effectiveStats.dream || 8);
+  const vitals = (effectiveStats.body || 8) + (effectiveStats.will || 8);
+  const stamina = (effectiveStats.body || 8) + (effectiveStats.whim || 8);
+  const resolve = (effectiveStats.soul || 8) + (effectiveStats.dream || 8);
 
   // alignment raw value stored as number -4 to +4; default 0
   const alignVal = Number(char?.alignment ?? 0);
   const apCurrent = char?.apCurrent ?? 0;
-  const apTotal   = char?.apTotal   ?? 0;
-  const morality  = char?.morality ?? 0;
+  const apTotal = char?.apTotal ?? 0;
+  const morality = char?.morality ?? 0;
 
   const scaleRow = (label, val, maxVal, leftLabel, rightLabel, color) => {
     const pct = Math.max(0, Math.min(100, ((val - 0) / maxVal) * 100));
@@ -386,7 +386,7 @@ function ScalesPanel({ char, effectiveStats }) {
           <div style={{ position: 'absolute', left: `${alignPct}%`, top: '50%', transform: 'translate(-50%, -50%)', width: 14, height: 14, borderRadius: '50%', background: alignColor, border: `2px solid ${COLORS.surface}`, boxShadow: `0 0 8px ${alignColor}88` }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
-          {[-4,-3,-2,-1,0,1,2,3,4].map(v => (
+          {[-4, -3, -2, -1, 0, 1, 2, 3, 4].map(v => (
             <div key={v} style={{ fontSize: 7, color: v === alignVal ? alignColor : COLORS.dim, fontFamily: 'monospace', fontWeight: v === alignVal ? 700 : 400 }}>{v}</div>
           ))}
         </div>
@@ -539,25 +539,25 @@ const QUICK_CATALOG = [
 ];
 
 function PackDrawer({ charId, loadedFromDB, packItems, setPackItems, persistPack, isDM = false }) {
-  const [open, setOpen]           = useState(false);
-  const [view, setView]           = useState('list');   // 'list' | 'catalog' | 'add'
+  const [open, setOpen] = useState(false);
+  const [view, setView] = useState('list');   // 'list' | 'catalog' | 'add'
   const [catalogFilter, setCatalogFilter] = useState('All');
   const [catalogSearch, setCatalogSearch] = useState('');
-  const [newItem, setNewItem]     = useState({ name: '', category: 'Misc', desc: '', qty: 1, weight: 0 });
-  const [coin, setCoin]           = useState('');
-  const [weight, setWeight]       = useState('');
-  const [misc, setMisc]           = useState('');
-  const [editIdx, setEditIdx]     = useState(null);
+  const [newItem, setNewItem] = useState({ name: '', category: 'Misc', desc: '', qty: 1, weight: 0 });
+  const [coin, setCoin] = useState('');
+  const [weight, setWeight] = useState('');
+  const [misc, setMisc] = useState('');
+  const [editIdx, setEditIdx] = useState(null);
   const PACK_META_KEY = `syntarion_pack_meta_${charId}`;
 
   // Load pack meta (coin/weight/misc) from localStorage
   useEffect(() => {
     try {
       const m = JSON.parse(localStorage.getItem(PACK_META_KEY) || '{}');
-      if (m.coin    !== undefined) setCoin(m.coin);
-      if (m.weight  !== undefined) setWeight(m.weight);
-      if (m.misc    !== undefined) setMisc(m.misc);
-    } catch (_) {}
+      if (m.coin !== undefined) setCoin(m.coin);
+      if (m.weight !== undefined) setWeight(m.weight);
+      if (m.misc !== undefined) setMisc(m.misc);
+    } catch (_) { }
   }, [charId]);
 
   const saveMeta = (field, val) => {
@@ -648,7 +648,7 @@ function PackDrawer({ charId, loadedFromDB, packItems, setPackItems, persistPack
                   {readOnly
                     ? <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{value}</div>
                     : <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-                        style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, padding: 0 }} />
+                      style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, padding: 0 }} />
                   }
                 </div>
               ))}
@@ -685,24 +685,24 @@ function PackDrawer({ charId, loadedFromDB, packItems, setPackItems, persistPack
                     </div>
                     {/* Qty controls */}
                     {isDM && (
-  <>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-      <button onClick={() => updateQty(idx, -1)}>−</button>
-      <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, minWidth: 18, textAlign: 'center' }}>
-        {item.qty || 1}
-      </div>
-      <button onClick={() => updateQty(idx, 1)}>+</button>
-    </div>
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                          <button onClick={() => updateQty(idx, -1)}>−</button>
+                          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, minWidth: 18, textAlign: 'center' }}>
+                            {item.qty || 1}
+                          </div>
+                          <button onClick={() => updateQty(idx, 1)}>+</button>
+                        </div>
 
-    <button onClick={() => openEdit(idx)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: COLORS.dim, fontSize: 11, padding: '2px 4px' }}>
-      ✎
-    </button>
+                        <button onClick={() => openEdit(idx)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: COLORS.dim, fontSize: 11, padding: '2px 4px' }}>
+                          ✎
+                        </button>
 
-    <button onClick={() => removeItem(idx)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#e05a5a', fontSize: 11, padding: '2px 4px' }}>
-      ✕
-    </button>
-  </>)}
-       </div>
+                        <button onClick={() => removeItem(idx)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#e05a5a', fontSize: 11, padding: '2px 4px' }}>
+                          ✕
+                        </button>
+                      </>)}
+                  </div>
                 ))}
               </div>
             )}
@@ -802,14 +802,14 @@ function PackDrawer({ charId, loadedFromDB, packItems, setPackItems, persistPack
 
 // ─── INVENTORY PANEL ──────────────────────────────────────────────────────────
 function InventoryPanel({ char, onInventoryChange, isDM = false }) {
-  const [items, setItems]         = useState({});
+  const [items, setItems] = useState({});
   const [packItems, setPackItems] = useState([]);
-  const [editSlot, setEditSlot]   = useState(null);
-  const [saving, setSaving]       = useState(false);
-  const [draft, setDraft]         = useState(null);
+  const [editSlot, setEditSlot] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [draft, setDraft] = useState(null);
   const [loadedFromDB, setLoadedFromDB] = useState(false);
 
-  const STORAGE_KEY     = `syntarion_inv_${char?.id}`;
+  const STORAGE_KEY = `syntarion_inv_${char?.id}`;
   const PACK_STORAGE_KEY = `syntarion_pack_${char?.id}`;
 
   // Load equipped items
@@ -837,17 +837,17 @@ function InventoryPanel({ char, onInventoryChange, isDM = false }) {
           onInventoryChange(equipped);
           return;
         }
-      } catch (_) {}
+      } catch (_) { }
       // localStorage fallback
       try {
         const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
         setItems(stored);
         onInventoryChange(stored);
-      } catch (_) {}
+      } catch (_) { }
       try {
         const storedPack = JSON.parse(localStorage.getItem(PACK_STORAGE_KEY) || '[]');
         setPackItems(storedPack);
-      } catch (_) {}
+      } catch (_) { }
     })();
   }, [char?.id]);
 
@@ -917,9 +917,9 @@ function InventoryPanel({ char, onInventoryChange, isDM = false }) {
                   )}
                   {!hasItem && <div style={{ fontSize: 10, color: `${COLORS.dim}66`, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Empty</div>}
                 </div>
-                {hasItem && item.bonuses && Object.entries(item.bonuses).some(([,v]) => v !== 0) && (
+                {hasItem && item.bonuses && Object.entries(item.bonuses).some(([, v]) => v !== 0) && (
                   <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-                    {Object.entries(item.bonuses).filter(([,v]) => v !== 0).map(([k, v]) => (
+                    {Object.entries(item.bonuses).filter(([, v]) => v !== 0).map(([k, v]) => (
                       <div key={k} style={{ fontSize: 7, color: v > 0 ? COLORS.magic : '#e05a5a', fontFamily: "'Cinzel', serif", letterSpacing: '0.08em' }}>
                         {v > 0 ? '+' : ''}{v} {k}
                       </div>
@@ -928,8 +928,8 @@ function InventoryPanel({ char, onInventoryChange, isDM = false }) {
                 )}
               </div>
               {isDM && (
-  <div style={{ fontSize: 10, color: COLORS.dim, marginLeft: 8, flexShrink: 0 }}>✎</div>
-)}
+                <div style={{ fontSize: 10, color: COLORS.dim, marginLeft: 8, flexShrink: 0 }}>✎</div>
+              )}
             </button>
           );
         })}
@@ -1030,7 +1030,7 @@ function InventoryPanel({ char, onInventoryChange, isDM = false }) {
 
 // ─── LOOTBOX PANEL ────────────────────────────────────────────────────────────
 function LootboxPanel({ campaignId, userChar, onClaimed }) {
-  const [boxes, setBoxes]       = useState([]);
+  const [boxes, setBoxes] = useState([]);
   const [expanded, setExpanded] = useState(null);  // box id
   const [boxItems, setBoxItems] = useState({});     // { boxId: [...] }
   const [claiming, setClaiming] = useState(null);   // box id being claimed
@@ -1079,7 +1079,7 @@ function LootboxPanel({ campaignId, userChar, onClaimed }) {
     // Write all items to character's pack
     const rows = items.map(item => ({
       character_id: String(userChar.id),
-      slot: `pack__${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+      slot: `pack__${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       name: item.item_name,
       description: `${item.item_category}|${item.item_desc}${item.note ? ' — ' + item.note : ''}`,
       attuned: false,
@@ -1136,8 +1136,8 @@ function LootboxPanel({ campaignId, userChar, onClaimed }) {
       )}
 
       {boxes.map(box => {
-        const isOpen    = expanded === box.id;
-        const items     = boxItems[box.id] || [];
+        const isOpen = expanded === box.id;
+        const items = boxItems[box.id] || [];
         const isClaiming = claiming === box.id;
 
         return (
@@ -1206,25 +1206,25 @@ const TABS = ['Map', 'Sheet', 'Scales', 'Actions', 'Abilities', 'Inventory', 'Lo
 
 function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   const { isMobile } = useDevice();
-  const [activeTab, setActiveTab]     = useState('Map');
-  const [assigning, setAssigning]     = useState(false);
-  const [astHovered, setAstHovered]   = useState(false);
+  const [activeTab, setActiveTab] = useState('Map');
+  const [assigning, setAssigning] = useState(false);
+  const [astHovered, setAstHovered] = useState(false);
   const [hercHovered, setHercHovered] = useState(false);
   const [rollingAction, setRollingAction] = useState(null);
-  const [inventory, setInventory]     = useState({});
+  const [inventory, setInventory] = useState({});
   const [lootboxCount, setLootboxCount] = useState(0);
-  const [showCastor, setShowCastor]       = useState(false);
+  const [showCastor, setShowCastor] = useState(false);
   const [castorHovered, setCastorHovered] = useState(false);
-  const [castorBadge, setCastorBadge]     = useState(0);
-  const timer      = useSessionTimer(campaign.id);
+  const [castorBadge, setCastorBadge] = useState(0);
+  const timer = useSessionTimer(campaign.id);
   const isAssigned = userChar?.campaign === String(campaign.id);
   const [showAstragal, setShowAstragal] = useState(false);
   const [showHercules, setShowHercules] = useState(false);
   const [showScribeCV, setShowScribeCV] = useState(false);
   const [showBestiary, setShowBestiary] = useState(false);
-  const [showScribe, setShowScribe]     = useState(false);
+  const [showScribe, setShowScribe] = useState(false);
   const [showArgus, setShowArgus] = useState(false);
-  
+
   // Poll lootbox count for badge
   useEffect(() => {
     const fetchCount = async () => {
@@ -1258,7 +1258,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
     ALL_EIGHT.forEach(s => {
       effective[s.key] = (base[s.key] || 8) + (itemBonuses[s.key] || 0);
     });
-    effective._itemBonuses      = itemBonuses;
+    effective._itemBonuses = itemBonuses;
     effective._conditionBonuses = conditionBonuses;
     return effective;
   })();
@@ -1274,23 +1274,23 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
     await supabase.from('hercules_events').insert({ session_id: hsession.id, type: 'action', actor_name: userChar.name || 'Player', actor_id: String(userChar.id), description: `${userChar.name || 'Player'} used ${action}: d20 ${roll}${modifier ? ` + ${modifier}` : ''} = ${total}.` });
     setRollingAction(null);
   };
-  
+
   const rollAbility = async (entry, modifier) => {
-  const roll = Math.floor(Math.random() * 20) + 1;
-  const total = roll + modifier;
-  const { data: hsession } = await supabase
-    .from('hercules_sessions').select('id')
-    .eq('campaign_id', String(campaign.id)).eq('status', 'active')
-    .order('created_at', { ascending: false }).limit(1).maybeSingle();
-  if (!hsession?.id) return;
-  await supabase.from('hercules_events').insert({
-    session_id: hsession.id,
-    type: 'ability',
-    actor_name: userChar?.name || 'Player',
-    actor_id: userChar?.id ? String(userChar.id) : null,
-    description: `${userChar?.name || 'Player'} used ${entry.name} [${entry.disciplineLabel}]: d20 ${roll} ${modifier >= 0 ? '+' : ''}${modifier} = ${total}.`,
-  });
-};
+    const roll = Math.floor(Math.random() * 20) + 1;
+    const total = roll + modifier;
+    const { data: hsession } = await supabase
+      .from('hercules_sessions').select('id')
+      .eq('campaign_id', String(campaign.id)).eq('status', 'active')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (!hsession?.id) return;
+    await supabase.from('hercules_events').insert({
+      session_id: hsession.id,
+      type: 'ability',
+      actor_name: userChar?.name || 'Player',
+      actor_id: userChar?.id ? String(userChar.id) : null,
+      description: `${userChar?.name || 'Player'} used ${entry.name} [${entry.disciplineLabel}]: d20 ${roll} ${modifier >= 0 ? '+' : ''}${modifier} = ${total}.`,
+    });
+  };
 
   const handleAssign = async () => {
     if (!userChar?.id) return;
@@ -1334,7 +1334,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
             <div style={{ ...label8(), marginBottom: 12 }}>Your Actions</div>
             {Object.entries(ACTIONS).map(([category, actions]) => {
               if (category === 'magic' && userChar.cp !== 'magic') return null;
-              if (category === 'tech'  && userChar.cp !== 'tech')  return null;
+              if (category === 'tech' && userChar.cp !== 'tech') return null;
               return (
                 <div key={category} style={{ marginBottom: 16 }}>
                   <div style={{ ...label8(), marginBottom: 8, color: COLORS.dim }}>{category}</div>
@@ -1360,10 +1360,10 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
           </div>
         ) : <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12 }}>No character loaded.</div>;
 
-        case 'Abilities':
+      case 'Abilities':
         return userChar
-    ? <AbilitiesPanel char={userChar} campaignId={String(campaign.id)} onRoll={rollAbility} />
-    : <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12 }}>No character loaded.</div>;
+          ? <AbilitiesPanel char={userChar} campaignId={String(campaign.id)} onRoll={rollAbility} />
+          : <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12 }}>No character loaded.</div>;
 
       case 'Inventory':
         return userChar
@@ -1400,132 +1400,131 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
     <div style={{ minHeight: '100vh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap'); * { box-sizing: border-box; } body { margin: 0; }`}</style>
 
-<FloatToolbar buttons={[
-  {
-  id: 'astragal',
-  title: 'Astragal — Roll the dice',
-  onClick: () => setShowAstragal(o => !o),
-  children: (
-    <img
-      src="/AstragalButton.png"
-      alt="Astragal"
-      draggable={false}
-      style={{
-        width: '118%',
-        height: '118%',
-        objectFit: 'contain',
-        pointerEvents: 'none',
-      }}
-    />
-  ),
-},
-  {
-    id: 'hercules',
-    title: 'HERCULES — Combat Tracker',
-    onClick: () => setShowHercules(o => !o),
-    children: (
-      <img
-        src="/HerculesCombat.png"
-        alt="HERCULES"
-        draggable={false}
-        style={{
-          width: '150%',
-          height: '150%',
-          objectFit: 'contain',
-          filter: 'invert(1) brightness(1.28)',
-          pointerEvents: 'none',
-        }}
-      />
-    ),
-  },
-  {
-    id: 'argus',
-    title: 'ARGUS — My Gear, Pack & Equipment',
-    onClick: () => setShowArgus(o => !o),
-    children: (
-      <img
-        src="/Backpackicon.png"
-        alt="ARGUS"
-        draggable={false}
-        style={{
-          width: '105%',
-          height: '105%',
-          objectFit: 'contain',
-          pointerEvents: 'none',
-        }}
-      />
-    ),
-  },
-  {
-    id: 'castor',
-    title: 'CASTOR — Cast Request',
-    onClick: () => setShowCastor(o => !o),
-    badge: castorBadge,
-    children: (
-      <img
-        src="/castoricon.png"
-        alt="CASTOR"
-        draggable={false}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          pointerEvents: 'none',
-        }}
-      />
-    ),
-  },
-  {
-  id: 'bestiary',
-  title: 'Bestiary — Creatures of Soteria',
-  onClick: () => setShowBestiary(o => !o),
-  children: <img src="/bestiaryicon.png" alt="Bestiary" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
-},
-  {
-  id: 'scribe',
-  title: 'The Scribe — Archives',
-  onClick: () => setShowScribeCV(o => !o),
-  children: <img src="/scribeicon.png" alt="Scribe" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
-},
-]} />
-   
+      <FloatToolbar buttons={[
+        {
+          id: 'astragal',
+          title: 'Astragal — Roll the dice',
+          onClick: () => setShowAstragal(o => !o),
+          children: (
+            <img
+              src="/AstragalButton.png"
+              alt="Astragal"
+              draggable={false}
+              style={{
+                width: '118%',
+                height: '118%',
+                objectFit: 'contain',
+                pointerEvents: 'none',
+              }}
+            />
+          ),
+        },
+        {
+          id: 'hercules',
+          title: 'HERCULES — Combat Tracker',
+          onClick: () => setShowHercules(o => !o),
+          children: (
+            <img
+              src="/HerculesCombat.png"
+              alt="HERCULES"
+              draggable={false}
+              style={{
+                width: '150%',
+                height: '150%',
+                objectFit: 'contain',
+                pointerEvents: 'none',
+              }}
+            />
+          ),
+        },
+        {
+          id: 'argus',
+          title: 'ARGUS — My Gear, Pack & Equipment',
+          onClick: () => setShowArgus(o => !o),
+          children: (
+            <img
+              src="/Backpackicon.png"
+              alt="ARGUS"
+              draggable={false}
+              style={{
+                width: '105%',
+                height: '105%',
+                objectFit: 'contain',
+                pointerEvents: 'none',
+              }}
+            />
+          ),
+        },
+        {
+          id: 'castor',
+          title: 'CASTOR — Cast Request',
+          onClick: () => setShowCastor(o => !o),
+          badge: castorBadge,
+          children: (
+            <img
+              src="/castoricon.png"
+              alt="CASTOR"
+              draggable={false}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                pointerEvents: 'none',
+              }}
+            />
+          ),
+        },
+        {
+          id: 'bestiary',
+          title: 'Bestiary — Creatures of Soteria',
+          onClick: () => setShowBestiary(o => !o),
+          children: <img src="/bestiaryicon.png" alt="Bestiary" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+        },
+        {
+          id: 'scribe',
+          title: 'The Scribe — Archives',
+          onClick: () => setShowScribeCV(o => !o),
+          children: <img src="/scribeicon.png" alt="Scribe" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+        },
+      ]} />
+
       {/* Astragal panel */}
       {showAstragal && (
-  <DraggablePanel defaultX={108} defaultY={300} onClose={() => setShowAstragal(false)} title="Astragal — Fate Cast in Bone" width={320} accentColor="rgba(240,238,235,0.12)">
-    <div style={{ padding: 14 }}>
-      <Astragal character={userChar} actionName="Astragal Roll" statKey="will" onResult={logRoll} />
-    </div>
-  </DraggablePanel>
-)}
+        <DraggablePanel defaultX={108} defaultY={300} onClose={() => setShowAstragal(false)} title="Astragal — Fate Cast in Bone" width={320} accentColor="rgba(240,238,235,0.12)">
+          <div style={{ padding: 14 }}>
+            <Astragal character={userChar} actionName="Astragal Roll" statKey="will" onResult={logRoll} />
+          </div>
+        </DraggablePanel>
+      )}
 
       {/* HERCULES lite panel */}
       {showHercules && (
-  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowHercules(false)} title="HERCULES" width={340} accentColor="rgba(200,168,74,0.35)">
-    <HerculesLite campaignId={String(campaign.id)} char={userChar} onClose={() => setShowHercules(false)} embedded />
-  </DraggablePanel>
-)}
+        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowHercules(false)} title="HERCULES" width={340} accentColor="rgba(200,168,74,0.35)">
+          <HerculesLite campaignId={String(campaign.id)} char={userChar} onClose={() => setShowHercules(false)} embedded />
+        </DraggablePanel>
+      )}
 
-       {showCastor && (
-  <DraggablePanel defaultX={108} defaultY={160} onClose={() => setShowCastor(false)} title="CASTOR · Spell-Casting & Schematics" width={360} accentColor="rgba(56,189,248,0.35)">
-    <CastorPanel char={userChar} campaignId={String(campaign.id)} onClose={() => setShowCastor(false)} onBadgeChange={setCastorBadge} embedded />
-  </DraggablePanel>
-)}
+      {showCastor && (
+        <DraggablePanel defaultX={108} defaultY={160} onClose={() => setShowCastor(false)} title="CASTOR · Spell-Casting & Schematics" width={360} accentColor="rgba(56,189,248,0.35)">
+          <CastorPanel char={userChar} campaignId={String(campaign.id)} onClose={() => setShowCastor(false)} onBadgeChange={setCastorBadge} embedded />
+        </DraggablePanel>
+      )}
 
-    {showArgus && (
-  <ArgusPlayerPanel char={userChar} onClose={() => setShowArgus(false)} />
-)}
+      {showArgus && (
+        <ArgusPlayerPanel char={userChar} onClose={() => setShowArgus(false)} />
+      )}
 
-    {showBestiary && (
-  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowBestiary(false)} title="BESTIARY · Creatures of Soteria" width={380} accentColor="rgba(168,230,163,0.3)">
-    <BestiaryPanel isDM={false} campaignId={String(campaign.id)} embedded />
-  </DraggablePanel>
-)}
+      {showBestiary && (
+        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowBestiary(false)} title="BESTIARY · Creatures of Soteria" width={380} accentColor="rgba(168,230,163,0.3)">
+          <BestiaryPanel isDM={false} campaignId={String(campaign.id)} embedded />
+        </DraggablePanel>
+      )}
 
-{showScribeCV && (
-  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribeCV(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
-    <ScribePlayerPanel char={userChar} campaignId={String(campaign.id)} onUpdateChar={char => onAssign(char.campaign)} embedded />
-  </DraggablePanel>
-)}
+      {showScribeCV && (
+        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribeCV(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
+          <ScribePlayerPanel char={userChar} campaignId={String(campaign.id)} onUpdateChar={char => onAssign(char.campaign)} embedded />
+        </DraggablePanel>
+      )}
 
       {/* Header */}
       <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>

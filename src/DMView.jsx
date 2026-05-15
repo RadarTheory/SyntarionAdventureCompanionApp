@@ -59,10 +59,10 @@ function label8() {
 
 function StatusBadge({ status }) {
   const map = {
-    draft:              { label: 'Draft',    color: COLORS.dim,   bg: 'rgba(131,115,100,0.12)' },
-    awaiting_adventure: { label: 'Awaiting', color: COLORS.deity, bg: COLORS.deityBg           },
-    approved:           { label: 'Approved', color: COLORS.magic, bg: COLORS.magicBg           },
-    rejected:           { label: 'Rejected', color: COLORS.warn,  bg: COLORS.warnBg            },
+    draft: { label: 'Draft', color: COLORS.dim, bg: 'rgba(131,115,100,0.12)' },
+    awaiting_adventure: { label: 'Awaiting', color: COLORS.deity, bg: COLORS.deityBg },
+    approved: { label: 'Approved', color: COLORS.magic, bg: COLORS.magicBg },
+    rejected: { label: 'Rejected', color: COLORS.warn, bg: COLORS.warnBg },
   };
   const s = map[status] || map.draft;
   return (
@@ -102,16 +102,16 @@ function ChatPanel({ session, onClose, isDM }) {
   const [sending, setSending] = useState(false);
   const [sessionEnded, setSessionEnded] = useState(false);
   const bottomRef = useRef(null);
-  
+
 
   useEffect(() => {
-  if (!session) return;
-  fetchMessages();
-  const channel = supabase.channel(`dm-session-${session.session_id}`)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `session_id=eq.${session.session_id}` }, () => fetchMessages())
-    .subscribe();
-  return () => supabase.removeChannel(channel);
-}, [session]);
+    if (!session) return;
+    fetchMessages();
+    const channel = supabase.channel(`dm-session-${session.session_id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `session_id=eq.${session.session_id}` }, () => fetchMessages())
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [session]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
@@ -389,38 +389,38 @@ function DMMemoryPanel({ characterId, campaignId }) {
   const cats = ['note', 'secret', 'hook', 'npc', 'lore'];
 
   return (
-  <div>
-    <div style={{ ...label8(), marginBottom: 10 }}>DM Memory</div>
-    <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-      {cats.map(c => <div key={c} onClick={() => setCategory(c)} style={{ background: category === c ? COLORS.deityBg : 'transparent', border: `1px solid ${category === c ? COLORS.deity : COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: category === c ? COLORS.deityText : COLORS.dim, fontFamily: "'Cinzel', serif" }}>{c}</div>)}
-    </div>
-    <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-      <input value={newMemory} onChange={e => setNewMemory(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMemory()} placeholder="Add a memory entry…" style={{ flex: 1, background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
-      <button onClick={addMemory} disabled={saving} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 6, padding: '7px 12px', cursor: 'pointer', fontSize: 10, color: COLORS.deityText, fontFamily: "'Cinzel', serif" }}>+</button>
-    </div>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 160, overflowY: 'auto' }}>
-      {memories.map(m => (
-        <div key={m.id} style={{ background: 'rgba(240,238,235,0.03)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
-              <div style={{ fontSize: 7, color: COLORS.deity, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase' }}>{m.category}</div>
-              <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: 'Georgia, serif' }}>{new Date(m.created_at).toLocaleDateString()}</div>
-            </div>
-            <div style={{ fontSize: 11, color: COLORS.text, fontFamily: 'Georgia, serif', lineHeight: 1.4 }}>{m.content}</div>
-            {(m.character_id || m.campaign_id) && (
-              <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 4 }}>
-                {m.campaign_id ? `Campaign ${m.campaign_id}` : 'Character'}
+    <div>
+      <div style={{ ...label8(), marginBottom: 10 }}>DM Memory</div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+        {cats.map(c => <div key={c} onClick={() => setCategory(c)} style={{ background: category === c ? COLORS.deityBg : 'transparent', border: `1px solid ${category === c ? COLORS.deity : COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: category === c ? COLORS.deityText : COLORS.dim, fontFamily: "'Cinzel', serif" }}>{c}</div>)}
+      </div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+        <input value={newMemory} onChange={e => setNewMemory(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMemory()} placeholder="Add a memory entry…" style={{ flex: 1, background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
+        <button onClick={addMemory} disabled={saving} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 6, padding: '7px 12px', cursor: 'pointer', fontSize: 10, color: COLORS.deityText, fontFamily: "'Cinzel', serif" }}>+</button>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 160, overflowY: 'auto' }}>
+        {memories.map(m => (
+          <div key={m.id} style={{ background: 'rgba(240,238,235,0.03)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                <div style={{ fontSize: 7, color: COLORS.deity, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase' }}>{m.category}</div>
+                <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: 'Georgia, serif' }}>{new Date(m.created_at).toLocaleDateString()}</div>
               </div>
-            )}
+              <div style={{ fontSize: 11, color: COLORS.text, fontFamily: 'Georgia, serif', lineHeight: 1.4 }}>{m.content}</div>
+              {(m.character_id || m.campaign_id) && (
+                <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 4 }}>
+                  {m.campaign_id ? `Campaign ${m.campaign_id}` : 'Character'}
+                </div>
+              )}
+            </div>
+            <button onClick={() => deleteMemory(m.id)} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 12, flexShrink: 0 }}>×</button>
           </div>
-          <button onClick={() => deleteMemory(m.id)} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 12, flexShrink: 0 }}>×</button>
-        </div>
-      ))}
-      {memories.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No memories recorded.</div>}
+        ))}
+        {memories.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No memories recorded.</div>}
+      </div>
     </div>
-  </div>
-);
-} 
+  );
+}
 
 // ─── SESSION LOG EDITOR ───────────────────────────────────────────────────────
 function SessionLogEditor({ campaign }) {
@@ -527,7 +527,7 @@ function MusicPanel() {
 
       if (listError) throw new Error(`Storage error: ${listError.message} (${listError.statusCode})`);
       if (!data) throw new Error('No data returned from storage');
-      
+
       const audioFiles = data
         .filter(f => f.name && /\.(wav|mp3|ogg|flac|m4a)$/i.test(f.name))
         .map(f => ({
@@ -606,7 +606,7 @@ function VitalsPanel({ row, onClose, campaignId }) {
   const isCreature = !row.character_id || row.character_id === row.character_name;
   const VITALS_KEY = `syntarion_vitals_${row.character_id}`;
   const load = (k, def) => { try { return JSON.parse(localStorage.getItem(VITALS_KEY) || '{}')[k] ?? def; } catch { return def; } };
-  const [vitals,  setVitals]  = useState({ current: load('vitals',  null), max: load('vitalsMax',  null) });
+  const [vitals, setVitals] = useState({ current: load('vitals', null), max: load('vitalsMax', null) });
   const [stamina, setStamina] = useState({ current: load('stamina', null), max: load('staminaMax', null) });
   const [resolve, setResolve] = useState({ current: load('resolve', null), max: load('resolveMax', null) });
 
@@ -616,10 +616,10 @@ function VitalsPanel({ row, onClose, campaignId }) {
         if (!data?.data) return;
         const d = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
         const s = d.stats || {};
-        const v = (s.body||8)+(s.will||8), st = (s.body||8)+(s.whim||8), r = (s.soul||8)+(s.dream||8);
-        setVitals(p  => ({ current: p.current  ?? v,  max: p.max  ?? v  }));
-        setStamina(p => ({ current: p.current  ?? st, max: p.max  ?? st }));
-        setResolve(p => ({ current: p.current  ?? r,  max: p.max  ?? r  }));
+        const v = (s.body || 8) + (s.will || 8), st = (s.body || 8) + (s.whim || 8), r = (s.soul || 8) + (s.dream || 8);
+        setVitals(p => ({ current: p.current ?? v, max: p.max ?? v }));
+        setStamina(p => ({ current: p.current ?? st, max: p.max ?? st }));
+        setResolve(p => ({ current: p.current ?? r, max: p.max ?? r }));
       });
     }
   }, [row.character_id]);
@@ -630,35 +630,35 @@ function VitalsPanel({ row, onClose, campaignId }) {
 
   const Tracker = ({ label, color, state, setState, others }) => {
     const cur = state.current ?? 0, max = state.max ?? 0;
-    const pct = max > 0 ? Math.max(0, Math.min(100, (cur/max)*100)) : 0;
-    const upd = (next) => { setState(next); save(label==='Vitals'?next:vitals, label==='Stamina'?next:stamina, label==='Resolve'?next:resolve); };
+    const pct = max > 0 ? Math.max(0, Math.min(100, (cur / max) * 100)) : 0;
+    const upd = (next) => { setState(next); save(label === 'Vitals' ? next : vitals, label === 'Stamina' ? next : stamina, label === 'Resolve' ? next : resolve); };
     return (
       <div style={{ marginBottom: 12 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-          <div style={{ fontFamily:"'Cinzel',serif", fontSize: 9, color, letterSpacing:'0.1em' }}>{label}</div>
-          <div style={{ display:'flex', alignItems:'center', gap: 4 }}>
-            <button onClick={() => upd({...state, current: Math.max(0,(state.current??0)-1)})} style={{ width:20,height:20,borderRadius:4,background:'rgba(224,90,90,0.15)',border:'1px solid rgba(224,90,90,0.4)',color:'#e05a5a',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center' }}>−</button>
-            <input type="number" value={state.current??''} onChange={e => upd({...state,current:parseInt(e.target.value)||0})} style={{ width:36,textAlign:'center',background:'rgba(0,0,0,0.3)',border:`1px solid ${color}44`,borderRadius:4,color,fontFamily:"'Cinzel',serif",fontSize:13,fontWeight:700,outline:'none',padding:'2px 0' }} />
-            <span style={{ color:'#555', fontSize:10 }}>/</span>
-            <input type="number" value={state.max??''} onChange={e => upd({...state,max:parseInt(e.target.value)||0})} style={{ width:36,textAlign:'center',background:'rgba(0,0,0,0.2)',border:`1px solid ${COLORS.border}`,borderRadius:4,color:COLORS.dim,fontFamily:"'Cinzel',serif",fontSize:11,outline:'none',padding:'2px 0' }} />
-            <button onClick={() => upd({...state, current: Math.min(state.max??999,(state.current??0)+1)})} style={{ width:20,height:20,borderRadius:4,background:'rgba(121,245,167,0.1)',border:'1px solid rgba(121,245,167,0.35)',color:'#79f5a7',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center' }}>+</button>
+          <div style={{ fontFamily: "'Cinzel',serif", fontSize: 9, color, letterSpacing: '0.1em' }}>{label}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button onClick={() => upd({ ...state, current: Math.max(0, (state.current ?? 0) - 1) })} style={{ width: 20, height: 20, borderRadius: 4, background: 'rgba(224,90,90,0.15)', border: '1px solid rgba(224,90,90,0.4)', color: '#e05a5a', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+            <input type="number" value={state.current ?? ''} onChange={e => upd({ ...state, current: parseInt(e.target.value) || 0 })} style={{ width: 36, textAlign: 'center', background: 'rgba(0,0,0,0.3)', border: `1px solid ${color}44`, borderRadius: 4, color, fontFamily: "'Cinzel',serif", fontSize: 13, fontWeight: 700, outline: 'none', padding: '2px 0' }} />
+            <span style={{ color: '#555', fontSize: 10 }}>/</span>
+            <input type="number" value={state.max ?? ''} onChange={e => upd({ ...state, max: parseInt(e.target.value) || 0 })} style={{ width: 36, textAlign: 'center', background: 'rgba(0,0,0,0.2)', border: `1px solid ${COLORS.border}`, borderRadius: 4, color: COLORS.dim, fontFamily: "'Cinzel',serif", fontSize: 11, outline: 'none', padding: '2px 0' }} />
+            <button onClick={() => upd({ ...state, current: Math.min(state.max ?? 999, (state.current ?? 0) + 1) })} style={{ width: 20, height: 20, borderRadius: 4, background: 'rgba(121,245,167,0.1)', border: '1px solid rgba(121,245,167,0.35)', color: '#79f5a7', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
           </div>
         </div>
-        <div style={{ height:4,background:`${color}22`,borderRadius:3,overflow:'hidden' }}>
-          <div style={{ height:'100%',width:`${pct}%`,background:color,borderRadius:3,transition:'width 0.2s ease' }} />
+        <div style={{ height: 4, background: `${color}22`, borderRadius: 3, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 3, transition: 'width 0.2s ease' }} />
         </div>
       </div>
     );
   };
 
   return (
-    <div style={{ background:'rgba(20,14,10,0.95)',border:'1px solid rgba(224,90,90,0.3)',borderRadius:10,padding:'12px 14px',marginBottom:6 }}>
-      <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10 }}>
-        <div style={{ fontFamily:"'Cinzel',serif",fontSize:11,color:COLORS.text }}>{row.character_name} — Health</div>
-        <button onClick={onClose} style={{ background:'transparent',border:`1px solid ${COLORS.border}`,borderRadius:4,padding:'2px 6px',cursor:'pointer',fontSize:9,color:COLORS.dim }}>✕</button>
+    <div style={{ background: 'rgba(20,14,10,0.95)', border: '1px solid rgba(224,90,90,0.3)', borderRadius: 10, padding: '12px 14px', marginBottom: 6 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <div style={{ fontFamily: "'Cinzel',serif", fontSize: 11, color: COLORS.text }}>{row.character_name} — Health</div>
+        <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '2px 6px', cursor: 'pointer', fontSize: 9, color: COLORS.dim }}>✕</button>
       </div>
-      {isCreature && <div style={{ fontSize:8,color:COLORS.dim,fontFamily:'Georgia,serif',fontStyle:'italic',marginBottom:8 }}>Set max manually for this enemy.</div>}
-      <Tracker label="Vitals"  color="#e05a5a" state={vitals}  setState={setVitals}  />
+      {isCreature && <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: 'Georgia,serif', fontStyle: 'italic', marginBottom: 8 }}>Set max manually for this enemy.</div>}
+      <Tracker label="Vitals" color="#e05a5a" state={vitals} setState={setVitals} />
       <Tracker label="Stamina" color="#e08a5a" state={stamina} setState={setStamina} />
       <Tracker label="Resolve" color="#79f5a7" state={resolve} setState={setResolve} />
     </div>
@@ -689,14 +689,14 @@ export default function DMView({ user, session, onHome }) {
   const [toast, setToast] = useState(null);
   const [sessionTimerLabel, setSessionTimerLabel] = useState(null);
   const [castorPendingCount, setCastorPendingCount] = useState(0);
-  const [showCastor, setShowCastor]   = useState(false);
+  const [showCastor, setShowCastor] = useState(false);
   const [castorBadge, setCastorBadge] = useState(0);
   const [showHercules, setShowHercules] = useState(false);
   const [showAstragal, setShowAstragal] = useState(false);
   const [showArgus, setShowArgus] = useState(false);
   const [showBestiary, setShowBestiary] = useState(false);
   const [showScribePanel, setShowScribePanel] = useState(false);
-  
+
   // LOBBY STATE
   const [checkedInPlayers, setCheckedInPlayers] = useState([]);
 
@@ -712,8 +712,8 @@ export default function DMView({ user, session, onHome }) {
     fetchCheckins();
 
     const channel = supabase.channel('lobby-updates')
-      .on('postgres_changes', 
-        { event: 'INSERT', schema: 'public', table: 'session_checkins' }, 
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'session_checkins' },
         (payload) => {
           setCheckedInPlayers(prev => [...prev, payload.new]);
         }
@@ -752,24 +752,24 @@ export default function DMView({ user, session, onHome }) {
   useEffect(() => {
     fetchAll();
     const channel = supabase.channel('dm-inbox')
-  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
-    fetchMessages();
-    if (!payload.new.is_dm) {
-      setToast({ name: payload.new.sender_name || 'A player', content: payload.new.content });
-      setTimeout(() => setToast(null), 4000);
-      if (payload.new.session_id && activeSessionRef.current?.session_id !== payload.new.session_id) {
-        setActiveSession({
-          session_id: payload.new.session_id,
-          character_id: payload.new.character_id,
-          character_name: payload.new.sender_name || payload.new.character_name || 'Player',
-          player_username: payload.new.player_username || null,
-          campaign_id: payload.new.campaign_id,
-          player_id: payload.new.sender_id,
-        });
-      }
-    }
-  })
-  .subscribe();
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        fetchMessages();
+        if (!payload.new.is_dm) {
+          setToast({ name: payload.new.sender_name || 'A player', content: payload.new.content });
+          setTimeout(() => setToast(null), 4000);
+          if (payload.new.session_id && activeSessionRef.current?.session_id !== payload.new.session_id) {
+            setActiveSession({
+              session_id: payload.new.session_id,
+              character_id: payload.new.character_id,
+              character_name: payload.new.sender_name || payload.new.character_name || 'Player',
+              player_username: payload.new.player_username || null,
+              campaign_id: payload.new.campaign_id,
+              player_id: payload.new.sender_id,
+            });
+          }
+        }
+      })
+      .subscribe();
     return () => supabase.removeChannel(channel);
   }, [fetchMessages]);
 
@@ -809,14 +809,14 @@ export default function DMView({ user, session, onHome }) {
   // 1. Add alongside existing vttPlaceTokenRef:
   const herculesAddCreature = useRef(null);
 
-// 2. Replace your existing <HerculesCombat ... /> at the bottom:
-<HerculesCombat
-  defaultCampaignId={activeCampaignTab}
-  onPlaceToken={tokenData => {
-    vttPlaceTokenRef.current?.(tokenData);
-  }}
-  onRegisterAddCreature={fn => { herculesAddCreature.current = fn; }}
-/>
+  // 2. Replace your existing <HerculesCombat ... /> at the bottom:
+  <HerculesCombat
+    defaultCampaignId={activeCampaignTab}
+    onPlaceToken={tokenData => {
+      vttPlaceTokenRef.current?.(tokenData);
+    }}
+    onRegisterAddCreature={fn => { herculesAddCreature.current = fn; }}
+  />
 
   const renderTab = () => {
     switch (activeTab) {
@@ -824,12 +824,12 @@ export default function DMView({ user, session, onHome }) {
       case 'Music': return <MusicPanel />;
       case 'Maps': return <MapPanel />;
       case 'VTT':
-      return <VTTCanvas
-        campaignId={activeCampaignTab}
-        onRegisterPlaceToken={fn => { vttPlaceTokenRef.current = fn; }}
-        checkedInPlayers={uniqueCheckins}
-  />;
-     
+        return <VTTCanvas
+          campaignId={activeCampaignTab}
+          onRegisterPlaceToken={fn => { vttPlaceTokenRef.current = fn; }}
+          checkedInPlayers={uniqueCheckins}
+        />;
+
       case 'Scribe':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', gap: 16 }}>
@@ -945,8 +945,8 @@ export default function DMView({ user, session, onHome }) {
                 <div key={t} onClick={() => setCampaignSubTab(t)} style={{ background: campaignSubTab === t ? COLORS.surface : 'transparent', border: `1px solid ${campaignSubTab === t ? COLORS.borderMid : COLORS.border}`, borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: campaignSubTab === t ? COLORS.text : COLORS.dim, fontFamily: "'Cinzel', serif" }}>{t}</div>
               ))}
             </div>
-            {camp && campaignSubTab === 'log'    && <SessionLogEditor campaign={camp} />}
-            {camp && campaignSubTab === 'map'    && <MapManager campaign={camp} />}
+            {camp && campaignSubTab === 'log' && <SessionLogEditor campaign={camp} />}
+            {camp && campaignSubTab === 'map' && <MapManager campaign={camp} />}
             {camp && campaignSubTab === 'memory' && <DMMemoryPanel campaignId={camp.id} />}
           </div>
         );
@@ -965,66 +965,66 @@ export default function DMView({ user, session, onHome }) {
     }
   };
 
-const logDmAstragalToHercules = async payload => {
-  const currentCampaignId = activeCampaignTab;
+  const logDmAstragalToHercules = async payload => {
+    const currentCampaignId = activeCampaignTab;
 
-  const { data: hsession, error: sessionError } = await supabase
-    .from('hercules_sessions')
-    .select('id')
-    .eq('campaign_id', String(currentCampaignId))
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    const { data: hsession, error: sessionError } = await supabase
+      .from('hercules_sessions')
+      .select('id')
+      .eq('campaign_id', String(currentCampaignId))
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-  if (sessionError || !hsession?.id) {
-    console.error('No active Hercules session found for DM Astragal roll:', sessionError);
-    return;
-  }
+    if (sessionError || !hsession?.id) {
+      console.error('No active Hercules session found for DM Astragal roll:', sessionError);
+      return;
+    }
 
-  const dice =
-    payload?.diceResults ||
-    payload?.results ||
-    payload?.rolls ||
-    payload?.dice ||
-    [];
+    const dice =
+      payload?.diceResults ||
+      payload?.results ||
+      payload?.rolls ||
+      payload?.dice ||
+      [];
 
-  const diceList = Array.isArray(dice)
-    ? dice.map(d => Number(d?.value ?? d?.roll ?? d)).filter(n => !Number.isNaN(n))
-    : [];
+    const diceList = Array.isArray(dice)
+      ? dice.map(d => Number(d?.value ?? d?.roll ?? d)).filter(n => !Number.isNaN(n))
+      : [];
 
-  const notation =
-    payload?.notation ||
-    `${payload?.count || diceList.length || 1}d${payload?.sides || payload?.die || 20}`;
+    const notation =
+      payload?.notation ||
+      `${payload?.count || diceList.length || 1}d${payload?.sides || payload?.die || 20}`;
 
-  const diceTotal =
-    payload?.diceTotal ??
-    diceList.reduce((sum, value) => sum + value, 0);
+    const diceTotal =
+      payload?.diceTotal ??
+      diceList.reduce((sum, value) => sum + value, 0);
 
-  const statModifier = Number(payload?.statModifier ?? payload?.statMod ?? 0);
-  const flatModifier = Number(payload?.flatModifier ?? payload?.modifier ?? 0);
-  const total = Number(payload?.total ?? payload?.result ?? diceTotal + statModifier + flatModifier);
+    const statModifier = Number(payload?.statModifier ?? payload?.statMod ?? 0);
+    const flatModifier = Number(payload?.flatModifier ?? payload?.modifier ?? 0);
+    const total = Number(payload?.total ?? payload?.result ?? diceTotal + statModifier + flatModifier);
 
-  const diceText = diceList.length ? diceList.join(', ') : 'unknown';
+    const diceText = diceList.length ? diceList.join(', ') : 'unknown';
 
-  const { error } = await supabase.from('hercules_events').insert({
-    session_id: hsession.id,
-    type: 'dm_roll',
-    actor_name: 'The Architect',
-    actor_id: null,
-    description:
-      `The Architect rolls the bones: ${notation}. ` +
-      `Dice: ${diceText}. ` +
-      `Dice total: ${diceTotal}. ` +
-      `Stat modifier: ${statModifier >= 0 ? '+' : ''}${statModifier}. ` +
-      `Flat modifier: ${flatModifier >= 0 ? '+' : ''}${flatModifier}. ` +
-      `Collected result: ${total}.`,
-  });
+    const { error } = await supabase.from('hercules_events').insert({
+      session_id: hsession.id,
+      type: 'dm_roll',
+      actor_name: 'The Architect',
+      actor_id: null,
+      description:
+        `The Architect rolls the bones: ${notation}. ` +
+        `Dice: ${diceText}. ` +
+        `Dice total: ${diceTotal}. ` +
+        `Stat modifier: ${statModifier >= 0 ? '+' : ''}${statModifier}. ` +
+        `Flat modifier: ${flatModifier >= 0 ? '+' : ''}${flatModifier}. ` +
+        `Collected result: ${total}.`,
+    });
 
-  if (error) {
-    console.error('Failed to log DM Astragal roll to Hercules:', error);
-  }
-};
+    if (error) {
+      console.error('Failed to log DM Astragal roll to Hercules:', error);
+    }
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text }}>
@@ -1037,16 +1037,16 @@ const logDmAstragalToHercules = async payload => {
       {editingChar && <CharacterEditor char={editingChar} onSave={() => { setEditingChar(null); fetchCharacters(); }} onClose={() => setEditingChar(null)} />}
       {activeSession && <ChatPanel session={activeSession} onClose={() => setActiveSession(null)} isDM={true} />}
       {showBestiary && (
-  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowBestiary(false)} title="BESTIARY · Creatures of Soteria" width={400} accentColor="rgba(168,230,163,0.3)">
-    <BestiaryPanel isDM={true} campaignId={activeCampaignTab} embedded />
-  </DraggablePanel>
-)}
+        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowBestiary(false)} title="BESTIARY · Creatures of Soteria" width={400} accentColor="rgba(168,230,163,0.3)">
+          <BestiaryPanel isDM={true} campaignId={activeCampaignTab} embedded />
+        </DraggablePanel>
+      )}
 
-{showScribePanel && (
-  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribePanel(false)} title="THE SCRIBE · Architect Access" width={420} accentColor={`${COLORS.deity}55`}>
-    <ScribeDMPanel embedded activeCampaignId={activeCampaignTab} />
-  </DraggablePanel>
-)}
+      {showScribePanel && (
+        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribePanel(false)} title="THE SCRIBE · Architect Access" width={420} accentColor={`${COLORS.deity}55`}>
+          <ScribeDMPanel embedded activeCampaignId={activeCampaignTab} />
+        </DraggablePanel>
+      )}
 
       <PlayersPanel
         onOpenCharacter={(char) => setEditingChar(char)}
@@ -1073,10 +1073,10 @@ const logDmAstragalToHercules = async payload => {
       )}
 
       {showBestiary && (
-  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowBestiary(false)} title="BESTIARY · Creatures of Soteria" width={400} accentColor="rgba(168,230,163,0.3)">
-    <BestiaryPanel isDM={true} campaignId={activeCampaignTab} embedded />
-  </DraggablePanel>
-)}
+        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowBestiary(false)} title="BESTIARY · Creatures of Soteria" width={400} accentColor="rgba(168,230,163,0.3)">
+          <BestiaryPanel isDM={true} campaignId={activeCampaignTab} embedded />
+        </DraggablePanel>
+      )}
 
       {/* ─── Header ─────────────────────────────────────────────────────── */}
       <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
@@ -1087,11 +1087,11 @@ const logDmAstragalToHercules = async payload => {
             {sessionTimerLabel || "The Architect's Chamber"}
           </div>
         </div>
-        
+
         {/* CORRECTED PROP PASSING HERE */}
-        <SessionManager 
-          onTimerLabel={setSessionTimerLabel} 
-          checkedInPlayers={uniqueCheckins} 
+        <SessionManager
+          onTimerLabel={setSessionTimerLabel}
+          checkedInPlayers={uniqueCheckins}
         />
       </div>
 
@@ -1109,114 +1109,113 @@ const logDmAstragalToHercules = async payload => {
         })}
       </div>
 
-             <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
         <div style={{ padding: isMobile ? '20px 16px' : '28px 32px', maxWidth: 740, width: '100%', margin: '0 auto' }}>
           {loading ? <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 13 }}>Consulting the archives…</div> : renderTab()}
         </div>
       </div>
       {showArgus && <ArgusDMPanel onClose={() => setShowArgus(false)} />}
       {showHercules && <HerculesCombat defaultCampaignId={activeCampaignTab} onClose={() => setShowHercules(false)} />}
-{showAstragal && <AstragalButton character={characters?.[0]} onResult={logDmAstragalToHercules} onClose={() => setShowAstragal(false)} />}
-{showCastor && (
-  <div style={{ position: 'fixed', bottom: 24, left: 108, width: 400, maxHeight: '80vh', zIndex: 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: '1px solid rgba(56,189,248,0.3)', borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
-    <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(56,189,248,0.14)', background: 'rgba(56,189,248,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-      <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#7dd3fc', letterSpacing: '0.18em', fontWeight: 700 }}>CASTOR</div>
-      <button onClick={() => setShowCastor(false)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
-    </div>
-    <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
-      <CastorDMPanel onPendingChange={setCastorBadge} />
-    </div>
-  </div>
-)}
+      {showAstragal && <AstragalButton character={characters?.[0]} onResult={logDmAstragalToHercules} onClose={() => setShowAstragal(false)} />}
+      {showCastor && (
+        <div style={{ position: 'fixed', bottom: 24, left: 108, width: 400, maxHeight: '80vh', zIndex: 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: '1px solid rgba(56,189,248,0.3)', borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(56,189,248,0.14)', background: 'rgba(56,189,248,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#7dd3fc', letterSpacing: '0.18em', fontWeight: 700 }}>CASTOR</div>
+            <button onClick={() => setShowCastor(false)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
+            <CastorDMPanel onPendingChange={setCastorBadge} />
+          </div>
+        </div>
+      )}
 
-<FloatToolbar buttons={[
- {
-  id: 'astragal',
-  title: 'Astragal — Roll the dice',
-  onClick: () => setShowAstragal(o => !o),
-  children: (
-    <img
-      src="/AstragalButton.png"
-      alt="Astragal"
-      draggable={false}
-      style={{
-        width: '118%',
-        height: '118%',
-        objectFit: 'contain',
-        pointerEvents: 'none',
-      }}
-    />
-  ),
-},
-  {
-    id: 'hercules',
-    title: 'HERCULES — Combat Tracker',
-    onClick: () => setShowHercules(o => !o),
-    children: (
-      <img
-        src="/HerculesCombat.png"
-        alt="HERCULES"
-        draggable={false}
-        style={{
-          width: '150%',
-          height: '150%',
-          objectFit: 'contain',
-          filter: 'invert(1) brightness(1.28)',
-          pointerEvents: 'none',
-        }}
-      />
-    ),
-  },
-  {
-    id: 'argus',
-    title: 'ARGUS — My Gear, Pack, and Revealed Chests',
-    onClick: () => setShowArgus(o => !o),
-    children: (
-      <img
-        src="/Backpackicon.png"
-        alt="ARGUS"
-        draggable={false}
-        style={{
-          width: '105%',
-          height: '105%',
-          objectFit: 'contain',
-          pointerEvents: 'none',
-        }}
-      />
-    ),
-  },
-  {
-    id: 'castor',
-    title: 'CASTOR — Cast Request',
-    onClick: () => setShowCastor(o => !o),
-    badge: castorBadge,
-    children: (
-      <img
-        src="/castoricon.png"
-        alt="CASTOR"
-        draggable={false}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          pointerEvents: 'none',
-        }}
-      />
-    ),
-  },
-  {
-  id: 'bestiary',
-  title: 'Bestiary — Creatures of Soteria',
-  onClick: () => setShowBestiary(o => !o),
-  children: <img src="/bestiaryicon.png" alt="Bestiary" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
-},
-{
-  id: 'scribe',
-  title: 'The Scribe — Archives',
-  onClick: () => setShowScribePanel(o => !o),
-  children: <img src="/scribeicon.png" alt="Scribe" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
-},
-]} />
+      <FloatToolbar buttons={[
+        {
+          id: 'astragal',
+          title: 'Astragal — Roll the dice',
+          onClick: () => setShowAstragal(o => !o),
+          children: (
+            <img
+              src="/AstragalButton.png"
+              alt="Astragal"
+              draggable={false}
+              style={{
+                width: '118%',
+                height: '118%',
+                objectFit: 'contain',
+                pointerEvents: 'none',
+              }}
+            />
+          ),
+        },
+        {
+          id: 'hercules',
+          title: 'HERCULES — Combat Tracker',
+          onClick: () => setShowHercules(o => !o),
+          children: (
+            <img
+              src="/HerculesCombat.png"
+              alt="HERCULES"
+              draggable={false}
+              style={{
+                width: '150%',
+                height: '150%',
+                objectFit: 'contain',
+                pointerEvents: 'none',
+              }}
+            />
+          ),
+        },
+        {
+          id: 'argus',
+          title: 'ARGUS — My Gear, Pack, and Revealed Chests',
+          onClick: () => setShowArgus(o => !o),
+          children: (
+            <img
+              src="/Backpackicon.png"
+              alt="ARGUS"
+              draggable={false}
+              style={{
+                width: '105%',
+                height: '105%',
+                objectFit: 'contain',
+                pointerEvents: 'none',
+              }}
+            />
+          ),
+        },
+        {
+          id: 'castor',
+          title: 'CASTOR — Cast Request',
+          onClick: () => setShowCastor(o => !o),
+          badge: castorBadge,
+          children: (
+            <img
+              src="/castoricon.png"
+              alt="CASTOR"
+              draggable={false}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                pointerEvents: 'none',
+              }}
+            />
+          ),
+        },
+        {
+          id: 'bestiary',
+          title: 'Bestiary — Creatures of Soteria',
+          onClick: () => setShowBestiary(o => !o),
+          children: <img src="/bestiaryicon.png" alt="Bestiary" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+        },
+        {
+          id: 'scribe',
+          title: 'The Scribe — Archives',
+          onClick: () => setShowScribePanel(o => !o),
+          children: <img src="/scribeicon.png" alt="Scribe" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+        },
+      ]} />
     </div>
   );
 }
