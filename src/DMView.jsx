@@ -1023,12 +1023,6 @@ const logDmAstragalToHercules = async payload => {
   </div>
 )}
 
-{showScribe && (
-  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribe(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
-    <ScribePlayerPanel char={userChar} campaignId={String(campaign.id)} onUpdateChar={char => onAssign(char.campaign)} embedded />
-  </DraggablePanel>
-)}
-
 <FloatToolbar buttons={[
  {
   id: 'astragal',
@@ -1120,3 +1114,14 @@ const logDmAstragalToHercules = async payload => {
     </div>
   );
 }
+
+{showScribe && (
+  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribe(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
+    <ScribePlayerPanel char={userChar} campaignId={String(campaign.id)} onUpdateChar={char => onAssign(char.campaign)} embedded />
+  </DraggablePanel>
+)}
+{showBestiary && (
+  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowBestiary(false)} title="BESTIARY · Creatures of Soteria" width={400} accentColor="rgba(168,230,163,0.3)">
+    <BestiaryPanel isDM={true} campaignId={activeCampaignTab} embedded />
+  </DraggablePanel>
+)}
