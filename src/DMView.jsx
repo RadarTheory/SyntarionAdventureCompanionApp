@@ -1042,6 +1042,12 @@ const logDmAstragalToHercules = async payload => {
   </DraggablePanel>
 )}
 
+{showScribePanel && (
+  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribePanel(false)} title="THE SCRIBE · Architect Access" width={420} accentColor={`${COLORS.deity}55`}>
+    <ScribeDMPanel embedded activeCampaignId={activeCampaignTab} />
+  </DraggablePanel>
+)}
+
       <PlayersPanel
         onOpenCharacter={(char) => setEditingChar(char)}
         onMessage={(session) => setActiveSession(session)}
@@ -1214,3 +1220,5 @@ const logDmAstragalToHercules = async payload => {
     </div>
   );
 }
+
+

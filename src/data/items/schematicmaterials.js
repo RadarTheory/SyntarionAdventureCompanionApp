@@ -21,6 +21,9 @@ export const SCHEMATIC_MATERIALS = [
 { category: 'Schematic Materials', type: 'Chemical', name: 'Elderglass Shards', desc: 'Heat-reactive crystals that glow orange when exposed to friction. Used in ignition plates and primitive alarm systems.', tags: ['chemical','heat','signal'], meta: 'effect: friction ignition; weight: tiny' },
 { category: 'Schematic Materials', type: 'Chemical', name: 'Jotunnar Fear Extract', desc: 'A pale, blood-scented extract that chills the air around it. Used in cooling rigs, cryo-tonics, and certain sleep draughts.', tags: ['chemical','cold','sedative'], meta: 'effect: localized cooling; weight: tiny' },
 
+// SCHEMATIC MATERIALS - Vehicls
+{ category: 'Schematic Materials', type: 'Vehicle', name: 'Monowheel', desc: 'A single large wheel with a platform and controls for a rider. It is a compact and speedy personal vehicle, but it requires practice to balance and steer.', tags: ['schematic','vehicle','transport'], meta: 'use: personal transport; risk: balance' },
+
 // SCHEMATIC MATERIALS — Cleaner
 { category: 'Schematic Materials', type: 'Cleaner', name: 'Monroe Cleaner', desc: 'A cheap solvent sold for floors, brass, and laundry. In the wrong recipe it becomes part of a far more dangerous poison base.', tags: ['chemical','solvent','household','poison ingredient'], meta: 'use: strong poison ingredient; vendor: general' },
 { category: 'Schematic Materials', type: 'Cleaner', name: 'Tallow Scrub Solvent', desc: 'A greasy solvent made from rendered fat and lye. Cleans soot from gears and dissolves certain organic residues.', tags: ['chemical','solvent','maintenance'], meta: 'use: gear cleaning; vendor: general' },
