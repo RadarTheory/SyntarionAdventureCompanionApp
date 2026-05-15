@@ -255,9 +255,6 @@ const windowDragOffset = useRef({ x: 0, y: 0 });
   const [initiative, setInitiative] = useState([]);
   const [creatureSearch, setCreatureSearch] = useState('');
   const [saving, setSaving] = useState(false);
-  const [manualLogText, setManualLogText] = useState('');
-  const [manualCombatantName, setManualCombatantName] = useState('');
-
   const eventsBottomRef = useRef(null);
 
   useEffect(() => {
@@ -1438,19 +1435,28 @@ const stopWindowDrag = useCallback(() => {
                         </IconButton>
 
                         <IconButton
-                            title="Remove from tracker"
-                            onClick={() => removeCombatantFromTracker(row)}
-                            border="rgba(220,90,70,0.35)"
-                            color="#b98a7f"
-                            >
-                            ✕
-                            </IconButton>
+                          title="Remove from tracker"
+                          onClick={() => removeCombatantFromTracker(row)}
+                          border="rgba(220,90,70,0.35)"
+                          color="#b98a7f"
+                          >
+                          ✕
+                          </IconButton>
 
                         {Number(row.tie_breaker || 0) > 0 && (
                           <span style={{ color: '#e8c84a', marginLeft: 6, fontSize: 10 }}>
                             Edict {row.tie_breaker}
                           </span>
                         )}
+
+                        <IconButton
+                          title="Vitals / Stamina / Resolve"
+                          onClick={() => setVitalsOpen(v => v === row.id ? null : row.id)}
+                          border={vitalsOpen === row.id ? 'rgba(224,90,90,0.7)' : 'rgba(224,90,90,0.3)'}
+                          color={vitalsOpen === row.id ? '#f08080' : '#c07070'}
+                        >
+                          ♥
+                        </IconButton>
 
                         <div
                           style={{
@@ -1464,6 +1470,9 @@ const stopWindowDrag = useCallback(() => {
                           {row.total}
                         </div>
                       </div>
+                      {vitalsOpen === row.id && (
+                        <VitalsPanel row={row} onClose={() => setVitalsOpen(null)} campaignId={campaignId} />
+                      )}
                     </div>
                   );
                 })}
