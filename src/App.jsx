@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
 import Landing from './Landing';
+import LoadingScreen from './LoadingScreen';
+import CornerLoadingStinger from './CornerLoadingStinger';
 
 export default function App() {
   const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [splashLoading, setSplashLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
@@ -12,20 +15,54 @@ export default function App() {
   }, [darkMode]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-    return () => subscription.unsubscribe();
+    const timer = setTimeout(() => {
+      setSplashLoading(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  if (loading) return null;
-  if (!session) return <LoginScreen />;
+  useEffect(() => {
+    let mounted = true;
 
-  return <Landing user={session.user} darkMode={darkMode} setDarkMode={setDarkMode} />;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      setSession(session);
+      setAuthLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      setSession(session);
+      setAuthLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  if (splashLoading || authLoading) {
+    return <LoadingScreen />;
+  }
+
+  if (!session) {
+    return <LoginScreen />;
+  }
+
+  return (
+    <>
+      <CornerLoadingStinger enabled={true} />
+      <Landing
+        user={session.user}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
+      />
+    </>
+  );
 }
 
 function LoginScreen() {
@@ -36,22 +73,52 @@ function LoginScreen() {
   const [message, setMessage] = useState('');
 
   const handleOAuth = async (provider) => {
-    await supabase.auth.signInWithOAuth({
+    setError('');
+    setMessage('');
+
+    const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: window.location.origin },
+      options: {
+        redirectTo: window.location.origin,
+      },
     });
+
+    if (error) {
+      setError(error.message);
+    }
   };
 
   const handleEmailAuth = async () => {
     setError('');
     setMessage('');
+
+    if (!email || !password) {
+      setError('Enter an email and password.');
+      return;
+    }
+
     if (isSignUp) {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) setError(error.message);
-      else setMessage('Check your email to confirm your account.');
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setError(error.message);
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setMessage('Check your email to confirm your account.');
+      }
+
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setError(error.message);
     }
   };
 
@@ -92,35 +159,174 @@ function LoginScreen() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f0eeeb', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Georgia, serif' }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap'); * { box-sizing: border-box; } body { margin: 0; }`}</style>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#f0eeeb',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'Georgia, serif',
+        padding: 24,
+      }}
+    >
+      <style>
+        {`
+          @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
 
-      <div style={{ fontFamily: "'Cinzel', serif", fontSize: 28, fontWeight: 700, letterSpacing: '0.1em', color: '#1a1714', marginBottom: 8 }}>SYNTARION</div>
-      <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 13, color: 'rgba(26,23,20,0.45)', marginBottom: 48, letterSpacing: '0.03em' }}>Are you ready, Adventurer?</div>
+          * {
+            box-sizing: border-box;
+          }
 
-      <div style={{ width: '100%', maxWidth: 320, display: 'flex', flexDirection: 'column' }}>
-        <input style={inputStyle} type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-        <input style={inputStyle} type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleEmailAuth()} />
+          body {
+            margin: 0;
+          }
+        `}
+      </style>
 
-        {error && <div style={{ fontSize: 12, color: '#c0392b', marginBottom: 8, textAlign: 'center' }}>{error}</div>}
-        {message && <div style={{ fontSize: 12, color: '#27ae60', marginBottom: 8, textAlign: 'center' }}>{message}</div>}
+      <div
+        style={{
+          fontFamily: "'Cinzel', serif",
+          fontSize: 28,
+          fontWeight: 700,
+          letterSpacing: '0.1em',
+          color: '#1a1714',
+          marginBottom: 8,
+        }}
+      >
+        SYNTARION
+      </div>
+
+      <div
+        style={{
+          fontFamily: 'Georgia, serif',
+          fontStyle: 'italic',
+          fontSize: 13,
+          color: 'rgba(26,23,20,0.45)',
+          marginBottom: 48,
+          letterSpacing: '0.03em',
+        }}
+      >
+        Are you ready, Adventurer?
+      </div>
+
+      <div
+        style={{
+          width: '100%',
+          maxWidth: 320,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <input
+          style={inputStyle}
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+        />
+
+        <input
+          style={inputStyle}
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              handleEmailAuth();
+            }
+          }}
+        />
+
+        {error && (
+          <div
+            style={{
+              fontSize: 12,
+              color: '#c0392b',
+              marginBottom: 8,
+              textAlign: 'center',
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        {message && (
+          <div
+            style={{
+              fontSize: 12,
+              color: '#27ae60',
+              marginBottom: 8,
+              textAlign: 'center',
+            }}
+          >
+            {message}
+          </div>
+        )}
 
         <button onClick={handleEmailAuth} style={btnStyle}>
           {isSignUp ? 'Create Account' : 'Sign In'}
         </button>
 
-        <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(26,23,20,0.5)', marginBottom: 20, cursor: 'pointer' }} onClick={() => setIsSignUp(!isSignUp)}>
-          {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+        <div
+          style={{
+            textAlign: 'center',
+            fontSize: 12,
+            color: 'rgba(26,23,20,0.5)',
+            marginBottom: 20,
+            cursor: 'pointer',
+          }}
+          onClick={() => setIsSignUp((current) => !current)}
+        >
+          {isSignUp
+            ? 'Already have an account? Sign in'
+            : "Don't have an account? Sign up"}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20, gap: 12 }}>
-          <div style={{ flex: 1, height: 1, background: 'rgba(26,23,20,0.15)' }} />
-          <span style={{ fontSize: 11, color: 'rgba(26,23,20,0.4)', letterSpacing: '0.1em' }}>OR</span>
-          <div style={{ flex: 1, height: 1, background: 'rgba(26,23,20,0.15)' }} />
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            marginBottom: 20,
+            gap: 12,
+          }}
+        >
+          <div
+            style={{
+              flex: 1,
+              height: 1,
+              background: 'rgba(26,23,20,0.15)',
+            }}
+          />
+
+          <span
+            style={{
+              fontSize: 11,
+              color: 'rgba(26,23,20,0.4)',
+              letterSpacing: '0.1em',
+            }}
+          >
+            OR
+          </span>
+
+          <div
+            style={{
+              flex: 1,
+              height: 1,
+              background: 'rgba(26,23,20,0.15)',
+            }}
+          />
         </div>
 
-        <button onClick={() => handleOAuth('google')} style={ghostBtnStyle}>Sign in with Google</button>
-        <button onClick={() => handleOAuth('facebook')} style={ghostBtnStyle}>Sign in with Facebook</button>
+        <button onClick={() => handleOAuth('google')} style={ghostBtnStyle}>
+          Sign in with Google
+        </button>
+
+        <button onClick={() => handleOAuth('facebook')} style={ghostBtnStyle}>
+          Sign in with Facebook
+        </button>
       </div>
     </div>
   );

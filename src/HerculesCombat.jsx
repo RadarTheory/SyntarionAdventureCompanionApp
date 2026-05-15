@@ -218,6 +218,9 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true, onP
   const campaignList = useMemo(normalizeCampaigns, []);
   const creatureNames = useMemo(parseCreatureNames, []);
   const firstCampaignId = campaignList?.[0]?.id || '';
+  const [manualLogText, setManualLogText] = useState('');
+  const [manualCombatantName, setManualCombatantName] = useState('');
+  const [vitalsOpen, setVitalsOpen] = useState(null);
 
   const savedPos = (() => {
     try {
@@ -1413,7 +1416,7 @@ const stopWindowDrag = useCallback(() => {
                           d20 {row.roll}{row.modifier ? ` + ${row.modifier}` : ''}
                         </div>
                       </div>
-
+                            
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
                         <IconButton
                           title="Roll action"
