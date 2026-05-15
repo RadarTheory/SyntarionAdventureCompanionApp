@@ -97,7 +97,7 @@ export function FloatButton({ storageKey, defaultPos, children, onClick, title, 
 }
 
 // ─── Toolbar button (docked inside toolbar) ───────────────────────────────────
-function ToolbarButton({ children, onClick, title, badge, onDragOut, size = 56 }) {
+const btnSize = mobile ? Math.max(36, Math.min(52, Math.floor((window.innerWidth - 48 - (dockedButtons.length - 1) * 8) / Math.max(1, dockedButtons.length)))) : 56;
   const [pressing, setPressing] = useState(false);
   const [hovered, setHovered]   = useState(false);
   const startPos = useRef(null);
@@ -151,7 +151,7 @@ function ToolbarButton({ children, onClick, title, badge, onDragOut, size = 56 }
       window.removeEventListener('touchend', onMouseUp);
     };
   }, [pressing, onMouseMove, onMouseUp, onTouchMove]);
-  
+
   return (
     <button
       title={title}
@@ -255,6 +255,12 @@ export default function FloatToolbar({ buttons }) {
 
   const dockedButtons  = buttons.filter(b => !undocked[b.id]);
   const undockedButtons = buttons.filter(b =>  undocked[b.id]);
+  const btnSize = (() => {
+    if (!mobile) return 56;
+    const count = dockedButtons.length || 1;
+    const available = window.innerWidth - 40 - (count - 1) * 8;
+    return Math.max(36, Math.min(52, Math.floor(available / count)));
+  })();
 
   // Toolbar orientation: vertical on desktop, horizontal on mobile
   const isHorizontal = mobile;
