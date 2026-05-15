@@ -471,7 +471,16 @@ INDUSTRIAL / VEINRUNNER ERA
 NOTE: These creatures exist because of the industrial age — displaced, mutated, or created by the expansion of the Veinrunner railway, grimrite mining operations, and Grid infrastructure.
 
 DOCILE / FRIENDLY:
-- TRACKBIRD — A small bird that has built its ecological niche around the Veinrunner rail network. Nests in signal towers and beneath platform overhangs. Feeds on insects disturbed by train passage. Completely habituated to human activity. Their sudden absence from a rail station is considered a bad omen by experienced conductors.
+{
+  category: 'Bestiary',
+  type: 'Bird',
+  biome: 'Industrial / Veinrunner Era',
+  disposition: 'Docile / Friendly',
+  name: 'TRACKBIRD',
+  desc: 'A small bird that has built its ecological niche around the Veinrunner rail network. Nests in signal towers and beneath platform overhangs. Feeds on insects disturbed by train passage. Completely habituated to human activity. Their sudden absence from a rail station is considered a bad omen by experienced conductors.',
+  tags: ['bestiary', 'bird', 'industrial', 'veinrunner', 'docile'],
+  meta: 'classification: Bird; biome: Industrial / Veinrunner Era; disposition: Docile / Friendly; threat: Low'
+}
 - DEPOT MOUSE — A clean, surprisingly healthy rodent variant found exclusively in Veinrunner depot grain stores. Has developed immunity to most standard rodent deterrents. The depot workers have largely given up and named several of them.
 
 AGGRESSIVE / PREDATORY:
@@ -555,7 +564,7 @@ ADDITIONS
 - KOBOLD — A small burrowing lineage known for tunnels, traps, territorial colonies, and dangerous numbers.
 - MALITH — A venomous or curse-marked lineage associated with malice, hidden settlements, old grudges, and sudden betrayal.
 - MYCELION — A fungal lineage altered by spore networks, shared instinct, damp underworld growth, and slow communal thought.
-- PIXIES — Small fey-like entities whose playfulness often turns manipulative, cruel, or dangerous depending on mood and territory.
+- SPRITE — Small fey-like entities whose playfulness often turns manipulative, cruel, or dangerous depending on mood and territory.
 - HARPIES — Winged fey-like predators with woman top halves and bird-like lower halves, known for their aerial agility, sharp talons, and hunting in coordinated groups.
 - SIRENS - Melodic and dangerous water-dwellers known for their enchanting songs that can drive sailors to their doom.
 - DAMPYR - A vampiric lineage that feeds on the life force of the living, often found in dark, secluded places.
