@@ -1,9 +1,4 @@
-// FubinLauncher.jsx
-// Drop this anywhere in your app — it renders a draggable wooden disc button.
-// Usage: <FubinLauncher onClick={() => setFubinOpen(true)} />
-
 import { useRef, useState, useCallback, useEffect } from 'react';
-import './fubin.css';
 
 export default function FubinLauncher({ onClick, hasNotification = false }) {
   const ref = useRef(null);
