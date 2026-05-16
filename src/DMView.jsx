@@ -1097,6 +1097,14 @@ export default function DMView({ user, session, onHome }) {
         {showWorldMap && (
         <DraggablePanel defaultX={120} defaultY={40} onClose={() => setShowWorldMap(false)} title="WORLD MAP · Soteria" width={Math.min(window.innerWidth - 140, 900)} accentColor="rgba(200,168,74,0.4)">
           <div
+  ref={el => {
+    if (!el) return;
+    const handler = e => {
+      e.preventDefault();
+      setMapZoom(z => Math.min(4, Math.max(0.3, z - e.deltaY * 0.001)));
+    };
+    el.addEventListener('wheel', handler, { passive: false });
+  }}
   style={{ overflow: 'hidden', maxHeight: 'calc(80vh - 48px)', cursor: 'grab', position: 'relative' }}
   onMouseDown={e => {
     const el = e.currentTarget;
@@ -1113,7 +1121,7 @@ export default function DMView({ user, session, onHome }) {
     src="/SoteriaMap.jpg"
     alt="Soteria World Map"
     draggable={false}
-    style={{ width: `${mapZoom * 100}%`, display: 'block', userSelect: 'none' }}
+    style={{ width: `${mapZoom * 100}%`, display: 'block', userSelect: 'none', transition: 'width 0.1s ease' }}
   />
 </div>
           <div style={{ padding: '6px 12px', borderTop: '1px solid rgba(200,168,74,0.2)', fontSize: 8, color: '#888', fontFamily: "'Cinzel', serif", textAlign: 'center' }}>
