@@ -701,6 +701,7 @@ export default function DMView({ user, session, onHome }) {
   const [showScribePanel, setShowScribePanel] = useState(false);
   const [showSolomon, setShowSolomon] = useState(false);
   const [showWorldMap, setShowWorldMap] = useState(false);
+  const [mapZoom, setMapZoom] = useState(1);
 
   // LOBBY STATE
   const [checkedInPlayers, setCheckedInPlayers] = useState([]);
@@ -1094,9 +1095,27 @@ export default function DMView({ user, session, onHome }) {
         </div>
 
         {showWorldMap && (
-        <DraggablePanel defaultX={120} defaultY={60} onClose={() => setShowWorldMap(false)} title="WORLD MAP · Soteria" width={680} accentColor="rgba(200,168,74,0.4)">
-          <div style={{ padding: 12 }}>
-           <img src="/Soteria%20With%20Marks%20(LARGE%2C%20UPDATED)%206.24.jpg" alt="Soteria World Map" style={{ width: '100%', borderRadius: 8 }} />
+        <DraggablePanel defaultX={120} defaultY={40} onClose={() => setShowWorldMap(false)} title="WORLD MAP · Soteria" width={Math.min(window.innerWidth - 140, 900)} accentColor="rgba(200,168,74,0.4)">
+          <div
+            style={{ overflow: 'auto', maxHeight: 'calc(80vh - 48px)', cursor: 'crosshair' }}
+            onWheel={e => {
+              e.preventDefault();
+              setMapZoom(z => Math.min(3, Math.max(0.3, z - e.deltaY * 0.001)));
+            }}
+          >
+            <img
+              src="/SoteriaMap.jpg"
+              alt="Soteria World Map"
+              draggable={false}
+              style={{
+                width: `${mapZoom * 100}%`,
+                display: 'block',
+                transition: 'width 0.1s ease',
+              }}
+            />
+          </div>
+          <div style={{ padding: '6px 12px', borderTop: '1px solid rgba(200,168,74,0.2)', fontSize: 8, color: '#888', fontFamily: "'Cinzel', serif", textAlign: 'center' }}>
+            Scroll to zoom · {Math.round(mapZoom * 100)}%
           </div>
         </DraggablePanel>
       )}
