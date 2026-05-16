@@ -1097,23 +1097,25 @@ export default function DMView({ user, session, onHome }) {
         {showWorldMap && (
         <DraggablePanel defaultX={120} defaultY={40} onClose={() => setShowWorldMap(false)} title="WORLD MAP · Soteria" width={Math.min(window.innerWidth - 140, 900)} accentColor="rgba(200,168,74,0.4)">
           <div
-            style={{ overflow: 'auto', maxHeight: 'calc(80vh - 48px)', cursor: 'crosshair' }}
-            onWheel={e => {
-            e.preventDefault();
-              setMapZoom(z => Math.min(3, Math.max(0.3, z - e.deltaY * 0.001)));
-            }}
-          >
-            <img
-              src="/SoteriaMap.jpg"
-              alt="Soteria World Map"
-              draggable={false}
-              style={{
-                width: `${mapZoom * 100}%`,
-                display: 'block',
-                transition: 'width 0.1s ease',
-              }}
-            />
-          </div>
+  style={{ overflow: 'hidden', maxHeight: 'calc(80vh - 48px)', cursor: 'grab', position: 'relative' }}
+  onMouseDown={e => {
+    const el = e.currentTarget;
+    el.style.cursor = 'grabbing';
+    const startX = e.clientX + el.scrollLeft;
+    const startY = e.clientY + el.scrollTop;
+    const onMove = ev => { el.scrollLeft = startX - ev.clientX; el.scrollTop = startY - ev.clientY; };
+    const onUp = () => { el.style.cursor = 'grab'; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }}
+>
+  <img
+    src="/SoteriaMap.jpg"
+    alt="Soteria World Map"
+    draggable={false}
+    style={{ width: `${mapZoom * 100}%`, display: 'block', userSelect: 'none' }}
+  />
+</div>
           <div style={{ padding: '6px 12px', borderTop: '1px solid rgba(200,168,74,0.2)', fontSize: 8, color: '#888', fontFamily: "'Cinzel', serif", textAlign: 'center' }}>
             Scroll to zoom · {Math.round(mapZoom * 100)}%
           </div>
