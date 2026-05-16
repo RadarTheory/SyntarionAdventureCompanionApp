@@ -755,6 +755,21 @@ NOTE: These are not bestiary creatures. They are organized threat groups with po
 - WEMIC — A lion-bodied lineage associated with pride structures, open-country hunting, martial dominance, and territorial law.
 - STYGIAN LIZARD — A sinister black-scaled reptilian predator native to deep subterranean fissures and Void-adjacent regions. Possesses unnatural cold resistance and extreme hostility toward light sources. See Void/Abyssal entry.
 
+//Khell lineages
+
+- KHELL — A parasitic adaptive brood-lineage whose Khellnid larvae caste-set into radically different mature branches depending on host biology, mineral exposure, ritual conditioning, and environmental pressure.
+- KHELLNID — The blind larval root-form of all Khellkind. Pale, hook-mouthed parasites that read host tissue, memory residue, mineral exposure, and environmental pressure before caste-setting into a mature Khell branch.
+- KHELLSARII — A tall honor-bound Khell warrior caste with backward skull crests, split jawplates, raptorlike legs, and a rigid culture of duel-law, scar-honor, and oath-bound martial houses.
+- KHELLSKINI — A many-limbed Khell salvage caste shaped by machine ruins, Grid residue, metallic nutrient exposure, and wreckfield survival. Known for scavenging, engineering, raiding, and weaponizing broken technology.
+- KHELLHANAE — A massive brute Khell caste formed through heavy host mass, blood-fed war pits, and dominance pressure. Known for immense strength, pack hierarchy, trophies, siege violence, and command through brutality.
+- KHELLOCH — A colony-form Khell caste in which many Khellnid bodies mature into coordinated worm-masses capable of occupying armor shells, dead giants, stone hollows, or siege frames.
+- KHELLYUUM — A rare priestly Khell caste cultivated in sacred nutrient pools, relic chambers, and ritual wombs. Physically delicate but mentally dangerous, serving as prophets, theologians, manipulators, and brood-rulers.
+- KHELLJTA — A solitary apex-hunter Khell caste formed through predatory host matter and isolation rites. Known for stalking worthy prey, wearing kill-masks, collecting trophies, and treating the hunt as sacred law.
+- KHELL’XEN — A nightmare hive-predator Khell caste born from darkness, corpse-hives, toxic chambers, and predatory hosts. Develops black carapaces, climbing limbs, corrosive blood, and a merciless infestation instinct.
+- KHELLCHIN — A crustacean-insectoid Khell labor caste shaped by salt flats, marsh protein, shell-matter, and industrial contamination. Often exploited as workers, refugees, or quarantine populations, but dangerous when cornered.
+- KHELL ELDERFORM — A rare ancient Khell expression that has survived multiple caste cycles, retaining brood-memory, tactical intelligence, and command authority over lesser Khell branches.
+- KHELL MOLTBOUND — An unstable adolescent Khell state between Khellnid larva and mature caste. Hungry, malformed, and dangerous, often displaying partial traits from several possible branches before caste-setting fully locks.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 31. UBIQUITOUS / CROSS-BIOME
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
