@@ -1168,7 +1168,7 @@ function LootboxPanel({ campaignId, userChar, onClaimed }) {
             </button>
 
             {/* Box contents */}
-            {isOpen && (
+             {isOpen && box.revealed && (
               <div style={{ padding: '14px 16px' }}>
                 {items.length === 0 ? (
                   <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '8px 0' }}>Loading contents…</div>
@@ -1191,7 +1191,7 @@ function LootboxPanel({ campaignId, userChar, onClaimed }) {
                   </div>
                 )}
 
-                <button onClick={() => claimBox(box)} disabled={isClaiming || !userChar}
+                <button onClick={() => claimBox(box)} disabled={isClaiming || !userChar || !box.revealed}
                   style={{ width: '100%', background: isClaiming ? 'transparent' : 'rgba(180,122,58,0.18)', border: `1px solid ${isClaiming ? COLORS.border : 'rgba(180,122,58,0.6)'}`, borderRadius: 8, padding: '11px', cursor: (isClaiming || !userChar) ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: isClaiming ? COLORS.dim : '#e8a84a', fontWeight: 700, letterSpacing: '0.12em', transition: 'all 0.15s' }}>
                   {isClaiming ? 'Claiming…' : !userChar ? 'No character loaded' : `⬡ Claim ${box.name}`}
                 </button>
@@ -1235,6 +1235,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
         .from('lootboxes')
         .select('*', { count: 'exact', head: true })
         .eq('claimed', false)
+        .eq('revealed', true)
         .or(`campaign_id.eq.${campaign.id},campaign_id.is.null`);
       setLootboxCount(count || 0);
     };
