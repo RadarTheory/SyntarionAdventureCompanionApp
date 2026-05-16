@@ -49,11 +49,10 @@ export default function Solomon({ campaignId, onClose }) {
 
   const load = useCallback(async () => {
     const { data } = await supabase
-      .from('lootboxes')
-      .select('*')
-      .or(`campaign_id.eq.${campaignId},campaign_id.is.null`)
-      .order('created_at', { ascending: false });
-    if (data) setBoxes(data);
+  .from('lootboxes')
+  .select('*')
+  .or(`campaign_id.eq.${campaignId},campaign_id.is.null`)
+  .order('created_at', { ascending: false });
   }, [campaignId]);
 
   const loadPresence = useCallback(async () => {
