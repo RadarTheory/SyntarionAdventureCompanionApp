@@ -1227,6 +1227,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   const [showBestiary, setShowBestiary] = useState(false);
   const [showScribe, setShowScribe] = useState(false);
   const [showArgus, setShowArgus] = useState(false);
+  const [showWorldMap, setShowWorldMap] = useState(false);
 
   // Poll lootbox count for badge
   useEffect(() => {
@@ -1545,6 +1546,14 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
       {showScribeCV && (
         <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribeCV(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
           <ScribePlayerPanel char={userChar} campaignId={String(campaign.id)} onUpdateChar={char => onAssign(char.campaign)} embedded />
+        </DraggablePanel>
+      )}
+
+      {showWorldMap && (
+        <DraggablePanel defaultX={120} defaultY={60} onClose={() => setShowWorldMap(false)} title="WORLD MAP · Soteria" width={680} accentColor="rgba(200,168,74,0.4)">
+          <div style={{ padding: 12 }}>
+            <img src="/SoteriaMap.jpg" alt="Soteria World Map" style={{ width: '100%', borderRadius: 8 }} />
+          </div>
         </DraggablePanel>
       )}
 

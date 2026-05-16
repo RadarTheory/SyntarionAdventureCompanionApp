@@ -700,6 +700,7 @@ export default function DMView({ user, session, onHome }) {
   const [showBestiary, setShowBestiary] = useState(false);
   const [showScribePanel, setShowScribePanel] = useState(false);
   const [showSolomon, setShowSolomon] = useState(false);
+  const [showWorldMap, setShowWorldMap] = useState(false);
 
   // LOBBY STATE
   const [checkedInPlayers, setCheckedInPlayers] = useState([]);
@@ -1092,6 +1093,14 @@ export default function DMView({ user, session, onHome }) {
           </div>
         </div>
 
+        {showWorldMap && (
+        <DraggablePanel defaultX={120} defaultY={60} onClose={() => setShowWorldMap(false)} title="WORLD MAP · Soteria" width={680} accentColor="rgba(200,168,74,0.4)">
+          <div style={{ padding: 12 }}>
+            <img src="/WorldMapIcon.png" alt="Soteria World Map" style={{ width: '100%', borderRadius: 8 }} />
+          </div>
+        </DraggablePanel>
+      )}
+
         {/* CORRECTED PROP PASSING HERE */}
         <SessionManager
           onTimerLabel={setSessionTimerLabel}
@@ -1238,6 +1247,24 @@ export default function DMView({ user, session, onHome }) {
                 width: '120%',
                 height: '120%',
                 objectFit: 'contain',
+                pointerEvents: 'none',
+              }}
+            />
+          ),
+        },
+        {
+          id: 'worldmap',
+          title: 'World Map — Soteria',
+          onClick: () => setShowWorldMap(o => !o),
+          children: (
+            <img
+              src="/WorldMapIcon.png"
+              alt="World Map"
+              draggable={false}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
                 pointerEvents: 'none',
               }}
             />
