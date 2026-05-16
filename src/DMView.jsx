@@ -1096,7 +1096,7 @@ export default function DMView({ user, session, onHome }) {
         {showWorldMap && (
         <DraggablePanel defaultX={120} defaultY={60} onClose={() => setShowWorldMap(false)} title="WORLD MAP · Soteria" width={680} accentColor="rgba(200,168,74,0.4)">
           <div style={{ padding: 12 }}>
-            <img src="/WorldMapIcon.png" alt="Soteria World Map" style={{ width: '100%', borderRadius: 8 }} />
+           <img src="/Soteria%20With%20Marks%20(LARGE%2C%20UPDATED)%206.24.jpg" alt="Soteria World Map" style={{ width: '100%', borderRadius: 8 }} />
           </div>
         </DraggablePanel>
       )}
