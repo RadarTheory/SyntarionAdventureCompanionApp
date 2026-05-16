@@ -273,7 +273,7 @@ function DMSigilModal({ onSuccess, onCancel }) {
 }
 
 // ─── MAIN LANDING COMPONENT ──────────────────────────────────────────────────
-export default function Landing({ user, darkMode, setDarkMode }) {
+export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   const { isMobile } = useDevice();
   const [appView, setAppView] = useState('home');
   const [savedChars, setSavedChars] = useState([]);
@@ -423,7 +423,7 @@ export default function Landing({ user, darkMode, setDarkMode }) {
         }}
       >Sign out</button>
 
-      <button onClick={() => setView('bag')}>
+      <button onClick={onOpenBag}>
         Lótjarr's Bag of Games
       </button>
 
