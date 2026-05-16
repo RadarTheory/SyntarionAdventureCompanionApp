@@ -423,6 +423,10 @@ export default function Landing({ user, darkMode, setDarkMode }) {
         }}
       >Sign out</button>
 
+      <button onClick={() => setView('bag')}>
+        Lótjarr's Bag of Games
+      </button>
+
       {showDMModal && (
         <DMSigilModal onSuccess={handleDMSuccess} onCancel={() => setShowDMModal(false)} />
       )}

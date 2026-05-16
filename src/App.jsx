@@ -3,6 +3,18 @@ import supabase from './lib/supabase';
 import Landing from './Landing';
 import LoadingScreen from './LoadingScreen';
 import CornerLoadingStinger from './CornerLoadingStinger';
+import LotjarrsBag from './LotjarrsBag';
+import PlayDriftstone from './PlayDriftstone';
+
+// In your view routing:
+{view === 'bag' && (
+  <LotjarrsBag
+    onHome={() => setView('landing')}
+    onLaunchGame={(id) => setView(id)}
+  />
+)}
+{view === 'driftstone' && <PlayDriftstone onHome={() => setView('bag')} />}
+{view === 'fubin' && <PlayFubin onHome={() => setView('bag')} />}
 
 export default function App() {
   const [session, setSession] = useState(null);
