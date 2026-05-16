@@ -1058,10 +1058,12 @@ function LootboxPanel({ campaignId, userChar, onClaimed }) {
   const loadItems = async (boxId) => {
     if (boxItems[boxId]) return; // already loaded
     const { data } = await supabase
-      .from('lootbox_items')
+      .from('lootboxes')
       .select('*')
-      .eq('lootbox_id', boxId)
-      .order('created_at', { ascending: true });
+      .eq('claimed', false)
+      .eq('revealed', true)
+      .or(`campaign_id.eq.${campaignId},campaign_id.is.null`)
+      .order('created_at', { ascending: false });
     if (data) setBoxItems(prev => ({ ...prev, [boxId]: data }));
   };
 
