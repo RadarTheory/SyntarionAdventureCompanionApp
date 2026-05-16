@@ -1490,6 +1490,24 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
           onClick: () => setShowScribeCV(o => !o),
           children: <img src="/scribeicon.png" alt="Scribe" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
+        {
+          id: 'worldmap',
+          title: 'World Map — Soteria',
+          onClick: () => setShowWorldMap(o => !o),
+          children: (
+            <img
+              src="/WorldMapIcon.png"
+              alt="World Map"
+              draggable={false}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                pointerEvents: 'none',
+              }}
+            />
+          ),
+        },
       ]} />
 
       {/* Astragal panel */}
@@ -1558,6 +1576,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
             </button>
           );
         })}
+        
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
