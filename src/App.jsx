@@ -68,6 +68,7 @@ export default function App() {
         user={session.user}
         darkMode={darkMode}
         setDarkMode={setDarkMode}
+        onOpenBag={() => setView('bag')}
       />
     </>
   );
