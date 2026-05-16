@@ -59,7 +59,7 @@ export default function App() {
 
   if (view === 'bag') return <LotjarrsBag onHome={() => setView('landing')} onLaunchGame={id => setView(id)} />;
   if (view === 'driftstone') return <PlayDriftstone onHome={() => setView('bag')} />;
-    if (view === 'fubin') return <FubinLauncher onClick={() => {}} onHome={() => setView('bag')} onBack={() => setView('bag')} />;
+  if (view === 'fubin') return <Fubin onHome={() => setView('bag')} />;
 
   return (
     <>

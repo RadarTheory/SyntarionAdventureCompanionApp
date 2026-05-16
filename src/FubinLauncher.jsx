@@ -20,7 +20,7 @@ export default function FubinLauncher({ onClick, hasNotification = false }) {
   }, []);
 
   const clampPos = useCallback((x, y) => ({
-    x: Math.max(0, Math.min(window.innerWidth - 72, x)),
+    x: Math.max(0, Math.min(window.iannerWidth - 72, x)),
     y: Math.max(0, Math.min(window.innerHeight - 72, y)),
   }), []);
 

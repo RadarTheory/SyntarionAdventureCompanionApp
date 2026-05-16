@@ -241,7 +241,6 @@ DOCILE / FRIENDLY:
 
 AGGRESSIVE / PREDATORY:
 - BOGLUKER — A submerged predator that stays perfectly still beneath the muck; uses vine-like feelers to ensnare the legs of those crossing the water.
-- VISCOPHYTE — A gelatinous humanoid horror that engulfs prey and dissolves them with corrosive enzymes; standard weapons often simply pass through its form.
 - FEN OGRE — See Ogre Family entry.
 - MARSH CROCODILIAN — A large armored ambush predator of swamp waterways. Patient, powerful, and capable of explosive speed over short distances. Rolls prey to disorient before dragging under.
 - MISTWOLF — A marsh and river predator that dissolves into fog between attacks, rising from still water to drag victims under while they are still conscious.
@@ -760,7 +759,7 @@ NOTE: These are not bestiary creatures. They are organized threat groups with po
 - KHELL — A parasitic adaptive brood-lineage whose Khellnid larvae caste-set into radically different mature branches depending on host biology, mineral exposure, ritual conditioning, and environmental pressure.
 - KHELLNID — The blind larval root-form of all Khellkind. Pale, hook-mouthed parasites that read host tissue, memory residue, mineral exposure, and environmental pressure before caste-setting into a mature Khell branch.
 - KHELLSARII — A tall honor-bound Khell warrior caste with backward skull crests, split jawplates, raptorlike legs, and a rigid culture of duel-law, scar-honor, and oath-bound martial houses.
-- KHELLSKINI — A many-limbed Khell salvage caste shaped by machine ruins, Grid residue, metallic nutrient exposure, and wreckfield survival. Known for scavenging, engineering, raiding, and weaponizing broken technology.
+- KHELLSKINI — A four armed Khell salvage caste shaped by machine ruins, Grid residue, metallic nutrient exposure, and wreckfield survival. Known for scavenging, engineering, raiding, and weaponizing broken technology.
 - KHELLHANAE — A massive brute Khell caste formed through heavy host mass, blood-fed war pits, and dominance pressure. Known for immense strength, pack hierarchy, trophies, siege violence, and command through brutality.
 - KHELLOCH — A colony-form Khell caste in which many Khellnid bodies mature into coordinated worm-masses capable of occupying armor shells, dead giants, stone hollows, or siege frames.
 - KHELLYUUM — A rare priestly Khell caste cultivated in sacred nutrient pools, relic chambers, and ritual wombs. Physically delicate but mentally dangerous, serving as prophets, theologians, manipulators, and brood-rulers.
@@ -769,6 +768,8 @@ NOTE: These are not bestiary creatures. They are organized threat groups with po
 - KHELLCHIN — A crustacean-insectoid Khell labor caste shaped by salt flats, marsh protein, shell-matter, and industrial contamination. Often exploited as workers, refugees, or quarantine populations, but dangerous when cornered.
 - KHELL ELDERFORM — A rare ancient Khell expression that has survived multiple caste cycles, retaining brood-memory, tactical intelligence, and command authority over lesser Khell branches.
 - KHELL MOLTBOUND — An unstable adolescent Khell state between Khellnid larva and mature caste. Hungry, malformed, and dangerous, often displaying partial traits from several possible branches before caste-setting fully locks.
+- KHELL UNSET — A Khellnid that has failed to caste-set and remains in a dangerous transitional larval state, absorbing traits from its surroundings without becoming a stable branch.
+- KHELL SCHISMFORM — A rare Khell expression created when one Khellnid receives conflicting caste signals, producing a divided body, fractured instincts, or unstable allegiance. They do not survive in the hive long as they are culled.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 31. UBIQUITOUS / CROSS-BIOME

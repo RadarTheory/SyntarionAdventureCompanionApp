@@ -11,6 +11,7 @@ import FloatToolbar from './FloatToolbar';
 import ArgusPlayerPanel from './Argus';
 import BestiaryPanel from './BestiaryPanel';
 import { ScribePlayerPanel } from './ScribePanel';
+import HerculesPlayer from './HerculesPlayer';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -1500,7 +1501,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
       {/* HERCULES lite panel */}
       {showHercules && (
         <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowHercules(false)} title="HERCULES" width={340} accentColor="rgba(200,168,74,0.35)">
-          <HerculesLite campaignId={String(campaign.id)} char={userChar} onClose={() => setShowHercules(false)} embedded />
+          <HerculesPlayer campaignId={String(campaign.id)} char={userChar} />
         </DraggablePanel>
       )}
 

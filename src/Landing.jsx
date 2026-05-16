@@ -608,3 +608,4 @@ function Stub({ label, onHome, dark }) {
     </div>
   );
 }
+

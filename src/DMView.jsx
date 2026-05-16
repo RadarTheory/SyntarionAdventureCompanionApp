@@ -17,6 +17,7 @@ import CastorDMPanel from './CastorDMPanel';
 import { ArgusDMPanel } from './Argus';
 import BestiaryPanel from './BestiaryPanel';
 import { ScribeDMPanel } from './ScribePanel';
+import Solomon from './Solomon';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -290,7 +291,7 @@ function CharacterEditor({ char, onSave, onClose }) {
   const [data, setData] = useState({ ...char });
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState('');
-
+  
   const handleSave = async (newStatus) => {
     setSaving(true);
     await supabase.from('characters').update({ data: { ...data }, status: newStatus || data.status, campaign_id: data.campaign || null }).eq('id', char.id);
@@ -696,7 +697,8 @@ export default function DMView({ user, session, onHome }) {
   const [showArgus, setShowArgus] = useState(false);
   const [showBestiary, setShowBestiary] = useState(false);
   const [showScribePanel, setShowScribePanel] = useState(false);
-
+  const [showSolomon, setShowSolomon] = useState(false);
+  
   // LOBBY STATE
   const [checkedInPlayers, setCheckedInPlayers] = useState([]);
 
@@ -1126,7 +1128,13 @@ export default function DMView({ user, session, onHome }) {
           <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
             <CastorDMPanel onPendingChange={setCastorBadge} />
           </div>
+          {showSolomon && (
+  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowSolomon(false)} title="SOLOMON · Loot Governance" width={400} accentColor="rgba(180,122,58,0.5)">
+    <Solomon campaignId={activeCampaignTab} />
+  </DraggablePanel>
+)}
         </div>
+        
       )}
 
       <FloatToolbar buttons={[
@@ -1215,7 +1223,26 @@ export default function DMView({ user, session, onHome }) {
           onClick: () => setShowScribePanel(o => !o),
           children: <img src="/scribeicon.png" alt="Scribe" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
+        {
+  id: 'solomon',
+  title: 'SOLOMON — Loot Governance',
+  onClick: () => setShowSolomon(o => !o),
+  children: (
+    <img
+      src="/solomonicon.png"
+      alt="SOLOMON"
+      draggable={false}
+      style={{
+        width: '120%',
+        height: '120%',
+        objectFit: 'contain',
+        pointerEvents: 'none',
+      }}
+    />
+  ),
+},
       ]} />
+      
     </div>
   );
 }
