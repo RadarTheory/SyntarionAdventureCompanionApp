@@ -1099,7 +1099,7 @@ export default function DMView({ user, session, onHome }) {
           <div
             style={{ overflow: 'auto', maxHeight: 'calc(80vh - 48px)', cursor: 'crosshair' }}
             onWheel={e => {
-              e.preventDefault();
+            e.preventDefault();
               setMapZoom(z => Math.min(3, Math.max(0.3, z - e.deltaY * 0.001)));
             }}
           >
