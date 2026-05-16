@@ -121,6 +121,8 @@ function ChatPanel({ session, onClose, isDM }) {
     if (data) { setMessages(data); setSessionEnded(data.some(m => m.session_ended)); }
   };
 
+
+
   const handleSend = async () => {
     if (!input.trim() || sending || sessionEnded) return;
     setSending(true);
@@ -291,7 +293,7 @@ function CharacterEditor({ char, onSave, onClose }) {
   const [data, setData] = useState({ ...char });
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState('');
-  
+
   const handleSave = async (newStatus) => {
     setSaving(true);
     await supabase.from('characters').update({ data: { ...data }, status: newStatus || data.status, campaign_id: data.campaign || null }).eq('id', char.id);
@@ -698,7 +700,7 @@ export default function DMView({ user, session, onHome }) {
   const [showBestiary, setShowBestiary] = useState(false);
   const [showScribePanel, setShowScribePanel] = useState(false);
   const [showSolomon, setShowSolomon] = useState(false);
-  
+
   // LOBBY STATE
   const [checkedInPlayers, setCheckedInPlayers] = useState([]);
 
@@ -1119,6 +1121,11 @@ export default function DMView({ user, session, onHome }) {
       {showArgus && <ArgusDMPanel onClose={() => setShowArgus(false)} />}
       {showHercules && <HerculesCombat defaultCampaignId={activeCampaignTab} onClose={() => setShowHercules(false)} />}
       {showAstragal && <AstragalButton character={characters?.[0]} onResult={logDmAstragalToHercules} onClose={() => setShowAstragal(false)} />}
+      {showSolomon && (
+        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowSolomon(false)} title="SOLOMON · Loot Governance" width={400} accentColor="rgba(180,122,58,0.5)">
+          <Solomon campaignId={activeCampaignTab} />
+        </DraggablePanel>
+      )}
       {showCastor && (
         <div style={{ position: 'fixed', bottom: 24, left: 108, width: 400, maxHeight: '80vh', zIndex: 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: '1px solid rgba(56,189,248,0.3)', borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(56,189,248,0.14)', background: 'rgba(56,189,248,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
@@ -1128,13 +1135,8 @@ export default function DMView({ user, session, onHome }) {
           <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
             <CastorDMPanel onPendingChange={setCastorBadge} />
           </div>
-          {showSolomon && (
-  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowSolomon(false)} title="SOLOMON · Loot Governance" width={400} accentColor="rgba(180,122,58,0.5)">
-    <Solomon campaignId={activeCampaignTab} />
-  </DraggablePanel>
-)}
         </div>
-        
+
       )}
 
       <FloatToolbar buttons={[
@@ -1224,25 +1226,25 @@ export default function DMView({ user, session, onHome }) {
           children: <img src="/scribeicon.png" alt="Scribe" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
         {
-  id: 'solomon',
-  title: 'SOLOMON — Loot Governance',
-  onClick: () => setShowSolomon(o => !o),
-  children: (
-    <img
-      src="/solomonicon.png"
-      alt="SOLOMON"
-      draggable={false}
-      style={{
-        width: '120%',
-        height: '120%',
-        objectFit: 'contain',
-        pointerEvents: 'none',
-      }}
-    />
-  ),
-},
+          id: 'solomon',
+          title: 'SOLOMON — Loot Governance',
+          onClick: () => setShowSolomon(o => !o),
+          children: (
+            <img
+              src="/solomonicon.png"
+              alt="SOLOMON"
+              draggable={false}
+              style={{
+                width: '120%',
+                height: '120%',
+                objectFit: 'contain',
+                pointerEvents: 'none',
+              }}
+            />
+          ),
+        },
       ]} />
-      
+
     </div>
   );
 }
