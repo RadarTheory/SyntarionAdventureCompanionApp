@@ -1101,7 +1101,7 @@ export default function DMView({ user, session, onHome }) {
     if (!el) return;
     const handler = e => {
       e.preventDefault();
-      setMapZoom(z => Math.min(4, Math.max(0.3, z - e.deltaY * 0.001)));
+      setMapZoom(z => Math.min(4, Math.max(0.3, z - e.deltaY * 0.0010)));
     };
     el.addEventListener('wheel', handler, { passive: false });
   }}
