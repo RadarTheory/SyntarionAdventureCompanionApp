@@ -55,6 +55,20 @@ RAUK FAMILY — BIOME VARIANTS:
 - GROVEKEEPER — Sylvan Grove. A large, solemn forest bird regarded as a silent overseer of the deep groves, known for its piercing cry and uncanny awareness of disturbances within ancient woodland regions. Repeated Grovekeeper calls are a warning of imbalance, blight, or nearby predatory movement.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DRUIDIC FETCHES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- FETCH DIRERYU — A druidic familiar summon shaped like a floating serpentine ryū, called from wind, mist, leaf-spirits, or old river resonance. Graceful and watchful, it scouts from above, coils through the air, and lashes at threats with a spectral bite or tail-strike.
+- FETCH DIREDRAKE — A druidic familiar summon shaped like a small dire drake with rugged scales, clawed limbs, and a low predatory stance. Used for guarding, intimidation, and short-range combat, it fights with snapping jaws and sudden lunges.
+- FETCH DIREWOLF — A druidic familiar summon shaped like a larger-than-natural wolf with spirit-bright eyes and bristling fur. Loyal, fast, and tactically aware, it tracks enemies, guards camps, and helps bring down prey through coordinated bites.
+- FETCH DIREBEAK — A druidic familiar summon shaped like a large predatory bird, able to appear as crow, raven, hawk, owl, kite, or vulture depending on the druid’s bond. Used for scouting, message-carrying, aerial harassment, and warning calls.
+- FETCH DIREBOAR — A druidic familiar summon shaped like a heavy tusked boar with dense shoulders and stubborn spirit-force. It charges through brush, breaks weak barricades, and defends its summoner with brutal direct aggression.
+- FETCH DIREWARG — A druidic familiar summon shaped like a twisted grim-warg with a low body, heavy jaws, and cruel hunting instincts. More aggressive than the Direwolf Fetch, it excels at pursuit, fear tactics, and dragging enemies off balance.
+- FETCH DIRETOAD — A druidic familiar summon shaped like an oversized swamp toad with slick hide, springing legs, and a wide gripping mouth. It leaps suddenly, clings to enemies, and can harry foes with croaks, slime, or minor toxic secretions.
+- FETCH DIREPARD — A druidic familiar summon shaped like a large predatory cat, ranging from lynxlike to pantherlike depending on the summoner’s region. Silent, agile, and precise, it excels at stalking, ambush, climbing, and striking exposed targets.
+- FETCH DIRELIZARD — A druidic familiar summon shaped like a rugged dire lizard with clawed feet, a thick tail, and alert reptilian senses. It clings to stone, darts through undergrowth, and fights with quick bites, tail sweeps, and stubborn survival instinct.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 THE OGRE EVOLUTION THEORY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -77,7 +91,6 @@ OGRE FAMILY — BIOME VARIANTS:
 - HIDE OGRE — Badlands. A lean hunched giant draped in a grisly patchwork of cured leathers and trophies; possesses supernatural ability to stitch itself into the environment, remaining invisible until it unfurls its heavy skin-bound club for a killing blow.
 - MIRE OGRE — Wastes/Marsh. A massive muck-encrusted giant with waterlogged mossy skin; lurks beneath the surface of the marsh, waiting to drag unsuspecting prey into the suffocating depths of the bog.
 - WOODHOLLOW — Forest. A bark-armored forest guardian that crushes intruders in sacred groves.
-- VELDT OGRE — Grassland. See Aldermore Giant entry.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 1. WOODLAND
@@ -103,6 +116,8 @@ DOCILE / FRIENDLY:
 - REEDBACK SHAGGYSWINE — An oily, water-resistant marsh strain of Shaggyswine that forages along riverbanks for shellfish, reeds, and buried eggs. Smells terrible when wet but nearly impossible to chill.
 - CRADLECRAG BOULDER-WOMBAT — A mountain strain of Boulder-Wombat with thicker hide and stone-dusted shoulder plates; often mistaken for fallen boulders during fog.
 - DUSTMOUND BOULDER-WOMBAT — A plains strain that digs wide, shallow tunnel networks; disliked by ranchers whose livestock break legs in old burrow roofs, but valued by farmers for soil-turning.
+- NOCRAT — Found in woodland, urban, and rail outpost settings. See Woodland entry.
+- LEAPER — Found in woodland, grassland, and broken terrain.
 
 AGGRESSIVE / PREDATORY:
 - MAULWASP — A colossal winged predator of ridge and wildwood, feared for venom and fury.
@@ -154,7 +169,7 @@ DOCILE / FRIENDLY:
 - TRIDENT TAILED LYNX — A silver-furred lynx that can turn nearly invisible in shadow; its large tail splits into three.
 - RIMEWILD — A pale grassland beast known for swift footing, sharp senses, and a cold wary nature.
 - AUROX — A broad-horned feral humanoid of plain and grove, known for calm strength.
-- SPHINX — A cunning lion-bodied guardian of sunslit ruins, known for riddles, patience, and sudden violence.
+- SPHYNX — A cunning lion-bodied guardian of sunslit ruins, known for riddles, patience, and sudden violence.
 - QUAGGA — A subspecies of plains zebra with distinctive stripes on its front fading into solid chestnut; primary hardy grazer for the great predators of the grasslands.
 - PLAINS HORSE (SOTERIAN) — The common wild horse of Soteria's open country. Herd-living, fast, and difficult to approach without proper training. Domesticated variants are the primary mount across most of the continent. Feral herds are legally protected in Veridoran territory.
 - BRINDLE CATTLE — A broad-framed semi-wild bovine of the grasslands, domesticated in most provinces but found feral along frontier roads. Their stampedes have derailed at least two Veinrunner freight loads in recorded history.
@@ -240,7 +255,7 @@ DOCILE / FRIENDLY:
 - MARSH TURTLE — A large freshwater turtle of muddy banks and slow rivers. Docile unless cornered. Their shells are used in Matekwan ceremonial percussion.
 
 AGGRESSIVE / PREDATORY:
-- BOGLUKER — A submerged predator that stays perfectly still beneath the muck; uses vine-like feelers to ensnare the legs of those crossing the water.
+- BOGLURKER — A submerged predator that stays perfectly still beneath the muck; uses vine-like feelers to ensnare the legs of those crossing the water.
 - FEN OGRE — See Ogre Family entry.
 - MARSH CROCODILIAN — A large armored ambush predator of swamp waterways. Patient, powerful, and capable of explosive speed over short distances. Rolls prey to disorient before dragging under.
 - MISTWOLF — A marsh and river predator that dissolves into fog between attacks, rising from still water to drag victims under while they are still conscious.
@@ -373,6 +388,7 @@ DOCILE / FRIENDLY:
 AGGRESSIVE / PREDATORY:
 - STALACTITE HORROR — A predator that clings motionless to cave ceilings disguised as natural rock formations. Drops onto prey below. Its grip prevents normal escape once contact is made. Low threat individually, extremely dangerous in groups.
 - CAVERN SPIDER — A blind cave-adapted spider with a body the size of a large dog. Hunts by vibration. Webs are nearly invisible in darkness and strong enough to hold a struggling human.
+- BEBELITH — Most often found near desecrated shrines, abandoned temples, or places where protective rites failed. See Woodland entry.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 12. TUNDRA
@@ -544,6 +560,7 @@ AGGRESSIVE / PREDATORY:
 - SHADOWMOTE — A small, shadowy creature that moves in the dark, known for its ability to blend into the background. Attempts to possess the minds of those it attacks.
 - GRAFTWRIGHT — A predatory falsework creature that grafts itself into objects, rooms, and structures, taking the form of what victims expect to find before latching, swallowing, or absorbing them. Often mistaken for chests, doors, shrines, books, tools, wagons, or relics. Older specimens can become part of an entire room.
 - GREATER GRAFTWRIGHT — A more powerful version of the Graftwright with stronger ability to integrate into and control its surroundings. Often found in more complex or elaborate structures.
+- LIQUID GRAFTWRIGHT — A rare and highly dangerous variant of the Graftwright that can take on a semi-liquid form, allowing it to infiltrate even the smallest cracks and crevices. Its attacks are more unpredictable and difficult to defend against.
 
 SMALLER / GAME:
 - TUNNEL RAT — Aggressive, large, disease-carrying rodent of city sewer and cellar systems. Found everywhere. Considered the most common hazard in Ashendell's lower districts.
@@ -780,11 +797,9 @@ NOTE: These creatures are found across multiple biomes and do not belong to a si
 
 - SPHINX — A cunning lion-bodied guardian of sunslit ruins, known for riddles, patience, and sudden violence. Found wherever ancient ruins exist.
 - GARGOYLE — A stone-winged predator that lurks upon rooftops and spires. Found wherever old stonework stands.
-- BEBELITH — Most often found near desecrated shrines, abandoned temples, or places where protective rites failed. See Woodland entry.
 - HAEROBURROW — Found in woodland, underground, and industrial waste zones. See Underground entry.
-- NOCRAT — Found in woodland, urban, and rail outpost settings. See Woodland entry.
-- LEAPER — Found in woodland, grassland, and broken terrain.
 - CARRIONZELLE — Found in wastes and battlefield margins. See Grassland entry.
+- THE GREY ONE — A smokey grey shoulder-up silhouette bearing the form of a classic bearded wizard beneath a vast old-world hat. His body is half-presence, half-vapor, dissolving into cold mist and pale runic fragments that drift through the air like broken geometry. His face is mostly hidden beneath shadow, beard, and brim, giving him the ancient gravity of a sage who has stepped beyond ordinary mortality. He fuses traditional wizardry with a cold, geometric, Witness-like ethereal presence: silent, architectural, distant, and unnaturally precise. Often encountered in dark cave biomes lit by ghostly fungi or faint subterranean glow, he appears less summoned than discovered, as though the cave itself has exposed a wound between realms. The Grey One's soul is now tied to FUBIN, a realm not yet understood. Whether FUBIN is an afterlife, prison, engine, dream-plane, or unfinished world remains unknown. Since the binding, he no longer exists entirely in one place; his body smokes, fractures, and reforms, while the symbols around him may be pieces of his soul leaking through from that strange realm. Threat Level: Unknown / Campaign-adjacent. Resonance: Echoing, Glyphic, Fubin-Bound.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 32. FACTION THREAT GROUPS
