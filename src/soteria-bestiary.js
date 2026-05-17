@@ -752,7 +752,7 @@ NOTE: These are not bestiary creatures. They are organized threat groups with po
 - VISCOPHYTES — Rootwraught Tel'ari transformed into gelatinous plantlike humanoids that engulf and dissolve prey.
 - VYRLYPH — Ooze-like humanoids whose bodies do not hold stable shape for long and whose movements leave slick residue behind.
 - WEMIC — A lion-bodied lineage associated with pride structures, open-country hunting, martial dominance, and territorial law.
-- STYGIAN LIZARD — A sinister black-scaled reptilian predator native to deep subterranean fissures and Void-adjacent regions. Possesses unnatural cold resistance and extreme hostility toward light sources. See Void/Abyssal entry.
+- ILLITHID — A cold psychic humanoid predator with a cephalid head, probing mind, and a hunger for thought, memory, and living intellect. Illithids dwell in deep ruins, abandoned laboratories, void-touched sanctums, and hidden undercities where silence protects their colonies. They dominate weaker minds through psychic pressure, harvest secrets from captives, and treat identity itself as food.
 
 - SCOUT CULTIST — A furtive initiate of the Triune Path trained to locate hidden roads, scout ruins, mark sacrifices, and vanish before open battle begins.
 - BULWARK CULTIST — A hardened threshold-keeper of the Triune Path who protects rites, blocks escape, and stands between intruders and the cult’s forbidden work.
