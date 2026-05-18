@@ -1,9 +1,3 @@
-/ ═══════════════════════════════════════════════════════════════════════════
-//  Fubin.jsx — Syntarion | Arcane-Industrial Pong
-//  Single-file component. Drop into src/ and render as <Fubin onHome={fn} />
-//  Requires: supabase client at ./lib/supabase
-// ═══════════════════════════════════════════════════════════════════════════
-
 import { useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react';
 import supabase from './lib/supabase';
 
