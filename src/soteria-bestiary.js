@@ -786,37 +786,22 @@ GREAT TITANS
 
 NOTE: These are not bestiary creatures. They are organized threat groups with politics, hierarchies, and reasons for what they do.
 
-- BLIGHTED — A broad classification for beings overtaken by rot, curse-growth, hostile natural resonance, or failed cleansing rites.
-- CENTAUR — A fierce plains hunter whose speed, pride, and territorial violence make it dangerous to cross.
-- DAEMONTAR — A fiend-touched lineage marked by horns, warped temperaments, unstable spiritual pressure, and violent instinct.
-- DAMPYR — A vampiric lineage that feeds on the life force of the living, often found in dark, secluded places.
-- DUERGAR — A deep-dwelling lineage shaped by pressure, darkness, subterranean corruption, and old bitterness beneath the earth.
-- FANKOON — A malformed scavenger lineage known for cruel social structures, territorial shrieking, and opportunistic violence.
-- FERRABORNE / SAVAGES — Iron-marked beings shaped by metal exposure, violence, and social collapse.
-- GHROTHMOGG — A hulking lineage associated with brute force, hunger, clan-like predatory groups, and ruinous endurance.
-- GNOLL — A hyena-like lineage known for pack cruelty, carrion rites, aggressive raids, and battlefield scavenging.
-- GOBLIN — Small cunning humanoids known for scavenging, ambush tactics, traps, crude ingenuity, and dangerous coordination in numbers. See Sylvan Grove entry.
-- HARPIES — Winged fey-like predators with woman top halves and bird-like lower halves, known for their aerial agility, sharp talons, and hunting in coordinated groups.
-- KHAASTA — Agile alligator-like reptilian predators with leathery hides, cliff ambush tactics, and coordinated pack hunting. See Mountain entry.
-- KITE — A goblinoid or gliding scavenger lineage associated with cliff nests, battlefield circling, and opportunistic attacks on the wounded.
-- KOBOLD — A small burrowing lineage known for tunnels, traps, territorial colonies, and dangerous numbers.
-- MALITH — A venomous or curse-marked lineage associated with malice, hidden settlements, old grudges, and sudden betrayal.
-- METAMORPH — A being cursed with transforming into the state of another being. This state can be permanent if the afflicted do not find a cure or change back within a specific timeframe.
-- MYCELION — A fungal lineage altered by spore networks, shared instinct, damp underworld growth, and slow communal thought.
-- QUICKLING — A speed-warped lineage that moves too quickly for ordinary sight and delights in harassment, theft, and sudden cuts.
-- SAHUAGIN — A shark-folk lineage adapted to blood-scent, coastal raids, underwater violence, and predatory group assaults.
-- SIRENS — Melodic and dangerous water-dwellers known for their enchanting songs that can drive sailors to their doom.
-- SPRITE — Small fey-like entities whose playfulness often turns manipulative, cruel, or dangerous depending on mood and territory.
-- SUNDERLING — A small, agile creature that is often found in groups, known for its ability to split into multiple smaller versions of itself when threatened.
-- URSAROK — A bear-like lineage known for immense strength, territorial rage, brutal endurance, and devastating close-range violence.
-- VISCOPHYTES — Rootwraught Tel'ari transformed into gelatinous plantlike humanoids that engulf and dissolve prey.
-- VYRLYPH — Ooze-like humanoids whose bodies do not hold stable shape for long and whose movements leave slick residue behind.
-- WEMIC — A lion-bodied lineage associated with pride structures, open-country hunting, martial dominance, and territorial law.
-- ILLITHID — A cold psychic humanoid predator with a cephalid head, probing mind, and a hunger for thought, memory, and living intellect. Illithids dwell in deep ruins, abandoned laboratories, void-touched sanctums, and hidden undercities where silence protects their colonies. They dominate weaker minds through psychic pressure, harvest secrets from captives, and treat identity itself as food.
-
-- SCOUT CULTIST — A furtive initiate of the Triune Path trained to locate hidden roads, scout ruins, mark sacrifices, and vanish before open battle begins.
-- BULWARK CULTIST — A hardened threshold-keeper of the Triune Path who protects rites, blocks escape, and stands between intruders and the cult’s forbidden work.
-- ELDRITCH CULTIST — An inner initiate of the Triune Path who reads forbidden signs, speaks through sealed powers, and channels unstable occult force.
+- BLIGHTED — Any race corrupted by Dybuk influence, Void contamination, Maelificar shadow, or Apostate resonance.
+- DRAUGR — A corpse-bound remnant of fallen Addamar, animated by old grudges, grave-cold hunger, and the refusal to remain dead.
+- DUERGAR — A deep-forge Durinak counterlineage hardened by buried spite, cruel industry, and the black pressure of the underworld.
+- VYRLYPH — A twisted Tel’ari offshoot whose elegant form has become unstable, backward, and wrong beneath corrupted resonance.
+- GROTHMOGG — A hulking Othrod war-brute shaped by conquest, hunger, tribal cruelty, and relentless battlefield dominance.
+- OGRE — A massive Terraxian counterform warped into brutal adaptive megafauna, using terrain, strength, and endurance to crush intruders.
+- KRAG — A small vicious mountain-haunting winged creature, agile and shrieking, known for cruel weapons and sudden pack violence.
+- KRUG — A warped Trink counterlineage of squat tool-users, trap-makers, and spiteful scavenger-crafters with a taste for ruin.
+- FERRABORNE — A hard-bodied Pa’morph opposite shaped by iron, invasive growth, and anti-natural adaptation rather than living animal harmony.
+- SPRITE — A cruel lesser Fae that weaponizes beauty, tricks, stolen names, and tiny acts of malice into lasting harm.
+- GENIE — A dangerous true wish-being whose bargains bend desire into debt, servitude, elemental punishment, or ruin.
+- ONI — A towering Helianth counterform marked by demonic appetite, horned brutality, and predatory delight in fear.
+- MAL’AKH — A fallen Seraphan counterpart of false light, merciless judgment, and divine authority stripped of compassion.
+- DRAEKUL — A corrupted Drakazir bloodline driven by hoard-lust, bloodfire, ancient tyranny, and draconic supremacy.
+- NEREIGILL — A dark Nazari counterlineage tied to drowned trenches, black water, predatory currents, and abyssal hunger.
+- CHRONOVORE — A time-devouring hunter of the Chronison that consumes stolen years, alternate selves, and forbidden futures.
 
 //Khell lineages
 
@@ -843,6 +828,7 @@ NOTE: These creatures are found across multiple biomes and do not belong to a si
 - HAEROBURROW — Found in woodland, underground, and industrial waste zones. See Underground entry.
 - CARRIONZELLE — Found in wastes and battlefield margins. See Grassland entry.
 - THE GREY ONE — A smokey grey shoulder-up silhouette bearing the form of a classic bearded wizard beneath a vast old-world hat. His body is half-presence, half-vapor, dissolving into cold mist and pale runic fragments that drift through the air like broken geometry. His face is mostly hidden beneath shadow, beard, and brim, giving him the ancient gravity of a sage who has stepped beyond ordinary mortality. He fuses traditional wizardry with a cold, geometric, Witness-like ethereal presence: silent, architectural, distant, and unnaturally precise. Often encountered in dark cave biomes lit by ghostly fungi or faint subterranean glow, he appears less summoned than discovered, as though the cave itself has exposed a wound between realms. The Grey One's soul is now tied to FUBIN, a realm not yet understood. Whether FUBIN is an afterlife, prison, engine, dream-plane, or unfinished world remains unknown. Since the binding, he no longer exists entirely in one place; his body smokes, fractures, and reforms, while the symbols around him may be pieces of his soul leaking through from that strange realm. Threat Level: Unknown / Campaign-adjacent. Resonance: Echoing, Glyphic, Fubin-Bound.
+- GLOAMPLUME — A towering raven-hawk humanoid with layered slate-black feathers, scaled talons, a hooked executioner’s beak, and crescent arm-blades. Gloamplumes haunt ruined temples, tomb roads, and old stone gates, standing as silent wardens until trespassers cross too far.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 32. FACTION THREAT GROUPS

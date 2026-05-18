@@ -13,10 +13,11 @@ export const DEFAULT_CITIES = [
     id: 'elrathia',
     name: 'Elrãthia',
     region: 'Veridora / Sylvan Grove',
-    npcs: [
-      { id: 'n1', name: 'The Orphaned', role: 'Children of Elrãthia', status: 'Active', faction: 'Elrãthia', notes: 'Ageless children with unique magical gifts, ages magically suspended.' },
-      { id: 'n2', name: 'The Caretakers', role: 'Guardian Entities', status: 'Active', faction: 'Elrãthia', notes: 'Ethereal figures who oversee the wellbeing of The Orphaned, largely unseen.' },
+    groups: [
+      { id: 'g_elrathia_1', name: 'The Orphaned', category: 'Uncategorized' },
+      { id: 'g_elrathia_2', name: 'The Caretakers', category: 'Uncategorized' },
     ],
+    npcs: [],
   },
 
   {
@@ -1136,3 +1137,4 @@ export const DEFAULT_CITIES = [
 let _npcCounter = 600;
 export const newNpcId = () => `npc_${++_npcCounter}_${Date.now()}`;
 export const newCityId = () => `city_${Date.now()}`;
+
