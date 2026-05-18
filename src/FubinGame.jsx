@@ -1,4 +1,4 @@
-// ═══════════════════════════════════════════════════════════════════════════
+/ ═══════════════════════════════════════════════════════════════════════════
 //  Fubin.jsx — Syntarion | Arcane-Industrial Pong
 //  Single-file component. Drop into src/ and render as <Fubin onHome={fn} />
 //  Requires: supabase client at ./lib/supabase
@@ -49,7 +49,7 @@ const dist2   = (ax, ay, bx, by) => Math.hypot(bx - ax, by - ay);
 const randRange = (lo, hi) => lo + Math.random() * (hi - lo);
 
 // ── Room code generator ───────────────────────────────────────────────────────
-const genRoomCode = () => Math.random().toString(36).slice(2, 😎.toUpperCase();
+const genRoomCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 
 // ── Audio ────────────────────────────────────────────────────────────────────
 let _audioCtx = null;
@@ -118,7 +118,7 @@ const makeWisp = (id, W, H, ballX, ballY, paddles) => {
 //  PERSISTENCE
 // ═══════════════════════════════════════════════════════════════════════════
 
-const LS_KEY = uid => fubin_stats_${uid};
+const LS_KEY = uid => `fubin_stats_${uid}`;
 
 const defaultStats = () => ({
   vs_grey_apprentice_wins: 0, vs_grey_apprentice_losses: 0,
@@ -156,7 +156,7 @@ const recordGameResult = async (uid, { isAI, difficulty, won, networkInterrupted
   const local = loadLocalStats(uid);
   const next = { ...local };
   if (isAI) {
-    const base = vs_grey_${difficulty};
+    const base = `vs_grey_${difficulty}`;
     if (won) { next[`${base}_wins`]++; next.current_streak++; }
     else     { next[`${base}_losses`]++; next.current_streak = 0; }
   } else {
@@ -357,7 +357,7 @@ function ShellUI(props) {
       background: 'rgba(18,14,9,0.97)',
       border: '1px solid rgba(184,137,42,0.2)',
       borderRadius: 8, padding: '36px 40px',
-      boxShadow: '0 0 60px rgba(184,137,42,0.07), 0 24px 80px rgba(0,0,0,0.😎',
+      boxShadow: '0 0 60px rgba(184,137,42,0.07), 0 24px 80px rgba(0,0,0,0.8)',
       width: '100%', maxWidth: 460, position: 'relative',
     },
     title: {
@@ -389,7 +389,7 @@ function ShellUI(props) {
       borderRadius: 4, cursor: 'pointer',
       fontFamily: "'Cinzel', serif", fontSize: 11,
       letterSpacing: '0.16em', textTransform: 'uppercase',
-      color: 'rgba(200,190,170,0.😎', fontWeight: 600,
+      color: 'rgba(200,190,170,0.8)', fontWeight: 600,
       transition: 'all 0.2s', marginBottom: 12,
     },
     btnGhost: {
@@ -426,12 +426,12 @@ function ShellUI(props) {
 
   // ambient particles
   const particles = Array.from({ length: 18 }, (_, i) => ({
-    left: ${5 + (i * 5.3) % 90}%,
-    top: ${10 + (i * 7.1) % 80}%,
+    left: `${5 + (i * 5.3) % 90}%`,
+    top: `${10 + (i * 7.1) % 80}%`,
     size: 2 + (i % 3),
     opacity: 0.06 + (i % 4) * 0.04,
     color: i % 3 === 0 ? '#e8c040' : i % 3 === 1 ? '#4090ff' : '#60e080',
-    animDelay: ${i * 0.4}s,
+    animDelay: `${i * 0.4}s`,
   }));
 
   // ── MENU ──────────────────────────────────────────────────────────────────
@@ -498,7 +498,7 @@ function ShellUI(props) {
             onClick={() => { setDifficulty(key); startAiGame(); }}
             style={{
               ...S.btnSecondary,
-              border: 1px solid ${d.color}44,
+              border: `1px solid ${d.color}44`,
               display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
               gap: 4, textAlign: 'left',
             }}
@@ -619,15 +619,15 @@ function ShellUI(props) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
             {jewels.map((j, i) => (
               <div key={i} style={{
-                background: 'rgba(13,11,8,0.9)', border: 1px solid ${j.color}33,
+                background: 'rgba(13,11,8,0.9)', border: `1px solid ${j.color}33`,
                 borderRadius: 4, padding: '14px 16px', position: 'relative', overflow: 'hidden',
               }}>
                 {/* chisel texture lines */}
                 <div style={{ position: 'absolute', inset: 0, opacity: 0.04,
                   backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 6px, rgba(255,255,255,0.5) 6px, rgba(255,255,255,0.5) 7px)' }}/>
                 {/* jewel */}
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: j.color, boxShadow: 0 0 8px ${j.color}, marginBottom: 8 }}/>
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: j.color, lineHeight: 1, textShadow: 0 0 12px ${j.color}66 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: j.color, boxShadow: `0 0 8px ${j.color}`, marginBottom: 8 }}/>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: j.color, lineHeight: 1, textShadow: `0 0 12px ${j.color}66` }}>
                   {j.value}
                 </div>
                 <div style={{ fontFamily: "'Crimson Pro', serif", fontStyle: 'italic', fontSize: 10, color: 'rgba(180,170,150,0.55)', marginTop: 4, letterSpacing: '0.04em' }}>
@@ -650,15 +650,15 @@ function ShellUI(props) {
             <div key={i} style={{
               display: 'flex', alignItems: 'center', gap: 14,
               padding: '12px 16px', marginBottom: 8,
-              background: 'rgba(13,11,8,0.😎', border: '1px solid rgba(255,255,255,0.04)',
+              background: 'rgba(13,11,8,0.8)', border: '1px solid rgba(255,255,255,0.04)',
               borderRadius: 4,
             }}>
               <span style={{
                 fontFamily: "'Cinzel', serif", fontSize: 14, fontWeight: 700, width: 24, textAlign: 'center',
                 color: entry.rank === 1 ? '#ffd700' : entry.rank === 2 ? '#c0c0c0' : entry.rank === 3 ? '#cd7f32' : 'rgba(180,170,150,0.5)',
-                textShadow: entry.rank <= 3 ? 0 0 10px currentColor : 'none',
+                textShadow: entry.rank <= 3 ? `0 0 10px currentColor` : 'none',
               }}>{entry.rank}</span>
-              <span style={{ flex: 1, fontFamily: "'Cinzel', serif", fontSize: 11, color: 'rgba(220,210,190,0.😎', letterSpacing: '0.08em' }}>{entry.username}</span>
+              <span style={{ flex: 1, fontFamily: "'Cinzel', serif", fontSize: 11, color: 'rgba(220,210,190,0.8)', letterSpacing: '0.08em' }}>{entry.username}</span>
               <span style={{ fontFamily: "'Crimson Pro', serif", fontSize: 14, color: '#e8c040' }}>{entry.wins}W</span>
               <span style={{ fontFamily: "'Crimson Pro', serif", fontSize: 12, color: 'rgba(180,170,150,0.4)' }}>{entry.losses}L</span>
             </div>
@@ -686,9 +686,9 @@ function ShellUI(props) {
               width: r * 2, height: r * 2,
               marginLeft: -r, marginTop: -r,
               borderRadius: '50%',
-              border: 1px solid ${i === 0 ? '#e8c040' : i === 1 ? '#4080ff' : '#60e080'},
-              animation: fubinPulseRing ${2 + i * 0.4}s ease-in-out infinite,
-              animationDelay: ${i * 0.2}s,
+              border: `1px solid ${i === 0 ? '#e8c040' : i === 1 ? '#4080ff' : '#60e080'}`,
+              animation: `fubinPulseRing ${2 + i * 0.4}s ease-in-out infinite`,
+              animationDelay: `${i * 0.2}s`,
             }}/>
           ))}
 
@@ -699,7 +699,7 @@ function ShellUI(props) {
               marginLeft: offset - 22, marginTop: -22,
               width: 44, height: 44,
               border: '2px solid rgba(58,40,16,0.7)', borderRadius: '50%',
-              animation: fubinGearSpin ${4 + i}s linear infinite,
+              animation: `fubinGearSpin ${4 + i}s linear infinite`,
               animationDirection: i === 1 ? 'reverse' : 'normal',
             }}/>
           ))}
@@ -707,7 +707,7 @@ function ShellUI(props) {
           <h1 style={{
             fontFamily: "'Cinzel', serif", fontSize: 42, fontWeight: 900, letterSpacing: '0.08em',
             color: w.won ? '#e8c040' : '#c0b090',
-            textShadow: 0 0 40px ${w.won ? 'rgba(232,192,64,0.6)' : 'rgba(192,176,144,0.4)'},
+            textShadow: `0 0 40px ${w.won ? 'rgba(232,192,64,0.6)' : 'rgba(192,176,144,0.4)'}`,
             animation: 'fubinWinTitle 0.6s ease both',
             position: 'relative', zIndex: 1,
           }}>
@@ -988,7 +988,7 @@ function GameCanvas({ user, mode, difficulty, lobbyState, onWin, onAbandon }) {
       const rad = bx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.7);
       rad.addColorStop(0,   'rgba(30,20,8,0)');
       rad.addColorStop(0.6, 'rgba(10,6,2,0.4)');
-      rad.addColorStop(1,   'rgba(4,2,1,0.😎');
+      rad.addColorStop(1,   'rgba(4,2,1,0.8)');
       bx.fillStyle = rad;
       bx.fillRect(0, 0, W, H);
 
@@ -1017,10 +1017,10 @@ function GameCanvas({ user, mode, difficulty, lobbyState, onWin, onAbandon }) {
       bx.strokeStyle = 'rgba(48,72,160,0.22)';
       bx.lineWidth = 0.8;
       const circuits = [
-        M${W*0.25} ${H*0.5} L${W*0.35} ${H*0.5} L${W*0.38} ${H*0.44} L${W*0.62} ${H*0.44} L${W*0.65} ${H*0.5} L${W*0.75} ${H*0.5},
-        M${W*0.38} ${H*0.56} L${W*0.62} ${H*0.56},
-        M${W*0.5} ${H*0.44} L${W*0.5} ${H*0.36},
-        M${W*0.5} ${H*0.56} L${W*0.5} ${H*0.64},
+        `M${W*0.25} ${H*0.5} L${W*0.35} ${H*0.5} L${W*0.38} ${H*0.44} L${W*0.62} ${H*0.44} L${W*0.65} ${H*0.5} L${W*0.75} ${H*0.5}`,
+        `M${W*0.38} ${H*0.56} L${W*0.62} ${H*0.56}`,
+        `M${W*0.5} ${H*0.44} L${W*0.5} ${H*0.36}`,
+        `M${W*0.5} ${H*0.56} L${W*0.5} ${H*0.64}`,
       ];
       circuits.forEach(d => { const p = new Path2D(d); bx.stroke(p); });
 
@@ -1144,7 +1144,7 @@ function GameCanvas({ user, mode, difficulty, lobbyState, onWin, onAbandon }) {
 
         // Brass edge effect as planks lock in
         if (ease > 0.7) {
-          ctx.strokeStyle = rgba(106,72,32,${(ease-0.7)/0.3});
+          ctx.strokeStyle = `rgba(106,72,32,${(ease-0.7)/0.3})`;
           ctx.lineWidth = 2;
           ctx.strokeRect(qx, qy, W/2, H/2);
         }
@@ -1162,9 +1162,9 @@ function GameCanvas({ user, mode, difficulty, lobbyState, onWin, onAbandon }) {
 
       const ease = p < 0.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2;
       ctx.save();
-      ctx.strokeStyle = rgba(60,120,255,${ease * 0.6});
+      ctx.strokeStyle = `rgba(60,120,255,${ease * 0.6})`;
       ctx.lineWidth = 1.5;
-      ctx.shadowColor = 'rgba(60,120,255,0.😎';
+      ctx.shadowColor = 'rgba(60,120,255,0.8)';
       ctx.shadowBlur = 8;
 
       // Draw circuits progressively
@@ -1197,7 +1197,7 @@ function GameCanvas({ user, mode, difficulty, lobbyState, onWin, onAbandon }) {
 
       // Glowing nodes
       [[W*0.35,H*0.44],[W*0.65,H*0.44],[W*0.38,H*0.56],[W*0.62,H*0.56],[W*0.5,H*0.36],[W*0.5,H*0.64]].forEach(([nx,ny]) => {
-        ctx.fillStyle = rgba(60,120,255,${ease * 0.8});
+        ctx.fillStyle = `rgba(60,120,255,${ease * 0.8})`;
         ctx.beginPath(); ctx.arc(nx, ny, 4, 0, Math.PI*2); ctx.fill();
       });
 
@@ -1287,8 +1287,8 @@ function GameCanvas({ user, mode, difficulty, lobbyState, onWin, onAbandon }) {
         const tr = r * (0.25 + t * 0.6);
         ctx.save(); ctx.globalAlpha = a;
         const tg = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, tr * 2.5);
-        tg.addColorStop(0, rgba(180,220,255,${a}));
-        tg.addColorStop(0.5, rgba(60,130,255,${a*0.6}));
+        tg.addColorStop(0, `rgba(180,220,255,${a})`);
+        tg.addColorStop(0.5, `rgba(60,130,255,${a*0.6})`);
         tg.addColorStop(1, 'rgba(20,60,200,0)');
         ctx.fillStyle = tg;
         ctx.beginPath(); ctx.arc(pt.x, pt.y, tr*2.5, 0, Math.PI*2); ctx.fill();
@@ -1401,7 +1401,7 @@ function GameCanvas({ user, mode, difficulty, lobbyState, onWin, onAbandon }) {
           ctx.beginPath(); ctx.moveTo(ex+eyeR, ey-eyeR); ctx.lineTo(ex-eyeR, ey+eyeR); ctx.stroke();
         });
         // distress lines radiating out
-        ctx.strokeStyle = rgba(255,200,80,${dt2});
+        ctx.strokeStyle = `rgba(255,200,80,${dt2})`;
         ctx.lineWidth = 1;
         for (let li = 0; li < 6; li++) {
           const la = (li/6)*Math.PI*2;
@@ -1472,17 +1472,17 @@ function GameCanvas({ user, mode, difficulty, lobbyState, onWin, onAbandon }) {
       // Score text
       const L = scoreRef.current.L, R = scoreRef.current.R;
       ctx.fillStyle = '#e8c040';
-      ctx.font = bold 26px 'Cinzel', 'Georgia', serif;
+      ctx.font = `bold 26px 'Cinzel', 'Georgia', serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.shadowColor = 'rgba(232,192,64,0.5)'; ctx.shadowBlur = 8;
-      ctx.fillText(${L}  –  ${R}, W/2, sbY + sbH/2 + 2);
+      ctx.fillText(`${L}  –  ${R}`, W/2, sbY + sbH/2 + 2);
       ctx.shadowBlur = 0;
 
       // Smoke puff on score change
       if (scoreSmoke.current.active) {
         const st2 = scoreSmoke.current.timer;
         const sa = Math.max(0, 1 - st2 * 2.5);
-        ctx.fillStyle = rgba(180,180,200,${sa * 0.6});
+        ctx.fillStyle = `rgba(180,180,200,${sa * 0.6})`;
         const sr = 18 + st2 * 40;
         ctx.beginPath(); ctx.arc(W/2, sbY+sbH/2, sr, 0, Math.PI*2); ctx.fill();
       }
@@ -1496,7 +1496,7 @@ function GameCanvas({ user, mode, difficulty, lobbyState, onWin, onAbandon }) {
         const a = Math.max(0, 1 - s.t / s.life);
         ctx.save();
         ctx.globalAlpha = a * 0.5;
-        ctx.fillStyle = rgba(200,200,220,${a});
+        ctx.fillStyle = `rgba(200,200,220,${a})`;
         ctx.beginPath(); ctx.arc(s.x, s.y, 4 + s.t * 12, 0, Math.PI*2); ctx.fill();
         ctx.restore();
       });
@@ -1585,7 +1585,7 @@ function GameCanvas({ user, mode, difficulty, lobbyState, onWin, onAbandon }) {
         // Smoke
         if (scoreSmoke.current.active) {
           scoreSmoke.current.timer += dt;
-          if (scoreSmoke.current.timer > 0.😎 scoreSmoke.current.active = false;
+          if (scoreSmoke.current.timer > 0.8) scoreSmoke.current.active = false;
         }
         return;
       }
@@ -1812,7 +1812,7 @@ function GameCanvas({ user, mode, difficulty, lobbyState, onWin, onAbandon }) {
 
       // Score smoke
       if (scoreSmoke.current.active) scoreSmoke.current.timer += dt;
-      if (scoreSmoke.current.timer > 0.😎 scoreSmoke.current.active = false;
+      if (scoreSmoke.current.timer > 0.8) scoreSmoke.current.active = false;
 
       // Speed floor
       ball.speed = Math.max(ball.speed, BALL_BASE_SPEED * 0.6);
@@ -1865,7 +1865,7 @@ function GameCanvas({ user, mode, difficulty, lobbyState, onWin, onAbandon }) {
       if (phaseRef.current === 'waiting_serve') {
         ctx.save();
         ctx.fillStyle = 'rgba(232,192,64,0.75)';
-        ctx.font = italic 16px 'Crimson Pro', Georgia, serif;
+        ctx.font = `italic 16px 'Crimson Pro', Georgia, serif`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText('Tap or click to serve', W/2, H * 0.18);
         ctx.restore();
@@ -1961,7 +1961,7 @@ function GameCanvas({ user, mode, difficulty, lobbyState, onWin, onAbandon }) {
           background: 'rgba(13,8,4,0.85)', border: '1px solid rgba(184,137,42,0.2)',
           borderRadius: 4, padding: '10px 20px',
           fontFamily: "'Crimson Pro', serif", fontStyle: 'italic',
-          color: 'rgba(232,192,64,0.😎', fontSize: 14, whiteSpace: 'nowrap',
+          color: 'rgba(232,192,64,0.8)', fontSize: 14, whiteSpace: 'nowrap',
         }}>
           {mode === 'ai' ? 'Click or tap to serve — aim with your cursor' : 'Right player: tap to serve'}
         </div>
