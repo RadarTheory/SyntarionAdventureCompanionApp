@@ -18,9 +18,6 @@ const injectFonts = () => {
 };
 
 // ── Constants ────────────────────────────────────────────────────────────────
-const SUPABASE_URL      = 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
-
 const WIN_AHEAD        = 5;
 const BALL_BASE_R      = 13;
 const BALL_MIN_R       = 3;
