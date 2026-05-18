@@ -79,7 +79,7 @@ const TREE = {
           { n: 'Dual Balance',   d: 'Redistributes effects between connected targets.' },
           { n: 'Weave Collapse', d: 'Forces all active connections to resolve simultaneously.' },
         ]},
-        { name: 'Cursewright', lvl: '10–20', from: 'Bokor', abilities: [
+        { name: 'Draeth', lvl: '10–20', from: 'Bokor', abilities: [
           { n: 'Etch Sigil',      d: 'Inscribe a lasting curse onto a surface, object, or being.' },
           { n: 'Spread Malison',  d: 'Extends an existing curse to additional targets.' },
           { n: 'Blood Terms',     d: 'Strengthens a curse through sacrifice or cost.' },

@@ -205,7 +205,7 @@ CAELYN [Tier 3, Lvl 10-20, 3pt each, from Shaman]
   Dual Balance — Redistributes effects between connected targets.
   Weave Collapse — Forces all active connections to resolve simultaneously.
 
-CURSEWRIGHT [Tier 3, Lvl 10-20, 3pt each, from Bokor]
+DRAETH [Tier 3, Lvl 10-20, 3pt each, from Bokor]
   Etch Sigil — Inscribe a lasting curse onto a surface, object, or being.
   Spread Malison — Extends an existing curse to additional targets.
   Blood Terms — Strengthens a curse through sacrifice or cost.

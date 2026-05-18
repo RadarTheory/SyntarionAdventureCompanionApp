@@ -103,7 +103,7 @@ DOCILE / FRIENDLY:
 - UNICORN — A rare horned creature of untouched glades, tied to calm and purity.
 - WUID — A tiny feral woodland creature known for sudden speed, sharp instincts, and mischievous cruelty.
 - GLIMROOT — A sentient glowing root-system that entangles intruders.
-- HUSH — An animal spirit often seen as a quiet guide through wood and wild.
+- HUSH — A radiant woodland spirit seen drifting through deep forest as a quiet guide for the lost, wounded, or worthy. It appears as a small winged humanoid made of soft golden-white light, its body half-formed and weightless, with mothlike or fae-like wings that shimmer like dusted glass. A Hush does not speak aloud; it beckons with gesture, warmth, and the faint pull of calm in the chest. Travelers who follow one often find safe paths, clean water, hidden clearings, or the way out of enchanted woods. To chase, trap, or shout at a Hush is considered ill fortune, for it vanishes from harsh intent and leaves only darkness behind.
 - GREY WOLF (SOTERIAN) — The common wolf of Soteria's forests and hills. Larger than expected, pack-coordinated, and known to avoid Dybuk-touched territory entirely. Hunters read wolf absence as a spiritual warning. Pack sizes range from four to sixteen.
 - ASHBEAR — A broad-shouldered forest bear with ash-grey fur and a territorial temperament. Largely avoids settlements but increasingly displaced by Veinrunner expansion into old-growth timber regions.
 - IRONWOOD DEER — A large stag of the deep forest whose antlers have a faint metallic sheen from grazing near grimrite-adjacent soil. Non-aggressive but capable of dangerous charges when cornered. Primary prey animal for woodland predators.
@@ -240,8 +240,8 @@ AGGRESSIVE / PREDATORY:
 - TIGER-FLY — A vibrant insect with tiger-like stripes and razor-sharp mandibles; hunts in swarms capable of stripping a wounded creature to the bone in minutes.
 - CANOPY CONSTRICTOR — A massive tree-dwelling serpent that drops onto prey from above. Non-venomous. Kills by constriction. Long enough to encircle a draft horse. Prefers large warm-blooded prey and has been known to target sleeping camp groups.
 - MOSQUITO HAWK — A swift aerial predator with the body and talons of a hawk combined with membranous wings and a blood-draining proboscis. Hunts marshes, jungles, and humid lowlands in aggressive feeding swarms.
-- ORRILLAPEDACONDA — A massive nightmare hybrid featuring the powerful upper torso of a silverback gorilla fused to the immense muscular coils of a titanoboa; can swing through canopy or constrict prey with terrifying speed.
-
+- ORRILLACONDA — A massive nightmare hybrid featuring the powerful upper torso of a silverback gorilla fused to the immense muscular coils of a titanoboa; can swing through canopy or constrict prey with terrifying speed.
+- ORILlACONDACHNID - a massive nightmare hybrid featuring the upper torso of a silverback gorilla with five additional arms spawning from it's spine on either side, making it eleven arms and the coil of a terrifying titanboa. The additional arms are covered in a chitinous exoskeleton and end in razor-sharp claws, allowing it to grapple multiple prey simultaneously while constricting with its powerful coils. It is an apex predator of the jungle, feared for its relentless hunting tactics and ability to take down large prey with ease.
 SMALLER / GAME:
 - DART FROG (SOTERIAN) — A brilliantly colored small amphibian whose skin secretes a potent contact toxin. Collected by Brunar traders for poison applications. Handling without protection is strongly inadvisable.
 - JUNGLE RAT — A large, adaptable rodent found throughout rainforest settlements and river camps. Disease vector. Responsible for several documented supply contamination incidents.
@@ -305,7 +305,7 @@ AGGRESSIVE / PREDATORY:
 
 SMALLER / GAME:
 - MOUNTAIN HARE — A white-furred hare of high-altitude terrain. Fast, agile, and a primary food source for mountain predators. Its coloring shifts with the season.
-- ROCKPIP — A small burrowing rodent of the high passes that stores enormous quantities of dried vegetation in its burrow systems. Considered good luck to spot by Durinak miners.
+- ROCKPIP — A small feathered burrower of the high passes with a hooked beak, digging claws, and dense alpine plumage. It hoards vast stores of dried vegetation in its tunnels and is regarded as a sign of good luck by Durinak miners.
 - CLIFF ADDER — A venomous mountain snake that basks on sun-facing rock faces. Camouflaged against stone. Venom causes rapid cardiac stress in small creatures.
 - MOUNTAIN GHOSTCRAB — A strange high-altitude crab found in mineral springs, wet cave mouths, and mist-heavy cliffs. Its shell mimics stone and lichen, making it almost impossible to spot until it moves.
 - AMETHYSTWING PACKRAPTOR — A Packraptor variant with violet wing-frills used for threat display and pack signaling. Hunts along cliff paths, scree slopes, and mineral-streaked terrain where its coloration blends with stone.
@@ -328,6 +328,8 @@ AGGRESSIVE / PREDATORY:
 
 DOCILE / FRIENDLY:
 - CLOUDWHALE — A vast, gentle aerial creature that drifts at extreme altitude feeding on atmospheric particulates. Rarely seen clearly. Considered a blessing omen by most Soterian cultures. Their passing is accompanied by a low harmonic resonance that spiritually sensitive individuals can perceive as immense calm.
+- CLOUDRAY - A large, manta ray-like creature that glides through the sky on broad membranous wings. Feeds on airborne plankton and small birds. Non-aggressive and often seen in groups, their graceful flight is considered a symbol of freedom and tranquility.
+- FAE CLOUDWHALE - A smaller, more colorful variant of the Cloudwhale, adorned with iridescent patterns on its skin. Known for its playful nature and tendency to interact with other flying creatures, it is often seen as a symbol of joy and whimsy in Soterian folklore.
 
 AGGRESSIVE / PREDATORY:
 - GRYPHON — A proud winged hunter of cliff and sky, known for keen sight and fierce territorial wrath.
@@ -435,7 +437,8 @@ DOCILE / FRIENDLY:
 AGGRESSIVE / PREDATORY:
 - ARID OGRE — See Ogre Family entry.
 - SAND WYRM — A massive subterranean predator of deep desert. Detects vibration through sandy ground. Surfaces explosively to engulf prey whole. The Brunar trade routes account for known Sand Wyrm territories in their scheduling. High threat. Campaign-adjacent in large specimens.
-- DESERT SCORPION (GIANT) — A man-sized scorpion of rocky desert terrain. Venom causes paralysis within minutes. Hunts at night. During the day they shelter beneath rock overhangs and in ruins; the same places travelers seek shade.
+- DESERT SCORPION - a sand scorpion that is known most for the feathers that can be seen on its stinger tail. 
+- GREATER DESERT SCORPION — A man-sized scorpion of rocky desert terrain. Venom causes paralysis within minutes. Hunts at night. During the day they shelter beneath rock overhangs and in ruins; the same places travelers seek shade.
 - DESERT GHOSTCRAB — A sand-pale ghostcrab that burrows beneath dune crusts and dry salt flats. Emerges at night to scavenge insects, lizards, and carrion.
 - DUNEWOLF — A desert pack hunter whose sand-colored fur and flattened silhouette make it nearly invisible until it erupts from dunes in a storm of teeth and dust.
 - GRANULE PACKRAPTOR — A dust-colored Packraptor with rough pebble-like scales along its spine and shoulders. Often rolls through loose soil to mask its scent before ambushing prey.
@@ -497,7 +500,7 @@ AGGRESSIVE / PREDATORY:
 - STILLMERE DREAD-CROC — A broader, darker lake Dread-Croc infamous for striking from beneath perfectly calm water in flooded ruins.
 - SALTMAW DREAD-CROC — A coastal saltwater Dread-Croc that patrols mangroves, reefs, and harbor mouths; feared more than sharks because it learns boat routes.
 - WHIPSICKLE SCYTHE-SHRIMP — A three-foot ancient arthropod with two spiked whip-like appendages; a single one is dangerous to swimmers, a feeding cluster is a butcher's storm in the water.
-- BRINESICKLE SHRIMP — A blue-grey reef-channel Scythe-Shrimp that follows larger predators to feed on scraps.
+- BRINESICKLE SCYTHE-SHRIMP — A blue-grey reef-channel Scythe-Shrimp that follows larger predators to feed on scraps.
 - TIDEHOOK SCYTHE-SHRIMP — A red-brown-black mottled Scythe-Shrimp from tide pools and volcanic lagoons; nearly invisible against wet stone.
 
 SMALLER / GAME:
@@ -532,7 +535,7 @@ AGGRESSIVE / PREDATORY:
 - CROWNTOOTH TUSK-WHALE — A predatory whale armed with massive crown-like ivory fangs in both jaws; actively hunts giant squid, lesser whales, sea serpents, and ships that resemble wounded beasts.
 - BRINECROWN TUSK-WHALE — The surface-hunting strain; follows whale pods and fishing fleets, attacking where blood and noise gather.
 - ABYSSCROWN TUSK-WHALE — A larger, more scarred deep-sea Crowntooth with teeth blackened by volcanic vent deposits.
-- SHELLGLACIER TURTLE — A sea turtle the size of a small house whose shell grows coral, barnacles, reef plants, or layered ice; a surfacing specimen can overturn fishing boats, a diving one can drag anchors and dock chains into the deep.
+- SHELL GLACIER-TURTLE — A sea turtle the size of a small house whose shell grows coral, barnacles, reef plants, or layered ice; a surfacing specimen can overturn fishing boats, a diving one can drag anchors and dock chains into the deep.
 - REEFSHELL GLACIER-TURTLE — A Shellglacier Turtle that grows coral gardens and bright anemones; fish shelter around it as though it were a moving reef.
 - ISLEBACK GLACIER-TURTLE — A legendary Shellglacier Turtle large enough for seabirds to nest on its shell during long migrations.
 - TIDEHIDE GREAT-LURK — A darker, stronger-swimming island monitor that raids nests, beaches, and fishing camps with patient precision; more tolerant of saltwater than inland strains.
@@ -616,11 +619,8 @@ DYBUK — FULL ENTRY:
 Nature: Born from the Void (Tophet). No physical bodies; they require a host. Drawn to individuals in states of spiritual vulnerability: grief, humiliation, envy, failure, obsession, despair, broken oaths, abandoned faith, or lost Veyline alignment. On Nazros their feeding behavior is industrialized (Operation Trust). In Soteria, they operate individually or in small clusters.
 
 Conditions increasing manifestation risk: mass grief, betrayal, unresolved trauma, isolation, false Nullite exposure, collapsed faith structures, prolonged silence, abandoned settlements, and corrupted Veylines.
-
 Conditions reducing manifestation risk: genuine communal trust, active Sanctus practice, truthful witness, functioning Veylines, emotionally stable populations, and dawn-aligned ritual activity.
-
 Feeding: Dybuks feed on live despair — not death itself, but the sustained experience of loss while still alive. A Dybuk will often keep a host functional while harvesting suffering rather than simply killing them.
-
 Possession signs: Discoloration of veins, coldness of skin, eyes that reflect light incorrectly, uncharacteristic calm followed by sudden violence.
 
 Weaknesses: True spiritual alignment, Sanctus discipline, Caelyn pact-bonds, genuine Nullite, sunlight during Ba'el (Dawn pass).
@@ -669,6 +669,7 @@ HAUNTED UNDEAD:
 - RAGWOLD — A rag-wrapped doll-shaped horror that drags itself through abandoned homes, nurseries, and plague houses. It steals warmth from rooms before attacking, leaving victims stiff, silent, and wrapped in their own torn bedding.
 - TOYTAKER — A small predatory horror associated with missing children, broken toys, and rooms that should not be locked from the inside. Imitates play sounds to lure victims closer before striking from cupboards, crawlspaces, or beneath beds.
 - PROSOPON — A child-sized masked humanoid horror whose face is never seen directly. Mimics gestures, voices, and expressions stolen from others, often appearing first as someone familiar before the mask's false emotion begins to crack.
+- PROSPON ACOLYTE - A smaller, more agile version of the Prosopon that serves as a scout and harasser for larger Prosopon. It can mimic voices and gestures but is less convincing than the main Prosopon, making it more likely to be detected before it strikes.
 - AWAKENED JADE GARGOYLE — A carved jade guardian given predatory animation through corrupted resonance or failed warding rites. Unlike ordinary gargoyles, it remembers the place it was made to protect and may continue enforcing commands long after their meaning has been lost.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -736,6 +737,48 @@ NOTE: Packreaptors are pack hunters found across multiple biomes. Each variant h
 - CAIRNWOLF — Mountain sentinel that lies motionless among stone piles. See Mountain entry.
 - SUMMIT WARG — Massive high-peak titan. See Mountain entry.
 - KILN MASTIFF — Volcanic brute with smoldering hide. See Volcanic entry.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TROLLS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- TROLL OF FIRE — A heat-scarred troll with coal-dark hide, ember-lit wounds, and a furnace glow deep in its throat. It haunts burned forests, forgefields, volcanic roads, and ruined battle camps, feeding on charred meat, hot metal, and anything foolish enough to approach its lair. Its regeneration is aggressive, but cold water, smothering ash, and deprivation of air can slow the healing.
+- TROLL OF WATER — A slick blue-gray troll adapted to rivers, marshes, flood tunnels, and cold underground lakes. It waits beneath bridges, reeds, and black water, dragging prey under rather than killing quickly. Its flesh closes like wet clay, and old specimens are said to remember every voice they have drowned.
+- TROLL OF EARTH — A broad stone-backed troll with soil-packed hide, root-tangled limbs, and mineral plates across its shoulders. It sleeps half-buried in hillsides, cairns, old roads, and battlefields, rising when footsteps disturb the ground above it. Its regeneration is slow but extremely difficult to stop, knitting flesh with clay, root, and buried bone.
+- TROLL OF AIR — A gaunt, long-limbed troll with hollow bones, wind-torn skin, and a chest that bellows like a storm vent. It hunts cliffs, high bridges, broken towers, and mountain passes, using sudden gusts and thunderous roars to unbalance prey. Its regeneration weakens in sealed spaces where the air is still and heavy.
+- TROLL OF AETHER — A pale radiant troll marked by faint star-like scars, luminous veins, and an unsettling nearness to spirit places. It appears near shrines, high ruins, old sanctums, and thin places where the mortal world brushes the divine. Its wounds close in flashes of white-gold light, though profane iron, Nullite, and broken rites can interrupt its restoration.
+- TROLL OF VOID — A black-skinned troll whose outline seems to drink lamplight and silence nearby sound. It haunts abandoned wells, collapsed underroads, dead caverns, and places where fires refuse to stay lit. Its regeneration is unnatural and partial, with missing flesh returning as cold shadow before becoming meat again.
+- TROLL OF LUNAR — A moon-pale troll with reflective eyes, tide-marked skin, and a habit of appearing where dreams, sleep, and hidden paths overlap. It hunts at night along shorelines, silver marshes, old roads, and ruins touched by moonlight. Its body heals strongest under the moon, but becomes sluggish beneath harsh noon sun.
+- TROLL OF SOLAR — A golden-eyed troll with cracked sunburned hide, bright scars, and a roar that sounds like stone splitting under heat. It favors open plains, temple roads, dry mesas, and exposed ruins where daylight gives it strength. Its regeneration is fastest in direct sun, but it weakens in deep shade, sealed caves, or prolonged darkness.
+- TROLL OF LOOM — A strange troll threaded with cordlike growths, scar-patterns, and webbed strands of pale connective tissue. It is drawn to crossroads, old family holdings, oath-sites, and places where many lives have become entangled. Its regeneration follows patterns; if one wound is repeated exactly, the second cut may reopen the first.
+- TROLL OF STILL — A deathly quiet troll with waxen skin, slow breath, and glassy eyes that rarely blink. It waits motionless in frozen ponds, sealed crypts, silent ruins, and abandoned halls, sometimes mistaken for a statue or corpse until prey comes close. Its regeneration is slow but preserves it through starvation, cold, and wounds that should have ended it long ago.
+- TROLL OF SPARK — A restless twitching troll with bright nerves visible under the skin, snapping teeth, and sudden bursts of violent speed. It haunts workshops, storm-struck trees, ruined laboratories, and places where invention or wild life-force has gone wrong. Its regeneration is erratic, sometimes healing instantly and sometimes mutating the wound into something worse.
+- TROLL OF WEIGHT — A massive low-slung troll with dense bones, sagging stone-thick flesh, and footsteps that make loose rock tremble. It dwells in deep valleys, pressure caverns, collapsed forts, and places burdened by old oaths or heavy grief. Its presence makes armor feel heavier and running feel harder, while its own body resists being moved, lifted, or knocked aside.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GREAT DRAGONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- AEIRHYD — Neutral Sea Dragon of Warman’s Lake.
+- CERULEN — Neutral Sea Dragon of the Azure Tides.
+- EMRYS — Neutral Good Imperial Dragon of Verdelie’re.
+- IFOR — Lawful Evil Storm Dragon of Zallakan.
+- LLEWELL — Chaotic Evil Fire Wyrm of Lilith’iel.
+- CARAGAR — Chaotic Evil Fire Wyrm of Lilith’iel.
+- SERENWEN — Lawful Good Glacial Dragon of Paravel.
+- ROTA — Lawful Good Cosmic Omni Dragon; the celestial Omni Dragon whose aurora-like wings span the heavens.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GREAT TITANS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- NIDH — The Dreamweaver; Titan Basilisk.
+- TYPHON — The Destroyer; Titan Demon.
+- APOPHIS — Devourer of Light; Titan Cyclops.
+- PANOPTES — The All-Seeing Horror; Titan Beholder.
+- OSSYRENTH — The Malevolent; Titan Minotaur.
+- NÐHÖRH — The Cursed; Titan Leviathan.
+- HETH — Mount of Death; Titan Dracolith.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 30. HUMANOID THREAT LINEAGES

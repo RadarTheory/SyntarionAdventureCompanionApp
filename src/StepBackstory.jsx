@@ -54,44 +54,49 @@ export default function StepBackstory({
   };
 
   // ── SUBMIT TO SCRIBE ──
-  const handleSubmit = async () => {
-    setSubmitting(true);
-    setSubmitError(null);
-    try {
-      const charData = buildChar();
-      const finalChar = {
-        ...charData,
-        complication: complication || null,
-        status: 'awaiting_adventure',
-        submittedAt: Date.now(),
-      };
+  const [submitType, setSubmitType] = useState(null); // 'campaign' | 'oneshot'
 
-      const { error } = await supabase
-        .from('characters')
-        .upsert({
-          id:          finalChar.id,
-          name:        finalChar.name,
-          campaign_id: finalChar.campaign || null,
-          owner_name:  finalChar.fn,
-          status:      'awaiting_adventure',
-          data:        finalChar,
-        });
+// ── SUBMIT TO SCRIBE ──
+const handleSubmit = async (type) => {
+  setSubmitting(true);
+  setSubmitError(null);
+  const status = type === 'oneshot' ? 'awaiting_oneshot' : 'awaiting_adventure';
+  try {
+    const charData = buildChar();
+    const finalChar = {
+      ...charData,
+      complication: complication || null,
+      status,
+      submittedAt: Date.now(),
+    };
 
-      if (error) throw error;
+    const { error } = await supabase
+      .from('characters')
+      .upsert({
+        id:          finalChar.id,
+        name:        finalChar.name,
+        campaign_id: finalChar.campaign || null,
+        owner_name:  finalChar.fn,
+        status,
+        data:        finalChar,
+      });
 
-      setSubmitted(true);
-      setConfirmSubmit(false);
-
-      // Tell Landing we're done — route back
-      setTimeout(() => onComplete(finalChar), 2000);
-
-    } catch (err) {
-      console.error('Submit error:', err.message);
-      setSubmitError('The archives resisted. Try again.');
-    } finally {
-      setSubmitting(false);
+    if (error) {
+      console.error('Supabase error:', JSON.stringify(error));
+      throw error;
     }
-  };
+
+    setSubmitted(true);
+    setConfirmSubmit(false);
+    setTimeout(() => onComplete(finalChar), 2000);
+
+  } catch (err) {
+    console.error('Submit error full:', JSON.stringify(err));
+    setSubmitError('The archives resisted. Try again.');
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   // ── SUBMITTED STATE ──
   if (submitted) {

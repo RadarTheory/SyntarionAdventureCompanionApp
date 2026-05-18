@@ -943,11 +943,11 @@ export const UNAFFILIATED = [
 export const CLASSES = {
   magic: [
     { id:'inquisitor', name:'Inquisitor', path:'Divine',    disc:'Sanctus',   t2:'Paladin / Cleric',       t3:'Iridesce / Augur',        stats:'Wis/Cha', magicTechNudge:-1 },
-    { id:'zealot',     name:'Zealot',     path:'Spiritual', disc:'Sacral',    t2:'Shaman / Bokor',         t3:'Caelyn / Cursewright',    stats:'Wis/Con', magicTechNudge:-1, isSacral:true },
+    { id:'zealot',     name:'Zealot',     path:'Spiritual', disc:'Sacral',    t2:'Shaman / Bokor',         t3:'Caelyn / Draeth',    stats:'Wis/Con', magicTechNudge:-1, isSacral:true },
     { id:'weaver',     name:'Weaver',     path:'Magic',     disc:'Mana',      t2:'Bard / Castor',          t3:'Maiar / Magus',           stats:'Int/Cha', magicTechNudge:-2 },
     { id:'druid',      name:'Druid',      path:'Nature',    disc:'Essence',   t2:'Ovate / Wildheart',      t3:'Dryad / Primalist',       stats:'Wis/Dex', magicTechNudge:-1 },
     { id:'sage',       name:'Sage',       path:'Arcane',    disc:'Gnosis',    t2:'Codexer / Scribe',       t3:'Glyphsage / Runesiph',    stats:'Int',     magicTechNudge:-1 },
-    { id:'mystic',     name:'Mystic',     path:'Mythic',    disc:'Shaeid',    t2:'Guardian',               t3:'Arcani',                  stats:'Wis/Cha', magicTechNudge:-2 },
+    { id:'mystic',     name:'Mystic',     path:'Mythic',    disc:'Shaeid',    t2:'Guardian',               t3:'Arcani / Maleficar',                  stats:'Wis/Cha', magicTechNudge:-2 },
     { id:'magister',   name:'Magister',   path:'Shadow',    disc:'Wraill',    t2:'Hemoclast / Harrow',     t3:'Necromancer / Darkweaver',stats:'Int/Cha', magicTechNudge:-2 },
   ],
   tech: [
