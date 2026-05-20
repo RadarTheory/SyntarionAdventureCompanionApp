@@ -178,7 +178,7 @@ Each track has three tiers (Class I → III):
 MAGIC TRACK:
 - Divine: Inquisitor → Paladin/Cleric → Iridesce/Augur
 - Sacral: Zealot → Shaman/Bokor → Caelyn/Draeth
-- Magic: Weaver → Bard/Caster → Maiar/Magus
+- Magic: Weaver → Bard/Caster → Spellwright/Magus
 - Nature: Druid → Ovate/Wildheart → Dryad/Primalist
 - Arcane: Sage → Codexer/Scribe → Glyphsage/Runesiph
 - Mythic: Mystic → Guardian → Arcani
