@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDevice } from './useDevice';
 import {
-  COLORS, RACES, PM_MAJ, PM_MIN,
+  COLORS, RACES, PM_MAJ, PM_MIN, PM_AEON, PM_ASTRAL,
   NAMES, getNamePool, pick, RACE_VARIANT_DESCS,
   PAMORPH_LORE, getRacialTraits,
 } from './constants';
@@ -388,60 +388,55 @@ export default function StepRace({
                     )}
 
                     {/* Pa'morph bloodlines */}
-                    {r.isPamorph && (
-                      <div style={{ marginBottom: 14 }}>
-                        <span style={label}>Major bloodlines</span>
-                        <div style={{
-                          display: 'grid',
-                          gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`,
-                          gap: 6,
-                          marginBottom: 10,
-                        }}>
-                          {PM_MAJ.map(p => (
-                            <div
-                              key={p.id}
-                              onClick={() => setPmV(pmV === p.id ? null : p.id)}
-                              style={{
-                                background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent',
-                                border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`,
-                                borderRadius: 6,
-                                padding: '7px 10px',
-                                cursor: 'pointer',
-                                transition: 'all 0.12s',
-                              }}
-                            >
-                              <div style={{ fontSize: 11, color: pmV === p.id ? COLORS.text : COLORS.muted, fontFamily: 'Georgia, serif' }}>{p.name}</div>
-                              <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{p.sub}</div>
-                            </div>
-                          ))}
-                        </div>
+                                      {r.isPamorph && (
+                    <div style={{ marginBottom: 14 }}>
 
-                        <span style={label}>Minor bloodlines</span>
-                        <div style={{
-                          display: 'grid',
-                          gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`,
-                          gap: 6,
-                        }}>
-                          {PM_MIN.map(p => (
-                            <div
-                              key={p.id}
-                              onClick={() => setPmV(pmV === p.id ? null : p.id)}
-                              style={{
-                                background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent',
-                                border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`,
-                                borderRadius: 6,
-                                padding: '7px 10px',
-                                cursor: 'pointer',
-                                transition: 'all 0.12s',
-                              }}
-                            >
-                              <div style={{ fontSize: 11, color: pmV === p.id ? COLORS.text : COLORS.muted, fontFamily: 'Georgia, serif' }}>{p.name}</div>
-                              <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{p.sub}</div>
-                            </div>
-                          ))}
-                        </div>
+                      <span style={label}>Major bloodlines</span>
+                      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: 6, marginBottom: 14 }}>
+                        {PM_MAJ.map(p => (
+                          <div key={p.id} onClick={() => setPmV(pmV === p.id ? null : p.id)}
+                            style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
+                            <div style={{ fontSize: 11, color: pmV === p.id ? COLORS.text : COLORS.muted, fontFamily: 'Georgia, serif' }}>{p.name}</div>
+                            <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{p.sub}</div>
+                          </div>
+                        ))}
                       </div>
-                    )}
+
+                      <span style={label}>Minor bloodlines</span>
+                      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: 6, marginBottom: 14 }}>
+                        {PM_MIN.map(p => (
+                          <div key={p.id} onClick={() => setPmV(pmV === p.id ? null : p.id)}
+                            style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
+                            <div style={{ fontSize: 11, color: pmV === p.id ? COLORS.text : COLORS.muted, fontFamily: 'Georgia, serif' }}>{p.name}</div>
+                            <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{p.sub}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <span style={label}>Aeon bloodlines</span>
+                      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: 6, marginBottom: 14 }}>
+                        {PM_AEON.map(p => (
+                          <div key={p.id} onClick={() => setPmV(pmV === p.id ? null : p.id)}
+                            style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
+                            <div style={{ fontSize: 11, color: pmV === p.id ? COLORS.text : COLORS.muted, fontFamily: 'Georgia, serif' }}>{p.name}</div>
+                            <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{p.sub}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <span style={label}>Astral bloodlines</span>
+                      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: 6 }}>
+                        {PM_ASTRAL.map(p => (
+                          <div key={p.id} onClick={() => setPmV(pmV === p.id ? null : p.id)}
+                            style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
+                            <div style={{ fontSize: 11, color: pmV === p.id ? COLORS.text : COLORS.muted, fontFamily: 'Georgia, serif' }}>{p.name}</div>
+                            <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{p.sub}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                    </div>
+                  )}
                   </div>
                 )}
               </div>
