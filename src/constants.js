@@ -57,7 +57,7 @@ export const RACES = [
   { id:'fynlor',    name:'Fynlor',     sub:'Halfling',   tag:'any',  lean:0,  sub2:'Lightfoot · Stout', variants:['Lightfoot','Stout'], ns:'fynlor', desc:"Small, quick, and socially gifted in ways that larger folk consistently underestimate. The Fynlor have a talent for arriving at the right moment and leaving before the wrong one." },
   { id:'trink',     name:'Trink',      sub:'Gnome',      tag:'tech', lean:2,  sub2:'Small · Arcane logic', variants:[], ns:'trink', desc:"Curious to a fault and mechanically gifted. The Trink built half the systems that run Ashendell's lower districts and have filed patents on the other half." },
   { id:'pamorph',   name:"Pa'morph",   sub:'Beast-folk', tag:'any',  lean:0,  sub2:'Choose bloodline below', variants:[], isPamorph:true, ns:'pamorph', desc:"Shape-touched and bloodline-defined, the Pa'morph exist across every corner of Soteria. Their culture varies as widely as their forms — from pack-law territories to city guilds to wilderness enclaves that appear on no official map." },
-  { id:'fae',       name:'Fae',        sub:"Faerie",    tag:'magic',lean:-2, sub2:'Arcani potential · Soul-sight', variants:[], ns:'fae', desc:"Fae exist at the intersection of the material and the resonant. They perceive things that others cannot and are occasionally perceived by things that others cannot see." },
+  { id:'fae',       name:'Fae',        sub:"Faerie",     tag:'magic',lean:-2, sub2:'Arcani potential · Soul-sight', variants:[], ns:'fae', desc:"Fae exist at the intersection of the material and the resonant. They perceive things that others cannot and are occasionally perceived by things that others cannot see." },
   { id:'djinn',     name:'Djinn',      sub:'Genie',      tag:'magic',lean:-1, sub2:'Efreet · Marid · Djinni · Dao', variants:['Efreet — Wish','Marid — Hex','Djinni — Heal','Dao — Luck'], ns:'djinn', desc:"Born of supernatural convergence, the Djinn carry their heritage in their blood, but their whim remains unpredictable.." },
   { id:'helianth',  name:'Helianth',   sub:'Tiefling',   tag:'magic',lean:-1, sub2:'Infernal ancestry', variants:[], ns:'helianth', desc:"Infernal blood runs cool in the Helianth — not hot. They are not defined by their ancestry unless they choose to be, and most of them are tired of being defined by it." },
   { id:'seraphan',  name:'Seraphan',   sub:'Aasimar',    tag:'magic',lean:-1, sub2:'Celestial blood', variants:[], ns:'seraphan', desc:"Celestial-blooded and occasionally burdened by it. The Seraphan carry a presence that others read before the Seraphan has spoken." },
@@ -182,6 +182,29 @@ export const PM_MIN = [
   { id:'ssazaral', name:'Ssazaral',  sub:'Snake'      },
   { id:'lutrav',   name:"Lutra'v",   sub:'Otter'      },
   { id:'musteiah', name:'Musteiah',  sub:'Weasel'     },
+];
+
+export const PM_AEON = [
+  { id:'hraelvan',   name:'Hraelvan',   sub:'Feathered Raptor'        },
+  { id:'cerakhjorn', name:'Cerakhjorn', sub:'Many-Horned Ceratopsian' },
+  { id:'jevrak',     name:'Jevrak',     sub:'Small Feather-Herbivore' },
+  { id:'anpryd',     name:'Anpryd',     sub:'Armored Shieldback'       },
+  { id:'limridh',    name:'Limridh',    sub:'Mud-Lizard'              },
+  { id:'pterrotara', name:'Pterrotara', sub:'Crested Wingfolk'        },
+  { id:'saurok',     name:'Saurok',     sub:'Long-Necked Herdfolk'    },
+  { id:'hadrynn',    name:'Hadrynn',    sub:'Duck-Billed Chorusfolk'  },
+];
+
+export const PM_ASTRAL = [
+  { id:'khellsarii', name:'Khellsarii', sub:'Honor-Bound Warrior Caste'     },
+  { id:'khellskini', name:'Khellskini', sub:'Four-Armed Salvage Caste'      },
+  { id:'khellhanae', name:'Khellhanae', sub:'Brute Siege Caste'             },
+  { id:'khelloch',   name:'Khelloch',   sub:'Colony-Form Worm-Mass Caste'   },
+  { id:'khellyuum',  name:'Khellyuum',  sub:'Priestly Brood-Ruler Caste'    },
+  { id:'khelljta',   name:'Khelljta',   sub:'Solitary Apex-Hunter Caste'    },
+  { id:'khellxen',   name:"Khell'xen",  sub:'Nightmare Hive-Predator Caste' },
+  { id:'khellchin',  name:'Khellchin',  sub:'Infiltrator Mimic Caste'       },
+
 ];
 
 // ─── PA'MORPH BLOODLINE LORE ──────────────────────────────────────────────────
@@ -314,6 +337,74 @@ export const PAMORPH_LORE = {
     default: "The Musteiah are a weasel bloodline, and the reputation preceded them so thoroughly that they eventually decided to make it useful. They are quick, clever, and they fit into places that seem too small for something with their ambitions. They are excellent in a crisis and occasionally the cause of one, depending on how bored they've been lately. The ones who find something worth caring about — a cause, a crew, a city — become the most effective people in any room they enter.",
   },
 
+    // ── AEON BLOODLINES ─────────────────────────────────────────────────────────
+
+  hraelvan: {
+    default: "The Hraelvan are a feathered raptor bloodline of the Pa'morph Aeon, all quick eyes, sickle claws, and old predatory grace. They do not move like the newer beast-blooded. They move like something remembered from a world before roads, before towers, before polite borders. Hraelvan families prize speed, coordination, and the sacred terror of the pack-hunt, though the wise among them know that patience kills more reliably than haste.",
+  },
+
+  cerakhjorn: {
+    default: "The Cerakhjorn are a many-horned ceratopsian bloodline of the Pa'morph Aeon, broad of frame and difficult to move once they have decided where they stand. Their horns are not ornament. They are lineage, declaration, argument, and warning. Cerakhjorn communities favor guild-like houses, public oaths, and ancestral burdens carried without complaint. They do not forget insults quickly, but they remember protection longer.",
+  },
+
+  jevrak: {
+    default: "The Jevrak are a small feathered herbivore bloodline of the Pa'morph Aeon, quick-handed, watchful, and underestimated by almost everyone exactly once. They are not built to dominate a room. They are built to survive the room, understand it, and leave before the heavy-footed notice what has changed. Jevrak clans tend gardens, maps, seed-vaults, and quiet escape paths with equal seriousness.",
+  },
+
+  anpryd: {
+    default: "The Anpryd are an armored shieldback bloodline of the Pa'morph Aeon, shaped by plates, patience, and the ancient logic of enduring the blow. They are not merely defensive. That is what outsiders misunderstand. An Anpryd who lowers their stance is not hiding. They are becoming the wall the enemy breaks against. Their households value craft, fortification, communal protection, and the long discipline of standing firm.",
+  },
+
+  limridh: {
+    default: "The Limridh are a mud-lizard bloodline of the Pa'morph Aeon, born to riverbanks, flooded forests, jungle ruins, and the soft places where stone gives way to silt. They are adaptable in a way that looks almost lazy until it becomes survival. Limridh families know water routes, hidden banks, edible roots, drowned paths, and which quiet pools are not as empty as they seem.",
+  },
+
+  pterrotara: {
+    default: "The Pterrotara are a crested wingfolk bloodline of the Pa'morph Aeon, high-voiced, sharp-sighted, and older in bearing than their bright crests suggest. They are sky-watchers, cliff-dwellers, wind-readers, and messengers between places that groundbound folk call impossible to reach. A Pterrotara does not simply fly over a border. They learn what the border looks like from above, and that knowledge changes how seriously they take it.",
+  },
+
+  saurok: {
+    default: "The Saurok are a long-necked herdfolk bloodline of the Pa'morph Aeon, immense in patience and slow only to those who mistake deliberation for weakness. They carry the memory of open plains, great migrations, and old roads pressed into the world by generations of feet. Saurok elders are often treated as living landmarks. When they speak, it is usually because silence has stopped being useful.",
+  },
+
+  hadrynn: {
+    default: "The Hadrynn are a duck-billed chorus bloodline of the Pa'morph Aeon, social, resonant, and difficult to silence once their people have decided a truth should be carried aloud. Their voices are instruments of memory, warning, celebration, and law. Hadrynn settlements are rarely quiet, but their noise has structure: calls, replies, songs, names, histories, and the deep communal comfort of being heard.",
+  },
+
+  // ── ASTRAL BLOODLINES ───────────────────────────────────────────────────────
+
+  khellsarii: {
+    default: "The Khellsarii are an honor-bound warrior caste of the Pa'morph Astral, tall and severe, with backward skull crests, split jawplates, raptorlike legs, and a culture sharpened around duel-law. They do not treat violence casually. That makes them more dangerous, not less. Every scar is a document. Every oath is a weapon. Every house remembers who broke formation and who held.",
+  },
+
+  khellskini: {
+    default: "The Khellskini are a four-armed salvage caste of the Pa'morph Astral, shaped by machine ruins, Grid residue, metallic nutrient exposure, and the practical theology of taking broken things apart before they take you apart. They are scavengers, engineers, raiders, and battlefield improvisers. A Khellskini sees wreckage and does not see failure. They see inventory.",
+  },
+
+  khellhanae: {
+    default: "The Khellhanae are a massive brute caste of the Pa'morph Astral, formed through heavy host mass, blood-fed war pits, and dominance pressure. They are siege bodies with opinions. Their hierarchy is brutal, direct, and difficult to misunderstand. Trophies matter to them because trophies prove the story happened, and the Khellhanae prefer stories that can be lifted, worn, or nailed to a gate.",
+  },
+
+  khelloch: {
+    default: "The Khelloch are a colony-form caste of the Pa'morph Astral, many Khellnid bodies maturing into coordinated worm-masses capable of occupying armor shells, dead giants, stone hollows, or siege frames. They unsettle even other Khell because they make the idea of the individual negotiable. A Khelloch does not ask where the body ends. It asks what the body can be used to move.",
+  },
+
+  khellyuum: {
+    default: "The Khellyuum are a rare priestly caste of the Pa'morph Astral, cultivated in sacred nutrient pools, relic chambers, and ritual wombs. They are physically delicate in the way a venomous needle is delicate. Their danger is not in the limb but in the thought behind it. They serve as prophets, theologians, manipulators, and brood-rulers, translating hunger into doctrine and doctrine back into obedience.",
+  },
+
+  khelljta: {
+    default: "The Khelljta are a solitary apex-hunter caste of the Pa'morph Astral, formed through predatory host matter and isolation rites. They stalk worthy prey, wear kill-masks, collect trophies, and treat the hunt as sacred law. They are not assassins, though they can kill quietly. They are not soldiers, though they can break armies. They are the question a predator asks when it wants proof that it is still the answer.",
+  },
+
+  khellxen: {
+    default: "The Khell'xen are a nightmare hive-predator caste of the Pa'morph Astral, born from darkness, corpse-hives, toxic chambers, and predatory hosts. Their black carapaces, climbing limbs, corrosive blood, and infestation instinct make them less a people in the ordinary sense and more a disaster with lineage. They do not conquer first. They enter. Then the place becomes theirs from the inside.",
+  },
+
+  khellchin: {
+    default: "The Khellchin are an infiltrator mimic caste of the Pa'morph Astral, narrow-bodied, observant, and socially dangerous. They study host cultures with unnerving care: voices, clothing, posture, rituals, greetings, taboos, grief, humor. A Khellchin does not merely wear a disguise. They learn the room well enough that the room explains them to itself. By then, the door is already open.",
+  },
+
   // ── DEFAULT ─────────────────────────────────────────────────────────────────
 
   default: "Pa'morph are the children of the beast-blooded — a people shaped by the nature of their bloodline and the world they were born into. They range from the proud major bloodlines of Therienstadt and Sarazana to the smaller but no less formidable minor bloodlines scattered across every continent in Soteria. They are not one thing. They are each of them specifically, irreducibly themselves.",
@@ -331,6 +422,7 @@ export const RACIAL_TRAITS = {
         text: '...',
       },
     },
+  
   }, 
 
   addamar: {
@@ -459,6 +551,23 @@ export const RACIAL_TRAITS = {
       ssazaral:   { name: 'Coiled Read',       text: "Once per rest, when body language, stillness, or hidden intent would reveal what a creature is about to do, you may roll to read it before it moves. On a success, learn whether the creature intends harm, flight, or deception." },
       lutrav:     { name: 'Waterplay',         text: "Once per rest, when swimming, slipping free, or moving through water would impose a penalty, you may roll to move through it like it isn't one. On a success, ignore that penalty." },
       musteiah:   { name: 'Narrow Escape',     text: "Once per rest, when trapped, cornered, or pressed into a space with no obvious exit, you may roll to find one that wasn't obvious. On a success, escape the restriction for this instance." },
+      hraelvan:   { name: 'Packstrike Memory', text: "Once per rest, when you act with an ally against the same target, you may roll to move as the old packs did. On a success, either you or that ally gains +1 to the current action. The hunt remembers its shape." },
+      cerakhjorn: { name: 'Hornwall Stand', text: "Once per rest, when you defend an ally, hold a line, or refuse to be moved, you may roll to lock your stance. On a success, reduce incoming harm, pressure, or forced movement by one step." },
+      jevrak:     { name: 'Seedpath Skitter', text: "Once per rest, when your size, speed, or quiet movement would help you avoid notice or escape danger, you may roll to slip through. On a success, ignore the penalty or reposition without consequence." },
+      anpryd:     { name: 'Shieldback Brace', text: "Once per rest, when you would take harm from a direct blow, fall, crush, or collision, you may roll to turn your body into the impact. On a success, reduce the harm by one step." },
+      limridh:    { name: 'Mudbank Instinct', text: "Once per rest, when mud, water, jungle, swamp, or unstable ground would hinder you, you may roll to use it instead. On a success, ignore the penalty or gain one useful position advantage." },
+      pterrotara: { name: 'Crestwind Lift', text: "Once per rest, when height, wind, falling, leaping, or aerial movement would matter, you may roll to catch the air correctly. On a success, reduce the difficulty by one step or reposition safely." },
+      saurok:     { name: 'Longroad Memory', text: "Once per rest, when travel, endurance, old routes, migration, or ancient terrain would matter, you may roll to remember the way. On a success, learn one safe path, hazard, landmark, or route advantage." },
+      hadrynn:    { name: 'Chorus Call', text: "Once per rest, when allies can hear you, you may roll to carry direction through voice, rhythm, or warning. On a success, one ally gains +1 to their next related action or ignores a confusion penalty." },
+
+      khellsarii: { name: 'Duel-Law', text: "Once per rest, when you face a single worthy opponent directly, you may roll to bind the exchange by challenge. On a success, gain +1 to your next action against that opponent, but only while you hold the duel's terms." },
+      khellskini: { name: 'Wreckfield Hands', text: "Once per rest, when using broken machinery, scrap, weapons, ruins, or unstable tech, you may roll to make it function for one immediate purpose. On a success, it works long enough to matter." },
+      khellhanae: { name: 'Dominance Mass', text: "Once per rest, when brute force, intimidation, siege pressure, or physical dominance would decide the moment, you may roll to impose yourself. On a success, reduce the difficulty by one step or force one enemy to hesitate." },
+      khelloch:   { name: 'Colony Motion', text: "Once per rest, when restrained, split, surrounded, or forced through an unnatural space, you may roll to move as many bodies with one intent. On a success, escape, reform, or reposition without the normal penalty." },
+      khellyuum:  { name: 'Brood Doctrine', text: "Once per rest, when manipulating belief, fear, obedience, ritual, or hierarchy, you may roll to speak with priestly authority. On a success, one target hesitates, obeys a small command, or reveals what pressure governs them." },
+      khelljta:   { name: 'Sacred Hunt', text: "Once per rest, after observing a target, you may roll to mark them as prey. On a success, gain +1 to your next tracking, stalking, striking, or pursuit action against that target." },
+      khellxen:   { name: 'Hive-Terror Blood', text: "Once per rest, when darkness, climbing, fear, corrosion, or infestation would aid you, you may roll to become the thing the room was afraid of. On a success, one enemy takes –1 to its next action against you." },
+      khellchin:  { name: 'Borrowed Manner', text: "Once per rest, when imitating a voice, custom, posture, uniform, greeting, or social role, you may roll to pass as belonging. On a success, observers accept you for the scene unless given direct proof otherwise." },
     },
   },
 
@@ -942,12 +1051,12 @@ export const UNAFFILIATED = [
 // ─── CLASSES ──────────────────────────────────────────────────────────────────
 export const CLASSES = {
   magic: [
-    { id:'inquisitor', name:'Inquisitor', path:'Divine',    disc:'Sanctus',   t2:'Paladin / Cleric',       t3:'Iridesce / Augur',        stats:'Wis/Cha', magicTechNudge:-1 },
-    { id:'zealot',     name:'Zealot',     path:'Spiritual', disc:'Sacral',    t2:'Shaman / Bokor',         t3:'Caelyn / Draeth',    stats:'Wis/Con', magicTechNudge:-1, isSacral:true },
-    { id:'weaver',     name:'Weaver',     path:'Magic',     disc:'Mana',      t2:'Bard / Castor',          t3:'Maiar / Magus',           stats:'Int/Cha', magicTechNudge:-2 },
+    { id:'inquisitor', name:'Inquisitor', path:'Divine',    disc:'Sanctus',   t2:'Paladin / Cleric',       t3:'Iridesce / Augur',        stats:'Wis/Cha', magicTechNudge:-1, isDivine:true },
+    { id:'zealot',     name:'Zealot',     path:'Spiritual', disc:'Sacral',    t2:'Shaman / Bokor',         t3:'Caelyn / Cursewright',    stats:'Wis/Con', magicTechNudge:-1, isSacral:true },
+    { id:'weaver',     name:'Weaver',     path:'Magic',     disc:'Mana',      t2:'Arcanist / Castor',      t3:'Spellwright / Magus',          stats:'Int/Cha', magicTechNudge:-2, isMana:true },
     { id:'druid',      name:'Druid',      path:'Nature',    disc:'Essence',   t2:'Ovate / Wildheart',      t3:'Dryad / Primalist',       stats:'Wis/Dex', magicTechNudge:-1 },
     { id:'sage',       name:'Sage',       path:'Arcane',    disc:'Gnosis',    t2:'Codexer / Scribe',       t3:'Glyphsage / Runesiph',    stats:'Int',     magicTechNudge:-1 },
-    { id:'mystic',     name:'Mystic',     path:'Mythic',    disc:'Shaeid',    t2:'Guardian',               t3:'Arcani / Maleficar',                  stats:'Wis/Cha', magicTechNudge:-2 },
+    { id:'mystic',     name:'Mystic',     path:'Mythic',    disc:'Shaeid',    t2:'Guardian',               t3:'Arcani / Maleficar',      stats:'Wis/Cha', magicTechNudge:-2 },
     { id:'magister',   name:'Magister',   path:'Shadow',    disc:'Wraill',    t2:'Hemoclast / Harrow',     t3:'Necromancer / Darkweaver',stats:'Int/Cha', magicTechNudge:-2 },
   ],
   tech: [
