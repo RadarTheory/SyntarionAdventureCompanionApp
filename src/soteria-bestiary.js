@@ -802,7 +802,7 @@ NOTE: These are not bestiary creatures. They are organized threat groups with po
 - DRAEKUL — A corrupted Drakazir bloodline driven by hoard-lust, bloodfire, ancient tyranny, and draconic supremacy.
 - NEREIGILL — A dark Nazari counterlineage tied to drowned trenches, black water, predatory currents, and abyssal hunger.
 - CHRONOVORE — A time-devouring hunter of the Chronison that consumes stolen years, alternate selves, and forbidden futures.
-- NOCTARYN — A dark, astral-skinned bloodline found across many races and creatures. Noctaryn-born are often unable to speak, leaving them isolated, feared, and easily controlled by stronger factions. Their strength, silence, and violent conditioning have made them prized as hunters, assassins, and shock troops. The Othrod have used them most brutally, leading thousands of Noctaryn into battle against rival clans.
+- NOCTARYNN — A dark, astral-skinned bloodline found across many races and creatures. Noctaryn-born are often unable to speak, leaving them isolated, feared, and easily controlled by stronger factions. Their strength, silence, and violent conditioning have made them prized as hunters, assassins, and shock troops. The Othrod have used them most brutally, leading thousands of Noctaryn into battle against rival clans.
 
 //Khell lineages
 
@@ -876,6 +876,10 @@ NOTE: These are singular entities. Encountering them is never accidental from a 
 - MARROWJAW BONE-CRUNCHER — A night-roving scavenger-predator with iron bolt-cutter jaws that leaves almost no evidence. A battlefield visited by Marrowjaws may be mistaken for a clean burial ground until one notices the absence of bones.
 - CLAWSTRUTH RAPTOR-STRUTHIO — See Savannah entry.
 - MAWLOAM — See Woodland entry.
+
+// DIREFETCH 
+- Direfetch Fae, Direfetch Fae are stored on the face of a Fetchcoin, which a Direwarden will use to summon them. They are small, winged, and often mischievous creatures that can be used for various purposes, such as scouting, delivering messages, or even minor combat assistance. 
+- 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ENCOUNTER CALIBRATION
