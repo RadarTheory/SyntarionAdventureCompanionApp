@@ -463,6 +463,7 @@ export const DEFAULT_CITIES = [
       { id: 'n222', name: 'Aurelio Vittori', role: "Underground Thieves' Guild Leader", status: 'Active', faction: "Thieves' Guild", notes: "Leader of the Underground Thieves' Guild. Frequents Madame Effigia's." },
       { id: 'n223', name: 'Magus the Dwarf', role: 'Thief', status: 'Active', faction: 'Independent', notes: 'Thief and frequent patron of the Ashendell Gentlemen\'s club.' },
       { id: 'n224', name: 'Matthew Jameson', role: 'Civilian', status: 'Active', faction: 'Ashendell', notes: 'Lost the ring he was going to use to propose. Fell into an open manhole near city entrance.' },
+      { id: 'n225b', name: 'Brooj Brivihan', role: 'Pa\'morph Activist', status: 'Active', faction: 'Independent', category: 'Vagrants', notes: 'Loxodon civil rights activist. Campaigns publicly for Pa\'morph equality in Ashendell. Direct opponent of Edwin Thorne\'s industrial agenda. His impassioned speeches in the streets draw crowds and make powerful enemies.' },
     ],
   },
 
@@ -1137,4 +1138,3 @@ export const DEFAULT_CITIES = [
 let _npcCounter = 600;
 export const newNpcId = () => `npc_${++_npcCounter}_${Date.now()}`;
 export const newCityId = () => `city_${Date.now()}`;
-

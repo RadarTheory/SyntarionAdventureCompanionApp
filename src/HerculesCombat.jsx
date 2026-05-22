@@ -151,6 +151,7 @@ function VitalsPanel({ row, onClose, campaignId }) {
   }));
 
   const Tracker = ({ label, color, state, setState, others }) => {
+    
     const cur = state.current ?? 0, max = state.max ?? 0;
     const pct = max > 0 ? Math.max(0, Math.min(100, (cur / max) * 100)) : 0;
     const upd = (next) => { setState(next); save(label === 'Vitals' ? next : vitals, label === 'Stamina' ? next : stamina, label === 'Resolve' ? next : resolve); };

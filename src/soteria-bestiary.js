@@ -802,6 +802,7 @@ NOTE: These are not bestiary creatures. They are organized threat groups with po
 - DRAEKUL — A corrupted Drakazir bloodline driven by hoard-lust, bloodfire, ancient tyranny, and draconic supremacy.
 - NEREIGILL — A dark Nazari counterlineage tied to drowned trenches, black water, predatory currents, and abyssal hunger.
 - CHRONOVORE — A time-devouring hunter of the Chronison that consumes stolen years, alternate selves, and forbidden futures.
+- NOCTARYN — A dark, astral-skinned bloodline found across many races and creatures. Noctaryn-born are often unable to speak, leaving them isolated, feared, and easily controlled by stronger factions. Their strength, silence, and violent conditioning have made them prized as hunters, assassins, and shock troops. The Othrod have used them most brutally, leading thousands of Noctaryn into battle against rival clans.
 
 //Khell lineages
 
@@ -828,12 +829,11 @@ NOTE: These creatures are found across multiple biomes and do not belong to a si
 - HAEROBURROW — Found in woodland, underground, and industrial waste zones. See Underground entry.
 - CARRIONZELLE — Found in wastes and battlefield margins. See Grassland entry.
 - THE GREY ONE — A smokey grey shoulder-up silhouette bearing the form of a classic bearded wizard beneath a vast old-world hat. His body is half-presence, half-vapor, dissolving into cold mist and pale runic fragments that drift through the air like broken geometry. His face is mostly hidden beneath shadow, beard, and brim, giving him the ancient gravity of a sage who has stepped beyond ordinary mortality. He fuses traditional wizardry with a cold, geometric, Witness-like ethereal presence: silent, architectural, distant, and unnaturally precise. Often encountered in dark cave biomes lit by ghostly fungi or faint subterranean glow, he appears less summoned than discovered, as though the cave itself has exposed a wound between realms. The Grey One's soul is now tied to FUBIN, a realm not yet understood. Whether FUBIN is an afterlife, prison, engine, dream-plane, or unfinished world remains unknown. Since the binding, he no longer exists entirely in one place; his body smokes, fractures, and reforms, while the symbols around him may be pieces of his soul leaking through from that strange realm. Threat Level: Unknown / Campaign-adjacent. Resonance: Echoing, Glyphic, Fubin-Bound.
-- GLOAMPLUME — A towering raven-hawk humanoid with layered slate-black feathers, scaled talons, a hooked executioner’s beak, and crescent arm-blades. Gloamplumes haunt ruined temples, tomb roads, and old stone gates, standing as silent wardens until trespassers cross too far.
+- RAVENEIR — A towering raven-hawk humanoid with layered slate-black feathers, scaled talons, a hooked executioner’s beak, and crescent arm-blades. Raveneirs haunt ruined temples, tomb roads, and old stone gates, standing as silent wardens until trespassers cross too far.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 32. FACTION THREAT GROUPS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 NOTE: These are organized human, Othrod, Durinak, and mixed-race threat groups. They have politics, hierarchies, and reasons for what they do.
 
 - ROAD BRIGANDS — Opportunistic criminals operating along trade roads and rail access routes. Lightly armed. Motivated by profit. Will negotiate if cornered and outmatched. Low-to-Medium threat.
