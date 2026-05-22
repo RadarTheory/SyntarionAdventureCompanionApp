@@ -424,7 +424,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
       >Sign out</button>
 
       <button onClick={onOpenBag}>
-        Lótjarr's Box of Games
+        Lótjarr's Bag of Games
       </button>
 
       {showDMModal && (
