@@ -22,7 +22,6 @@ export default function App() {
     const timer = setTimeout(() => {
       setSplashLoading(false);
     }, 3000);
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -49,19 +48,26 @@ export default function App() {
     };
   }, []);
 
-  if (splashLoading) {
-  return <LoadingScreen />;
-}
+  // Show splash screen first, regardless of auth state
+  if (splashLoading) return <LoadingScreen />;
 
+  // While auth resolves after splash, show nothing (avoids flash)
+  if (authLoading) return null;
+
+  // Not logged in → show login screen
+  if (!session) return <LoginScreen />;
+
+  // Bag / mini-game views (auth still required to reach these)
   if (view === 'bag') return <LotjarrsBag onHome={() => setView('landing')} onLaunchGame={id => setView(id)} />;
   if (view === 'driftstone') return <PlayDriftstone onHome={() => setView('bag')} />;
   if (view === 'fubin') return <Fubin onHome={() => setView('bag')} />;
 
+  // Main app — pass real session user
   return (
     <>
       <CornerLoadingStinger enabled={true} />
       <Landing
-        user={{ id: import.meta.env.VITE_DM_USER_ID, email: 'admin' }}
+        user={session.user}
         darkMode={darkMode}
         setDarkMode={setDarkMode}
         onOpenBag={() => setView('bag')}
@@ -103,25 +109,16 @@ function LoginScreen() {
     }
 
     if (isSignUp) {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
+      const { error } = await supabase.auth.signUp({ email, password });
       if (error) {
         setError(error.message);
       } else {
         setMessage('Check your email to confirm your account.');
       }
-
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setError(error.message);
     }
@@ -179,14 +176,8 @@ function LoginScreen() {
       <style>
         {`
           @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
-
-          * {
-            box-sizing: border-box;
-          }
-
-          body {
-            margin: 0;
-          }
+          * { box-sizing: border-box; }
+          body { margin: 0; }
         `}
       </style>
 
@@ -216,20 +207,13 @@ function LoginScreen() {
         Are you ready, Adventurer?
       </div>
 
-      <div
-        style={{
-          width: '100%',
-          maxWidth: 320,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+      <div style={{ width: '100%', maxWidth: 320, display: 'flex', flexDirection: 'column' }}>
         <input
           style={inputStyle}
           type="email"
           placeholder="Email"
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          onChange={(e) => setEmail(e.target.value)}
         />
 
         <input
@@ -237,36 +221,18 @@ function LoginScreen() {
           type="password"
           placeholder="Password"
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              handleEmailAuth();
-            }
-          }}
+          onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleEmailAuth(); }}
         />
 
         {error && (
-          <div
-            style={{
-              fontSize: 12,
-              color: '#c0392b',
-              marginBottom: 8,
-              textAlign: 'center',
-            }}
-          >
+          <div style={{ fontSize: 12, color: '#c0392b', marginBottom: 8, textAlign: 'center' }}>
             {error}
           </div>
         )}
 
         {message && (
-          <div
-            style={{
-              fontSize: 12,
-              color: '#27ae60',
-              marginBottom: 8,
-              textAlign: 'center',
-            }}
-          >
+          <div style={{ fontSize: 12, color: '#27ae60', marginBottom: 8, textAlign: 'center' }}>
             {message}
           </div>
         )}
@@ -283,46 +249,15 @@ function LoginScreen() {
             marginBottom: 20,
             cursor: 'pointer',
           }}
-          onClick={() => setIsSignUp((current) => !current)}
+          onClick={() => setIsSignUp((c) => !c)}
         >
-          {isSignUp
-            ? 'Already have an account? Sign in'
-            : "Don't have an account? Sign up"}
+          {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
         </div>
 
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            marginBottom: 20,
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              flex: 1,
-              height: 1,
-              background: 'rgba(26,23,20,0.15)',
-            }}
-          />
-
-          <span
-            style={{
-              fontSize: 11,
-              color: 'rgba(26,23,20,0.4)',
-              letterSpacing: '0.1em',
-            }}
-          >
-            OR
-          </span>
-
-          <div
-            style={{
-              flex: 1,
-              height: 1,
-              background: 'rgba(26,23,20,0.15)',
-            }}
-          />
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20, gap: 12 }}>
+          <div style={{ flex: 1, height: 1, background: 'rgba(26,23,20,0.15)' }} />
+          <span style={{ fontSize: 11, color: 'rgba(26,23,20,0.4)', letterSpacing: '0.1em' }}>OR</span>
+          <div style={{ flex: 1, height: 1, background: 'rgba(26,23,20,0.15)' }} />
         </div>
 
         <button onClick={() => handleOAuth('google')} style={ghostBtnStyle}>
