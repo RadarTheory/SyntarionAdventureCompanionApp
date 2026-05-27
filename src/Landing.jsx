@@ -165,7 +165,7 @@ function DMSigilModal({ onSuccess, onCancel }) {
   const [shake, setShake] = useState(false);
 
   const attempt = () => {
-    if (input.trim() === 'LUC4N') {
+    if (input === import.meta.env.VITE_DM_PASSWORD) {
       onSuccess();
     } else {
       setError(true);
@@ -410,18 +410,6 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
         background: 'radial-gradient(ellipse at center, transparent 40%, rgba(26,23,20,0.07) 100%)',
         pointerEvents: 'none',
       }} />
-
-      {/* Sign out */}
-      <button
-        onClick={() => supabase.auth.signOut()}
-        style={{
-          position: 'absolute', top: 24, right: 24,
-          background: 'transparent', border: 'none', cursor: 'pointer',
-          fontFamily: "'Cinzel', serif", fontSize: 8,
-          letterSpacing: '0.16em', textTransform: 'uppercase',
-          color: darkMode ? 'rgba(240,238,235,0.4)' : 'rgba(26,23,20,0.4)',
-        }}
-      >Sign out</button>
 
       <button onClick={onOpenBag}>
         Lótjarr's Bag of Games
