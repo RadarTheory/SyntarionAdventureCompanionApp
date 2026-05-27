@@ -49,13 +49,9 @@ export default function App() {
     };
   }, []);
 
-  if (splashLoading || authLoading) {
-    return <LoadingScreen />;
-  }
-
-  if (!session) {
-    return <LoginScreen />;
-  }
+  if (splashLoading) {
+  return <LoadingScreen />;
+}
 
   if (view === 'bag') return <LotjarrsBag onHome={() => setView('landing')} onLaunchGame={id => setView(id)} />;
   if (view === 'driftstone') return <PlayDriftstone onHome={() => setView('bag')} />;
@@ -65,7 +61,7 @@ export default function App() {
     <>
       <CornerLoadingStinger enabled={true} />
       <Landing
-        user={session.user}
+        user={{ id: import.meta.env.VITE_DM_USER_ID, email: 'admin' }}
         darkMode={darkMode}
         setDarkMode={setDarkMode}
         onOpenBag={() => setView('bag')}
