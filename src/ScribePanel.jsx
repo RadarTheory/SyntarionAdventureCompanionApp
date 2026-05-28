@@ -185,8 +185,9 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
         read:         false,
       });
 
-      setMessages(p => [...p, { role: 'scribe', content: answer, time: new Date() }]);
+     setMessages(p => [...p, { role: 'scribe', content: answer, time: new Date() }]);
     } catch (err) {
+      console.error('SCRIBE ERROR:', err);
       setMessages(p => [...p, { role: 'scribe', content: `The archives resisted the inquiry. ${err?.message || 'Try again.'}`, time: new Date() }]);
     } finally {
       setLoading(false);
@@ -315,7 +316,7 @@ export function ScribeDMPanel({ onClose, embedded = false, activeCampaignId }) {
         role: m.role === 'dm' ? 'user' : 'assistant',
         content: m.content,
       }));
-      const answer = await callGemini(system, geminiHistory);
+      const answer = await callGemini(DM_SCRIBE_SYSTEM, geminiHistory);
       setMessages(p => [...p, { role: 'scribe', content: answer, time: new Date() }]);
     } catch (err) {
       setMessages(p => [...p, { role: 'scribe', content: `The archives are silent. ${err?.message || 'Try again.'}`, time: new Date() }]);
