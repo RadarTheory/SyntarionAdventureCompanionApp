@@ -165,7 +165,7 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
         loadSessionLog(campaignId),
       ]);
 
-      const system     = SCRIBE_SYSTEM(buildPlayerContext(char, combatLog, sessionLog));
+      const system = SCRIBE_SYSTEM(buildPlayerContext(char, combatLog, sessionLog));
       const geminiHistory = next.filter(m => m.role !== 'system').map(m => ({
         role: m.role === 'player' ? 'user' : 'assistant',
         content: m.content,
