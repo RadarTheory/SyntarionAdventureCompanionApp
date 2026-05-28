@@ -128,7 +128,7 @@ export function ScribeConsult({ char, onUpdateChar }) {
     try {
       const systemPrompt = `${SOTERIA_CONTEXT}\n\n${buildCharacterContext(char)}\n\nThis response costs the adventurer 1 AP. Make the answer useful, specific, and worthy of the cost.`.trim();
       const groqHistory = nextMessages.map(m => ({ role: m.role === 'player' ? 'user' : 'assistant', content: m.content }));
-      const answer = await callGroq(systemPrompt, groqHistory);
+      const answer = await callGemini(systemPrompt, groqHistory);
 
       await deductAP();
       await persistScribeConsult({ question: userMsg });
