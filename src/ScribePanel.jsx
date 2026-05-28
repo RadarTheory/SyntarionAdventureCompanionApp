@@ -6,20 +6,20 @@ import { SOTERIA_BESTIARY } from './soteria-bestiary';
 import { SOTERIA_MECHANICS } from './soteria-mechanics';
 
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY;
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`;
 const GEMINI_MODEL = 'gemini-1.5-flash';
 
 // ─── GEMINI CALL ────────────────────────────────────────────────────────────────
 async function callGemini(system, messages, maxTokens = 400) {
   if (!GEMINI_KEY) throw new Error('Missing VITE_GEMINI_KEY.');
-  const res = await fetch(GEMINI_URL, {
+  const res = await fetch(`${GEMINI_URL}?key=${GEMINI_KEY}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${GEMINI_KEY}` },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: GEMINI_MODEL,
       messages: [{ role: 'system', content: system }, ...messages],
-      temperature: 0.82,
       max_tokens: maxTokens,
+      temperature: 0.82,
     }),
   });
   const data = await res.json();
@@ -27,8 +27,7 @@ async function callGemini(system, messages, maxTokens = 400) {
   const text = data?.choices?.[0]?.message?.content;
   if (!text) throw new Error('No response from Gemini.');
   return text;
-}
-
+} 
 // ─── BUILD CONTEXT ────────────────────────────────────────────────────────────
 function buildPlayerContext(char, combatLog, sessionLog) {
   const campaign = CAMPAIGNS.find(c => c.id === (char?.campaign || char?.campaign_id));
@@ -316,7 +315,7 @@ export function ScribeDMPanel({ onClose, embedded = false, activeCampaignId }) {
         role: m.role === 'dm' ? 'user' : 'assistant',
         content: m.content,
       }));
-      const answer = await callGemini(DM_SCRIBE_SYSTEM, geminiHistory);
+      const answer = await callGemini(system, geminiHistory);
       setMessages(p => [...p, { role: 'scribe', content: answer, time: new Date() }]);
     } catch (err) {
       setMessages(p => [...p, { role: 'scribe', content: `The archives are silent. ${err?.message || 'Try again.'}`, time: new Date() }]);
