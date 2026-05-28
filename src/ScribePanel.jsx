@@ -5,27 +5,27 @@ import { SOTERIA_LORE } from './soteria-lore';
 import { SOTERIA_BESTIARY } from './soteria-bestiary';
 import { SOTERIA_MECHANICS } from './soteria-mechanics';
 
-const GROQ_KEY   = import.meta.env.VITE_GROQ_API_KEY;
-const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
+const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY;
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+const GEMINI_MODEL = 'gemini-1.5-flash';
 
-// ─── GROQ CALL ────────────────────────────────────────────────────────────────
-async function callGroq(system, messages, maxTokens = 400) {
-  if (!GROQ_KEY) throw new Error('Missing VITE_GROQ_API_KEY.');
-  const res = await fetch(GROQ_URL, {
+// ─── GEMINI CALL ────────────────────────────────────────────────────────────────
+async function callGemini(system, messages, maxTokens = 400) {
+  if (!GEMINI_KEY) throw new Error('Missing VITE_GEMINI_KEY.');
+  const res = await fetch(GEMINI_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${GROQ_KEY}` },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${GEMINI_KEY}` },
     body: JSON.stringify({
-      model: GROQ_MODEL,
+      model: GEMINI_MODEL,
       messages: [{ role: 'system', content: system }, ...messages],
       temperature: 0.82,
       max_tokens: maxTokens,
     }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data?.error?.message || `Groq ${res.status}`);
+  if (!res.ok) throw new Error(data?.error?.message || `Gemini ${res.status}`);
   const text = data?.choices?.[0]?.message?.content;
-  if (!text) throw new Error('No response from Groq.');
+  if (!text) throw new Error('No response from Gemini.');
   return text;
 }
 
