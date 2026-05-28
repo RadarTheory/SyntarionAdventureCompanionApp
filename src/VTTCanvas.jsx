@@ -69,20 +69,28 @@ const r = zone.r * mapRect.w;
     }
   });
   fogCtx.globalCompositeOperation = 'source-over';
-  fogCtx.fillStyle = 'rgba(10,8,6,0.85)';
-  fogZones.forEach(zone => {
-    if (zone.type === 'hide') {
+fogZones.forEach(zone => {
+  if (zone.type === 'hide') {
+    const cx = mapRect.x + zone.x * mapRect.w;
+    const cy = mapRect.y + zone.y * mapRect.h;
+    const r = zone.r * mapRect.w;
+    const feather = zone.feather ?? 0;
+    if (feather > 0) {
+      const grad = fogCtx.createRadialGradient(cx, cy, r * (1 - feather), cx, cy, r);
+      grad.addColorStop(0, 'rgba(10,8,6,0.85)');
+      grad.addColorStop(1, 'rgba(10,8,6,0)');
       fogCtx.beginPath();
-      fogCtx.arc(
-  mapRect.x + zone.x * mapRect.w,
-  mapRect.y + zone.y * mapRect.h,
-  zone.r * mapRect.w,
-  0,
-  Math.PI * 2
-);
+      fogCtx.arc(cx, cy, r, 0, Math.PI * 2);
+      fogCtx.fillStyle = grad;
+      fogCtx.fill();
+    } else {
+      fogCtx.beginPath();
+      fogCtx.arc(cx, cy, r, 0, Math.PI * 2);
+      fogCtx.fillStyle = 'rgba(10,8,6,0.85)';
       fogCtx.fill();
     }
-  });
+  }
+});
   ctx.drawImage(fogCanvas, 0, 0);
 
   tokens.forEach(tok => {
@@ -391,19 +399,7 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensCh
       const t = transformRef.current;
       const r = brushRadius / (canvas.width * t.scale);
       const zone = { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r, feather };
-      setFogZones(prev => {
-        const next = [...prev, zone];
-        if (tool === 'fog-reveal') {
-          return next.filter(z => {
-            if (z.id === zone.id) return true;
-            if (z.type !== 'hide') return true;
-            const dx = (z.x - pos.x) * canvas.width;
-            const dy = (z.y - pos.y) * canvas.height;
-            return Math.sqrt(dx * dx + dy * dy) > (r + z.r) * canvas.width;
-          });
-        }
-        return next;
-      });
+      setFogZones(prev => [...prev, zone]);
     }
     if (tool === 'token-enemy') { setPendingClick(pos); setShowTokenForm(true); }
     if (tool === 'erase-token') {
