@@ -5,7 +5,7 @@ import { SOTERIA_LORE } from './soteria-lore';
 
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY;
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
-const GEMINI_MODEL = 'gemini-1.5-flash-latest-latest';
+const GEMINI_MODEL = 'gemini-1.5-proh-latest';
 
 const SOTERIA_CONTEXT = `
 You are The Scribe — an ancient, sentient archival intelligence bound to the city of Ashendell in the world of Soteria, 178 Era of Unity.
