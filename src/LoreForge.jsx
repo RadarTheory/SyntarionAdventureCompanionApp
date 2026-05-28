@@ -6,7 +6,7 @@ import { SOTERIA_BESTIARY } from './soteria-bestiary';
 
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY;
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
-const GEMINI_MODEL = 'gemini-1.5-flash';
+const GEMINI_MODEL = 'gemini-1.5-flash-latest';
 
 // ─── CATEGORY DEFINITIONS ────────────────────────────────────────────────────
 
@@ -774,14 +774,14 @@ export default function LoreForge({ activeCampaignId }) {
       const systemPrompt = buildContext(selectedCategory.id);
       const userPrompt = buildPrompt(selectedCategory.id, prompt, fields, campaignFilter);
 
-      const res = await fetch(GROQ_URL, {
+      const res = await fetch(GEMINI_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${GROQ_KEY}`,
+          'Authorization': `Bearer ${GEMINI_KEY}`,
         },
         body: JSON.stringify({
-          model: GROQ_MODEL,
+          model: GEMINI_MODEL,
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
@@ -793,7 +793,7 @@ export default function LoreForge({ activeCampaignId }) {
 
       const data = await res.json();
       const text = data?.choices?.[0]?.message?.content;
-      if (!text) throw new Error('No response from Groq');
+      if (!text) throw new Error('No response from gods. The Forge is silent.');
 
       setOutput(text);
       setHistory(prev => [{
