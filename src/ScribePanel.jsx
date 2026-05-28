@@ -171,7 +171,7 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
         content: m.content,
       }));
 
-      const answer = await callGroq(system, groqHistory, 400);
+      const answer = await callGemini(systemPrompt, groqHistory);
 
       // Notify DM with the question (DM decides whether to charge a token)
       await supabase.from('messages').insert({
