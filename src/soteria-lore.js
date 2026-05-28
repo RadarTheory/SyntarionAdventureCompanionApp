@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // SOTERIA LORE — The Scribe's Brain
-// Injected into every Groq call as world context.
+// Injected into every Gemini call as world context.
 // Import: import { SOTERIA_LORE } from './soteria-lore';
 // Usage:  const SOTERIA_DM_CONTEXT = `You are The Scribe...\n\n${SOTERIA_LORE}`;
 // ═══════════════════════════════════════════════════════════════════════════════

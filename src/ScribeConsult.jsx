@@ -61,7 +61,7 @@ async function callGemini(systemPrompt, messages) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${GEMINI_KEY}` },
     body: JSON.stringify({
-      model: GROQ_MODEL,
+      model: GEMINI_MODEL,
       messages: [{ role: 'system', content: systemPrompt }, ...messages],
       temperature: 0.85,
       max_tokens: 350,
@@ -127,8 +127,8 @@ export function ScribeConsult({ char, onUpdateChar }) {
 
     try {
       const systemPrompt = `${SOTERIA_CONTEXT}\n\n${buildCharacterContext(char)}\n\nThis response costs the adventurer 1 AP. Make the answer useful, specific, and worthy of the cost.`.trim();
-      const groqHistory = nextMessages.map(m => ({ role: m.role === 'player' ? 'user' : 'assistant', content: m.content }));
-      const answer = await callGemini(systemPrompt, groqHistory);
+      const geminiHistory = nextMessages.map(m => ({ role: m.role === 'player' ? 'user' : 'assistant', content: m.content }));
+      const answer = await callGemini(systemPrompt, geminiHistory);
 
       await deductAP();
       await persistScribeConsult({ question: userMsg });

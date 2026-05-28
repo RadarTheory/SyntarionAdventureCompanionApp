@@ -222,8 +222,8 @@ function ScribePanel({ onClose }) {
     const newMessages = [...messages, { role: 'dm', content: userMsg, time: new Date() }];
     setMessages(newMessages);
     try {
-      const groqHistory = newMessages.map(m => ({ role: m.role === 'dm' ? 'user' : 'assistant', content: m.content }));
-      const text = await callGroq(SOTERIA_DM_CONTEXT, groqHistory, 800);
+      const geminiHistory = newMessages.map(m => ({ role: m.role === 'dm' ? 'user' : 'assistant', content: m.content }));
+      const text = await callGemini(SOTERIA_DM_CONTEXT, geminiHistory, 800);
       setMessages(prev => [...prev, { role: 'scribe', content: text, time: new Date() }]);
     } catch {
       setMessages(prev => [...prev, { role: 'scribe', content: 'The archives are silent. Try again.', time: new Date() }]);

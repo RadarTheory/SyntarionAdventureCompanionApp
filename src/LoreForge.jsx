@@ -4,9 +4,9 @@ import { SOTERIA_LORE } from './soteria-lore';
 import { SOTERIA_MECHANICS } from './soteria-mechanics';
 import { SOTERIA_BESTIARY } from './soteria-bestiary';
 
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
-const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY;
+const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY;
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+const GEMINI_MODEL = 'gemini-1.5-flash';
 
 // ─── CATEGORY DEFINITIONS ────────────────────────────────────────────────────
 
