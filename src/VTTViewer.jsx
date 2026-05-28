@@ -36,14 +36,26 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform }) {
     }
   });
   fogCtx.globalCompositeOperation = 'source-over';
-  fogCtx.fillStyle = 'rgba(10,8,6,0.85)';
-  fogZones.forEach(zone => {
-    if (zone.type === 'hide') {
+fogZones.forEach(zone => {
+  if (zone.type === 'hide') {
+    const cx = zone.x * W, cy = zone.y * H, r = zone.r * W;
+    const feather = zone.feather ?? 0;
+    if (feather > 0) {
+      const grad = fogCtx.createRadialGradient(cx, cy, r * (1 - feather), cx, cy, r);
+      grad.addColorStop(0, 'rgba(10,8,6,0.85)');
+      grad.addColorStop(1, 'rgba(10,8,6,0)');
       fogCtx.beginPath();
-      fogCtx.arc(zone.x * W, zone.y * H, zone.r * W, 0, Math.PI * 2);
+      fogCtx.arc(cx, cy, r, 0, Math.PI * 2);
+      fogCtx.fillStyle = grad;
+      fogCtx.fill();
+    } else {
+      fogCtx.beginPath();
+      fogCtx.arc(cx, cy, r, 0, Math.PI * 2);
+      fogCtx.fillStyle = 'rgba(10,8,6,0.85)';
       fogCtx.fill();
     }
-  });
+  }
+});
   ctx.drawImage(fogCanvas, 0, 0);
 
   tokens.forEach(tok => {

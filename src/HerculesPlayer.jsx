@@ -130,6 +130,33 @@ function AttackButton({ row, char, sessionId, onRolled }) {
 // Vitals panel — player edits submit a pending approval event
 function PlayerVitalsPanel({ row, char, sessionId, onClose }) {
   const isOwn = row.character_id === char?.id || row.character_id === String(char?.id);
+  {isOwn && !isDead && (
+  <button
+    onClick={async () => {
+      const note = window.prompt('Describe your move (e.g. "Move to the doorway"):');
+      if (!note?.trim()) return;
+      await supabase.from('hercules_events').insert({
+        session_id: session.id,
+        type: 'move_request',
+        actor_name: char?.name || 'Player',
+        actor_id: char?.id ? String(char.id) : null,
+        description: `${char?.name || 'Player'} requests to move: ${note.trim()}`,
+      });
+    }}
+    style={{
+      background: 'rgba(121,245,167,0.08)',
+      border: '1px solid rgba(121,245,167,0.35)',
+      borderRadius: 4,
+      padding: '2px 6px',
+      cursor: 'pointer',
+      fontSize: 9,
+      color: '#79f5a7',
+      fontFamily: "'Cinzel', serif",
+    }}
+  >
+    ✥ Move
+  </button>
+)}
   const VITALS_KEY = `syntarion_vitals_${row.character_id}`;
   const load = (k, def) => { try { return JSON.parse(localStorage.getItem(VITALS_KEY) || '{}')[k] ?? def; } catch { return def; } };
   const [vitals, setVitals] = useState({ current: load('vitals', null), max: load('vitalsMax', null) });
