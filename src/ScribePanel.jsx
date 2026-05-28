@@ -315,7 +315,7 @@ export function ScribeDMPanel({ onClose, embedded = false, activeCampaignId }) {
         role: m.role === 'dm' ? 'user' : 'assistant',
         content: m.content,
       }));
-      const answer = await callGroq(DM_SCRIBE_SYSTEM, groqHistory, 600);
+      const answer = await callGemini(system, groqHistory);
       setMessages(p => [...p, { role: 'scribe', content: answer, time: new Date() }]);
     } catch (err) {
       setMessages(p => [...p, { role: 'scribe', content: `The archives are silent. ${err?.message || 'Try again.'}`, time: new Date() }]);
