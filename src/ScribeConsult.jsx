@@ -68,9 +68,9 @@ async function callGemini(systemPrompt, messages) {
     }),
   });
   const data = await res.json();
-  if (!res.ok) { console.error('Groq API Error:', data); throw new Error(data?.error?.message || `Groq request failed with ${res.status}`); }
+  if (!res.ok) { console.error('The Scribe is unheard by the gods', data); throw new Error(data?.error?.message || `Gemini request failed with ${res.status}`); }
   const text = data?.choices?.[0]?.message?.content;
-  if (!text) { console.error('Malformed Groq response:', data); throw new Error('No response from Groq.'); }
+  if (!text) { console.error('Malformed Scribe response:', data); throw new Error('No response from Gemini.'); }
   return text;
 }
 
