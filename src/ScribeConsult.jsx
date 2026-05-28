@@ -55,22 +55,22 @@ AP Total: ${char?.apTotal || 0}
 `.trim();
 }
 
-async function callGemini(systemPrompt, messages) {
+async function callGemini(system, messages, maxTokens = 400) {
   if (!GEMINI_KEY) throw new Error('Missing VITE_GEMINI_KEY.');
-  const res = await fetch(GEMINI_URL, {
+  const res = await fetch(`${GEMINI_URL}?key=${GEMINI_KEY}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${GEMINI_KEY}` },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: GEMINI_MODEL,
-      messages: [{ role: 'system', content: systemPrompt }, ...messages],
-      temperature: 0.85,
-      max_tokens: 350,
+      messages: [{ role: 'system', content: system }, ...messages],
+      max_tokens: maxTokens,
+      temperature: 0.82,
     }),
   });
   const data = await res.json();
-  if (!res.ok) { console.error('The Scribe is unheard by the gods', data); throw new Error(data?.error?.message || `Gemini request failed with ${res.status}`); }
+  if (!res.ok) throw new Error(data?.error?.message || `Gemini ${res.status}`);
   const text = data?.choices?.[0]?.message?.content;
-  if (!text) { console.error('Malformed Scribe response:', data); throw new Error('No response from Gemini.'); }
+  if (!text) throw new Error('No response from Gemini.');
   return text;
 }
 

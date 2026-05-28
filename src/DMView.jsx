@@ -38,20 +38,22 @@ const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY;
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
 const GEMINI_MODEL = 'gemini-1.5-flash';
 
-async function callGemini(systemPrompt, messages, maxTokens = 800) {
-  const res = await fetch(GEMINI_URL, {
+async function callGemini(system, messages, maxTokens = 400) {
+  if (!GEMINI_KEY) throw new Error('Missing VITE_GEMINI_KEY.');
+  const res = await fetch(`${GEMINI_URL}?key=${GEMINI_KEY}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GEMINI_KEY}` },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: GEMINI_MODEL,
-      messages: [{ role: 'system', content: systemPrompt }, ...messages],
-      temperature: 0.8,
+      messages: [{ role: 'system', content: system }, ...messages],
       max_tokens: maxTokens,
+      temperature: 0.82,
     }),
   });
   const data = await res.json();
+  if (!res.ok) throw new Error(data?.error?.message || `Gemini ${res.status}`);
   const text = data?.choices?.[0]?.message?.content;
-  if (!text) throw new Error('The Scribe is unresponsive. Consult your DM.');
+  if (!text) throw new Error('No response from Gemini.');
   return text;
 }
 
