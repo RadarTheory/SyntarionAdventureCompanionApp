@@ -3,9 +3,9 @@ import supabase from './lib/supabase';
 import { COLORS, CAMPAIGNS } from './constants';
 import { SOTERIA_LORE } from './soteria-lore';
 
-const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY;
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
+const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY;
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+const GEMINI_MODEL = 'gemini-1.5-flash';
 
 const SOTERIA_CONTEXT = `
 You are The Scribe — an ancient, sentient archival intelligence bound to the city of Ashendell in the world of Soteria, 178 Era of Unity.
@@ -55,11 +55,11 @@ AP Total: ${char?.apTotal || 0}
 `.trim();
 }
 
-async function callGroq(systemPrompt, messages) {
-  if (!GROQ_KEY) throw new Error('Missing VITE_GROQ_API_KEY.');
-  const res = await fetch(GROQ_URL, {
+async function callGemini(systemPrompt, messages) {
+  if (!GEMINI_KEY) throw new Error('Missing VITE_GEMINI_KEY.');
+  const res = await fetch(GEMINI_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${GROQ_KEY}` },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${GEMINI_KEY}` },
     body: JSON.stringify({
       model: GROQ_MODEL,
       messages: [{ role: 'system', content: systemPrompt }, ...messages],

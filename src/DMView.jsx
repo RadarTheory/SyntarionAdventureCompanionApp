@@ -34,16 +34,16 @@ ${SOTERIA_BESTIARY}
 `;
 
 const DM_USER_ID = import.meta.env.VITE_DM_USER_ID;
-const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY;
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
+const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY;
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+const GEMINI_MODEL = 'gemini-1.5-flash';
 
-async function callGroq(systemPrompt, messages, maxTokens = 800) {
-  const res = await fetch(GROQ_URL, {
+async function callGemini(systemPrompt, messages, maxTokens = 800) {
+  const res = await fetch(GEMINI_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GEMINI_KEY}` },
     body: JSON.stringify({
-      model: GROQ_MODEL,
+      model: GEMINI_MODEL,
       messages: [{ role: 'system', content: systemPrompt }, ...messages],
       temperature: 0.8,
       max_tokens: maxTokens,
@@ -51,7 +51,7 @@ async function callGroq(systemPrompt, messages, maxTokens = 800) {
   });
   const data = await res.json();
   const text = data?.choices?.[0]?.message?.content;
-  if (!text) throw new Error('No response from Groq');
+  if (!text) throw new Error('The Scribe is unresponsive. Consult your DM.');
   return text;
 }
 
