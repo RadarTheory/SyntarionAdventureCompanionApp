@@ -166,12 +166,12 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
       ]);
 
       const system     = SCRIBE_SYSTEM(buildPlayerContext(char, combatLog, sessionLog));
-      const groqHistory = next.filter(m => m.role !== 'system').map(m => ({
+      const geminiHistory = next.filter(m => m.role !== 'system').map(m => ({
         role: m.role === 'player' ? 'user' : 'assistant',
         content: m.content,
       }));
 
-      const answer = await callGemini(systemPrompt, groqHistory);
+      const answer = await callGemini(systemPrompt, geminiHistory);
 
       // Notify DM with the question (DM decides whether to charge a token)
       await supabase.from('messages').insert({
@@ -311,11 +311,11 @@ export function ScribeDMPanel({ onClose, embedded = false, activeCampaignId }) {
     const next = [...messages, { role: 'dm', content: question, time: new Date() }];
     setMessages(next);
     try {
-      const groqHistory = next.filter(m => m.role !== 'system').map(m => ({
+      const geminiHistory = next.filter(m => m.role !== 'system').map(m => ({
         role: m.role === 'dm' ? 'user' : 'assistant',
         content: m.content,
       }));
-      const answer = await callGemini(system, groqHistory);
+      const answer = await callGemini(system, geminiHistory);
       setMessages(p => [...p, { role: 'scribe', content: answer, time: new Date() }]);
     } catch (err) {
       setMessages(p => [...p, { role: 'scribe', content: `The archives are silent. ${err?.message || 'Try again.'}`, time: new Date() }]);
