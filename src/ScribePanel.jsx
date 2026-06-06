@@ -7,7 +7,7 @@ import { SOTERIA_MECHANICS } from './soteria-mechanics';
 
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY;
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`;
-const GEMINI_MODEL = 'gemini-1.5-proh-latest';
+const GEMINI_MODEL = 'gemini-1.5-pro-latest';
 
 // ─── GEMINI CALL ────────────────────────────────────────────────────────────────
 async function callGemini(system, messages, maxTokens = 400) {

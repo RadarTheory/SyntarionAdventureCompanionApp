@@ -450,19 +450,7 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensCh
       const canvas = canvasRef.current;
       const r = brushRadius / (canvas.width * t.scale);
       const zone = { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r, feather };
-      setFogZones(prev => {
-        const next = [...prev, zone];
-        if (tool === 'fog-reveal') {
-          return next.filter(z => {
-            if (z.id === zone.id) return true;
-            if (z.type !== 'hide') return true;
-            const dx = (z.x - pos.x) * canvas.width;
-            const dy = (z.y - pos.y) * canvas.height;
-            return Math.sqrt(dx * dx + dy * dy) > (r + z.r) * canvas.width;
-          });
-        }
-        return next;
-      });
+      setFogZones(prev => [...prev, zone]);
     }
     if (tool === 'token-move' && selectedTokenId && (e.buttons === 1 || e.touches)) {
       setTokens(prev => prev.map(t => t.id === selectedTokenId ? { ...t, x: pos.x, y: pos.y } : t));
