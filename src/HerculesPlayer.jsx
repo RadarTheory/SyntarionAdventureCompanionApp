@@ -164,6 +164,8 @@ function PlayerVitalsPanel({ row, char, sessionId, onClose }) {
   const [resolve, setResolve] = useState({ current: load('resolve', null), max: load('resolveMax', null) });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [moveMode, setMoveMode] = useState(false);
+  const [moveNote, setMoveNote] = useState('');
 
   const submitVitalsRequest = async () => {
     if (!sessionId || submitting) return;
@@ -336,6 +338,62 @@ export default function HerculesPlayer({ campaignId, char }) {
             const isActive = i === currentTurn && row.status !== 'dead';
             const isDead = row.status === 'dead';
             const isCreature = !row.character_id || row.character_id === row.character_name;
+            {session && alreadyRolled && (
+  <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+    <button
+      onClick={() => setMoveMode(m => !m)}
+      style={{
+        flex: 1,
+        background: moveMode ? 'rgba(121,245,167,0.15)' : 'rgba(240,238,235,0.05)',
+        border: `1px solid ${moveMode ? 'rgba(121,245,167,0.5)' : COLORS.border}`,
+        borderRadius: 8,
+        padding: '8px 12px',
+        cursor: 'pointer',
+        fontFamily: "'Cinzel', serif",
+        fontSize: 9,
+        letterSpacing: '0.1em',
+        color: moveMode ? '#79f5a7' : COLORS.dim,
+      }}
+    >
+      {moveMode ? '✥ Move Mode — tap destination or describe below' : '✥ Request Move'}
+    </button>
+  </div>
+)}
+
+{moveMode && (
+  <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+    <input
+      value={moveNote}
+      onChange={e => setMoveNote(e.target.value)}
+      placeholder="Describe your move (e.g. behind the pillar)…"
+      style={{ flex: 1, background: COLORS.card, border: `1px solid rgba(121,245,167,0.3)`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }}
+    />
+    <button
+      onClick={async () => {
+        if (!moveNote.trim() || !session?.id) return;
+        await supabase.from('hercules_events').insert({
+          session_id: session.id,
+          type: 'move_request',
+          actor_name: char?.name || 'Player',
+          actor_id: char?.id ? String(char.id) : null,
+          description: `${char?.name || 'Player'} requests to move: ${moveNote.trim()}`,
+        });
+        setMoveNote('');
+        setMoveMode(false);
+      }}
+      disabled={!moveNote.trim()}
+      style={{ background: 'rgba(121,245,167,0.12)', border: '1px solid rgba(121,245,167,0.4)', borderRadius: 6, padding: '7px 12px', cursor: moveNote.trim() ? 'pointer' : 'default', fontFamily: "'Cinzel', serif", fontSize: 9, color: '#79f5a7', opacity: moveNote.trim() ? 1 : 0.5 }}
+    >
+      Send
+    </button>
+    <button
+      onClick={() => { setMoveMode(false); setMoveNote(''); }}
+      style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.dim }}
+    >
+      Cancel
+    </button>
+  </div>
+)}
             return (
               <div key={row.id}>
                 <div style={{
