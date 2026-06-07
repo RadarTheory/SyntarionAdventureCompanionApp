@@ -6,7 +6,3 @@ const supabase = createClient(
 );
 
 export default supabase;
-
-export function getMusicUrl(path) {
-  return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/music/${path}`;
-}
