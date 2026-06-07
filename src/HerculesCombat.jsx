@@ -3,7 +3,6 @@ import supabase from './lib/supabase';
 import { COLORS, CAMPAIGNS } from './constants';
 import { SOTERIA_BESTIARY } from './soteria-bestiary';
 
-
 function normalizeCampaigns() {
   if (Array.isArray(CAMPAIGNS)) return CAMPAIGNS;
 
