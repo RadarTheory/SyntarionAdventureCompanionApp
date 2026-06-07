@@ -838,34 +838,88 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true, onP
   }, [addCreature, onRegisterAddCreature]);
 
   const approveEvent = async event => {
-    if (!event?.id) return;
+  if (!event?.id) return;
 
-    await supabase
-      .from('hercules_events')
-      .update({
-        dm_approved: true,
-        outcome: event.scribe_suggestion || event.outcome || 'Approved by DM.',
-        dm_note: null,
-      })
-      .eq('id', event.id);
+  // If this is a move_request, commit the waypoint to the token position
+  if (event.type === 'move_request' && event.actor_id) {
+    const characterId = String(event.actor_id);
 
-    await loadEvents();
-  };
+    const { data: vttData } = await supabase
+      .from('vtt_sessions')
+      .select('id, tokens, pending_moves')
+      .eq('campaign_id', String(campaignIdRef.current))
+      .maybeSingle();
 
-  const denyEvent = async event => {
-    if (!event?.id) return;
+    if (vttData?.id) {
+      const pending = (vttData.pending_moves || []).filter(
+        m => String(m.characterId) === characterId
+      );
 
-    await supabase
-      .from('hercules_events')
-      .update({
-        dm_approved: false,
-        outcome: 'Denied by DM. No effect is applied.',
-        dm_note: null,
-      })
-      .eq('id', event.id);
+      if (pending.length > 0) {
+        const destination = pending[pending.length - 1]; // last waypoint
+        const updatedTokens = (vttData.tokens || []).map(tok =>
+          String(tok.characterId) === characterId
+            ? { ...tok, x: destination.x, y: destination.y }
+            : tok
+        );
+        const remainingMoves = (vttData.pending_moves || []).filter(
+          m => String(m.characterId) !== characterId
+        );
 
-    await loadEvents();
-  };
+        await supabase.from('vtt_sessions').update({
+          tokens: updatedTokens,
+          pending_moves: remainingMoves,
+          updated_at: new Date().toISOString(),
+        }).eq('id', vttData.id);
+      }
+    }
+  }
+
+  await supabase.from('hercules_events').update({
+    dm_approved: true,
+    outcome: event.type === 'move_request'
+      ? 'Move approved. Token repositioned.'
+      : (event.scribe_suggestion || event.outcome || 'Approved by DM.'),
+    dm_note: null,
+  }).eq('id', event.id);
+
+  await loadEvents();
+};
+
+const denyEvent = async event => {
+  if (!event?.id) return;
+
+  // If this is a move_request, clear that character's pending waypoints
+  if (event.type === 'move_request' && event.actor_id) {
+    const characterId = String(event.actor_id);
+
+    const { data: vttData } = await supabase
+      .from('vtt_sessions')
+      .select('id, pending_moves')
+      .eq('campaign_id', String(campaignIdRef.current))
+      .maybeSingle();
+
+    if (vttData?.id) {
+      const remainingMoves = (vttData.pending_moves || []).filter(
+        m => String(m.characterId) !== characterId
+      );
+      await supabase.from('vtt_sessions').update({
+        pending_moves: remainingMoves,
+        updated_at: new Date().toISOString(),
+      }).eq('id', vttData.id);
+    }
+  }
+
+  await supabase.from('hercules_events').update({
+    dm_approved: false,
+    outcome: event.type === 'move_request'
+      ? 'Move denied. Waypoints cleared.'
+      : 'Denied by DM. No effect is applied.',
+    dm_note: null,
+  }).eq('id', event.id);
+
+  await loadEvents();
+};
 
   const customOutcome = async (eventId, text) => {
     if (!eventId || !text?.trim()) return;
