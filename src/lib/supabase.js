@@ -7,7 +7,9 @@ const supabase = createClient(
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: true,  // ← this is the key one
-    }
+      detectSessionInUrl: true,
+    },
   }
 );
+
+export default supabase;
