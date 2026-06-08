@@ -1286,7 +1286,7 @@ const denyEvent = async event => {
                 flexShrink: 0,
               }}
             >
-              <HerculesLogoImage size="74%" />
+              <HerculesLogoImage size="100%" />
             </div>
 
             <div style={{ flex: 1 }}>
