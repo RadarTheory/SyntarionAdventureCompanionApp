@@ -1515,9 +1515,9 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
           ),
         },
         { id: 'grimoire', title: 'Grimoire — Adventure Journal', onClick: () => setShowGrimoire(o => !o),
-          children: <img src="/grimoireicon.png" alt="Grimoire" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
+          children: <img src="/Grimoireicon.png" alt="Grimoire" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
         { id: 'lark', title: 'Lark — Send a Letter', onClick: () => setShowLark(o => !o),
-          children: <img src="/larkicon.png" alt="Lark" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
+          children: <img src="/Larkicon.png" alt="Lark" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
       ]} />
 
             {showGrimoire && (
