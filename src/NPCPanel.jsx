@@ -165,18 +165,18 @@ const S = {
   },
   groupCount: { fontSize: 9, color: 'rgba(184,137,42,0.3)' },
   npcRow: {
-    display: 'flex', alignItems: 'flex-start', gap: 6,
+    display: 'flex', alignItems: 'center', gap: 6,
     padding: '5px 10px 5px 28px',
     borderBottom: '1px solid rgba(255,255,255,0.02)', cursor: 'pointer',
   },
   npcRowIndented: {
-    display: 'flex', alignItems: 'flex-start', gap: 6,
+    display: 'flex', alignItems: 'center', gap: 6,
     padding: '4px 10px 4px 36px',
     borderBottom: '1px solid rgba(255,255,255,0.015)', cursor: 'pointer',
   },
   npcDot: { width: 7, height: 7, borderRadius: '50%', flexShrink: 0, marginTop: 4 },
   npcMain: { flex: 1, minWidth: 0 },
-  npcName: { fontWeight: 600, color: '#ddd0b0', fontSize: 13 },
+  npcName: { fontWeight: 600, color: '#ddd0b0', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
   npcRole: { color: 'rgba(200,180,130,0.5)', fontSize: 11, fontStyle: 'italic' },
   npcFaction: { color: 'rgba(184,137,42,0.55)', fontSize: 10 },
   npcStatus: { fontSize: 10, fontFamily: "'Cinzel', serif", letterSpacing: '0.05em', flexShrink: 0 },
@@ -747,7 +747,19 @@ export default function NPCPanel() {
                                           {npc.role    && <div style={S.npcRole}>{npc.role}</div>}
                                           {npc.faction && <div style={S.npcFaction}>{npc.faction}</div>}
                                         </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                                        <button
+                                          onClick={e => {
+                                            e.stopPropagation();
+                                            window.dispatchEvent(new CustomEvent('hercules:add_npc', {
+                                              detail: { id: npc.id, name: npc.name, role: npc.role || '', conditions: npc.conditions || [], cityName: city.name }
+                                            }));
+                                          }}
+                                          style={{ background: 'rgba(60,120,200,0.12)', border: '1px solid rgba(60,120,200,0.3)', borderRadius: 3, color: '#80a0e0', cursor: 'pointer', padding: '2px 6px', fontSize: 9, fontFamily: "'Cinzel', serif" }}>
+                                          ⚔
+                                        </button>
                                         <div style={{ ...S.npcStatus, color: sc(npc.status) }}>{npc.status}</div>
+                                      </div>
                                       </div>
                                     );
                                   })}
@@ -767,7 +779,19 @@ export default function NPCPanel() {
                                     {npc.role    && <div style={S.npcRole}>{npc.role}</div>}
                                     {npc.faction && <div style={S.npcFaction}>{npc.faction}</div>}
                                   </div>
+                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                                  <button
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      window.dispatchEvent(new CustomEvent('hercules:add_npc', {
+                                        detail: { id: npc.id, name: npc.name, role: npc.role || '', conditions: npc.conditions || [], cityName: city.name }
+                                      }));
+                                    }}
+                                    style={{ background: 'rgba(60,120,200,0.12)', border: '1px solid rgba(60,120,200,0.3)', borderRadius: 3, color: '#80a0e0', cursor: 'pointer', padding: '2px 6px', fontSize: 9, fontFamily: "'Cinzel', serif" }}>
+                                    ⚔
+                                  </button>
                                   <div style={{ ...S.npcStatus, color: sc(npc.status) }}>{npc.status}</div>
+                                </div>
                                 </div>
                               );
                             })}
