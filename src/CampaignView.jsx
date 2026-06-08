@@ -12,6 +12,8 @@ import ArgusPlayerPanel from './Argus';
 import BestiaryPanel from './BestiaryPanel';
 import { ScribePlayerPanel } from './ScribePanel';
 import HerculesPlayer from './HerculesPlayer';
+import GrimoirePanel from './GrimoirePanel';
+import LarkPanel from './LarkPanel';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -1229,6 +1231,8 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   const [showArgus, setShowArgus] = useState(false);
   const [showWorldMap, setShowWorldMap] = useState(false);
   const [mapZoom, setMapZoom] = useState(1);
+  const [showGrimoire, setShowGrimoire] = useState(false);
+  const [showLark, setShowLark] = useState(false);
 
   // Poll lootbox count for badge
   useEffect(() => {
@@ -1510,7 +1514,22 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
             />
           ),
         },
+        { id: 'grimoire', title: 'Grimoire — Adventure Journal', onClick: () => setShowGrimoire(o => !o),
+          children: <img src="/grimoireicon.png" alt="Grimoire" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
+        { id: 'lark', title: 'Lark — Send a Letter', onClick: () => setShowLark(o => !o),
+          children: <img src="/larkicon.png" alt="Lark" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
       ]} />
+
+            {showGrimoire && (
+        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowGrimoire(false)} title="GRIMOIRE · Adventure Journal" width={400} accentColor="rgba(121,245,167,0.35)">
+          <GrimoirePanel char={userChar} campaignId={String(campaign.id)} isDM={false} embedded />
+        </DraggablePanel>
+      )}
+      {showLark && (
+        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowLark(false)} title="LARK · Letters & Correspondence" width={400} accentColor="rgba(200,168,74,0.35)">
+          <LarkPanel char={userChar} campaignId={String(campaign.id)} isDM={false} embedded />
+        </DraggablePanel>
+      )}
 
       {/* Astragal panel */}
       {showAstragal && (
@@ -1553,6 +1572,10 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
       {showWorldMap && (
         <DraggablePanel defaultX={120} defaultY={40} onClose={() => setShowWorldMap(false)} title="WORLD MAP · Soteria" width={Math.min(window.innerWidth - 140, 900)} accentColor="rgba(200,168,74,0.4)">
           <div
+
+          
+
+                    
   ref={el => {
     if (!el) return;
     const handler = e => {
