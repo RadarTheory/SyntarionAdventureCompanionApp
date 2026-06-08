@@ -1485,12 +1485,6 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
           ),
         },
         {
-          id: 'bestiary',
-          title: 'Bestiary — Creatures of Soteria',
-          onClick: () => setShowBestiary(o => !o),
-          children: <img src="/bestiaryicon.png" alt="Bestiary" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
-        },
-        {
           id: 'scribe',
           title: 'The Scribe — Archives',
           onClick: () => setShowScribeCV(o => !o),
