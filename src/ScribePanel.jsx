@@ -127,8 +127,7 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
   const [loading, setLoading]   = useState(false);
   const bottomRef               = useRef(null);
   const lockRef                 = useRef(false);
-  const system = SCRIBE_SYSTEM(buildPlayerContext(char, combatLog, sessionLog), buildScribeContext(question));
-
+  
   const tokens = char?.scribeTokens ?? 0;
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
@@ -137,6 +136,7 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
     if (lockRef.current || !input.trim() || loading) return;
     lockRef.current = true;
     setLoading(true);
+    const system = SCRIBE_SYSTEM(buildPlayerContext(char, combatLog, sessionLog), buildScribeContext(question));
 
     const question = input.trim();
     setInput('');
@@ -260,7 +260,8 @@ export function ScribeDMPanel({ onClose, embedded = false, activeCampaignId }) {
   const [tokenInputs, setTokenInputs] = useState({});
   const bottomRef                   = useRef(null);
   const lockRef                     = useRef(false);
-  const answer = await callGemini(DM_SCRIBE_SYSTEM(buildScribeContext(question, 14000)), geminiHistory);
+  
+ 
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
 
@@ -303,7 +304,7 @@ export function ScribeDMPanel({ onClose, embedded = false, activeCampaignId }) {
         role: m.role === 'dm' ? 'user' : 'assistant',
         content: m.content,
       }));
-      const answer = await callGemini(DM_SCRIBE_SYSTEM, geminiHistory);
+      const answer = await callGemini(DM_SCRIBE_SYSTEM(buildScribeContext(question, 14000)), geminiHistory);
       setMessages(p => [...p, { role: 'scribe', content: answer, time: new Date() }]);
     } catch (err) {
       setMessages(p => [...p, { role: 'scribe', content: `The archives are silent. ${err?.message || 'Try again.'}`, time: new Date() }]);
