@@ -82,54 +82,25 @@ function AttackButton({ row, char, sessionId, onRolled }) {
   );
 }
 
-function PlayerVitalsPanel({ row, char, sessionId, onClose }) {
-  const isOwn = String(row.character_id) === String(char?.id);
+function PlayerVitalsPanel({ row, onClose }) {
   const VITALS_KEY = `syntarion_vitals_${row.character_id}`;
   const load = (k, def) => { try { return JSON.parse(localStorage.getItem(VITALS_KEY) || '{}')[k] ?? def; } catch { return def; } };
-  const [vitals, setVitals] = useState({ current: load('vitals', null), max: load('vitalsMax', null) });
-  const [stamina, setStamina] = useState({ current: load('stamina', null), max: load('staminaMax', null) });
-  const [resolve, setResolve] = useState({ current: load('resolve', null), max: load('resolveMax', null) });
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const vitals  = { current: load('vitals', 0),   max: load('vitalsMax', 0) };
+  const stamina = { current: load('stamina', 0),  max: load('staminaMax', 0) };
+  const resolve = { current: load('resolve', 0),  max: load('resolveMax', 0) };
 
-  const submitVitalsRequest = async () => {
-    if (!sessionId || submitting) return;
-    setSubmitting(true);
-    const actorName = char?.name || char?.character_name || 'Player';
-    await supabase.from('hercules_events').insert({
-      session_id: sessionId,
-      type: 'vitals_request',
-      actor_name: actorName,
-      actor_id: char?.id ? String(char.id) : null,
-      description: `${actorName} requests vitals update — Vitals: ${vitals.current}/${vitals.max}, Stamina: ${stamina.current}/${stamina.max}, Resolve: ${resolve.current}/${resolve.max}.`,
-    });
-    localStorage.setItem(VITALS_KEY, JSON.stringify({
-      vitals: vitals.current, vitalsMax: vitals.max,
-      stamina: stamina.current, staminaMax: stamina.max,
-      resolve: resolve.current, resolveMax: resolve.max,
-    }));
-    setSubmitting(false);
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
-  };
-
-  const Tracker = ({ label, color, state, setState }) => {
-    const cur = state.current ?? 0, max = state.max ?? 0;
-    const pct = max > 0 ? Math.max(0, Math.min(100, (cur / max) * 100)) : 0;
+  const Bar = ({ label, color, current, max }) => {
+    const pct = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
     return (
       <div style={{ marginBottom: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
           <div style={{ fontFamily: "'Cinzel',serif", fontSize: 8, color, letterSpacing: '0.1em' }}>{label}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <button onClick={() => setState(s => ({ ...s, current: Math.max(0, (s.current ?? 0) - 1) }))} style={{ width: 18, height: 18, borderRadius: 3, background: 'rgba(224,90,90,0.15)', border: '1px solid rgba(224,90,90,0.4)', color: '#e05a5a', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-            <input type="number" value={state.current ?? ''} onChange={e => setState(s => ({ ...s, current: parseInt(e.target.value) || 0 }))} style={{ width: 32, textAlign: 'center', background: 'rgba(0,0,0,0.3)', border: `1px solid ${color}44`, borderRadius: 3, color, fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 700, outline: 'none', padding: '2px 0' }} />
-            <span style={{ color: '#555', fontSize: 9 }}>/</span>
-            <input type="number" value={state.max ?? ''} onChange={e => setState(s => ({ ...s, max: parseInt(e.target.value) || 0 }))} style={{ width: 32, textAlign: 'center', background: 'rgba(0,0,0,0.2)', border: `1px solid ${COLORS.border}`, borderRadius: 3, color: COLORS.dim, fontFamily: "'Cinzel',serif", fontSize: 10, outline: 'none', padding: '2px 0' }} />
-            <button onClick={() => setState(s => ({ ...s, current: Math.min(s.max ?? 999, (s.current ?? 0) + 1) }))} style={{ width: 18, height: 18, borderRadius: 3, background: 'rgba(121,245,167,0.1)', border: '1px solid rgba(121,245,167,0.35)', color: '#79f5a7', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+          <div style={{ fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 700, color }}>
+            {current} <span style={{ fontSize: 9, color: COLORS.dim }}>/ {max}</span>
           </div>
         </div>
-        <div style={{ height: 3, background: `${color}22`, borderRadius: 2, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 2, transition: 'width 0.2s ease' }} />
+        <div style={{ height: 4, background: `${color}22`, borderRadius: 2, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 2 }} />
         </div>
       </div>
     );
@@ -137,20 +108,16 @@ function PlayerVitalsPanel({ row, char, sessionId, onClose }) {
 
   return (
     <div style={{ background: 'rgba(20,14,10,0.95)', border: '1px solid rgba(224,90,90,0.3)', borderRadius: 8, padding: '10px 12px', marginTop: 4 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <div style={{ fontFamily: "'Cinzel',serif", fontSize: 10, color: COLORS.text }}>{row.character_name} — Health</div>
         <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 3, padding: '1px 5px', cursor: 'pointer', fontSize: 9, color: COLORS.dim }}>✕</button>
       </div>
-      <Tracker label="Vitals" color="#e05a5a" state={vitals} setState={setVitals} />
-      <Tracker label="Stamina" color="#e08a5a" state={stamina} setState={setStamina} />
-      <Tracker label="Resolve" color="#79f5a7" state={resolve} setState={setResolve} />
-      {isOwn ? (
-        <button onClick={submitVitalsRequest} disabled={submitting} style={{ width: '100%', marginTop: 8, background: submitted ? 'rgba(121,245,167,0.1)' : 'rgba(200,168,74,0.12)', border: `1px solid ${submitted ? 'rgba(121,245,167,0.4)' : 'rgba(200,168,74,0.4)'}`, borderRadius: 6, padding: '7px', cursor: submitting ? 'default' : 'pointer', fontFamily: "'Cinzel',serif", fontSize: 8, color: submitted ? '#79f5a7' : '#e8c84a', letterSpacing: '0.08em' }}>
-          {submitted ? '✓ Request Sent' : submitting ? 'Submitting…' : 'Request Vitals Update'}
-        </button>
-      ) : (
-        <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: 'Georgia,serif', fontStyle: 'italic', marginTop: 6 }}>View only — not your character.</div>
-      )}
+      <Bar label="Vitals"  color="#e05a5a" current={vitals.current}  max={vitals.max} />
+      <Bar label="Stamina" color="#e08a5a" current={stamina.current} max={stamina.max} />
+      <Bar label="Resolve" color="#79f5a7" current={resolve.current} max={resolve.max} />
+      <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: 'Georgia,serif', fontStyle: 'italic', marginTop: 4 }}>
+        The Architect manages your health pool.
+      </div>
     </div>
   );
 }
@@ -334,7 +301,7 @@ export default function HerculesPlayer({ campaignId, char }) {
                 </div>
                 {vitalsOpen === row.id && (
                   <div style={{ padding: '0 12px 8px' }}>
-                    <PlayerVitalsPanel row={row} char={char} sessionId={session?.id} onClose={() => setVitalsOpen(null)} />
+                    <PlayerVitalsPanel row={row} onClose={() => setVitalsOpen(null)} />
                   </div>
                 )}
               </div>

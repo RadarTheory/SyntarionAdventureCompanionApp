@@ -1070,6 +1070,893 @@ export const CLASSES = {
   ],
 };
 
+// ─── ABILITY TREE ─────────────────────────────────────────────────────────────
+// Key schema: rowId|nodeId|abilityName  e.g. "soul|paladin|Oathbrand"
+// lean: -0.25 = magic nudge, +0.25 = tech nudge, -0.5/-0.5 = elite nudge
+// Nodes on left of stat box = magic (green), right = tech (blue)
+
+export const ABILITY_TREE = {
+
+  // ─── SOUL ROW ───────────────────────────────────────────────────────────────
+  // Starter: Inquisitor | Elite: Iridesce (magic) / Sleuth (tech)
+  soul: {
+    id: 'soul', label: 'Soul', sublabel: 'Sanctus',
+    starter: 'Inquisitor',
+    starterAbilities: [
+      { n: 'Soul Sense',         d: 'Detects presence, alignment, or disturbance in nearby beings or divine objects.' },
+      { n: 'Resonant Touch',     d: 'Can interrupt casting, expose illusions, or mark a target.' },
+      { n: 'Faith Enforcement',  d: 'Imposes will of divine authority.' },
+      { n: 'Edict of Silence',   d: 'Prevents casting, invocation, or certain actions temporarily.' },
+    ],
+    magic: {
+      elite: 'Iridesce',
+      nodes: [
+        {
+          id: 'cleric', name: 'Cleric', cost: 1, lean: -0.25,
+          abilities: [
+            { n: 'Benediction',   d: 'Restores vitality or stabilizes a target, preventing further degradation.' },
+            { n: 'Consecration',  d: 'Sanctifies an area, strengthening allies and weakening hostile forces within it.' },
+            { n: 'Warding Light', d: 'Creates a protective barrier that absorbs or deflects incoming effects.' },
+            { n: 'Communion',     d: 'Channels sustained divine presence, amplifying allies and restoring over time.' },
+          ],
+        },
+        {
+          id: 'devout', name: 'Devout', cost: 1, lean: -0.25,
+          abilities: [
+            { n: 'Fervent Strike',   d: 'Placeholder — fill in ability description.' },
+            { n: 'Sacred Endurance', d: 'Placeholder — fill in ability description.' },
+            { n: "Martyr's Will",    d: 'Placeholder — fill in ability description.' },
+            { n: 'Oath of Binding',  d: 'Placeholder — fill in ability description.' },
+          ],
+        },
+        {
+          id: 'paladin', name: 'Paladin', cost: 2, lean: -0.25,
+          abilities: [
+            { n: 'Oathbrand',      d: 'Marks a target or self with a binding oath, enhancing damage or resistance based on adherence.' },
+            { n: 'Radiant Strike', d: 'Empowers weapon attacks with sanctified force, dealing additional radiant impact.' },
+            { n: 'Aegis March',    d: 'Advances with a protective field, reducing incoming damage for self and nearby allies.' },
+            { n: 'Judgment Arc',   d: 'Releases stored conviction in a sweeping burst, striking multiple marked or nearby enemies.' },
+          ],
+        },
+        {
+          id: 'augur', name: 'Augur', cost: 2, lean: -0.25,
+          abilities: [
+            { n: 'Omen Sight',         d: 'Reveals immediate future outcomes or hidden intent in a target or area.' },
+            { n: 'Thread Reading',     d: 'Identifies the most likely path of action or consequence in a situation.' },
+            { n: 'Forewarning',        d: 'Grants allies brief precognitive reactions, improving evasion or defense.' },
+            { n: 'Prophetic Collapse', d: 'Forces a predicted outcome onto a target, overriding their next action.' },
+          ],
+        },
+      ],
+      eliteNode: {
+        id: 'iridesce', name: 'Iridesce', cost: 4, lean: -0.5,
+        abilities: [
+          { n: 'Prismatic Veil',   d: 'Surrounds the caster in shifting light, distorting perception and reducing incoming effects.' },
+          { n: 'Spectrum Lance',   d: 'Projects a focused beam of refracted energy with variable effects based on alignment or state.' },
+          { n: 'Chromatic Divide', d: 'Splits an area into bands of influence, altering movement, damage, or perception across zones.' },
+          { n: 'Rite of Iridesce', d: 'Unleashes a multi-spectrum burst that adapts its effect to each affected target.' },
+        ],
+      },
+    },
+    tech: {
+      elite: 'Sleuth',
+      nodes: [
+        {
+          id: 'inspector', name: 'Inspector', cost: 1, lean: 0.25,
+          abilities: [
+            { n: "Inspector's Scope", d: 'A crafted lens that reveals scratches, residues, hidden seams, forged marks, and tampered objects.' },
+            { n: 'Evidence Kit',      d: 'A case of powders, vials, wax, thread, and tags used to preserve traces for later analysis.' },
+            { n: 'Scene Grid',        d: 'A deployable cord-and-marker layout used to reconstruct movement, angle, timing, and position.' },
+            { n: 'Trace Canister',    d: 'A sealed container for carrying evidence without contamination.' },
+          ],
+        },
+        {
+          id: 'strider', name: 'Strider', cost: 1, lean: 0.25,
+          abilities: [
+            { n: 'Phantom Cloak',      d: 'A high-grade stealth cloak that breaks outline, muffles movement, and resists detection.' },
+            { n: 'Roofrunner Rig',     d: 'A harness, hooks, reels, and grips system for rapid vertical movement.' },
+            { n: 'Shadow Cache',       d: 'A hidden stash network placed across routes, safehouses, rooftops, or wilderness paths.' },
+            { n: "Strider's Pathkit",  d: 'A complete infiltration kit for bypassing walls, locks, patrols, terrain, and pursuit.' },
+          ],
+        },
+        {
+          id: 'detective', name: 'Detective', cost: 2, lean: 0.25,
+          abilities: [
+            { n: 'Caseboard',          d: 'A portable or installed board that links suspects, motives, routes, objects, and contradictions.' },
+            { n: 'Autopsy Roll',       d: 'A specialized tool wrap for examining wounds, cause of death, poison, disease, or unnatural damage.' },
+            { n: 'Interrogation Lamp', d: 'A focused lamp-and-seat apparatus used to pressure testimony and expose inconsistencies.' },
+            { n: 'Chain of Evidence',  d: 'A sealed documentation system that makes gathered proof difficult to dismiss, alter, or destroy.' },
+          ],
+        },
+        {
+          id: 'ranger', name: 'Ranger', cost: 2, lean: 0.25,
+          abilities: [
+            { n: 'Trail Markers',    d: 'Subtle placed signs that guide allies, confuse pursuers, or mark danger.' },
+            { n: 'Camouflage Cloak', d: 'A crafted cloak adapted to terrain, light, foliage, dust, or stone.' },
+            { n: 'Snare Kit',        d: 'A carried set of wire, stakes, hooks, and triggers for catching, slowing, or warning.' },
+            { n: "Ranger's Cache",   d: 'A hidden supply bundle prepared for later recovery in hostile or remote terrain.' },
+          ],
+        },
+      ],
+      eliteNode: {
+        id: 'sleuth', name: 'Sleuth', cost: 4, lean: 0.5,
+        abilities: [
+          { n: 'Sleuth I',   d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Sleuth II',  d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Sleuth III', d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Sleuth IV',  d: 'Placeholder — fill in elite ability description.' },
+        ],
+      },
+    },
+  },
+
+  // ─── SPIRIT ROW ─────────────────────────────────────────────────────────────
+  // Starter: Zealot | Magic Elite: Caelyn | Tech Elite: Baron
+  spirit: {
+    id: 'spirit', label: 'Spirit', sublabel: 'Sacral',
+    starter: 'Zealot',
+    starterAbilities: [
+      { n: 'Ignition',     d: 'Enters a fervent state, increasing physical output and resistance at the cost of control.' },
+      { n: 'Rite of Fury', d: 'Empowers the next actions with overwhelming force, breaking through defenses or resistance.' },
+      { n: 'Vey Breach',   d: 'Tears open the boundary briefly, allowing spirit energy to surge into the physical space.' },
+      { n: 'Possession',   d: 'Invites a volatile spirit into the body, granting power with unpredictable side effects.' },
+    ],
+    magic: {
+      elite: 'Caelyn',
+      nodes: [
+        {
+          id: 'monk', name: 'Monk', cost: 1, lean: -0.25,
+          abilities: [
+            { n: 'Focused Strike',  d: 'Placeholder — fill in ability description.' },
+            { n: 'Iron Discipline', d: 'Placeholder — fill in ability description.' },
+            { n: 'Breath Control',  d: 'Placeholder — fill in ability description.' },
+            { n: 'Center Hold',     d: 'Placeholder — fill in ability description.' },
+          ],
+        },
+        {
+          id: 'cursewright', name: 'Cursewright', cost: 1, lean: -0.25,
+          abilities: [
+            { n: 'Hex Brand',      d: 'Placeholder — fill in ability description.' },
+            { n: 'Curse Weaving',  d: 'Placeholder — fill in ability description.' },
+            { n: 'Blight Touch',   d: 'Placeholder — fill in ability description.' },
+            { n: 'Malison Script', d: 'Placeholder — fill in ability description.' },
+          ],
+        },
+        {
+          id: 'shaman', name: 'Shaman', cost: 2, lean: -0.25,
+          abilities: [
+            { n: 'Totem',              d: 'Anchors a spirit to a location, granting persistent environmental effects.' },
+            { n: 'Spirit Bargain',     d: 'Negotiates with a local spirit for a temporary boon or service.' },
+            { n: 'Walk Between',       d: 'Phases partially into Mhattha, the spiritual plane, to reposition or avoid harm.' },
+            { n: 'Primal Convergence', d: 'Calls multiple spirits into a controlled alignment for a large-scale effect.' },
+          ],
+        },
+        {
+          id: 'bokor', name: 'Bokor', cost: 2, lean: -0.25,
+          abilities: [
+            { n: 'Hex Drawing',       d: "Applies a precise curse that alters a target's capabilities or outcomes." },
+            { n: 'Vessel Link',       d: 'Binds a target to an object or effigy, transferring effects between them.' },
+            { n: 'Grave Work',        d: 'Manipulates remains or lingering essence to produce obedient constructs.' },
+            { n: 'Malison Sovereign', d: 'Unleashes a perfected curse that compounds and persists beyond normal limits.' },
+          ],
+        },
+      ],
+      eliteNode: {
+        id: 'caelyn', name: 'Caelyn', cost: 4, lean: -0.5,
+        abilities: [
+          { n: 'Thread Sight',   d: 'Perceives underlying spiritual connections between entities.' },
+          { n: 'Weave Step',     d: 'Moves along unseen connections, repositioning through linked points.' },
+          { n: 'Pattern Hold',   d: 'Locks a state or condition in place, preventing change for a duration.' },
+          { n: 'Weave Collapse', d: 'Forces all active connections to resolve simultaneously.' },
+        ],
+      },
+    },
+    tech: {
+      elite: 'Baron',
+      nodes: [
+        {
+          id: 'emissary', name: 'Emissary', cost: 1, lean: 0.25,
+          abilities: [
+            { n: 'Contract Press',    d: 'A device that imprints binding terms onto documents or participants.' },
+            { n: 'Credit Ledger',     d: 'A carried or installed account system that extends value and tracks debt.' },
+            { n: 'Safe Conduct Pass', d: 'A forged or issued token granting protected movement and limited immunity.' },
+            { n: 'Supply Array',      d: 'A routed network of crates, routes, or depots that controls resource flow.' },
+          ],
+        },
+        {
+          id: 'negotiator', name: 'Negotiator', cost: 1, lean: 0.25,
+          abilities: [
+            { n: 'Terms Charter',    d: 'A document or device that defines allowed actions within its scope.' },
+            { n: 'Binding Contract', d: 'A sealed agreement that enforces compliance and punishes violation.' },
+            { n: 'Breach Trigger',   d: 'A prepared clause or device that activates when conditions are broken.' },
+            { n: 'Grand Accord',     d: 'A master treaty construct that binds multiple factions under shared constraints.' },
+          ],
+        },
+        {
+          id: 'tycoon', name: 'Tycoon', cost: 2, lean: 0.25,
+          abilities: [
+            { n: 'Monopoly Registry',  d: 'A central record system that grants exclusive control over resources or services.' },
+            { n: 'Capital Engine',     d: 'A built mechanism that converts stored wealth into defense or mitigation.' },
+            { n: 'Market Halt Switch', d: 'A control device that freezes trade and exchange within its network.' },
+            { n: 'Trade Dominion Hub', d: 'A central node that governs regional exchange, taxation, and access.' },
+          ],
+        },
+        {
+          id: 'viceroy', name: 'Viceroy', cost: 2, lean: 0.25,
+          abilities: [
+            { n: 'Viceroy I',   d: 'Placeholder — fill in ability description.' },
+            { n: 'Viceroy II',  d: 'Placeholder — fill in ability description.' },
+            { n: 'Viceroy III', d: 'Placeholder — fill in ability description.' },
+            { n: 'Viceroy IV',  d: 'Placeholder — fill in ability description.' },
+          ],
+        },
+      ],
+      eliteNode: {
+        id: 'baron', name: 'Baron', cost: 4, lean: 0.5,
+        abilities: [
+          { n: 'Baron I',   d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Baron II',  d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Baron III', d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Baron IV',  d: 'Placeholder — fill in elite ability description.' },
+        ],
+      },
+    },
+  },
+
+  // ─── MIND ROW ───────────────────────────────────────────────────────────────
+  // Starter: Weaver | Magic Elite: Archon | Tech Elite: Laureate
+  mind: {
+    id: 'mind', label: 'Mind', sublabel: 'Mana',
+    starter: 'Weaver',
+    starterAbilities: [
+      { n: 'Arcane Sense',      d: 'Detects magical presence, active spells, and arcane disturbances.' },
+      { n: 'Cantrip Mastery',   d: 'Improves efficiency and potency of basic spells, allowing repeated low-cost casting.' },
+      { n: 'Spell Threading',   d: 'Refines casting structure, reducing miscasts and stabilizing complex spells.' },
+      { n: 'Spell Preparation', d: 'Prepares structured spells in advance for faster, more reliable casting.' },
+    ],
+    magic: {
+      elite: 'Archon',
+      nodes: [
+        {
+          id: 'warlock', name: 'Warlock', cost: 1, lean: -0.25,
+          abilities: [
+            { n: 'Pact Seal',      d: 'Placeholder — fill in ability description.' },
+            { n: 'Eldritch Blast', d: 'Placeholder — fill in ability description.' },
+            { n: 'Dark Patron',    d: 'Placeholder — fill in ability description.' },
+            { n: 'Void Sight',     d: 'Placeholder — fill in ability description.' },
+          ],
+        },
+        {
+          id: 'magus', name: 'Magus', cost: 1, lean: -0.25,
+          abilities: [
+            { n: 'Enchant Weapon',    d: 'Infuses a weapon with arcane energy for enhanced strikes.' },
+            { n: 'Spellstrike',       d: 'Delivers a spell through a physical attack.' },
+            { n: 'Arcane Deflection', d: 'Reduces or redirects incoming magical damage.' },
+            { n: 'Mana Surge',        d: 'Temporarily increases spell output at the cost of stability.' },
+          ],
+        },
+        {
+          id: 'castor', name: 'Castor', cost: 2, lean: -0.25,
+          abilities: [
+            { n: 'Castor I',   d: 'Placeholder — fill in ability description.' },
+            { n: 'Castor II',  d: 'Placeholder — fill in ability description.' },
+            { n: 'Castor III', d: 'Placeholder — fill in ability description.' },
+            { n: 'Castor IV',  d: 'Placeholder — fill in ability description.' },
+          ],
+        },
+        {
+          id: 'wizard', name: 'Wizard', cost: 2, lean: -0.25,
+          abilities: [
+            { n: 'Grimoire Binding', d: 'Stores and organizes spells within a spellbook, expanding accessible repertoire.' },
+            { n: 'Ritual Casting',   d: 'Performs extended casts that produce powerful, sustained, or large-scale effects.' },
+            { n: 'Counterspell',     d: 'Interrupts or negates incoming magical effects.' },
+            { n: 'Arcane Reserve',   d: 'Maintains a pool of stored mana for rapid or repeated casting.' },
+          ],
+        },
+      ],
+      eliteNode: {
+        id: 'archon', name: 'Archon', cost: 4, lean: -0.5,
+        abilities: [
+          { n: 'Archon I',   d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Archon II',  d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Archon III', d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Archon IV',  d: 'Placeholder — fill in elite ability description.' },
+        ],
+      },
+    },
+    tech: {
+      elite: 'Laureate',
+      nodes: [
+        {
+          id: 'tactician', name: 'Tactician', cost: 1, lean: 0.25,
+          abilities: [
+            { n: 'Battle Map',          d: 'A prepared tactical board that marks enemy movement, ally placement, cover, routes, and attack lanes.' },
+            { n: 'Foresight Maneuver',  d: 'A written combat sequence that can be revealed later to alter positioning, timing, or defensive response.' },
+            { n: 'Formation Guide',     d: 'A drilled instruction set that strengthens allies when they hold formation or follow assigned roles.' },
+            { n: 'Counterplan Dossier', d: 'A prepared file on enemy habits, weaknesses, routes, and likely tactics.' },
+          ],
+        },
+        {
+          id: 'cartographer', name: 'Cartographer', cost: 1, lean: 0.25,
+          abilities: [
+            { n: 'Wayfinder Map',    d: 'A crafted map that improves navigation and reveals safe routes, hazards, and hidden passages.' },
+            { n: 'Terrain Plate',    d: 'A portable relief model of nearby land, structures, or ruins used to plan movement and avoid traps.' },
+            { n: 'Survey Compass',   d: 'A calibrated compass that locates landmarks, ruins, relic traces, mineral deposits, or route anomalies.' },
+            { n: 'Expedition Cache', d: 'A prepared supply store hidden or carried for later retrieval in the field.' },
+          ],
+        },
+        {
+          id: 'strategist', name: 'Strategist', cost: 2, lean: 0.25,
+          abilities: [
+            { n: 'War Table',        d: 'A command installation that coordinates allies, formations, routes, reserves, and battlefield priorities.' },
+            { n: 'Campaign Dossier', d: 'A master file that tracks roster resources and faction movements.' },
+            { n: 'Command Standard', d: 'A planted signal banner that organizes allied movement and prevents panic or disorder.' },
+            { n: 'Grand Stratagem',  d: 'A complete operational plan that changes the conditions of an encounter, siege, pursuit, or negotiation.' },
+          ],
+        },
+        {
+          id: 'archivist', name: 'Archivist', cost: 2, lean: 0.25,
+          abilities: [
+            { n: 'Reliquary',          d: 'A secured storage system for artifacts, rare texts, schematics, maps, and historical devices.' },
+            { n: 'Master Catalogue',   d: 'A comprehensive index that cross-references relics, regions, factions, languages, and known threats.' },
+            { n: 'Translation Engine', d: 'A built decoding apparatus that converts lost scripts, symbolic systems, and ciphered records.' },
+            { n: 'Archival Seal',      d: 'A protective mark or casing that preserves fragile knowledge and prevents tampering, decay, or theft.' },
+          ],
+        },
+      ],
+      eliteNode: {
+        id: 'laureate', name: 'Laureate', cost: 4, lean: 0.5,
+        abilities: [
+          { n: 'Laureate I',   d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Laureate II',  d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Laureate III', d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Laureate IV',  d: 'Placeholder — fill in elite ability description.' },
+        ],
+      },
+    },
+  },
+
+  // ─── BODY ROW ───────────────────────────────────────────────────────────────
+  // Starter: Druid | Magic Elite: Dyreon | Tech Elite: Gallant
+  body: {
+    id: 'body', label: 'Body', sublabel: 'Essence',
+    starter: 'Druid',
+    starterAbilities: [
+      { n: 'Wildcall',         d: 'Calls upon nearby natural forces, beasts, plants, or terrain to respond with minor aid.' },
+      { n: 'Essence Breath',   d: 'Channels living essence through breath, restoring vitality or releasing natural force.' },
+      { n: 'Rootbind',         d: 'Restrains a target through roots, vines, thorns, or terrain growth.' },
+      { n: 'Feral Attunement', d: 'Temporarily heightens senses, movement, and instinct through communion with wild essence.' },
+    ],
+    magic: {
+      elite: 'Dyreon',
+      nodes: [
+        {
+          id: 'wild', name: 'Wild', cost: 1, lean: -0.25,
+          abilities: [
+            { n: 'Beast Surge', d: 'Channels animal ferocity into speed, strength, or predatory instinct.' },
+            { n: 'Clawform',    d: 'Partially reshapes the body with natural weapons or beast traits.' },
+            { n: 'Packcall',    d: 'Summons or rallies nearby beasts to assist, distract, or attack.' },
+            { n: 'Apex Roar',   d: 'Unleashes primal dominance, frightening enemies and empowering allies.' },
+          ],
+        },
+        {
+          id: 'fetch', name: 'Fetch', cost: 1, lean: -0.25,
+          abilities: [
+            { n: 'Fetch I',   d: 'Placeholder — fill in ability description.' },
+            { n: 'Fetch II',  d: 'Placeholder — fill in ability description.' },
+            { n: 'Fetch III', d: 'Placeholder — fill in ability description.' },
+            { n: 'Fetch IV',  d: 'Placeholder — fill in ability description.' },
+          ],
+        },
+        {
+          id: 'ovate', name: 'Ovate', cost: 2, lean: -0.25,
+          abilities: [
+            { n: 'Grove Rite',      d: 'Establishes a sacred natural area that restores allies and weakens unnatural intrusion.' },
+            { n: 'Verdant Reading', d: 'Interprets signs in plants, weather, soil, and animal behavior.' },
+            { n: 'Life Sap',        d: 'Draws vitality from the environment to heal, sustain, or empower.' },
+            { n: 'Green Communion', d: "Communes deeply with a location's living memory, revealing what the land has witnessed." },
+          ],
+        },
+        {
+          id: 'primalist', name: 'Primalist', cost: 2, lean: -0.25,
+          abilities: [
+            { n: 'Predator Form',   d: 'Assumes a powerful bestial state with enhanced movement, senses, and attacks.' },
+            { n: 'Blood Scent',     d: 'Tracks wounded or marked enemies with supernatural precision.' },
+            { n: 'Savage Pounce',   d: 'Closes distance violently and strikes with overwhelming momentum.' },
+            { n: 'Alpha Ascendant', d: 'Embodies apex instinct, overpowering weaker foes and driving allies into coordinated ferocity.' },
+          ],
+        },
+      ],
+      eliteNode: {
+        id: 'dyreon', name: 'Dyreon', cost: 4, lean: -0.5,
+        abilities: [
+          { n: 'Dyreon I',   d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Dyreon II',  d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Dyreon III', d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Dyreon IV',  d: 'Placeholder — fill in elite ability description.' },
+        ],
+      },
+    },
+    tech: {
+      elite: 'Gallant',
+      nodes: [
+        {
+          id: 'barbarian', name: 'Barbarian', cost: 1, lean: 0.25,
+          abilities: [
+            { n: 'Rage Conduit',   d: 'A forged focus that converts damage taken into increased physical output.' },
+            { n: 'Blood Reserve',  d: 'A storage system that delays or redistributes incoming damage over time.' },
+            { n: 'War Totem',      d: 'A carried object that amplifies aggression and resilience under pressure.' },
+            { n: 'Charge Harness', d: 'A reinforced rig that increases force during forward momentum.' },
+          ],
+        },
+        {
+          id: 'swashbuckler', name: 'Swashbuckler', cost: 1, lean: 0.25,
+          abilities: [
+            { n: 'Duelist Frame',     d: 'A lightweight rig that enhances speed, precision, and recovery between actions.' },
+            { n: 'Riposte Mechanism', d: 'A reactive tool that converts successful defense into immediate counterattack.' },
+            { n: 'Mobility Boots',    d: 'Engineered footwear that enables rapid repositioning and escape.' },
+            { n: 'Feint Device',      d: 'A misdirection tool that disrupts targeting and timing.' },
+          ],
+        },
+        {
+          id: 'knight', name: 'Knight', cost: 2, lean: 0.25,
+          abilities: [
+            { n: 'Fortress Core',     d: 'A central armor system that massively increases durability and stability.' },
+            { n: 'War Banner',        d: 'A plantable standard that reinforces allied endurance and resolve.' },
+            { n: 'Shield Wall Array', d: 'A deployable formation system that strengthens group defense.' },
+            { n: 'Last Stand Core',   d: 'An emergency system that sustains operation past normal failure thresholds.' },
+          ],
+        },
+        {
+          id: 'marauder', name: 'Marauder', cost: 2, lean: 0.25,
+          abilities: [
+            { n: 'Boarding Harness', d: 'A combat rig built for climbing, swinging, bracing, and fighting across ships, docks, and unstable ground.' },
+            { n: 'Breaching Hooks',  d: 'Heavy hooks and chained tools used to board vessels, tear barriers open, or drag enemies out of position.' },
+            { n: 'Cutlass Frame',    d: 'A reinforced weapon assembly built for close-quarters slashing, parrying, and rapid follow-through.' },
+            { n: 'Blackflag Cache',  d: 'A hidden or portable store of weapons, smoke, powder, rope, and emergency supplies for raids or escapes.' },
+          ],
+        },
+      ],
+      eliteNode: {
+        id: 'gallant', name: 'Gallant', cost: 4, lean: 0.5,
+        abilities: [
+          { n: 'Gallant I',   d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Gallant II',  d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Gallant III', d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Gallant IV',  d: 'Placeholder — fill in elite ability description.' },
+        ],
+      },
+    },
+  },
+
+  // ─── WILL ROW ───────────────────────────────────────────────────────────────
+  // Starter: Sage | Magic Elite: Makemark | Tech Elite: Whyth
+  will: {
+    id: 'will', label: 'Will', sublabel: 'Gnosis',
+    starter: 'Sage',
+    starterAbilities: [
+      { n: 'Runic Literacy',  d: 'Reads, identifies, and safely interprets basic runes, glyphs, and written magical structures.' },
+      { n: 'Rune Attunement', d: "Aligns with a rune's intent, allowing it to be activated, stabilized, or resisted." },
+      { n: 'Glyph Marking',   d: 'Places a simple glyph on a surface, object, or threshold to trigger a defined effect.' },
+      { n: 'Script Recall',   d: 'Retrieves memorized runic forms quickly, allowing faster inscription or interpretation.' },
+    ],
+    magic: {
+      elite: 'Makemark',
+      nodes: [
+        {
+          id: 'runesiph', name: 'Runesiph', cost: 1, lean: -0.25,
+          abilities: [
+            { n: 'Siphon Mark',      d: 'Places a rune that drains magical energy from a target or object.' },
+            { n: 'Break Script',     d: 'Disrupts active runes, seals, wards, or inscriptions.' },
+            { n: 'Draining Array',   d: 'Creates a field that absorbs power from spells cast within it.' },
+            { n: 'Final Extraction', d: 'Consumes stored rune energy for a decisive burst, restoration, or shutdown.' },
+          ],
+        },
+        {
+          id: 'glyphsage', name: 'Glyphsage', cost: 1, lean: -0.25,
+          abilities: [
+            { n: 'Glyph Theory',      d: 'Understands advanced symbolic structures, improving all rune-based casting.' },
+            { n: 'Symbol Dominion',   d: 'Rewrites active glyph behavior within range.' },
+            { n: 'Recursive Array',   d: 'Creates linked glyphs that repeat or chain effects.' },
+            { n: 'Archive Awakening', d: 'Animates a codex, tablet, or written archive into an active magical instrument.' },
+          ],
+        },
+        {
+          id: 'scribe', name: 'Scribe', cost: 2, lean: -0.25,
+          abilities: [
+            { n: 'Inscribe Ward',  d: 'Writes a protective rune onto a surface, object, or creature.' },
+            { n: 'Sealing Script', d: 'Locks, suppresses, or contains a magical effect through formal inscription.' },
+            { n: 'Transfer Glyph', d: 'Moves a stored rune effect from one surface or object to another.' },
+            { n: 'Trigger Seal',   d: 'Creates a delayed rune that activates when its condition is met.' },
+          ],
+        },
+        {
+          id: 'codexer', name: 'Codexer', cost: 2, lean: -0.25,
+          abilities: [
+            { n: 'Formula Script',  d: 'Combines written symbols into structured effects with predictable outcomes.' },
+            { n: 'Lexicon Binding', d: 'Links a spell effect to a word, phrase, or written command.' },
+            { n: 'Codex Interdict', d: 'Uses written authority to interrupt, restrict, or invalidate a magical effect.' },
+            { n: 'Living Codex',    d: 'Maintains an active written record that updates as new symbols are encountered.' },
+          ],
+        },
+      ],
+      eliteNode: {
+        id: 'makemark', name: 'Makemark', cost: 4, lean: -0.5,
+        abilities: [
+          { n: 'Makemark I',   d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Makemark II',  d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Makemark III', d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Makemark IV',  d: 'Placeholder — fill in elite ability description.' },
+        ],
+      },
+    },
+    tech: {
+      elite: 'Whyth',
+      nodes: [
+        {
+          id: 'sentine', name: 'Sentine', cost: 1, lean: 0.25,
+          abilities: [
+            { n: 'Sentine Bulwark', d: 'A reinforced armor scaffold that expands protection to nearby allies.' },
+            { n: 'Null Standard',   d: 'A planted field banner that suppresses hostile spell strength within its radius.' },
+            { n: 'Grounding Grid',  d: 'A deployed network of rods and wire that prevents teleportation, summoning, and spectral passage.' },
+            { n: 'Bulwark Relay',   d: "A linked armor node that redirects magical impact from allies into the Sentine's defenses." },
+          ],
+        },
+        {
+          id: 'null', name: 'Null', cost: 1, lean: 0.25,
+          abilities: [
+            { n: 'Ritecore Socket',    d: 'A spinal interface housing that prepares the body for deeper severance and Whythryn integration.' },
+            { n: 'Silence Gauntlet',   d: 'A heavy gauntlet that interrupts spellcasting, focus use, and touch-based magic.' },
+            { n: 'Null Brands',        d: 'Forged body-marks or embedded plates that reduce attunement to magic, spirits, and divine influence.' },
+            { n: 'Cogmail Harness',    d: 'A partial Whythryn armor rig that strengthens the body while suppressing magical dependency.' },
+          ],
+        },
+        {
+          id: 'stalwart', name: 'Stalwart', cost: 2, lean: 0.25,
+          abilities: [
+            { n: 'Stalwart I',   d: 'Placeholder — fill in ability description.' },
+            { n: 'Stalwart II',  d: 'Placeholder — fill in ability description.' },
+            { n: 'Stalwart III', d: 'Placeholder — fill in ability description.' },
+            { n: 'Stalwart IV',  d: 'Placeholder — fill in ability description.' },
+          ],
+        },
+        {
+          id: 'warden', name: 'Warden', cost: 2, lean: 0.25,
+          abilities: [
+            { n: 'Warden Plate',      d: 'A full defensive armor system that protects the wearer and stabilizes allies against magical force.' },
+            { n: 'Spellbreak Pylon',  d: 'A deployable tower that disrupts sustained spell effects within its field.' },
+            { n: 'Anchor Circle',     d: 'A constructed perimeter that prevents magical entry, exit, summoning, and planar interference.' },
+            { n: 'Groundlaw Bastion', d: 'A fortified anti-magic installation that imposes material rules over a defended zone.' },
+          ],
+        },
+      ],
+      eliteNode: {
+        id: 'whyth', name: 'Whyth', cost: 4, lean: 0.5,
+        abilities: [
+          { n: 'Ritecore Plug',      d: 'A permanent spinal implant created through the Rite of Binding, severing spiritual and magical connection.' },
+          { n: 'Whythryn Cogmail',   d: 'A full armor system that makes the wearer highly resistant to magical, divine, and spiritual effects.' },
+          { n: 'Whythryn Cudgel',    d: 'A transforming weapon built to break enchanted armor, spell barriers, and resonance-bound constructs.' },
+          { n: 'Grimroot Grounding', d: 'A final grounding apparatus that roots the Whyth fully in the material world, suppressing magic through presence.' },
+        ],
+      },
+    },
+  },
+
+  // ─── WHIM ROW ───────────────────────────────────────────────────────────────
+  // Starter: Mystic | Magic Elite: Arcani | Tech Elite: Engineer
+  whim: {
+    id: 'whim', label: 'Whim', sublabel: 'Shaeid',
+    starter: 'Mystic',
+    starterAbilities: [
+      { n: 'Light Sense',   d: 'Perceives underlying currents of power, soul presence, and unseen disturbances.' },
+      { n: 'Trance',        d: 'Enters a focused internal state, heightening awareness, resistance, and spiritual clarity.' },
+      { n: 'Inner Conduit', d: 'Channels power through the self rather than an external source, stabilizing output.' },
+      { n: 'Echo Release',  d: 'Unleashes stored mythic resonance in a controlled burst.' },
+    ],
+    magic: {
+      elite: 'Arcani',
+      nodes: [
+        {
+          id: 'dryad', name: 'Dryad', cost: 1, lean: -0.25,
+          abilities: [
+            { n: 'Living Bark',    d: 'Transforms skin or body into living wood, gaining protection and regeneration.' },
+            { n: 'Thorncrown',     d: 'Surrounds the caster with a blooming crown of thorns that wounds attackers and empowers nature spells.' },
+            { n: 'Root Sanctum',   d: 'Creates a sanctuary bound to the land, healing allies and resisting corruption.' },
+            { n: 'Verdant Avatar', d: 'Becomes an embodiment of the grove, commanding growth, healing, and terrain.' },
+          ],
+        },
+        {
+          id: 'guardian', name: 'Guardian', cost: 1, lean: -0.25,
+          abilities: [
+            { n: 'Warden Bastion', d: 'Projects a protective aura that absorbs or redirects harm.' },
+            { n: 'Anchor',         d: 'Prevents displacement, possession, or forced movement.' },
+            { n: 'Intercept',      d: 'Redirects an incoming effect from an ally to self.' },
+            { n: 'Last Vigil',     d: 'Remains active after defeat for a short duration, continuing to defend.' },
+          ],
+        },
+      ],
+      eliteNode: {
+        id: 'arcani', name: 'Arcani', cost: 4, lean: -0.5,
+        abilities: [
+          { n: 'Ichor',          d: 'Completes the soul-binding trial, awakening the Shaeid Light into its true mythic form.' },
+          { n: 'Heart-Fae Form', d: 'Channels emotion through the Shaeid Light, making its form reactive to courage, grief, love, or instinct.' },
+          { n: 'Gatecut',        d: 'Opens a temporary Faetway passage between attuned locations.' },
+          { n: 'Shaeid Arsenal', d: "The weapon becomes an echo of the Arcani's myth, evolving into an eternal light-form bound to the wielder." },
+        ],
+      },
+    },
+    tech: {
+      elite: 'Engineer',
+      nodes: [
+        {
+          id: 'gunsmith', name: 'Gunsmith', cost: 1, lean: 0.25,
+          abilities: [
+            { n: 'Gunsmith I',   d: 'Placeholder — fill in ability description.' },
+            { n: 'Gunsmith II',  d: 'Placeholder — fill in ability description.' },
+            { n: 'Gunsmith III', d: 'Placeholder — fill in ability description.' },
+            { n: 'Gunsmith IV',  d: 'Placeholder — fill in ability description.' },
+          ],
+        },
+        {
+          id: 'tinkerer', name: 'Tinkerer', cost: 1, lean: 0.25,
+          abilities: [
+            { n: 'Clockwork Familiar', d: 'A small constructed assistant used for carrying, repairing, scouting, or manipulating simple objects.' },
+            { n: 'Gearwork Bench',     d: 'A portable workbench that improves crafting, repair, assembly, and schematic modification.' },
+            { n: 'Springloaded Arm',   d: 'A mounted tool-limb used for gripping, lifting, striking, or operating mechanisms at reach.' },
+            { n: 'Automaton Core',     d: 'A crafted control center used to animate, direct, or stabilize constructed machines.' },
+          ],
+        },
+        {
+          id: 'gunslinger', name: 'Gunslinger', cost: 2, lean: 0.25,
+          abilities: [
+            { n: 'Firearm Grit',       d: 'A reinforced firearm assembly built to endure repeated high-pressure shots.' },
+            { n: 'Trickshot Cylinder', d: 'A rotating chamber that stores specialized rounds for cover-breaking, disarming, pinning, or ricochet fire.' },
+            { n: 'Quickdraw Holster',  d: 'A spring-loaded holster designed for rapid draw, reload, and weapon readiness.' },
+            { n: 'Deadeye Scope',      d: 'A precision sight that improves range, target reading, and weak-point accuracy.' },
+          ],
+        },
+        {
+          id: 'machinist', name: 'Machinist', cost: 2, lean: 0.25,
+          abilities: [
+            { n: 'Exosuit Titan',      d: 'A large mechanical suit that increases strength, protection, speed, and built-in weapon capacity.' },
+            { n: 'Veinrunner Command', d: 'A control interface for directing vehicles, engines, constructs, or industrial machines.' },
+            { n: 'Ironwork Drone',     d: 'A durable construct assistant built for labor, defense, repair, and battlefield support.' },
+            { n: 'Masterwork Engine',  d: 'A central power unit that sustains large machines, exosuits, workshops, or linked schematics.' },
+          ],
+        },
+      ],
+      eliteNode: {
+        id: 'engineer', name: 'Engineer', cost: 4, lean: 0.5,
+        abilities: [
+          { n: 'Engineer I',   d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Engineer II',  d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Engineer III', d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Engineer IV',  d: 'Placeholder — fill in elite ability description.' },
+        ],
+      },
+    },
+  },
+
+  // ─── AFFECT ROW ─────────────────────────────────────────────────────────────
+  // Starter: Bard | Magic Elite: Cantor | Tech Elite: Tribune
+  affect: {
+    id: 'affect', label: 'Affect', sublabel: 'Resonance',
+    starter: 'Bard',
+    starterAbilities: [
+      { n: 'Bardic I',   d: 'Placeholder — fill in starter ability description.' },
+      { n: 'Bardic II',  d: 'Placeholder — fill in starter ability description.' },
+      { n: 'Bardic III', d: 'Placeholder — fill in starter ability description.' },
+      { n: 'Bardic IV',  d: 'Placeholder — fill in starter ability description.' },
+    ],
+    magic: {
+      elite: 'Cantor',
+      nodes: [
+        {
+          id: 'rhapsodist', name: 'Rhapsodist', cost: 1, lean: -0.25,
+          abilities: [
+            { n: 'Rhapsodist I',   d: 'Placeholder — fill in ability description.' },
+            { n: 'Rhapsodist II',  d: 'Placeholder — fill in ability description.' },
+            { n: 'Rhapsodist III', d: 'Placeholder — fill in ability description.' },
+            { n: 'Rhapsodist IV',  d: 'Placeholder — fill in ability description.' },
+          ],
+        },
+        {
+          id: 'minstrel', name: 'Minstrel', cost: 1, lean: -0.25,
+          abilities: [
+            { n: 'Minstrel I',   d: 'Placeholder — fill in ability description.' },
+            { n: 'Minstrel II',  d: 'Placeholder — fill in ability description.' },
+            { n: 'Minstrel III', d: 'Placeholder — fill in ability description.' },
+            { n: 'Minstrel IV',  d: 'Placeholder — fill in ability description.' },
+          ],
+        },
+      ],
+      eliteNode: {
+        id: 'cantor', name: 'Cantor', cost: 4, lean: -0.5,
+        abilities: [
+          { n: 'Cantor I',   d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Cantor II',  d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Cantor III', d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Cantor IV',  d: 'Placeholder — fill in elite ability description.' },
+        ],
+      },
+    },
+    tech: {
+      elite: 'Tribune',
+      nodes: [
+        {
+          id: 'herald', name: 'Herald', cost: 1, lean: 0.25,
+          abilities: [
+            { n: 'Herald I',   d: 'Placeholder — fill in ability description.' },
+            { n: 'Herald II',  d: 'Placeholder — fill in ability description.' },
+            { n: 'Herald III', d: 'Placeholder — fill in ability description.' },
+            { n: 'Herald IV',  d: 'Placeholder — fill in ability description.' },
+          ],
+        },
+        {
+          id: 'provocateur', name: 'Provocateur', cost: 1, lean: 0.25,
+          abilities: [
+            { n: 'Provocateur I',   d: 'Placeholder — fill in ability description.' },
+            { n: 'Provocateur II',  d: 'Placeholder — fill in ability description.' },
+            { n: 'Provocateur III', d: 'Placeholder — fill in ability description.' },
+            { n: 'Provocateur IV',  d: 'Placeholder — fill in ability description.' },
+          ],
+        },
+      ],
+      eliteNode: {
+        id: 'tribune', name: 'Tribune', cost: 4, lean: 0.5,
+        abilities: [
+          { n: 'Tribune I',   d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Tribune II',  d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Tribune III', d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Tribune IV',  d: 'Placeholder — fill in elite ability description.' },
+        ],
+      },
+    },
+  },
+
+  // ─── DREAM ROW ──────────────────────────────────────────────────────────────
+  // Starter: Magister | Magic Elite: Eldritch | Tech Elite: Materion
+  dream: {
+    id: 'dream', label: 'Dream', sublabel: 'Umbral',
+    starter: 'Magister',
+    starterAbilities: [
+      { n: 'Echo Harvest',  d: 'Draws residual essence from the recently fallen, storing it for later use.' },
+      { n: 'Grave Speech',  d: 'Communicates with lingering remnants to extract fragments of memory or intent.' },
+      { n: 'Wraith Touch',  d: 'Channels umbral energy through contact, weakening vitality or binding motion.' },
+      { n: 'Shade Veil',    d: 'Shrouds the caster in dim distortion, reducing detection and incoming precision.' },
+    ],
+    magic: {
+      elite: 'Eldritch',
+      nodes: [
+        {
+          id: 'hemoclast', name: 'Hemoclast', cost: 1, lean: -0.25,
+          abilities: [
+            { n: 'Blood Rend',       d: 'Manipulates internal lifeforce to damage or destabilize a target.' },
+            { n: 'Sanguine Channel', d: 'Converts personal vitality into power, enhancing spell output.' },
+            { n: 'Vein Lock',        d: 'Restricts movement or action by seizing internal flow.' },
+            { n: 'Exsanguinate',     d: 'Drains a target rapidly, transferring strength to the caster.' },
+          ],
+        },
+        {
+          id: 'darkweaver', name: 'Darkweaver', cost: 1, lean: -0.25,
+          abilities: [
+            { n: 'Umbral Thread',     d: 'Links targets through shadow, sharing damage or effects.' },
+            { n: 'Night Shroud',      d: 'Creates an area of heavy obscurity and distortion.' },
+            { n: 'Phantom Duplicity', d: 'Generates shifting false forms to confuse and misdirect.' },
+            { n: 'Darkweave',         d: 'Combines all active shadow effects into a single overwhelming manifestation.' },
+          ],
+        },
+        {
+          id: 'harrow', name: 'Harrow', cost: 2, lean: -0.25,
+          abilities: [
+            { n: 'Tether Shade',  d: 'Binds a spirit remnant to a target, applying persistent pressure or influence.' },
+            { n: 'Gravebound',    d: 'Anchors a target in place through lingering essence.' },
+            { n: 'Soul Fracture', d: "Splits a target's stability, increasing vulnerability to further effects." },
+            { n: 'Revenant Rite', d: 'Raises a temporary servant from remains or residual presence.' },
+          ],
+        },
+        {
+          id: 'necromancer', name: 'Necromancer', cost: 2, lean: -0.25,
+          abilities: [
+            { n: 'Legion Awakening',    d: 'Animates multiple constructs or remains under command.' },
+            { n: 'Death Command',       d: 'Issues direct control orders to all summoned entities.' },
+            { n: 'Essence Reclamation', d: 'Reclaims energy from defeated units or targets.' },
+            { n: 'Sovereign of Bones',  d: 'Becomes the focal authority over all deathbound forces nearby.' },
+          ],
+        },
+      ],
+      eliteNode: {
+        id: 'eldritch', name: 'Eldritch', cost: 4, lean: -0.5,
+        abilities: [
+          { n: 'Eldritch I',   d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Eldritch II',  d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Eldritch III', d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Eldritch IV',  d: 'Placeholder — fill in elite ability description.' },
+        ],
+      },
+    },
+    tech: {
+      elite: 'Materion',
+      nodes: [
+        {
+          id: 'mutagenist', name: 'Mutagenist', cost: 1, lean: 0.25,
+          abilities: [
+            { n: 'Mutagen Syringe', d: 'An injectable compound that alters strength, speed, or resilience temporarily.' },
+            { n: 'Flesh Graft Kit', d: 'A surgical toolset used to attach, reinforce, or modify living tissue.' },
+            { n: 'Adaptive Serum',  d: 'A prepared dose that grants resistance to a chosen hazard or condition.' },
+            { n: 'Regenesis Vat',   d: 'A containment vessel that accelerates tissue repair and biological recovery.' },
+          ],
+        },
+        {
+          id: 'bombardier', name: 'Bombardier', cost: 1, lean: 0.25,
+          abilities: [
+            { n: 'Blast Charge',  d: 'A prepared explosive designed to destroy barriers, armor, machinery, or clustered enemies.' },
+            { n: 'Acid Flask',    d: 'A corrosive vessel that breaks down metal, stone, locks, armor, or organic matter.' },
+            { n: 'Chain Reactor', d: 'A rigged compound that spreads detonation through nearby volatile materials.' },
+            { n: 'Pressure Mine', d: 'A planted device that triggers when stepped on, opened, moved, or disturbed.' },
+          ],
+        },
+        {
+          id: 'biomancer', name: 'Biomancer', cost: 2, lean: 0.25,
+          abilities: [
+            { n: 'Gene Crucible',     d: 'A laboratory vessel used to refine traits from harvested biological material.' },
+            { n: 'Chimera Graft',     d: 'A permanent or semi-permanent biological modification that grants inherited traits.' },
+            { n: 'Living Armature',   d: 'A grown biological support structure that reinforces the body during mutation.' },
+            { n: 'Perfected Mutagen', d: 'A stabilized apex compound that allows controlled transformation without immediate bodily failure.' },
+          ],
+        },
+        {
+          id: 'saboteur', name: 'Saboteur', cost: 2, lean: 0.25,
+          abilities: [
+            { n: 'Cataclysm Bomb',  d: 'A high-yield explosive device built for structural destruction and battlefield denial.' },
+            { n: 'Toxin Swarm',     d: 'A cluster of dispersal pods that spreads poison, acid, smoke, or disease across an area.' },
+            { n: 'Deadman Trigger', d: 'A concealed trigger system that activates when the user falls, flees, or gives a signal.' },
+            { n: 'Collapse Array',  d: 'A planted network of charges designed to bring down structures, tunnels, bridges, or fortified zones.' },
+          ],
+        },
+      ],
+      eliteNode: {
+        id: 'materion', name: 'Materion', cost: 4, lean: 0.5,
+        abilities: [
+          { n: 'Materion I',   d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Materion II',  d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Materion III', d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Materion IV',  d: 'Placeholder — fill in elite ability description.' },
+        ],
+      },
+    },
+  },
+
+};
+
+export function makeAbilityKey(rowId, nodeId, abilityName) {
+  return `${rowId}|${nodeId}|${abilityName}`;
+}
+
+export function parseAbilityKey(key) {
+  const [rowId, nodeId, abilityName] = key.split('|');
+  return { rowId, nodeId, abilityName };
+}
+
+export function getNodeLean(key) {
+  const { rowId, nodeId } = parseAbilityKey(key);
+  const row = ABILITY_TREE[rowId];
+  if (!row) return 0;
+  const magicNode = [...(row.magic?.nodes || []), row.magic?.eliteNode].find(n => n?.id === nodeId);
+  if (magicNode) return magicNode.lean ?? -0.25;
+  const techNode = [...(row.tech?.nodes || []), row.tech?.eliteNode].find(n => n?.id === nodeId);
+  if (techNode) return techNode.lean ?? 0.25;
+  return 0;
+}
+
+// Row display order
+export const ABILITY_TREE_ROWS = ['soul','spirit','mind','body','will','whim','affect','dream'];
+
+// Cost helper — based on node.cost field, not tier string
+export function nodeCost(node) {
+  return node?.cost ?? 1;
+}
+
 export const ALL_CLASSES = [...CLASSES.magic, ...CLASSES.tech];
 
 // ─── STATS ────────────────────────────────────────────────────────────────────
