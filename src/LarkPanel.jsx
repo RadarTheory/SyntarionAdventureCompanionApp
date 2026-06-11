@@ -302,14 +302,20 @@ export default function LarkPanel({ char, campaignId, isDM = false, embedded = f
     return () => { supabase.removeChannel(sub); window.removeEventListener('census:npc_snapshot', h); };
   }, [campaignId]);
 
-  const loadLarks = async () => {
-    setLoading(true);
-    const { data } = await supabase.from('larks').select('*')
-      .eq('campaign_id', String(campaignId))
-      .order('created_at', { ascending: false });
-    if (data) setLarks(data);
-    setLoading(false);
-  };
+ const loadLarks = async () => {
+  setLoading(true);
+  let q = supabase.from('larks').select('*')
+    .eq('campaign_id', String(campaignId))
+    .order('created_at', { ascending: false });
+  if (!isDM) {
+    const cid = char?.id ? String(char.id) : null;
+    if (!cid) { setLarks([]); setLoading(false); return; }
+    q = q.or(`sender_id.eq.${cid},recipient_id.eq.${cid}`);
+  }
+  const { data } = await q;
+  if (data) setLarks(data);
+  setLoading(false);
+};
 
   const charIdStr = char?.id ? String(char.id) : null;
 
