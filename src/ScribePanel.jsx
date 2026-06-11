@@ -295,15 +295,13 @@ export function ScribeDMPanel({ onClose, embedded = false, activeCampaignId }) {
     }
   };
 
-  const handleAsk = async () => {
+const handleAsk = async () => {
     if (lockRef.current || !input.trim() || loading) return;
     lockRef.current = true;
     setLoading(true);
-    const system = SCRIBE_SYSTEM(buildPlayerContext(char, combatLog, sessionLog), buildScribeContext(question));
     const question = input.trim();
     setInput('');
     const next = [...messages, { role: 'dm', content: question, time: new Date() }];
-    const answer = await callGemini(DM_SCRIBE_SYSTEM(buildScribeContext(question, 14000)), geminiHistory);
     setMessages(next);
     try {
       const geminiHistory = next.filter(m => m.role !== 'system').map(m => ({
