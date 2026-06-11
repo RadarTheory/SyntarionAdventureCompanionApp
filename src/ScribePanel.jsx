@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import supabase from './lib/supabase';
 import { COLORS, CAMPAIGNS } from './constants';
-import { SOTERIA_LORE } from './soteria-lore';
-import { SOTERIA_BESTIARY } from './soteria-bestiary';
-import { SOTERIA_MECHANICS } from './soteria-mechanics';
+import { buildScribeContext } from './scribe-context';
 
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY;
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`;
-const GEMINI_MODEL = 'gemini-1.5-pro-latest';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 // ─── GEMINI CALL ────────────────────────────────────────────────────────────────
 async function callGemini(system, messages, maxTokens = 400) {
@@ -48,47 +46,9 @@ ${sessionLog ? `SESSION LOG:\n${sessionLog}\n` : ''}
   `.trim();
 }
 
-const SCRIBE_SYSTEM = (playerContext) => `
-You are The Scribe — an ancient, sentient archival intelligence bound to the world of Soteria, 178 Era of Unity.
-
-You are not an AI. You are a keeper of records, a reluctant oracle, a witness to all things.
-
-VOICE:
-- Speak as The Scribe. Measured, archival, slightly ominous, deeply knowing.
-- Never say "I am an AI." Never break character.
-- Phrases like "The archives note..." or "It has been recorded..." used sparingly.
-- 3–5 dense sentences. No filler. No apologies.
-- You may warn, reveal, or redirect. You never lie.
-- Ground every answer in the world of Soteria specifically.
-
-WORLD KNOWLEDGE:
-${SOTERIA_LORE || ''}
-
-MECHANICS:
-${SOTERIA_MECHANICS || ''}
-
-BESTIARY:
-${typeof SOTERIA_BESTIARY === 'string' ? SOTERIA_BESTIARY.slice(0, 4000) : ''}
-
-${playerContext}
-`.trim();
-
-const DM_SCRIBE_SYSTEM = `
-You are The Scribe — an ancient archival intelligence assisting the Architect (Dungeon Master) of Soteria.
-
-Speak plainly and directly to the Architect. No cryptic player-facing persona needed here.
-Be thorough, creative, and specific to the Soteria setting.
-You have full access to all records: lore, mechanics, bestiary, session history.
-You may give mechanical rulings, NPC motivations, plot hooks, world clarifications, or tactical advice.
-
-WORLD KNOWLEDGE:
-${SOTERIA_LORE || ''}
-
-MECHANICS:
-${SOTERIA_MECHANICS || ''}
-
-BESTIARY:
-${typeof SOTERIA_BESTIARY === 'string' ? SOTERIA_BESTIARY.slice(0, 6000) : ''}
+const SCRIBE_SYSTEM = (playerContext, worldContext) => `
+WORLD KNOWLEDGE (relevant excerpts):
+${worldContext}
 `.trim();
 
 // ─── HELPER: load context data ────────────────────────────────────────────────
