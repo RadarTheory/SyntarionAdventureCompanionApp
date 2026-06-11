@@ -277,6 +277,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   const { isMobile } = useDevice();
   const [appView, setAppView] = useState('home');
   const [savedChars, setSavedChars] = useState([]);
+  const campaignChars = savedChars.filter(c => c.status === 'approved' && c.campaign_id);
   const [loading, setLoading] = useState(true);
   const [showDMModal, setShowDMModal] = useState(false);
   const [hoveredBtn, setHoveredBtn] = useState(null);
@@ -328,8 +329,9 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
 
   if (appView === 'campaigns') return (
     <CampaignView
-      userChar={savedChars[0] || null}
+      userChar={campaignChars[0] || null}
       onHome={goHome}
+      onUpdateChar={(updated) => setSavedChars(prev => prev.map(c => c.id === updated.id ? updated : c))}
       onAssign={(campaignId) => {
         setSavedChars(prev => prev.map(c => ({ ...c, campaign: campaignId })));
       }}
@@ -370,12 +372,12 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
           : 'Begin your journey',
       onClick: handlePlay,
     },
-    {
+    ...(campaignChars.length > 0 ? [{
       id: 'campaigns',
       label: 'CAMPAIGNS',
       sub: 'Enter the age of steam',
       onClick: () => setAppView('campaigns'),
-    },
+    }] : []),
        {
       id: 'settings',
       label: 'SETTINGS',
