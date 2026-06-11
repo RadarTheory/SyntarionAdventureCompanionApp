@@ -3,29 +3,13 @@ import supabase from './lib/supabase';
 import { COLORS, CAMPAIGNS } from './constants';
 import { buildScribeContext } from './scribe-context';
 
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY;
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`;
-const GEMINI_MODEL = 'gemini-2.5-flash';
-
-// ─── GEMINI CALL ────────────────────────────────────────────────────────────────
+c// ─── GEMINI CALL (via Supabase Edge Function relay — no key in client) ────────
 async function callGemini(system, messages, maxTokens = 1024) {
-  if (!GEMINI_KEY) throw new Error('Missing VITE_GEMINI_KEY.');
-  const res = await fetch(GEMINI_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${GEMINI_KEY}`,
-    },
-    body: JSON.stringify({
-      model: GEMINI_MODEL,
-      messages: [{ role: 'system', content: system }, ...messages],
-      max_tokens: maxTokens,
-      temperature: 0.82,
-      reasoning_effort: 'none',
-    }),
+  const { data, error } = await supabase.functions.invoke('scribe', {
+    body: { system, messages, max_tokens: maxTokens },
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error?.message || JSON.stringify(data).slice(0, 200) || `Gemini ${res.status}`);
+  if (error) throw new Error(error.message || 'The relay to the archives failed.');
+  if (data?.error) throw new Error(data.error.message || JSON.stringify(data.error).slice(0, 200));
   const text = data?.choices?.[0]?.message?.content;
   if (!text) throw new Error('No response from Gemini.');
   return text;

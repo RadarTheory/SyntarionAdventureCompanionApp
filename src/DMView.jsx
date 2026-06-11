@@ -19,6 +19,7 @@ import BestiaryPanel from './BestiaryPanel';
 import { ScribeDMPanel } from './ScribePanel';
 import Solomon from './Solomon';
 import NPCPanel from './NPCPanel';
+import LarkPanel from './LarkPanel';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -706,6 +707,7 @@ export default function DMView({ user, session, onHome }) {
   const [showWorldMap, setShowWorldMap] = useState(false);
   const [mapZoom, setMapZoom] = useState(1);
   const [showNPC, setShowNPC] = useState(false);
+  const [showLarks, setShowLarks] = useState(false);
 
   // LOBBY STATE
   const [checkedInPlayers, setCheckedInPlayers] = useState([]);
@@ -1095,6 +1097,12 @@ export default function DMView({ user, session, onHome }) {
           </DraggablePanel>
         )}
 
+        {showLarks && (
+          <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowLarks(false)} title="LARK · Letters & Correspondence" width={400} accentColor="rgba(200,168,74,0.35)">
+            <LarkPanel char={null} campaignId={activeCampaignTab} isDM={true} embedded />
+          </DraggablePanel>
+        )}
+
       {/* ─── Header ─────────────────────────────────────────────────────── */}
       <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <button onClick={onHome} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.muted, padding: 0 }}>← Home</button>
@@ -1316,6 +1324,15 @@ export default function DMView({ user, session, onHome }) {
             onClick: () => setShowNPC(o => !o),
             children: (
               <img src="/npcicon.png" alt="NPC Tracker" draggable={false}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />
+            ),
+          },
+          {
+            id: 'lark',
+            title: 'LARK — Player Correspondence',
+            onClick: () => setShowLarks(o => !o),
+            children: (
+              <img src="/Larkicon.png" alt="Lark" draggable={false}
                 style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />
             ),
           },
