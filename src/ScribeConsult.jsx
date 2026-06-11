@@ -3,10 +3,6 @@ import supabase from './lib/supabase';
 import { COLORS, CAMPAIGNS } from './constants';
 import { SOTERIA_LORE } from './soteria-lore';
 
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY;
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
-const GEMINI_MODEL = 'gemini-1.5-pro-latest';
-
 const SOTERIA_CONTEXT = `
 You are The Scribe — an ancient, sentient archival intelligence bound to the city of Ashendell in the world of Soteria, 178 Era of Unity.
 
@@ -55,20 +51,12 @@ AP Total: ${char?.apTotal || 0}
 `.trim();
 }
 
-async function callGemini(system, messages, maxTokens = 400) {
-  if (!GEMINI_KEY) throw new Error('Missing VITE_GEMINI_KEY.');
-  const res = await fetch(`${GEMINI_URL}?key=${GEMINI_KEY}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: GEMINI_MODEL,
-      messages: [{ role: 'system', content: system }, ...messages],
-      max_tokens: maxTokens,
-      temperature: 0.82,
-    }),
+async function callGemini(system, messages, maxTokens = 1024) {
+  const { data, error } = await supabase.functions.invoke('scribe', {
+    body: { system, messages, max_tokens: maxTokens },
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error?.message || `Gemini ${res.status}`);
+  if (error) throw new Error(error.message || 'The relay to the archives failed.');
+  if (data?.error) throw new Error(data.error.message || JSON.stringify(data.error).slice(0, 200));
   const text = data?.choices?.[0]?.message?.content;
   if (!text) throw new Error('No response from Gemini.');
   return text;
@@ -126,7 +114,7 @@ export function ScribeConsult({ char, onUpdateChar }) {
     setMessages(nextMessages);
 
     try {
-      const systemPrompt = `${SOTERIA_CONTEXT}\n\n${buildCharacterContext(char)}\n\nThis response costs the adventurer 1 AP. Make the answer useful, specific, and worthy of the cost.`.trim();
+      const systemPrompt = `${SOTERIA_CONTEXT}\n\nWORLD KNOWLEDGE (relevant excerpts):\n${buildScribeContext(userMsg)}\n\n${buildCharacterContext(char)}\n\nThis response costs the adventurer 1 AP. Make the answer useful, specific, and worthy of the cost.`.trim();
       const geminiHistory = nextMessages.map(m => ({ role: m.role === 'player' ? 'user' : 'assistant', content: m.content }));
       const answer = await callGemini(systemPrompt, geminiHistory);
 
@@ -227,7 +215,7 @@ export function DMConsult({ char, user }) {
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [thread]);
 
   const fetchThread = async () => {
-    const { data } = await supabase.from('messages').select('*').eq('session_id', session.session_id).neq('type', 'scribe').order('created_at', { ascending: true });
+    const { data } = await supabase.from('messages').select('*').eq('session_id', sessionId).neq('type', 'scribe').order('created_at', { ascending: true });
     if (data) setThread(data);
   };
 

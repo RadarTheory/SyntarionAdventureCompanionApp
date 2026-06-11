@@ -34,25 +34,12 @@ ${SOTERIA_MECHANICS}
 ${SOTERIA_BESTIARY}
 `;
 
-const DM_USER_ID = import.meta.env.VITE_DM_USER_ID;
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY;
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
-const GEMINI_MODEL = 'gemini-1.5-pro-latest';
-
-async function callGemini(system, messages, maxTokens = 400) {
-  if (!GEMINI_KEY) throw new Error('Missing VITE_GEMINI_KEY.');
-  const res = await fetch(`${GEMINI_URL}?key=${GEMINI_KEY}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: GEMINI_MODEL,
-      messages: [{ role: 'system', content: system }, ...messages],
-      max_tokens: maxTokens,
-      temperature: 0.82,
-    }),
+async function callGemini(system, messages, maxTokens = 1024) {
+  const { data, error } = await supabase.functions.invoke('scribe', {
+    body: { system, messages, max_tokens: maxTokens },
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error?.message || `Gemini ${res.status}`);
+  if (error) throw new Error(error.message || 'The relay to the archives failed.');
+  if (data?.error) throw new Error(data.error.message || JSON.stringify(data.error).slice(0, 200));
   const text = data?.choices?.[0]?.message?.content;
   if (!text) throw new Error('No response from Gemini.');
   return text;

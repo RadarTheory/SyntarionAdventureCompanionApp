@@ -3,10 +3,7 @@ import { COLORS, CAMPAIGNS, RACES, ALL_CLASSES, GODS, SPIRITS } from './constant
 import { SOTERIA_LORE } from './soteria-lore';
 import { SOTERIA_MECHANICS } from './soteria-mechanics';
 import { SOTERIA_BESTIARY } from './soteria-bestiary';
-
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY;
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
-const GEMINI_MODEL = 'gemini-1.5-proh-latest';
+import supabase from './lib/supabase';
 
 // ─── CATEGORY DEFINITIONS ────────────────────────────────────────────────────
 
@@ -791,7 +788,15 @@ export default function LoreForge({ activeCampaignId }) {
         }),
       });
 
-      const data = await res.json();
+      const { data, error: fnError } = await supabase.functions.invoke('scribe', {
+        body: {
+          system: systemPrompt,
+          messages: [{ role: 'user', content: userPrompt }],
+          max_tokens: 2000,
+        },
+      });
+      if (fnError) throw new Error(fnError.message || 'The Forge relay failed.');
+      if (data?.error) throw new Error(data.error.message || JSON.stringify(data.error).slice(0, 200));
       const text = data?.choices?.[0]?.message?.content;
       if (!text) throw new Error('No response from gods. The Forge is silent.');
 
