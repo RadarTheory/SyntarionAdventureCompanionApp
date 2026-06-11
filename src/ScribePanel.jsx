@@ -144,16 +144,14 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
     if (lockRef.current || !input.trim() || loading) return;
     lockRef.current = true;
     setLoading(true);
-    
+
     const question = input.trim();
     setInput('');
     const userEntry = { role: 'player', content: question, time: new Date() };
-    const system = SCRIBE_SYSTEM(buildPlayerContext(char, combatLog, sessionLog), buildScribeContext(question));
     const next = [...messages, userEntry];
     setMessages(next);
 
     try {
-      // Load context
       const [combatLog, sessionLog] = await Promise.all([
         loadCombatLog(campaignId),
         loadSessionLog(campaignId),
@@ -166,7 +164,7 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
       }));
 
       const answer = await callGemini(system, geminiHistory);
-      
+
       // Notify DM with the question (DM decides whether to charge a token)
       await supabase.from('messages').insert({
         type:         'scribe_ping',
@@ -179,7 +177,7 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
         read:         false,
       });
 
-     setMessages(p => [...p, { role: 'scribe', content: answer, time: new Date() }]);
+      setMessages(p => [...p, { role: 'scribe', content: answer, time: new Date() }]);
     } catch (err) {
       console.error('SCRIBE ERROR:', err);
       setMessages(p => [...p, { role: 'scribe', content: `The archives resisted the inquiry. ${err?.message || 'Try again.'}`, time: new Date() }]);
@@ -188,7 +186,7 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
       lockRef.current = false;
     }
   };
-
+if ((char?.scribeTokens ?? 0) <= 0) { setMessages(p => [...p, { role: 'scribe', content: 'The archives demand payment. Seek a Scribe Token from the Architect.', time: new Date() }]); return; }
   const inner = (
     <>
       {/* Token bar */}
