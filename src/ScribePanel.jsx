@@ -10,9 +10,12 @@ const GEMINI_MODEL = 'gemini-2.5-flash';
 // ─── GEMINI CALL ────────────────────────────────────────────────────────────────
 async function callGemini(system, messages, maxTokens = 400) {
   if (!GEMINI_KEY) throw new Error('Missing VITE_GEMINI_KEY.');
-  const res = await fetch(`${GEMINI_URL}?key=${GEMINI_KEY}`, {
+  const res = await fetch(GEMINI_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GEMINI_KEY}`,
+    },
     body: JSON.stringify({
       model: GEMINI_MODEL,
       messages: [{ role: 'system', content: system }, ...messages],
@@ -21,11 +24,12 @@ async function callGemini(system, messages, maxTokens = 400) {
     }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data?.error?.message || `Gemini ${res.status}`);
+  if (!res.ok) throw new Error(data?.error?.message || JSON.stringify(data).slice(0, 200) || `Gemini ${res.status}`);
   const text = data?.choices?.[0]?.message?.content;
   if (!text) throw new Error('No response from Gemini.');
   return text;
-} 
+}
+ 
 // ─── BUILD CONTEXT ────────────────────────────────────────────────────────────
 function buildPlayerContext(char, combatLog, sessionLog) {
   const campaign = CAMPAIGNS.find(c => c.id === (char?.campaign || char?.campaign_id));
@@ -136,8 +140,7 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
     if (lockRef.current || !input.trim() || loading) return;
     lockRef.current = true;
     setLoading(true);
-    const system = SCRIBE_SYSTEM(buildPlayerContext(char, combatLog, sessionLog), buildScribeContext(question));
-
+    
     const question = input.trim();
     setInput('');
     const userEntry = { role: 'player', content: question, time: new Date() };
@@ -151,14 +154,14 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
         loadSessionLog(campaignId),
       ]);
 
-      const system = SCRIBE_SYSTEM(buildPlayerContext(char, combatLog, sessionLog));
+      const system = SCRIBE_SYSTEM(buildPlayerContext(char, combatLog, sessionLog), buildScribeContext(question));
       const geminiHistory = next.filter(m => m.role !== 'system').map(m => ({
         role: m.role === 'player' ? 'user' : 'assistant',
         content: m.content,
       }));
 
       const answer = await callGemini(system, geminiHistory);
-
+      
       // Notify DM with the question (DM decides whether to charge a token)
       await supabase.from('messages').insert({
         type:         'scribe_ping',
@@ -295,6 +298,7 @@ export function ScribeDMPanel({ onClose, embedded = false, activeCampaignId }) {
     if (lockRef.current || !input.trim() || loading) return;
     lockRef.current = true;
     setLoading(true);
+    const system = SCRIBE_SYSTEM(buildPlayerContext(char, combatLog, sessionLog), buildScribeContext(question));
     const question = input.trim();
     setInput('');
     const next = [...messages, { role: 'dm', content: question, time: new Date() }];
