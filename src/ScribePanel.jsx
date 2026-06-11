@@ -143,13 +143,12 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
 
   const handleAsk = async () => {
     if (lockRef.current || !input.trim() || loading) return;
-    lockRef.current = true;
-    setLoading(true);
-    
     if ((char?.scribeTokens ?? 0) <= 0) {
       setMessages(p => [...p, { role: 'scribe', content: 'The archives demand payment. Seek a Scribe Token from the Architect.', time: new Date() }]);
       return;
     }
+    lockRef.current = true;
+    setLoading(true);
 
     const question = input.trim();
     setInput('');
