@@ -8,7 +8,7 @@ const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/openai/chat
 const GEMINI_MODEL = 'gemini-2.5-flash';
 
 // ─── GEMINI CALL ────────────────────────────────────────────────────────────────
-async function callGemini(system, messages, maxTokens = 400) {
+async function callGemini(system, messages, maxTokens = 1024) {
   if (!GEMINI_KEY) throw new Error('Missing VITE_GEMINI_KEY.');
   const res = await fetch(GEMINI_URL, {
     method: 'POST',
@@ -21,6 +21,7 @@ async function callGemini(system, messages, maxTokens = 400) {
       messages: [{ role: 'system', content: system }, ...messages],
       max_tokens: maxTokens,
       temperature: 0.82,
+      reasoning_effort: 'none',
     }),
   });
   const data = await res.json();
@@ -144,6 +145,11 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
     if (lockRef.current || !input.trim() || loading) return;
     lockRef.current = true;
     setLoading(true);
+    
+    if ((char?.scribeTokens ?? 0) <= 0) {
+      setMessages(p => [...p, { role: 'scribe', content: 'The archives demand payment. Seek a Scribe Token from the Architect.', time: new Date() }]);
+      return;
+    }
 
     const question = input.trim();
     setInput('');
@@ -164,6 +170,10 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
       }));
 
       const answer = await callGemini(system, geminiHistory);
+      const newTokens = Math.max(0, (char?.scribeTokens || 0) - 1);
+      const { id, status, campaign_id, user_id, ...blob } = char || {};
+      await supabase.from('characters').update({ data: { ...blob, scribeTokens: newTokens } }).eq('id', char.id);
+      onUpdateChar?.({ ...char, scribeTokens: newTokens });
 
       // Notify DM with the question (DM decides whether to charge a token)
       await supabase.from('messages').insert({
