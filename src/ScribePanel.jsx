@@ -144,6 +144,7 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
     const question = input.trim();
     setInput('');
     const userEntry = { role: 'player', content: question, time: new Date() };
+    const system = SCRIBE_SYSTEM(buildPlayerContext(char, combatLog, sessionLog), buildScribeContext(question));
     const next = [...messages, userEntry];
     setMessages(next);
 
@@ -302,6 +303,7 @@ export function ScribeDMPanel({ onClose, embedded = false, activeCampaignId }) {
     const question = input.trim();
     setInput('');
     const next = [...messages, { role: 'dm', content: question, time: new Date() }];
+    const answer = await callGemini(DM_SCRIBE_SYSTEM(buildScribeContext(question, 14000)), geminiHistory);
     setMessages(next);
     try {
       const geminiHistory = next.filter(m => m.role !== 'system').map(m => ({
