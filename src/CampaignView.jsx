@@ -1209,7 +1209,7 @@ function LootboxPanel({ campaignId, userChar, onClaimed }) {
 // ─── CAMPAIGN DASHBOARD ───────────────────────────────────────────────────────
 const TABS = ['Map', 'Sheet', 'Scales', 'Actions', 'Abilities', 'Inventory', 'Loot', 'Log'];
 
-function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
+function CampaignDashboard({ campaign, userChar, onBack, onAssign, onUpdateChar }) {
   const { isMobile } = useDevice();
   const [activeTab, setActiveTab] = useState('Map');
   const [assigning, setAssigning] = useState(false);
@@ -1559,17 +1559,14 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
 
       {showScribeCV && (
         <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribeCV(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
-          <ScribePlayerPanel char={userChar} campaignId={String(campaign.id)} onUpdateChar={char => onAssign(char.campaign)} embedded />
+          <ScribePlayerPanel char={userChar} campaignId={String(campaign.id)} onUpdateChar={onUpdateChar} embedded />
         </DraggablePanel>
       )}
 
       {showWorldMap && (
         <DraggablePanel defaultX={120} defaultY={40} onClose={() => setShowWorldMap(false)} title="WORLD MAP · Soteria" width={Math.min(window.innerWidth - 140, 900)} accentColor="rgba(200,168,74,0.4)">
           <div
-
-          
-
-                    
+                          
   ref={el => {
     if (!el) return;
     const handler = e => {
@@ -1652,10 +1649,10 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign }) {
   );
 }
 
-export default function CampaignView({ userChar, onHome, onAssign }) {
+export default function CampaignView({ userChar, onHome, onAssign, onUpdateChar }) {
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   if (selectedCampaign) {
-    return <CampaignDashboard campaign={selectedCampaign} userChar={userChar} onBack={() => setSelectedCampaign(null)} onAssign={onAssign} />;
+    return <CampaignDashboard campaign={selectedCampaign} userChar={userChar} onBack={() => setSelectedCampaign(null)} onAssign={onAssign} onUpdateChar={onUpdateChar} />;
   }
   return <CampaignList onSelect={setSelectedCampaign} userChar={userChar} onHome={onHome} />;
 }
