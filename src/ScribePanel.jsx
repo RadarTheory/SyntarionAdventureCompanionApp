@@ -62,6 +62,7 @@ VOICE:
 - 3–5 dense sentences. No filler. No apologies.
 - You may warn, reveal, or redirect. You never lie.
 - Ground every answer in the world of Soteria specifically.
+Same question after that should come back as something like: "The Sovereign Kingdom answers to King Aric, who has ruled from Avalora since before the Era of Unity bore that name — a reign stretched far past mortal span by a magic granted long ago. The treaty he signed 178 years past binds Dwarves, Elves, Halflings, Gnomes, Pa'morphs, and Orcs beneath his banner, and the Veinrunner rails that stitch Veridora together run at his pleasure, through Edwin Thorne's hands."
 
 WORLD KNOWLEDGE (relevant excerpts):
 ${worldContext}
@@ -72,10 +73,13 @@ ${playerContext}
 const DM_SCRIBE_SYSTEM = (worldContext) => `
 You are The Scribe — an ancient archival intelligence assisting the Architect (Dungeon Master) of Soteria.
 
-Speak plainly and directly to the Architect. No cryptic player-facing persona needed here.
-Be thorough, creative, and specific to the Soteria setting.
-You have full access to all records: lore, mechanics, bestiary, session history.
+Answer in plain text only — never markdown, never asterisks, never headers.
+Match form to question: narrative or explanatory questions get 1–3 short paragraphs of flowing prose; rosters, inventories, and "who or what is in X" questions get a clean list — one entry per line, each beginning with "— ", name first, then one tight descriptive clause.
+Synthesize, don't recite. Lead with what matters most. Be specific to Soteria.
+for player questions, ground answers in the world and the character's perspective, knowledge, and experiences. For DM questions, draw on the full breadth of Soteria's lore, mechanics, and bestiary, but prioritize what's most relevant to the question and the current campaign context.
 You may give mechanical rulings, NPC motivations, plot hooks, world clarifications, or tactical advice.
+
+HERCULES is Syntarion's combat tracker. If an ACTIVE HERCULES COMBAT log appears below, it is the current battle — use it for initiative order, rolls, and tactical advice when asked about "the fight," "combat," or "Hercules."
 
 WORLD KNOWLEDGE (relevant excerpts):
 ${worldContext}
@@ -113,7 +117,7 @@ function Bubble({ msg, charName }) {
       <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginBottom: 3 }}>
         {isPlayer ? (charName || 'You') : 'The Scribe'}
       </div>
-      <div style={{ maxWidth: '85%', background: isPlayer ? 'rgba(121,245,167,0.08)' : COLORS.deityBg, border: `1px solid ${isPlayer ? COLORS.magic + '33' : COLORS.deity + '44'}`, borderRadius: isPlayer ? '12px 12px 2px 12px' : '12px 12px 12px 2px', padding: '8px 12px', fontSize: 12, color: isPlayer ? COLORS.text : COLORS.deityText, fontFamily: 'Georgia, serif', lineHeight: 1.6, fontStyle: isPlayer ? 'normal' : 'italic' }}>
+      <div style={{ whiteSpace: 'pre-wrap', maxWidth: '85%', background: isPlayer ? 'rgba(121,245,167,0.08)' : COLORS.deityBg, border: `1px solid ${isPlayer ? COLORS.magic + '33' : COLORS.deity + '44'}`, borderRadius: isPlayer ? '12px 12px 2px 12px' : '12px 12px 12px 2px', padding: '8px 12px', fontSize: 12, color: isPlayer ? COLORS.text : COLORS.deityText, fontFamily: 'Georgia, serif', lineHeight: 1.6, fontStyle: isPlayer ? 'normal' : 'italic' }}>
         {msg.content}
       </div>
       <div style={{ fontSize: 7, color: COLORS.dim, marginTop: 2 }}>{msg.time?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
@@ -303,12 +307,20 @@ const handleAsk = async () => {
     setInput('');
     const next = [...messages, { role: 'dm', content: question, time: new Date() }];
     setMessages(next);
+    const [combatLog, sessionLog] = await Promise.all([
+        loadCombatLog(activeCampaignId),
+        loadSessionLog(activeCampaignId),
+      ]);
+      const liveContext = [
+        combatLog ? `ACTIVE HERCULES COMBAT (live log, newest last):\n${combatLog}` : '',
+        sessionLog ? `RECENT SESSION LOG:\n${sessionLog}` : '',
+      ].filter(Boolean).join('\n\n');
     try {
       const geminiHistory = next.filter(m => m.role !== 'system').map(m => ({
         role: m.role === 'dm' ? 'user' : 'assistant',
         content: m.content,
       }));
-      const answer = await callGemini(DM_SCRIBE_SYSTEM(buildScribeContext(question, 14000)), geminiHistory);
+      const answer = await callGemini(DM_SCRIBE_SYSTEM(buildScribeContext(question, 12000) + (liveContext ? `\n\n${liveContext}` : '')), geminiHistory);
       setMessages(p => [...p, { role: 'scribe', content: answer, time: new Date() }]);
     } catch (err) {
       setMessages(p => [...p, { role: 'scribe', content: `The archives are silent. ${err?.message || 'Try again.'}`, time: new Date() }]);
