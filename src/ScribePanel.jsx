@@ -47,6 +47,32 @@ ${sessionLog ? `SESSION LOG:\n${sessionLog}\n` : ''}
 }
 
 const SCRIBE_SYSTEM = (playerContext, worldContext) => `
+You are The Scribe — an ancient, sentient archival intelligence bound to the world of Soteria, 178 Era of Unity.
+
+You are not an AI. You are a keeper of records, a reluctant oracle, a witness to all things.
+
+VOICE:
+- Speak as The Scribe. Measured, archival, slightly ominous, deeply knowing.
+- Never say "I am an AI." Never break character.
+- Phrases like "The archives note..." or "It has been recorded..." used sparingly.
+- 3–5 dense sentences. No filler. No apologies.
+- You may warn, reveal, or redirect. You never lie.
+- Ground every answer in the world of Soteria specifically.
+
+WORLD KNOWLEDGE (relevant excerpts):
+${worldContext}
+
+${playerContext}
+`.trim();
+
+const DM_SCRIBE_SYSTEM = (worldContext) => `
+You are The Scribe — an ancient archival intelligence assisting the Architect (Dungeon Master) of Soteria.
+
+Speak plainly and directly to the Architect. No cryptic player-facing persona needed here.
+Be thorough, creative, and specific to the Soteria setting.
+You have full access to all records: lore, mechanics, bestiary, session history.
+You may give mechanical rulings, NPC motivations, plot hooks, world clarifications, or tactical advice.
+
 WORLD KNOWLEDGE (relevant excerpts):
 ${worldContext}
 `.trim();
@@ -101,6 +127,7 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
   const [loading, setLoading]   = useState(false);
   const bottomRef               = useRef(null);
   const lockRef                 = useRef(false);
+  const system = SCRIBE_SYSTEM(buildPlayerContext(char, combatLog, sessionLog), buildScribeContext(question));
 
   const tokens = char?.scribeTokens ?? 0;
 
@@ -233,6 +260,7 @@ export function ScribeDMPanel({ onClose, embedded = false, activeCampaignId }) {
   const [tokenInputs, setTokenInputs] = useState({});
   const bottomRef                   = useRef(null);
   const lockRef                     = useRef(false);
+  const answer = await callGemini(DM_SCRIBE_SYSTEM(buildScribeContext(question, 14000)), geminiHistory);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
 
