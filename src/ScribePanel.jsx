@@ -3,7 +3,7 @@ import supabase from './lib/supabase';
 import { COLORS, CAMPAIGNS } from './constants';
 import { buildScribeContext } from './scribe-context';
 
-c// ─── GEMINI CALL (via Supabase Edge Function relay — no key in client) ────────
+// ─── GEMINI CALL (via Supabase Edge Function relay — no key in client) ────────
 async function callGemini(system, messages, maxTokens = 1024) {
   const { data, error } = await supabase.functions.invoke('scribe', {
     body: { system, messages, max_tokens: maxTokens },
