@@ -15,6 +15,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { DEFAULT_CITIES, newNpcId, newCityId } from './data/npcs';
 import supabase from './lib/supabase';
+import { logSessionEvent, getCheckedInCharacterIds } from './lib/sessionEvents';
 
 // ── Conditions ───────────────────────────────────────────────────────────────
 const CONDITIONS = [
@@ -181,9 +182,14 @@ const S = {
   npcFaction: { color: 'rgba(184,137,42,0.55)', fontSize: 10 },
   npcStatus: { fontSize: 10, fontFamily: "'Cinzel', serif", letterSpacing: '0.05em', flexShrink: 0 },
   drawer: {
-    borderTop: '1px solid rgba(184,137,42,0.2)',
-    background: '#0a0805', padding: '10px 12px',
-    flexShrink: 0, maxHeight: '48%', overflowY: 'auto',
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    borderTop: '1px solid rgba(184,137,42,0.4)',
+    background: 'rgba(8,6,4,0.97)',
+    backdropFilter: 'blur(4px)',
+    padding: '10px 12px',
+    maxHeight: '60%', overflowY: 'auto',
+    zIndex: 50,
+    boxShadow: '0 -8px 32px rgba(0,0,0,0.6)',
   },
   drawerTitle: {
     fontFamily: "'Cinzel', serif", fontSize: 13, color: '#e8c040',
@@ -295,7 +301,7 @@ function flattenNpcs(cities) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-export default function NPCPanel() {
+export default function NPCPanel({ campaignId, sessionId }) {
   const [cities, setCities]             = useState(() => JSON.parse(JSON.stringify(DEFAULT_CITIES)));
   const [collapsed, setCollapsed]       = useState({});
   const [catCollapsed, setCatCollapsed] = useState({});
@@ -499,13 +505,57 @@ export default function NPCPanel() {
     return g;
   };
 
+  // ADD after groupNpcsByGroup definition:
+const [metToast, setMetToast] = useState(null);
+
+const markMet = async (npc, cityName) => {
+  const checkins = await getCheckedInCharacterIds(sessionId);
+  if (!checkins.length) {
+    setMetToast(`No players checked in — grimoire entries skipped`);
+    setTimeout(() => setMetToast(null), 3000);
+    return;
+  }
+  const entryType = npc.category === 'Uncategorized' || !npc.category
+    ? 'npc'
+    : ['Guards','Military','Criminals','Adventurers','Nomadic'].includes(npc.category)
+      ? 'npc' : 'npc';
+
+  await Promise.all(checkins.map(({ character_id }) =>
+    supabase.from('grimoire_entries').insert({
+      character_id: String(character_id),
+      campaign_id: String(campaignId),
+      type: 'npc',
+      title: npc.name,
+      body: [npc.role, npc.faction, cityName].filter(Boolean).join(' · ') || null,
+      dm_note: npc.notes || null,
+    })
+  ));
+
+  await logSessionEvent(campaignId, sessionId, 'npc_met', {
+    npc_name: npc.name,
+    npc_role: npc.role || '',
+    npc_faction: npc.faction || '',
+    city: cityName,
+    character_ids: checkins.map(c => c.character_id),
+  });
+
+  setMetToast(`${npc.name} added to ${checkins.length} grimoire${checkins.length !== 1 ? 's' : ''}`);
+  setTimeout(() => setMetToast(null), 3000);
+};
+
   const selectedCity = selected ? cities.find(c => c.id === selected.cityId) : null;
   const selectedNpc  = selectedCity ? selectedCity.npcs.find(n => n.id === selected.npcId) : null;
   const modalCity    = cities.find(c => c.id === modalForm.cityId);
   const modalGroups  = modalCity ? (modalCity.groups || []).filter(g => g.category === modalForm.category) : [];
 
-  return (
+   return (
     <div style={S.root}>
+
+      {metToast && (
+        <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, background: 'rgba(10,8,5,0.95)', border: '1px solid rgba(184,137,42,0.5)', borderRadius: 6, padding: '5px 12px', fontFamily: "'Cinzel', serif", fontSize: 9, color: '#e8c040', letterSpacing: '0.08em', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
+          ⬡ {metToast}
+        </div>
+      )}
 
       {/* ══ Modal ══ */}
       {showModal && (
@@ -578,6 +628,12 @@ export default function NPCPanel() {
               </div>
             </>
           )}
+
+          {metToast && (
+              <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, background: 'rgba(10,8,5,0.95)', border: '1px solid rgba(184,137,42,0.5)', borderRadius: 6, padding: '5px 12px', fontFamily: "'Cinzel', serif", fontSize: 9, color: '#e8c040', letterSpacing: '0.08em', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
+                ⬡ {metToast}
+              </div>
+            )}
 
           {modalMode === 'city' && (
             <>
@@ -747,7 +803,12 @@ export default function NPCPanel() {
                                           {npc.role    && <div style={S.npcRole}>{npc.role}</div>}
                                           {npc.faction && <div style={S.npcFaction}>{npc.faction}</div>}
                                         </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                                         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                                        <button
+                                          onClick={e => { e.stopPropagation(); markMet(npc, city.name); }}
+                                          style={{ background: 'rgba(184,137,42,0.12)', border: '1px solid rgba(184,137,42,0.3)', borderRadius: 3, color: '#e8c040', cursor: 'pointer', padding: '2px 6px', fontSize: 9, fontFamily: "'Cinzel', serif" }}>
+                                          ⬡
+                                        </button>
                                         <button
                                           onClick={e => {
                                             e.stopPropagation();
@@ -779,7 +840,12 @@ export default function NPCPanel() {
                                     {npc.role    && <div style={S.npcRole}>{npc.role}</div>}
                                     {npc.faction && <div style={S.npcFaction}>{npc.faction}</div>}
                                   </div>
-                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                                  <button
+                                    onClick={e => { e.stopPropagation(); markMet(npc, city.name); }}
+                                    style={{ background: 'rgba(184,137,42,0.12)', border: '1px solid rgba(184,137,42,0.3)', borderRadius: 3, color: '#e8c040', cursor: 'pointer', padding: '2px 6px', fontSize: 9, fontFamily: "'Cinzel', serif" }}>
+                                    ⬡
+                                  </button>
                                   <button
                                     onClick={e => {
                                       e.stopPropagation();
@@ -993,6 +1059,11 @@ export default function NPCPanel() {
               <div style={{ fontSize: 10, color: 'rgba(200,180,130,0.25)', fontStyle: 'italic' }}>
                 {selectedCity.name}{selectedCity.region ? ` · ${selectedCity.region}` : ''}
               </div>
+              <button
+                onClick={() => markMet(selectedNpc, selectedCity.name)}
+                style={{ background: 'rgba(184,137,42,0.15)', border: '1px solid rgba(184,137,42,0.35)', borderRadius: 3, color: '#e8c040', cursor: 'pointer', padding: '3px 8px', fontSize: 10, fontFamily: "'Cinzel', serif", letterSpacing: '0.05em' }}>
+                ⬡ Met
+              </button>
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('hercules:add_npc', { detail: { id: selectedNpc.id, name: selectedNpc.name, role: selectedNpc.role || '', conditions: selectedNpc.conditions || [], cityName: selectedCity.name } }))}
                 style={{ background: 'rgba(60,120,200,0.15)', border: '1px solid rgba(60,120,200,0.35)', borderRadius: 3, color: '#80a0e0', cursor: 'pointer', padding: '3px 8px', fontSize: 10, fontFamily: "'Cinzel', serif", letterSpacing: '0.05em' }}>
