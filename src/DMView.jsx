@@ -77,12 +77,12 @@ function DraggablePanel({ defaultX, defaultY, onClose, title, width, accentColor
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onUp); };
   }, [width]);
   return (
-    <div style={{ position: 'fixed', left: pos.x, top: pos.y, width, maxHeight: '80vh', zIndex: 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: `1px solid ${accentColor}`, borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
+    <div style={{ position: 'fixed', left: pos.x, top: pos.y, width, height: '78vh', zIndex: 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: `1px solid ${accentColor}`, borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
       <div onMouseDown={onMouseDown} onTouchStart={onTouchStart} style={{ padding: '10px 14px', borderBottom: `1px solid ${accentColor}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'grab', background: 'rgba(255,255,255,0.03)', flexShrink: 0, userSelect: 'none' }}>
         <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8d9a7', letterSpacing: '0.12em' }}>⠿ {title}</div>
         <button onClick={onClose} style={{ background: 'transparent', border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 4, padding: '3px 7px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
       </div>
-       <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>{children}</div>
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>{children}</div>
     </div>
   );
 }
@@ -1081,7 +1081,7 @@ export default function DMView({ user, session, onHome }) {
           <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowNPC(false)}
             title="NPC TRACKER · People of Soteria" width={480} accentColor="rgba(200,168,74,0.4)">
             <div style={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
-              <NPCPanel campaignId={activeCampaignTab} sessionId={activeSession?.session_id || null} />
+             <NPCPanel campaignId={activeCampaignTab} sessionId={activeSession?.session_id || null} />
             </div>
           </DraggablePanel>
         )}
