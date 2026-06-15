@@ -182,14 +182,16 @@ const S = {
   npcFaction: { color: 'rgba(184,137,42,0.55)', fontSize: 10 },
   npcStatus: { fontSize: 10, fontFamily: "'Cinzel', serif", letterSpacing: '0.05em', flexShrink: 0 },
   drawer: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
+    position: 'fixed', bottom: 40, left: 108, width: 478,
     borderTop: '1px solid rgba(184,137,42,0.4)',
-    background: 'rgba(8,6,4,0.97)',
-    backdropFilter: 'blur(4px)',
+    border: '1px solid rgba(184,137,42,0.35)',
+    borderRadius: '0 0 12px 12px',
+    background: 'rgba(8,6,4,0.98)',
+    backdropFilter: 'blur(8px)',
     padding: '10px 12px',
-    maxHeight: '60%', overflowY: 'auto',
-    zIndex: 50,
-    boxShadow: '0 -8px 32px rgba(0,0,0,0.6)',
+    maxHeight: '50vh', overflowY: 'auto',
+    zIndex: 200001,
+    boxShadow: '0 8px 40px rgba(0,0,0,0.8)',
   },
   drawerTitle: {
     fontFamily: "'Cinzel', serif", fontSize: 13, color: '#e8c040',
@@ -436,13 +438,6 @@ export default function NPCPanel({ campaignId, sessionId }) {
         npcs: city.npcs.map(n => n.id !== npcId ? n : { ...n, [field]: value }),
       }
     ));
-
-  const deleteNpc = (cityId, npcId) => {
-    setCities(prev => prev.map(city =>
-      city.id !== cityId ? city : { ...city, npcs: city.npcs.filter(n => n.id !== npcId) }
-    ));
-    setSelected(null);
-  };
 
   const addNpcFromModal = () => {
     const { name, role, status, category, group, faction, notes, cityId } = modalForm;
@@ -806,7 +801,7 @@ const markMet = async (npc, cityName) => {
                                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                                         <button
                                           onClick={e => { e.stopPropagation(); markMet(npc, city.name); }}
-                                          style={{ background: 'rgba(184,137,42,0.12)', border: '1px solid rgba(184,137,42,0.3)', borderRadius: 3, color: '#e8c040', cursor: 'pointer', padding: '2px 6px', fontSize: 9, fontFamily: "'Cinzel', serif" }}>
+                                          style={{ background: 'rgba(184,137,42,0.12)', border: '1px solid rgba(184,137,42,0.3)', borderRadius: 3, color: '#e8c040', cursor: 'pointer', padding: '2px 6px', fontSize: 9, fontFamily: 'Georgia, serif' }}>
                                           ⬡
                                         </button>
                                         <button
@@ -816,7 +811,7 @@ const markMet = async (npc, cityName) => {
                                               detail: { id: npc.id, name: npc.name, role: npc.role || '', conditions: npc.conditions || [], cityName: city.name }
                                             }));
                                           }}
-                                          style={{ background: 'rgba(60,120,200,0.12)', border: '1px solid rgba(60,120,200,0.3)', borderRadius: 3, color: '#80a0e0', cursor: 'pointer', padding: '2px 6px', fontSize: 9, fontFamily: "'Cinzel', serif" }}>
+                                          style={{ background: 'rgba(60,120,200,0.12)', border: '1px solid rgba(60,120,200,0.3)', borderRadius: 3, color: '#80a0e0', cursor: 'pointer', padding: '2px 6px', fontSize: 9, fontFamily: 'Georgia, serif' }}>
                                           ⚔
                                         </button>
                                         <div style={{ ...S.npcStatus, color: sc(npc.status) }}>{npc.status}</div>
@@ -1070,11 +1065,7 @@ const markMet = async (npc, cityName) => {
                 ⚔ Add to Combat
               </button>
             </div>
-            <button style={S.deleteBtn}
-              onClick={() => { if (window.confirm(`Delete ${selectedNpc.name}?`)) deleteNpc(selectedCity.id, selectedNpc.id); }}>
-              Delete
-            </button>
-          </div>
+            </div>
         </div>
       )}
     </div>
