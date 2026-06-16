@@ -109,19 +109,6 @@ function useSessionTimer(campaignId) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-const [clockState, setClockState] = useState(null);
-
-useEffect(() => {
-  if (!campaign?.id) return;
-  supabase.from('world_clock').select('*').eq('campaign_id', campaign.id).maybeSingle()
-    .then(({ data }) => { if (data) setClockState(data); });
-  const ch = supabase.channel(`world_clock_cv_${campaign.id}`)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'world_clock', filter: `campaign_id=eq.${campaign.id}` },
-      ({ new: u }) => { if (u) setClockState(u); })
-    .subscribe();
-  return () => supabase.removeChannel(ch);
-}, [campaign.id]);
-
 // ─── DRAGGABLE FLOAT BUTTON ───────────────────────────────────────────────────
 function FloatButton({ storageKey, defaultPos, children, onClick, title, hovered, onHover }) {
   const saved = (() => { try { return JSON.parse(localStorage.getItem(storageKey)); } catch { return null; } })();
@@ -1397,6 +1384,35 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign, onUpdateChar 
   const [showLark, setShowLark] = useState(false);
   const [showBazaar, setShowBazaar] = useState(false);
   const [showQuestor, setShowQuestor] = useState(false);
+  const [clockState, setClockState] = useState(null);
+
+useEffect(() => {
+  if (!campaign?.id) return;
+  supabase.from('world_clock').select('*').eq('campaign_id', campaign.id).maybeSingle()
+    .then(({ data }) => { if (data) setClockState(data); });
+  const ch = supabase.channel(`world_clock_cv_${campaign.id}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'world_clock', filter: `campaign_id=eq.${campaign.id}` },
+      ({ new: u }) => { if (u) setClockState(u); })
+    .subscribe();
+  return () => supabase.removeChannel(ch);
+}, [campaign.id]);
+
+const [lobbyOpen, setLobbyOpen] = useState(false);
+
+useEffect(() => {
+  if (!campaign?.id) return;
+  const check = async () => {
+    const { data } = await supabase.from('sessions').select('id')
+      .eq('campaign_id', campaign.id).eq('status', 'lobby').limit(1);
+    setLobbyOpen((data?.length || 0) > 0);
+  };
+  check();
+  const ch = supabase.channel(`lobby-banner-${campaign.id}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions',
+      filter: `campaign_id=eq.${campaign.id}` }, check)
+    .subscribe();
+  return () => supabase.removeChannel(ch);
+}, [campaign.id]);
 
   // Poll lootbox count for badge
   useEffect(() => {
@@ -1768,6 +1784,8 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign, onUpdateChar 
         </div>
       </div>
 
+      
+
       {/* Tabs */}
       <div style={{ display: 'flex', borderBottom: `1px solid ${COLORS.border}`, overflowX: 'auto', background: COLORS.surface, flexShrink: 0 }}>
         {TABS.map(tab => {
@@ -1804,6 +1822,28 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign, onUpdateChar 
     </div>
   );
 }
+
+{/* Lobby banner */}
+{lobbyOpen && (
+  <div style={{
+    background: 'rgba(121,245,167,0.06)',
+    borderBottom: '1px solid rgba(121,245,167,0.2)',
+    padding: '8px 20px',
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    flexShrink: 0,
+  }}>
+    <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: '#79f5a7', letterSpacing: '0.12em' }}>
+      ● SESSION LOBBY OPEN
+    </div>
+    <button onClick={() => setActiveTab('Sheet')} style={{
+      background: 'rgba(121,245,167,0.12)', border: '1px solid rgba(121,245,167,0.4)',
+      borderRadius: 6, padding: '5px 14px', cursor: 'pointer',
+      fontFamily: "'Cinzel', serif", fontSize: 9, color: '#79f5a7', letterSpacing: '0.1em',
+    }}>
+      Check In →
+    </button>
+  </div>
+)}
 
 export default function CampaignView({ userChar, onHome, onAssign, onUpdateChar }) {
   const [selectedCampaign, setSelectedCampaign] = useState(null);
