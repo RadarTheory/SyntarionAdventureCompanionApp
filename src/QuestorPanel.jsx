@@ -38,7 +38,7 @@ export function QuestorPlayerPanel({ char, campaignId, embedded = false }) {
   const loadAll = async () => {
     setLoading(true);
     const [questsRes, myRes] = await Promise.all([
-      supabase.from('quests').select('*').in('visibility', ['public']).eq('status', 'active').order('created_at', { ascending: false }),
+      supabase.from('quests').select('*').in('visibility', ['public']).eq('status', 'active').eq('campaign_id', campaignId).order('created_at', { ascending: false }),
       supabase.from('quest_characters').select('*, quests(*)').eq('character_id', String(char.id)),
     ]);
     if (questsRes.data) setQuests(questsRes.data);
@@ -249,7 +249,7 @@ export function QuestorDMPanel({ campaignId, onClose }) {
   const loadAll = async () => {
     setLoading(true);
     const [questsRes, npcRes] = await Promise.all([
-      supabase.from('quests').select('*, quest_characters(*)').order('created_at', { ascending: false }),
+      supabase.from('quests').select('*, quest_characters(*)').eq('campaign_id', campaignId).order('created_at', { ascending: false }),
       supabase.from('npcs').select('id, name, role'),
     ]);
     if (questsRes.data) setQuests(questsRes.data);
@@ -363,7 +363,7 @@ export function QuestorDMPanel({ campaignId, onClose }) {
   };
 
   return (
-    <div style={{ position: 'fixed', bottom: 24, left: 108, width: 500, maxHeight: '85vh', zIndex: 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
 
       {toast && (
         <div style={{ position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)', zIndex: 500000, background: '#1a1410', border: '1px solid rgba(200,168,74,0.6)', borderRadius: 10, padding: '12px 20px', fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8c84a', whiteSpace: 'nowrap' }}>
@@ -380,14 +380,14 @@ export function QuestorDMPanel({ campaignId, onClose }) {
           </div>
           <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
         </div>
-        <div style={{ display: 'flex', gap: 5 }}>
-          {[['board', 'All Quests'], ['new', '+ New Quest']].map(([v, lbl]) => (
-            <button key={v} onClick={() => setView(v)}
-              style={{ background: view === v ? 'rgba(200,168,74,0.14)' : 'transparent', border: `1px solid ${view === v ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 5, padding: '4px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.12em', color: view === v ? '#e8c84a' : COLORS.dim }}>
-              {lbl}
-            </button>
-          ))}
-        </div>
+        <div style={{ display: 'flex', gap: 5, padding: '10px 14px', borderBottom: '1px solid rgba(200,168,74,0.15)', flexShrink: 0 }}>
+        {[['board', 'All Quests'], ['new', '+ New Quest']].map(([v, lbl]) => (
+          <button key={v} onClick={() => setView(v)}
+            style={{ background: view === v ? 'rgba(200,168,74,0.14)' : 'transparent', border: `1px solid ${view === v ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 5, padding: '4px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.12em', color: view === v ? '#e8c84a' : COLORS.dim }}>
+            {lbl}
+          </button>
+        ))}
+      </div>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>

@@ -475,8 +475,8 @@ export function BazaarDMPanel({ campaignId, onClose }) {
     loadAll();
   };
 
-  return (
-    <div style={{ position: 'fixed', bottom: 24, left: 108, width: 500, maxHeight: '85vh', zIndex: 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
+ return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
 
       {toast && (
         <div style={{ position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)', zIndex: 500000, background: '#1a1410', border: '1px solid rgba(200,168,74,0.6)', borderRadius: 10, padding: '12px 20px', fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8c84a', whiteSpace: 'nowrap' }}>
@@ -517,23 +517,13 @@ export function BazaarDMPanel({ campaignId, onClose }) {
         </div>
       )}
 
-      {/* Header */}
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(200,168,74,0.15)', background: 'rgba(200,168,74,0.04)', flexShrink: 0 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <div>
-            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#e8c84a', letterSpacing: '0.16em', fontWeight: 700 }}>BAZAAR</div>
-            <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>Trade Oversight · Architect View</div>
-          </div>
-          <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
-        </div>
-        <div style={{ display: 'flex', gap: 5 }}>
-          {[['trades', `Trades (${trades.filter(t => t.status === 'pending').length} pending)`], ['loot', `Loot (${lootboxes.length})`]].map(([v, lbl]) => (
-            <button key={v} onClick={() => setView(v)}
-              style={{ background: view === v ? 'rgba(200,168,74,0.14)' : 'transparent', border: `1px solid ${view === v ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 5, padding: '4px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.12em', color: view === v ? '#e8c84a' : COLORS.dim }}>
-              {lbl}
-            </button>
-          ))}
-        </div>
+      <div style={{ display: 'flex', gap: 5, padding: '10px 14px', borderBottom: '1px solid rgba(200,168,74,0.15)', flexShrink: 0 }}>
+        {[['trades', `Trades (${trades.filter(t => t.status === 'pending').length} pending)`], ['loot', `Loot (${lootboxes.length})`]].map(([v, lbl]) => (
+          <button key={v} onClick={() => setView(v)}
+            style={{ background: view === v ? 'rgba(200,168,74,0.14)' : 'transparent', border: `1px solid ${view === v ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 5, padding: '4px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.12em', color: view === v ? '#e8c84a' : COLORS.dim }}>
+            {lbl}
+          </button>
+        ))}
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
