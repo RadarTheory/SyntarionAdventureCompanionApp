@@ -267,7 +267,8 @@ function PlayModal({ onClose, onSessionStarted, existingSession }) {
 
   const fetchCheckins = async () => {
     if (!session) return;
-    const { data } = await supabase.from('session_checkins').select('*').eq('session_id', session.id).order('checked_in_at', { ascending: true });
+    const { data, error } = await supabase.from('session_checkins').select('*').eq('session_id', session.id);
+    console.log('checkins fetch:', data, error);
     if (data) setCheckins(data);
   };
 

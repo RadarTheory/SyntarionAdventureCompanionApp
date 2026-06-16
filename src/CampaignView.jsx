@@ -17,6 +17,7 @@ import LarkPanel from './LarkPanel';
 import { BazaarPlayerPanel } from './BazaarPanel';
 import { QuestorPlayerPanel } from './QuestorPanel';
 import { WorldMapPanel } from './WorldMapPanel';
+import { SoteriaClockDisplay } from './SoteriaClockPanel';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -107,6 +108,19 @@ function useSessionTimer(campaignId) {
   const h = Math.floor(elapsed / 3600), m = Math.floor((elapsed % 3600) / 60), s = elapsed % 60;
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
+
+const [clockState, setClockState] = useState(null);
+
+useEffect(() => {
+  if (!campaign?.id) return;
+  supabase.from('world_clock').select('*').eq('campaign_id', campaign.id).maybeSingle()
+    .then(({ data }) => { if (data) setClockState(data); });
+  const ch = supabase.channel(`world_clock_cv_${campaign.id}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'world_clock', filter: `campaign_id=eq.${campaign.id}` },
+      ({ new: u }) => { if (u) setClockState(u); })
+    .subscribe();
+  return () => supabase.removeChannel(ch);
+}, [campaign.id]);
 
 // ─── DRAGGABLE FLOAT BUTTON ───────────────────────────────────────────────────
 function FloatButton({ storageKey, defaultPos, children, onClick, title, hovered, onHover }) {
@@ -1749,7 +1763,9 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign, onUpdateChar 
             {timer ? `⏱ ${timer}` : (FULL_TITLES[campaign.id] || campaign.name)}
           </div>
         </div>
-        <div style={{ width: 60 }} />
+        <div style={{ minWidth: 60, display: 'flex', justifyContent: 'flex-end' }}>
+          {clockState && <SoteriaClockDisplay clock={clockState} compact />}
+        </div>
       </div>
 
       {/* Tabs */}

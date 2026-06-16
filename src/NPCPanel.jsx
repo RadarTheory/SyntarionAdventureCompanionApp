@@ -203,6 +203,8 @@ function getNodeAffinities(role, alignment) {
   }).filter(Boolean);
 }
 
+
+const FACTIONS = ['The Gryndal','The Synod','The Kira Deu','The Yarositan Empire','Cult of Thorns','The Ebonshroud Hand','The Conclave of Mages','The Circle of Eight','The Orphaned','Banat Al-Layl','The Luminary','The Thieves Underground','Managerie Council','Brunar Separatists','Legion of Elddim','Sovereign Kingdom Directorate','The Orinscess Triage','Mörkhofn','La Marée d\'Or','Caelyn - Wardens of the Caelvern','Draeth - Harbingers of the Caelvern','Iridesce - Starstriders','Whyth - Bearers of the Whythryn Cogmail','Arcani - FaeKnights','Aerephet - Wraithborne Incubi','The Wayward','House Sillmeer','Council of Asherah','Ba_elnariani','Nyumbani','Hadarai','Iloists - Heartkeepers','The Devoted - Way of Devotion','Ylandari','Cult of Dra_agora','Dunerryian','Firretharh','Brogoshk','Sýrethens','The Gilded Syndicate','The Zor_gol','Khoneul Shadow Paragon','Xaloran Creed','Kildrak - Way of the Stone','Claven of Hreidmar','Fortune\'s Children','The Wheel of Mýr','The Auric Order','Týrethanists','Rifters - Worshippers of the Maelstrom','The Malochean','The Haruspex','The Yal Arcana','The Acends','Wardens','Desolaran','Nameahn Pluralists','Unmarked'];
 const S = {
   root:{display:'flex',flexDirection:'column',height:'100%',background:'#0e0c09',color:'#c8b890',fontFamily:"'Crimson Pro','Georgia',serif",fontSize:13,overflow:'hidden',position:'relative'},
   toolbar:{display:'flex',alignItems:'center',gap:6,padding:'8px 10px',borderBottom:'1px solid rgba(184,137,42,0.2)',flexShrink:0},
@@ -274,7 +276,6 @@ function NPCModal({ cities, groups, onSave, onClose }) {
 
   const generateIdentity = () => {
     const r = (form.role||'').toLowerCase();
-    const FACTIONS = ['The Gryndal','The Synod','The Kira Deu','The Yarositan Empire','Cult of Thorns','The Ebonshroud Hand','The Conclave of Mages','The Circle of Eight','The Orphaned','Banat Al-Layl','The Luminary','The Thieves Underground','Managerie Council','Brunar Separatists','Legion of Elddim','Sovereign Kingdom Directorate','The Orinscess Triage','Mörkhofn','La Marée d\'Or','Caelyn - Wardens of the Caelvern','Draeth - Harbingers of the Caelvern','Iridesce - Starstriders','Whyth - Bearers of the Whythryn Cogmail','Arcani - FaeKnights','Aerephet - Wraithborne Incubi','The Wayward','House Sillmeer','Council of Asherah','Ba_elnariani','Nyumbani','Hadarai','Iloists - Heartkeepers','The Devoted - Way of Devotion','Ylandari','Cult of Dra_agora','Dunerryian','Firretharh','Brogoshk','Sýrethens','The Gilded Syndicate','The Zor_gol','Khoneul Shadow Paragon','Xaloran Creed','Kildrak - Way of the Stone','Claven of Hreidmar','Fortune\'s Children','The Wheel of Mýr','The Auric Order','Týrethanists','Rifters - Worshippers of the Maelstrom','The Malochean','The Haruspex','The Yal Arcana','The Acends','Wardens','Desolaran','Nameahn Pluralists','Unmarked'];
     const ALIGNMENTS = ['neutral','magic','tech','neutral','neutral','magic','tech','chaos','order','shadow','light'];
     const PERSONALITIES = [
       'Speaks in measured tones, never more than necessary. Harbors a debt that shapes every decision.',
