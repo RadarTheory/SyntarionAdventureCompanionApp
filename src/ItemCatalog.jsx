@@ -2,9 +2,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { COLORS } from './constants';
 import supabase from './lib/supabase';
 
-const [ITEMS, setItems] = useState([]);
-const [itemsLoading, setItemsLoading] = useState(true);
-
 useEffect(() => {
   supabase.from('items').select('*').order('category').order('name').then(({ data }) => {
     if (data) setItems(data.map(r => ({ ...r, desc: r.description })));
@@ -343,6 +340,8 @@ export default function ItemCatalog() {
   const [activeCategory, setActiveCat] = useState(null);
   const [activeType, setActiveType] = useState(null);
   const [grantItem, setGrantItem]   = useState(null); // item being granted
+  const [ITEMS, setItems] = useState([]);
+  const [itemsLoading, setItemsLoading] = useState(true);
 
   const categories = useMemo(() => [...new Set(ITEMS.map(i => i.category))], []);
   const types = useMemo(() => activeCategory
