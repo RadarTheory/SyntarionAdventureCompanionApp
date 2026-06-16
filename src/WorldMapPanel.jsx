@@ -46,6 +46,7 @@ const PIN_TYPES = {
 // ─── WORLD MAP PANEL ──────────────────────────────────────────────────────────
 export function WorldMapPanel({ campaignId, isDM = false, characters = [] }) {
   const mapRef = useRef(null);
+  const imgRef = useRef(null);
   const [locations, setLocations] = useState([]);
   const [partyPos, setPartyPos] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -89,14 +90,16 @@ export function WorldMapPanel({ campaignId, isDM = false, characters = [] }) {
     setLoading(false);
   };
 
-  // ── Map click handler ──────────────────────────────────────────────────────
-  const handleMapClick = useCallback((e) => {
-    if (!isDM) return;
-    if (movingParty) return; // handled separately
-    const rect = mapRef.current?.getBoundingClientRect();
-    if (!rect) return;
+  
+const handleMapClick = useCallback((e) => {
+  console.log('click fired', { isDM, movingParty, imgRef: imgRef.current });
+  if (!isDM) return;
+    const img = imgRef.current;
+    if (!img) return;
+    const rect = img.getBoundingClientRect();
     const x_pct = ((e.clientX - rect.left) / rect.width) * 100;
     const y_pct = ((e.clientY - rect.top) / rect.height) * 100;
+    if (movingParty) return;
     setPendingPin({ x_pct, y_pct });
     setPinForm({ name: '', type: 'city', region: '', notes: '' });
     setSelectedPin(null);
@@ -268,12 +271,14 @@ export function WorldMapPanel({ campaignId, isDM = false, characters = [] }) {
       {/* ── Map container ── */}
       <div style={{ flex: 1, overflow: 'auto', position: 'relative', cursor: movingParty ? 'crosshair' : isDM ? 'crosshair' : 'grab' }}
         ref={mapRef}
-        onClick={movingParty ? undefined : handleMapClick}>
+        onWheel={e => { e.preventDefault(); setZoom(z => Math.min(4, Math.max(0.5, z - e.deltaY * 0.001))); }}
+        onClick={handleMapClick}>
         <div style={{ position: 'relative', width: `${zoom * 100}%`, minHeight: '100%' }}>
           <img
             src="/SoteriaMap.jpg"
             alt="Soteria World Map"
             draggable={false}
+            ref={imgRef}
             style={{ width: '100%', display: 'block', userSelect: 'none' }}
           />
 
