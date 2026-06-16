@@ -1385,6 +1385,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign, onUpdateChar 
   const [showBazaar, setShowBazaar] = useState(false);
   const [showQuestor, setShowQuestor] = useState(false);
   const [clockState, setClockState] = useState(null);
+  const [lobbyOpen, setLobbyOpen] = useState(false);
 
 useEffect(() => {
   if (!campaign?.id) return;
@@ -1396,8 +1397,6 @@ useEffect(() => {
     .subscribe();
   return () => supabase.removeChannel(ch);
 }, [campaign.id]);
-
-const [lobbyOpen, setLobbyOpen] = useState(false);
 
 useEffect(() => {
   if (!campaign?.id) return;
@@ -1784,7 +1783,29 @@ useEffect(() => {
         </div>
       </div>
 
-      
+      {/* Lobby banner */}
+{lobbyOpen && (
+  <div style={{
+    background: 'rgba(121,245,167,0.06)',
+    borderBottom: '1px solid rgba(121,245,167,0.2)',
+    padding: '8px 20px',
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    flexShrink: 0,
+  }}>
+    <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: '#79f5a7', letterSpacing: '0.12em' }}>
+      ● SESSION LOBBY OPEN
+    </div>
+    <button onClick={() => setActiveTab('Sheet')} style={{
+      background: 'rgba(121,245,167,0.12)', border: '1px solid rgba(121,245,167,0.4)',
+      borderRadius: 6, padding: '5px 14px', cursor: 'pointer',
+      fontFamily: "'Cinzel', serif", fontSize: 9, color: '#79f5a7', letterSpacing: '0.1em',
+    }}>
+      Check In →
+    </button>
+  </div>
+)}
+
+
 
       {/* Tabs */}
       <div style={{ display: 'flex', borderBottom: `1px solid ${COLORS.border}`, overflowX: 'auto', background: COLORS.surface, flexShrink: 0 }}>
@@ -1819,31 +1840,9 @@ useEffect(() => {
           {renderTab()}
         </div>
       </div>
-    </div>
+          </div>
   );
 }
-
-{/* Lobby banner */}
-{lobbyOpen && (
-  <div style={{
-    background: 'rgba(121,245,167,0.06)',
-    borderBottom: '1px solid rgba(121,245,167,0.2)',
-    padding: '8px 20px',
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    flexShrink: 0,
-  }}>
-    <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: '#79f5a7', letterSpacing: '0.12em' }}>
-      ● SESSION LOBBY OPEN
-    </div>
-    <button onClick={() => setActiveTab('Sheet')} style={{
-      background: 'rgba(121,245,167,0.12)', border: '1px solid rgba(121,245,167,0.4)',
-      borderRadius: 6, padding: '5px 14px', cursor: 'pointer',
-      fontFamily: "'Cinzel', serif", fontSize: 9, color: '#79f5a7', letterSpacing: '0.1em',
-    }}>
-      Check In →
-    </button>
-  </div>
-)}
 
 export default function CampaignView({ userChar, onHome, onAssign, onUpdateChar }) {
   const [selectedCampaign, setSelectedCampaign] = useState(null);
