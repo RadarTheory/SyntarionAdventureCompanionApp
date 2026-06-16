@@ -1106,42 +1106,13 @@ export default function DMView({ user, session, onHome }) {
           </div>
         </div>
 
-        {showWorldMap && (
-        <DraggablePanel defaultX={120} defaultY={40} onClose={() => setShowWorldMap(false)} title="WORLD MAP · Soteria" width={Math.min(window.innerWidth - 140, 900)} accentColor="rgba(200,168,74,0.4)">
-          <div
-  ref={el => {
-    if (!el) return;
-    const handler = e => {
-      e.preventDefault();
-      setMapZoom(z => Math.min(4, Math.max(0.3, z - e.deltaY * 0.0010)));
-    };
-    el.addEventListener('wheel', handler, { passive: false });
-  }}
-  style={{ overflow: 'hidden', maxHeight: 'calc(80vh - 48px)', cursor: 'grab', position: 'relative' }}
-  onMouseDown={e => {
-    const el = e.currentTarget;
-    el.style.cursor = 'grabbing';
-    const startX = e.clientX + el.scrollLeft;
-    const startY = e.clientY + el.scrollTop;
-    const onMove = ev => { el.scrollLeft = startX - ev.clientX; el.scrollTop = startY - ev.clientY; };
-    const onUp = () => { el.style.cursor = 'grab'; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-  }}
->
-  <img
-    src="/SoteriaMap.jpg"
-    alt="Soteria World Map"
-    draggable={false}
-    style={{ width: `${mapZoom * 100}%`, display: 'block', userSelect: 'none', transition: 'width 0.1s ease' }}
-  />
-</div>
-          <div style={{ padding: '6px 12px', borderTop: '1px solid rgba(200,168,74,0.2)', fontSize: 8, color: '#888', fontFamily: "'Cinzel', serif", textAlign: 'center' }}>
-            Scroll to zoom · {Math.round(mapZoom * 100)}%
-          </div>
-        </DraggablePanel>
-      )}
-
+       {showWorldMap && (
+  <DraggablePanel defaultX={120} defaultY={40} onClose={() => setShowWorldMap(false)} title="WORLD MAP · Soteria" width={Math.min(window.innerWidth - 140, 900)} accentColor="rgba(200,168,74,0.4)">
+    <div style={{ height: '70vh' }}>
+      <WorldMapPanel campaignId={activeCampaignTab} isDM={true} characters={characters} />
+    </div>
+  </DraggablePanel>
+)}
         {/* CORRECTED PROP PASSING HERE */}
         <SessionManager
           onTimerLabel={setSessionTimerLabel}
