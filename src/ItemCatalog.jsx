@@ -1,9 +1,16 @@
 import { useState, useMemo, useEffect } from 'react';
 import { COLORS } from './constants';
-import { ALL_ITEMS } from "./data/items/allitems";
 import supabase from './lib/supabase';
 
-const ITEMS = ALL_ITEMS;
+const [ITEMS, setItems] = useState([]);
+const [itemsLoading, setItemsLoading] = useState(true);
+
+useEffect(() => {
+  supabase.from('items').select('*').order('category').order('name').then(({ data }) => {
+    if (data) setItems(data.map(r => ({ ...r, desc: r.description })));
+    setItemsLoading(false);
+  });
+}, []);
 
 const CAT_COLOR = {
   Currency: COLORS.tech || '#2D9E7A',
@@ -359,7 +366,7 @@ export default function ItemCatalog() {
       {grantItem && <GrantModal item={grantItem} onClose={() => setGrantItem(null)} />}
 
       <div style={{ marginBottom: 20 }}>
-        <div style={label8()}>Item Catalog · {ITEMS.length} entries</div>
+        <div style={label8()}>Item Catalog · {itemsLoading ? '…' : `${ITEMS.length} entries`}</div>
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
