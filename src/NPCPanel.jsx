@@ -18,10 +18,10 @@ const CONDITION_COLORS = {Dead:'#e05a5a',Dying:'#e06060',Unconscious:'#c06060',I
 const condColor = c => CONDITION_COLORS[c] || '#909090';
 
 const STATUS_OPTIONS = ['Active','Deceased','Missing','Unknown','Imprisoned','Wanted'];
-const CATEGORY_OPTIONS = ['Uncategorized','Merchants','Guards','Nobility','Clergy','Criminals','Scholars','Adventurers','Military','Mystics','Laborers','Vagrants','Nomadic','Working Class'];
+const CATEGORY_OPTIONS = ['Uncategorized','Merchants','Guards','Nobility','Clergy','Criminals','Scholars','Adventurers','Military','Mystics','Laborers','Vagrants','Nomadic','Working Class','Paladins','Augurs','Monks','Shamans','Warlocks','Wizards','Evokers','Sorcerers','Druids','Rangers','Rogues','Inquisitors','Bards','Alchemists','Gunslingers','Artificers','Necromancers','Vanguard','Diplomats','Inventors','Poets','Archivists'];
 const STATUS_COLORS = {Active:'#60e060',Deceased:'#e06060',Missing:'#e0b040',Unknown:'#8090a0',Imprisoned:'#c060e0',Wanted:'#e08040'};
 const sc = s => STATUS_COLORS[s] || '#8090a0';
-const CATEGORY_COLORS = {Merchants:'#e8a040',Guards:'#6090d0',Nobility:'#c060c0',Clergy:'#e0e060',Criminals:'#e06060',Scholars:'#40c0c0',Adventurers:'#60e060',Military:'#8090a0',Mystics:'#a060e0',Laborers:'#c0a060',Vagrants:'#908070',Nomadic:'#70b090','Working Class':'#b0a080',Uncategorized:'#504840'};
+const CATEGORY_COLORS = {Merchants:'#e8a040',Guards:'#6090d0',Nobility:'#c060c0',Clergy:'#e0e060',Criminals:'#e06060',Scholars:'#40c0c0',Adventurers:'#60e060',Military:'#8090a0',Mystics:'#a060e0',Laborers:'#c0a060',Vagrants:'#908070',Nomadic:'#70b090','Working Class':'#b0a080',Uncategorized:'#504840',Paladins:'#e8c040',Augurs:'#c0a0e0',Monks:'#60c0b0',Shamans:'#70b060',Warlocks:'#9040c0',Wizards:'#6080e0',Evokers:'#e06080',Sorcerers:'#e04060',Druids:'#60b040',Rangers:'#70a060',Rogues:'#a08060',Inquisitors:'#c07040',Bards:'#e0a060',Alchemists:'#80c060',Gunslingers:'#a0a0a0',Artificers:'#80b0c0',Necromancers:'#8040a0',Vanguard:'#6090b0',Diplomats:'#c0c060',Inventors:'#60c0c0',Poets:'#e080a0',Archivists:'#a0c0a0'};
 const cc = c => CATEGORY_COLORS[c] || CATEGORY_COLORS.Uncategorized;
 function newId() { return `${Date.now()}_${Math.random().toString(36).slice(2,7)}`; }
 
@@ -266,22 +266,46 @@ function NPCModal({ cities, groups, onSave, onClose }) {
   const [saving, setSaving] = useState(false);
   const [abilityTab, setAbilityTab] = useState('magic');
   const [generatingLoot, setGeneratingLoot] = useState(false);
-  const [generatingIdentity, setGeneratingIdentity] = useState(false);
   const nameRef = useRef(null);
   useEffect(() => { nameRef.current?.focus(); }, []);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const setStat = (k, v) => setForm(f => ({ ...f, stats: { ...f.stats, [k]: Number(v)||8 } }));
 
-  const generateIdentity = async () => {
-    setGeneratingIdentity(true);
-    try {
-      const prompt = `Generate identity details for a Soteria TTRPG NPC named "${form.name||'Unknown'}" with role "${form.role||'unknown'}". Return JSON with exactly these keys: faction (string), alignment (one of: neutral,magic,tech,chaos,order,shadow,light), tags (array from: trader,merchant,innkeep,vendor,questgiver,enemy,ally,neutral), conditions (array 0-2 items), notes (2-3 sentences: personality, motivation, secret).`;
-      const raw = await callGemini(SOTERIA_NPC_CONTEXT, [{role:'user',content:prompt}], 400);
-      const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
-      setForm(f => ({...f, faction:parsed.faction||f.faction, alignment:parsed.alignment||f.alignment, tags:parsed.tags||f.tags, conditions:parsed.conditions||f.conditions, notes:parsed.notes||f.notes}));
-    } catch(e) { console.error('Identity generate error:', e); }
-    setGeneratingIdentity(false);
+  const generateIdentity = () => {
+    const r = (form.role||'').toLowerCase();
+    const FACTIONS = ['The Veiled Accord','The Ironmark Guild','Order of the Pale Flame','The Shattered Lens','House Caerveth','The Driftborn Collective','The Ashen Compact','Syndicate of the Open Road','The Luminary','The Tidebound','Order of Sylph','The Cradle Courts','Unmarked','The Wandering Press','The Foundry Union','The Ecliptic Circle'];
+    const ALIGNMENTS = ['neutral','magic','tech','neutral','neutral','magic','tech','chaos','order','shadow','light'];
+    const PERSONALITIES = [
+      'Speaks in measured tones, never more than necessary. Harbors a debt that shapes every decision.',
+      'Openly warm, privately calculating. Knows more about the party than they let on.',
+      'Carries a grievance from a past alliance gone wrong. Loyalty must be earned twice.',
+      'Curious to a fault — asks too many questions but always for a reason.',
+      'Haunted by something they witnessed on the road. Flinches at the wrong sounds.',
+      'Excessively formal, as if performing for an audience that isn\u2019t there.',
+      'Generous with strangers, cold to those who know them well.',
+      'Marks every deal in writing. Has a ledger they guard like a second soul.',
+      'Seems cheerful until you catch them staring into nothing between sentences.',
+      'Claims no faction, but their hands tell a different story.',
+      'Once held a position of power. Lost it. Still acts like they have it.',
+      'Profoundly superstitious — observes small rituals before speaking to anyone new.',
+    ];
+    const TAG_MAP = {
+      merchant:['merchant','trader'],trader:['trader','merchant'],innkeep:['innkeep','vendor'],
+      vendor:['vendor','trader'],guard:['neutral'],soldier:['neutral'],
+      quest:['questgiver'],contact:['questgiver','ally'],enemy:['enemy'],
+      assassin:['enemy'],criminal:['enemy'],spy:['enemy','neutral'],
+      ally:['ally'],healer:['ally','questgiver'],cleric:['ally'],
+      default:['neutral'],
+    };
+    const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+    const faction = pick(FACTIONS);
+    const alignment = pick(ALIGNMENTS);
+    const notes = pick(PERSONALITIES);
+    let tags = TAG_MAP.default;
+    for (const [key,val] of Object.entries(TAG_MAP)) { if (r.includes(key)) { tags=val; break; } }
+    const startConds = Math.random()>0.6 ? [pick(['Working','Traveling','Guarding','Resting'])] : [];
+    setForm(f => ({...f, faction, alignment, tags, conditions:startConds, notes}));
   };
 
   const generateVitals = () => {
@@ -385,7 +409,7 @@ function NPCModal({ cities, groups, onSave, onClose }) {
           <div style={{display:'flex',flexDirection:'column',gap:9}}>
             <div style={{display:'flex',gap:8,alignItems:'flex-end'}}>
               <div style={{flex:1}}><label style={S.label}>Name *</label><input ref={nameRef} style={S.fieldInput} value={form.name} onChange={e=>set('name',e.target.value)} placeholder="NPC name…"/></div>
-              <button onClick={generateIdentity} disabled={generatingIdentity||!form.name.trim()} style={{...S.genBtn,width:'auto',padding:'5px 10px',marginBottom:0,opacity:form.name.trim()?1:0.4,cursor:form.name.trim()?'pointer':'not-allowed'}}>{generatingIdentity?'…':'⚙ Generate'}</button>
+              <button onClick={generateIdentity} disabled={!form.name.trim()} style={{...S.genBtn,width:'auto',padding:'5px 10px',marginBottom:0,opacity:form.name.trim()?1:0.4,cursor:form.name.trim()?'pointer':'not-allowed'}}>'⚙ Generate'</button>
             </div>
             <div style={{display:'flex',gap:8}}>
               <div style={{...S.field,flex:2}}><label style={S.label}>Role / Title</label><input style={S.fieldInput} value={form.role} onChange={e=>set('role',e.target.value)} placeholder="Role or title…"/></div>
