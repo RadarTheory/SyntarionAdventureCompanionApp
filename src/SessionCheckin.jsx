@@ -8,14 +8,15 @@ import { COLORS } from './constants';
 //   char   — the character object (needs char.id, char.name, char.campaign_id or char.campaign)
 //   user   — the authenticated user object (needs user.id)
 // ─────────────────────────────────────────────────────────────────────────────
-export default function SessionCheckin({ char, user }) {
+export default function SessionCheckin({ char, user, campaignId: campaignIdProp }) {
   const [lobbySession, setLobbySession] = useState(null);
   const [activeSession, setActiveSession] = useState(null);
   const [checkedIn, setCheckedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
+  
 
-  const campaignId = char?.campaign_id || char?.campaign;
+  const campaignId = campaignIdProp || char?.campaign_id || char?.campaign;
 
   useEffect(() => {
     if (!campaignId) { setLoading(false); return; }

@@ -258,8 +258,8 @@ function PlayModal({ onClose, onSessionStarted, existingSession }) {
     fetchCheckins();
     const channel = supabase.channel(`lobby-${session.id}`)
       .on('postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'session_checkins' },
-        (payload) => { setCheckins(prev => [...prev, payload.new]); }
+        { event: '*', schema: 'public', table: 'session_checkins' },
+      () => fetchCheckins()
       )
       .subscribe();
     return () => supabase.removeChannel(channel);
@@ -328,7 +328,10 @@ function PlayModal({ onClose, onSessionStarted, existingSession }) {
             <div style={{ fontSize: 11, color: COLORS.muted, fontStyle: 'italic', marginBottom: 20 }}>{campaign?.subtitle} · Waiting for players...</div>
             <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '12px 14px', marginBottom: 20, minHeight: 80 }}>
               {checkins.length === 0
-                ? <div style={{ fontSize: 11, color: COLORS.dim }}>No players yet.</div>
+                ? <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div style={{ fontSize: 11, color: COLORS.dim }}>No players yet.</div>
+    <button onClick={fetchCheckins} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '3px 8px', fontSize: 8, color: COLORS.dim, cursor: 'pointer', fontFamily: "'Cinzel', serif" }}>↻ Refresh</button>
+  </div>
                 : checkins.map(c => <div key={c.id} style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, padding: '4px 0' }}>✦ {c.character_name}</div>)
               }
             </div>

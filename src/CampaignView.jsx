@@ -18,6 +18,7 @@ import { BazaarPlayerPanel } from './BazaarPanel';
 import { QuestorPlayerPanel } from './QuestorPanel';
 import { WorldMapPanel } from './WorldMapPanel';
 import { SoteriaClockDisplay } from './SoteriaClockPanel';
+import SessionCheckin from './SessionCheckin';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -1386,6 +1387,10 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign, onUpdateChar 
   const [showQuestor, setShowQuestor] = useState(false);
   const [clockState, setClockState] = useState(null);
   const [lobbyOpen, setLobbyOpen] = useState(false);
+  const [authUser, setAuthUser] = useState(null);
+useEffect(() => {
+  supabase.auth.getUser().then(({ data }) => setAuthUser(data?.user || null));
+}, []);
 
 useEffect(() => {
   if (!campaign?.id) return;
@@ -1508,10 +1513,12 @@ useEffect(() => {
         return <VTTViewer campaignId={String(campaign.id)} userChar={userChar} />;
 
       case 'Sheet':
-        return userChar
-          ? <CharacterSheetInline char={userChar} effectiveStats={effectiveStats} />
-          : <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12 }}>No character loaded.</div>;
-
+  return userChar
+    ? <>
+        <SessionCheckin char={userChar} user={authUser} campaignId={String(campaign.id)} />
+        <CharacterSheetInline char={userChar} effectiveStats={effectiveStats} />
+      </>
+    : <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12 }}>No character loaded.</div>;
       case 'Scales':
         return userChar
           ? <ScalesPanel char={userChar} effectiveStats={effectiveStats} />
