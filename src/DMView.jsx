@@ -20,6 +20,8 @@ import { ScribeDMPanel } from './ScribePanel';
 import Solomon from './Solomon';
 import NPCPanel from './NPCPanel';
 import LarkPanel from './LarkPanel';
+import { BazaarDMPanel } from './BazaarPanel';
+import { QuestorDMPanel } from './QuestorPanel';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -695,6 +697,8 @@ export default function DMView({ user, session, onHome }) {
   const [mapZoom, setMapZoom] = useState(1);
   const [showNPC, setShowNPC] = useState(false);
   const [showLarks, setShowLarks] = useState(false);
+  const [showBazaar, setShowBazaar] = useState(false);
+  const [showQuestor, setShowQuestor] = useState(false);
 
   // LOBBY STATE
   const [checkedInPlayers, setCheckedInPlayers] = useState([]);
@@ -1182,82 +1186,44 @@ export default function DMView({ user, session, onHome }) {
             <CastorDMPanel onPendingChange={setCastorBadge} />
           </div>
         </div>
-
       )}
-
+      {showBazaar && (
+        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowBazaar(false)} title="BAZAAR · Trade & Loot" width={420} accentColor="rgba(180,122,58,0.5)">
+          <div style={{ padding: 14, height: '100%', overflowY: 'auto' }}>
+            <BazaarDMPanel campaignId={activeCampaignTab} onClose={() => setShowBazaar(false)} />
+          </div>
+        </DraggablePanel>
+      )}
+      {showQuestor && (
+        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowQuestor(false)} title="QUESTOR · Quest Board" width={420} accentColor="rgba(200,168,74,0.4)">
+          <QuestorDMPanel campaignId={activeCampaignTab} onClose={() => setShowQuestor(false)} />
+        </DraggablePanel>
+      )}
       <FloatToolbar buttons={[
         {
           id: 'astragal',
           title: 'Astragal — Roll the dice',
           onClick: () => setShowAstragal(o => !o),
-          children: (
-            <img
-              src="/AstragalButton.png"
-              alt="Astragal"
-              draggable={false}
-              style={{
-                width: '118%',
-                height: '118%',
-                objectFit: 'contain',
-                pointerEvents: 'none',
-              }}
-            />
-          ),
+          children: <img src="/AstragalButton.png" alt="Astragal" draggable={false} style={{ width: '118%', height: '118%', objectFit: 'contain', pointerEvents: 'none' }} />,
         },
         {
           id: 'hercules',
           title: 'HERCULES — Combat Tracker',
           onClick: () => setShowHercules(o => !o),
-          children: (
-            <img
-              src="/HerculesCombat.png"
-              alt="HERCULES"
-              draggable={false}
-              style={{
-                width: '150%',
-                height: '150%',
-                objectFit: 'contain',
-                pointerEvents: 'none',
-              }}
-            />
-          ),
+          children: <img src="/HerculesCombat.png" alt="HERCULES" draggable={false} style={{ width: '150%', height: '150%', objectFit: 'contain', pointerEvents: 'none' }} />,
         },
         {
           id: 'argus',
           title: 'ARGUS — My Gear, Pack, and Revealed Chests',
           onClick: () => setShowArgus(o => !o),
-          children: (
-            <img
-              src="/Backpackicon.png"
-              alt="ARGUS"
-              draggable={false}
-              style={{
-                width: '105%',
-                height: '105%',
-                objectFit: 'contain',
-                pointerEvents: 'none',
-              }}
-            />
-          ),
+          children: <img src="/Backpackicon.png" alt="ARGUS" draggable={false} style={{ width: '105%', height: '105%', objectFit: 'contain', pointerEvents: 'none' }} />,
         },
         {
           id: 'castor',
           title: 'CASTOR — Cast Request',
           onClick: () => setShowCastor(o => !o),
           badge: castorBadge,
-          children: (
-            <img
-              src="/castoricon.png"
-              alt="CASTOR"
-              draggable={false}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                pointerEvents: 'none',
-              }}
-            />
-          ),
+          children: <img src="/castoricon.png" alt="CASTOR" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
         {
           id: 'bestiary',
@@ -1275,60 +1241,39 @@ export default function DMView({ user, session, onHome }) {
           id: 'solomon',
           title: 'SOLOMON — Loot Governance',
           onClick: () => setShowSolomon(o => !o),
-          children: (
-            <img
-              src="/solomonicon.png"
-              alt="SOLOMON"
-              draggable={false}
-              style={{
-                width: '120%',
-                height: '120%',
-                objectFit: 'contain',
-                pointerEvents: 'none',
-              }}
-            />
-          ),
+          children: <img src="/solomonicon.png" alt="SOLOMON" draggable={false} style={{ width: '120%', height: '120%', objectFit: 'contain', pointerEvents: 'none' }} />,
         },
         {
           id: 'worldmap',
           title: 'World Map — Soteria',
           onClick: () => setShowWorldMap(o => !o),
-          children: (
-            <img
-              src="/WorldMapIcon.png"
-              alt="World Map"
-              draggable={false}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                pointerEvents: 'none',
-              }}
-            />
-          ),
+          children: <img src="/WorldMapIcon.png" alt="World Map" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
         {
-            id: 'npc',
-            title: 'NPC Tracker — People of Soteria',
-            onClick: () => setShowNPC(o => !o),
-            children: (
-              <img src="/npcicon.png" alt="NPC Tracker" draggable={false}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />
-            ),
-          },
-          {
-            id: 'lark',
-            title: 'LARK — Player Correspondence',
-            onClick: () => setShowLarks(o => !o),
-            children: (
-              <img src="/Larkicon.png" alt="Lark" draggable={false}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />
-            ),
-          },
+          id: 'npc',
+          title: 'NPC Tracker — People of Soteria',
+          onClick: () => setShowNPC(o => !o),
+          children: <img src="/npcicon.png" alt="NPC Tracker" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+        },
+        {
+          id: 'lark',
+          title: 'LARK — Player Correspondence',
+          onClick: () => setShowLarks(o => !o),
+          children: <img src="/Larkicon.png" alt="Lark" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+        },
+        {
+          id: 'bazaar',
+          title: 'BAZAAR — Trade & Loot',
+          onClick: () => setShowBazaar(o => !o),
+          children: <img src="/Bazaaricon.png" alt="Bazaar" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+        },
+        {
+          id: 'questor',
+          title: 'QUESTOR — Quest Board',
+          onClick: () => setShowQuestor(o => !o),
+          children: <img src="/Questoricon.png" alt="Questor" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+        },
       ]} />
-
     </div>
   );
 }
-
-
