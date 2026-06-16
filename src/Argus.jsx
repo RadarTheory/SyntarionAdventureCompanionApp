@@ -244,6 +244,131 @@ function smallBtn() {
   return { background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 20px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.dim, letterSpacing: '0.1em' };
 }
 
+// ─── NEW ITEM MODAL ───────────────────────────────────────────────────────────
+function NewItemModal({ onClose, onCreated }) {
+  const EMPTY = { name: '', category: 'Weapons', type: '', description: '', rarity: 'Common', value: '', tags: '', bonuses: {} };
+  const [draft, setDraft] = useState(EMPTY);
+  const [saving, setSaving] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const set = (k, v) => setDraft(d => ({ ...d, [k]: v }));
+  const setBonus = (k, v) => setDraft(d => ({ ...d, bonuses: { ...d.bonuses, [k]: Number(v) } }));
+
+  const save = async () => {
+    if (!draft.name.trim()) return;
+    setSaving(true);
+    const { data, error } = await supabase.from('items').insert({
+      name: draft.name.trim(),
+      category: draft.category,
+      type: draft.type.trim() || draft.category,
+      description: draft.description.trim(),
+      rarity: draft.rarity,
+      value: draft.value ? Number(draft.value) : null,
+      tags: draft.tags ? draft.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+      effect: { bonuses: draft.bonuses },
+      is_equippable: ['Weapons','Armor','Magic Items','Artifacts','Spellcasting Items','Accessories'].includes(draft.category),
+      is_consumable: draft.category === 'Consumables',
+      is_usable: ['Weapons','Magic Items','Artifacts','Spellcasting Items','Consumables'].includes(draft.category),
+    }).select().single();
+    setSaving(false);
+    if (!error && data) { onCreated({ ...data, desc: data.description }); setDone(true); }
+  };
+
+  if (done) return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.78)', zIndex: 500000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ background: '#120e0a', border: `1px solid ${COLORS.border}`, borderRadius: 14, padding: 28, maxWidth: 400, width: '100%', textAlign: 'center' }}>
+        <div style={{ fontSize: 24, marginBottom: 12 }}>✦</div>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, color: COLORS.magic, marginBottom: 8 }}>Item Created</div>
+        <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 20 }}>{draft.name} added to catalog.</div>
+        <button onClick={onClose} style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px 24px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.magicText }}>Close</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.78)', zIndex: 500000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ background: '#120e0a', border: `1px solid ${COLORS.border}`, borderRadius: 14, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', padding: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: COLORS.text, letterSpacing: '0.1em' }}>NEW ITEM</div>
+          <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <div style={{ ...label8(), marginBottom: 6 }}>Name *</div>
+            <input value={draft.name} onChange={e => set('name', e.target.value)}
+              placeholder="e.g. Soulweave Blade"
+              style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', fontFamily: 'Georgia, serif', fontSize: 12, color: COLORS.text, outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              <div style={{ ...label8(), marginBottom: 6 }}>Category</div>
+              <select value={draft.category} onChange={e => set('category', e.target.value)}
+                style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 8px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none' }}>
+                {ITEM_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={{ ...label8(), marginBottom: 6 }}>Type</div>
+              <input value={draft.type} onChange={e => set('type', e.target.value)}
+                placeholder="e.g. Longsword"
+                style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 8px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+          </div>
+
+          <div>
+            <div style={{ ...label8(), marginBottom: 6 }}>Description</div>
+            <textarea value={draft.description} onChange={e => set('description', e.target.value)}
+              rows={3} placeholder="Item lore and properties…"
+              style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              <div style={{ ...label8(), marginBottom: 6 }}>Rarity</div>
+              <select value={draft.rarity} onChange={e => set('rarity', e.target.value)}
+                style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 8px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none' }}>
+                {RARITIES.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={{ ...label8(), marginBottom: 6 }}>Value (gp)</div>
+              <input type="number" value={draft.value} onChange={e => set('value', e.target.value)}
+                placeholder="0"
+                style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 8px', fontFamily: 'monospace', fontSize: 11, color: COLORS.text, outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+          </div>
+
+          <div>
+            <div style={{ ...label8(), marginBottom: 6 }}>Tags (comma separated)</div>
+            <input value={draft.tags} onChange={e => set('tags', e.target.value)}
+              placeholder="e.g. fire, enchanted, rare-drop"
+              style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 8px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+
+          <div>
+            <div style={{ ...label8(), marginBottom: 10 }}>Stat Bonuses</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {ALL_EIGHT_KEYS.map(k => (
+                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, color: COLORS.muted, width: 54, textTransform: 'capitalize' }}>{k}</div>
+                  <input type="number" value={draft.bonuses[k] || 0} onChange={e => setBonus(k, e.target.value)}
+                    style={{ width: 48, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 6px', fontFamily: 'monospace', fontSize: 11, color: COLORS.text, outline: 'none', textAlign: 'center' }} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <button onClick={save} disabled={saving || !draft.name.trim()}
+          style={{ width: '100%', marginTop: 20, background: draft.name.trim() ? COLORS.magicBg : 'transparent', border: `1px solid ${draft.name.trim() ? COLORS.magic : COLORS.border}`, borderRadius: 8, padding: '11px', cursor: draft.name.trim() ? 'pointer' : 'default', fontFamily: "'Cinzel', serif", fontSize: 10, color: draft.name.trim() ? COLORS.magicText : COLORS.dim, fontWeight: 700, letterSpacing: '0.1em' }}>
+          {saving ? 'Creating…' : '✦ Create Item'}
+        </button>
+      </div>
+    </div>
+  );
+}
 // ─── EQUIPPED SLOT DISPLAY ────────────────────────────────────────────────────
 
 function SlotRow({ slot, item }) {
@@ -405,16 +530,22 @@ export function ArgusDMPanel({ onClose }) {
   const [charInvs, setCharInvs]   = useState({}); // { charId: { equipped, pack } }
   const [loading, setLoading]     = useState(false);
   const [expandedChar, setExpandedChar] = useState(null);
+  const [allItems, setAllItems] = useState([]);
+  const [showNewItem, setShowNewItem] = useState(false);
 
+  useEffect(() => {
+    supabase.from('items').select('*', { count: 'exact' }).order('category').order('name').range(0, 2500).then(({ data }) => {
+      if (data) setAllItems(data.map(r => ({ ...r, desc: r.description })));
+    });
+  }, []);
 
-  
-  // Catalog filtering
+  const categories = useMemo(() => [...new Set(allItems.map(i => i.category))], [allItems]);
   const filtered = useMemo(() => allItems.filter(item => {
-  if (activeCat && item.category !== activeCat) return false;
-  if (!search) return true;
-  const s = search.toLowerCase();
-  return item.name.toLowerCase().includes(s) || item.desc?.toLowerCase().includes(s);
-}), [search, activeCat, allItems]);
+    if (activeCat && item.category !== activeCat) return false;
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return item.name.toLowerCase().includes(s) || item.desc?.toLowerCase().includes(s);
+  }), [search, activeCat, allItems]);
 
   // Load characters
   useEffect(() => {
@@ -440,6 +571,7 @@ export function ArgusDMPanel({ onClose }) {
     <div style={{ position: 'fixed', bottom: 24, left: 108, width: 480, maxHeight: '85vh', zIndex: 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
 
       {grantItem && <GrantModal item={grantItem} onClose={() => setGrantItem(null)} />}
+      {showNewItem && <NewItemModal onClose={() => setShowNewItem(false)} onCreated={item => { setAllItems(prev => [item, ...prev]); setShowNewItem(false); }} />}
 
       {/* Header */}
       <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(200,168,74,0.15)', background: 'rgba(200,168,74,0.04)', flexShrink: 0 }}>
@@ -485,7 +617,13 @@ export function ArgusDMPanel({ onClose }) {
               </div>
             )}
 
-            <div style={{ fontSize: 8, color: COLORS.dim, marginBottom: 10 }}>{filtered.length} items</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <div style={{ fontSize: 8, color: COLORS.dim }}>{filtered.length} items</div>
+              <button onClick={() => setShowNewItem(true)}
+                style={{ background: 'rgba(200,168,74,0.12)', border: '1px solid rgba(200,168,74,0.4)', borderRadius: 5, padding: '4px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: '#e8c84a', letterSpacing: '0.08em' }}>
+                + New Item
+              </button>
+            </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {filtered.map((item, i) => {
