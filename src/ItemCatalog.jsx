@@ -2,13 +2,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { COLORS } from './constants';
 import supabase from './lib/supabase';
 
-useEffect(() => {
-  supabase.from('items').select('*').order('category').order('name').then(({ data }) => {
-    if (data) setItems(data.map(r => ({ ...r, desc: r.description })));
-    setItemsLoading(false);
-  });
-}, []);
-
 const CAT_COLOR = {
   Currency: COLORS.tech || '#2D9E7A',
   Weapons: COLORS.warn || '#D4845A',

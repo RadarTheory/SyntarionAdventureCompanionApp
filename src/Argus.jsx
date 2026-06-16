@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
-import { ALL_ITEMS } from './data/items/allitems';
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
@@ -21,6 +20,13 @@ const CAT_COLOR = {
 
 const CAMPAIGNS = ['I', 'II', 'III', 'IV'];
 const CAMPAIGN_NAMES = { I: 'Veinrunner', II: 'Keys of Aerifthos', III: 'Prints from Gamdon', IV: 'Veyline' };
+const ALL_EIGHT_KEYS = ['spirit','soul','body','essence','will','whim','mind','dream'];
+const ITEM_CATEGORIES = [
+  'Weapons','Armor','Magic Items','Artifacts','Spellcasting Items',
+  'Consumables','Gear','Packs','Currency','Trade Goods',
+  'Collectables','Documents','Schematic Materials','Accessories','Reagent',
+];
+const RARITIES = ['Mundane','Common','Uncommon','Rare','Very Rare','Epic','Legendary','Artifact'];
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -400,14 +406,15 @@ export function ArgusDMPanel({ onClose }) {
   const [loading, setLoading]     = useState(false);
   const [expandedChar, setExpandedChar] = useState(null);
 
+
+  
   // Catalog filtering
-  const categories = useMemo(() => [...new Set(ALL_ITEMS.map(i => i.category))], []);
-  const filtered   = useMemo(() => ALL_ITEMS.filter(item => {
-    if (activeCat && item.category !== activeCat) return false;
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return item.name.toLowerCase().includes(q) || item.desc?.toLowerCase().includes(q) || item.type?.toLowerCase().includes(q);
-  }), [search, activeCat]);
+  const filtered = useMemo(() => allItems.filter(item => {
+  if (activeCat && item.category !== activeCat) return false;
+  if (!search) return true;
+  const s = search.toLowerCase();
+  return item.name.toLowerCase().includes(s) || item.desc?.toLowerCase().includes(s);
+}), [search, activeCat, allItems]);
 
   // Load characters
   useEffect(() => {

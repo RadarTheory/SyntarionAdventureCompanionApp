@@ -1059,7 +1059,10 @@ function InventoryPanel({ char, onInventoryChange, isDM = false, campaignId }) {
                     )}
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    {hasUse({ ...item, category: item.category, desc: item.description }) && (
+                    {hasUse({
+                        category: item.description?.split('|')[0] || '',
+                        desc: item.description?.split('|')[1] || item.description || '',
+                      }) && (
                       <button onClick={useItem}
                         style={{ flex: 1, background: 'rgba(200,168,74,0.14)', border: '1px solid rgba(200,168,74,0.5)', borderRadius: 8, padding: '10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: '#e8c84a', fontWeight: 700 }}>
                         ⚡ Use
@@ -1097,7 +1100,7 @@ function InventoryPanel({ char, onInventoryChange, isDM = false, campaignId }) {
           </div>
         );
       })()}
-      
+
       {/* ── EQUIP SLOT EDIT MODAL ── */}
       {editSlot !== null && draft && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', zIndex: 300000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
