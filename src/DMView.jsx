@@ -9,7 +9,7 @@ import { SOTERIA_BESTIARY } from './soteria-bestiary';
 import PlayersPanel from './PlayersPanel';
 import AstragalButton from './AstragalButton';
 import SessionManager from './SessionManager';
-import MapPanel from './MapPanel';
+import { WorldMapPanel } from './WorldMapPanel';
 import VTTCanvas from './VTTCanvas';
 import HerculesCombat from './HerculesCombat';
 import FloatToolbar from './FloatToolbar';
