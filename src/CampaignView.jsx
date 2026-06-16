@@ -53,6 +53,28 @@ const DISCIPLINE_KEYS = [
   'gain', 'grit', 'focus', 'matter', 'ingenuity', 'fortitude', 'reason',
 ];
 
+// ─── SLOT CONFIG ─────────────────────────────────────────────────────────────
+const SLOT_CATEGORIES = {
+  Head: ['Armor'], Torso: ['Armor'], Waist: ['Armor'],
+  Hands: ['Armor'], Greaves: ['Armor'], Boots: ['Armor'],
+  'Main Hand': ['Weapons'], 'Off-Hand': ['Weapons'],
+  'Side-Weapon': ['Weapons'], Heavy: ['Weapons'],
+  'Ring I': ['Magic Items','Artifacts','Spellcasting Items','Accessories','Collectables'],
+  'Ring II': ['Magic Items','Artifacts','Spellcasting Items','Accessories','Collectables'],
+  Neck: ['Magic Items','Artifacts','Spellcasting Items','Accessories','Collectables'],
+  Charm: ['Magic Items','Artifacts','Spellcasting Items','Accessories','Collectables'],
+  Relic: ['Magic Items','Artifacts','Spellcasting Items','Accessories','Collectables'],
+  Artifact: ['Magic Items','Artifacts','Spellcasting Items','Accessories','Collectables'],
+};
+const USE_CATEGORIES = new Set(['Weapons','Magic Items','Artifacts','Spellcasting Items','Consumables']);
+const USE_KEYWORDS = ['action','cast','activate','once per','bonus action','trigger','expend','channel','invoke'];
+function hasUse(item) {
+  if (!item) return false;
+  if (USE_CATEGORIES.has(item.category)) return true;
+  const desc = (item.desc || item.description || '').toLowerCase();
+  return USE_KEYWORDS.some(kw => desc.includes(kw));
+}
+
 // axis colors
 const axisColor = axis => axis === 'magic' ? COLORS.magic : COLORS.tech;
 const axisText = axis => axis === 'magic' ? COLORS.magicText : COLORS.techText;
@@ -804,13 +826,14 @@ function PackDrawer({ charId, loadedFromDB, packItems, setPackItems, persistPack
 }
 
 // ─── INVENTORY PANEL ──────────────────────────────────────────────────────────
-function InventoryPanel({ char, onInventoryChange, isDM = false }) {
+function InventoryPanel({ char, onInventoryChange, isDM = false, campaignId }) {
   const [items, setItems] = useState({});
   const [packItems, setPackItems] = useState([]);
   const [editSlot, setEditSlot] = useState(null);
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState(null);
   const [loadedFromDB, setLoadedFromDB] = useState(false);
+  const [playerSlot, setPlayerSlot] = useState(null);
 
   const STORAGE_KEY = `syntarion_inv_${char?.id}`;
   const PACK_STORAGE_KEY = `syntarion_pack_${char?.id}`;
@@ -905,8 +928,9 @@ function InventoryPanel({ char, onInventoryChange, isDM = false }) {
           return (
             <button
               key={slot}
-              onClick={() => {
-                if (isDM) openEdit(slot);
+             onClick={() => {
+                if (isDM) { openEdit(slot); return; }
+                setPlayerSlot({ slot, item: items[slot] || null });
               }}
               style={{ background: hasItem ? (isAttuned ? 'rgba(200,168,74,0.08)' : COLORS.card) : 'transparent', border: `1px solid ${hasItem ? (isAttuned ? 'rgba(200,168,74,0.4)' : COLORS.border) : `${COLORS.border}66`}`, borderRadius: 6, padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', transition: 'all 0.15s' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -956,6 +980,124 @@ function InventoryPanel({ char, onInventoryChange, isDM = false }) {
         isDM={isDM}
       />
 
+{/* ── PLAYER EQUIP MODAL ── */}
+      {!isDM && playerSlot && (() => {
+        const { slot, item } = playerSlot;
+        const occupied = item && item.name;
+        const compatible = packItems.filter(p =>
+          (SLOT_CATEGORIES[slot] || []).includes(p.category)
+        );
+
+        const equipItem = async (packItem) => {
+          const newItems = { ...items, [slot]: { name: packItem.name, description: packItem.desc || '', attuned: true, bonuses: {} } };
+          setItems(newItems);
+          onInventoryChange(newItems);
+          if (packItem.id) await supabase.from('character_items').delete().eq('id', packItem.id);
+          await supabase.from('character_items').upsert({
+            character_id: String(char.id), slot,
+            name: packItem.name, description: packItem.desc || '',
+            attuned: true, bonuses: {}, equipped: true,
+          }, { onConflict: 'character_id,slot' });
+          setPackItems(prev => prev.filter(p => p.id !== packItem.id));
+          setPlayerSlot(null);
+        };
+
+        const unequipItem = async () => {
+          const packRow = {
+            character_id: String(char.id),
+            slot: `pack__${Date.now()}`,
+            name: item.name,
+            description: `Misc|${item.description || ''}`,
+            attuned: false, bonuses: {}, equipped: false, weight: 1,
+          };
+          const { data: newRow } = await supabase.from('character_items').insert(packRow).select().single();
+          await supabase.from('character_items').delete().eq('character_id', String(char.id)).eq('slot', slot);
+          const newItems = { ...items };
+          delete newItems[slot];
+          setItems(newItems);
+          onInventoryChange(newItems);
+          if (newRow) setPackItems(prev => [...prev, { id: newRow.id, name: item.name, category: 'Misc', desc: item.description || '', qty: 1 }]);
+          setPlayerSlot(null);
+        };
+
+        const useItem = async () => {
+          const { data: hsession } = await supabase.from('hercules_sessions').select('id')
+            .eq('campaign_id', campaignId || String(char.campaign)).eq('status', 'active')
+            .order('created_at', { ascending: false }).limit(1).maybeSingle();
+          if (!hsession?.id) { setPlayerSlot(null); return; }
+          await supabase.from('hercules_events').insert({
+            session_id: hsession.id, type: 'item_use',
+            actor_name: char.name || 'Player',
+            actor_id: String(char.id),
+            description: `${char.name || 'Player'} used ${item.name}. ${item.description || ''}`,
+          });
+          setPlayerSlot(null);
+        };
+
+        return (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', zIndex: 300000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <div style={{ background: '#120e0a', border: `1px solid ${COLORS.border}`, borderRadius: 14, width: '100%', maxWidth: 400, maxHeight: '85vh', overflowY: 'auto', padding: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <div>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, color: COLORS.text, letterSpacing: '0.1em' }}>{slot}</div>
+                  <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: "'Cinzel', serif", marginTop: 2 }}>{occupied ? item.name : 'Empty'}</div>
+                </div>
+                <button onClick={() => setPlayerSlot(null)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
+              </div>
+
+              {occupied ? (
+                <div>
+                  <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '12px 14px', marginBottom: 16 }}>
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, marginBottom: 6 }}>{item.name}</div>
+                    {item.description && <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', lineHeight: 1.5 }}>{item.description}</div>}
+                    {item.bonuses && Object.entries(item.bonuses).some(([,v]) => v !== 0) && (
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                        {Object.entries(item.bonuses).filter(([,v]) => v !== 0).map(([k,v]) => (
+                          <div key={k} style={{ fontSize: 8, color: v > 0 ? COLORS.magic : '#e05a5a', fontFamily: "'Cinzel', serif" }}>{v > 0 ? '+' : ''}{v} {k}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {hasUse({ ...item, category: item.category, desc: item.description }) && (
+                      <button onClick={useItem}
+                        style={{ flex: 1, background: 'rgba(200,168,74,0.14)', border: '1px solid rgba(200,168,74,0.5)', borderRadius: 8, padding: '10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: '#e8c84a', fontWeight: 700 }}>
+                        ⚡ Use
+                      </button>
+                    )}
+                    <button onClick={unequipItem}
+                      style={{ flex: 1, background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.dim }}>
+                      ↩ Unequip
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ ...label8(), marginBottom: 10 }}>Pack — {SLOT_CATEGORIES[slot]?.join(', ')}</div>
+                  {compatible.length === 0 ? (
+                    <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '24px 0' }}>
+                      No compatible items in pack.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {compatible.map((p, i) => (
+                        <button key={p.id || i} onClick={() => equipItem(p)}
+                          style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s' }}
+                          onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(200,168,74,0.4)'}
+                          onMouseLeave={e => e.currentTarget.style.borderColor = COLORS.border}>
+                          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, marginBottom: 4 }}>{p.name}</div>
+                          {p.desc && <div style={{ fontSize: 10, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', lineHeight: 1.4 }}>{p.desc}</div>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+      
       {/* ── EQUIP SLOT EDIT MODAL ── */}
       {editSlot !== null && draft && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', zIndex: 300000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
@@ -1377,7 +1519,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign, onUpdateChar 
 
       case 'Inventory':
         return userChar
-          ? <InventoryPanel char={userChar} onInventoryChange={setInventory} />
+          ? <InventoryPanel char={userChar} onInventoryChange={setInventory} campaignId={String(campaign.id)} />
           : <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12 }}>No character loaded.</div>;
 
       case 'Loot':
