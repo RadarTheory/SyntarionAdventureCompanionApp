@@ -1860,14 +1860,16 @@ useEffect(() => {
   return <SessionLogTab campaignId={String(campaign.id)} userChar={userChar} />;
 
 function SessionLogTab({ campaignId, userChar }) {
-  const [entries, setEntries] = useState([]);
-  const [loading, setLoading] = useState(true);
+ const [entries, setEntries] = useState([]);
+const [loading, setLoading] = useState(true);
+const loadedRef = useRef(false);
 
   useEffect(() => {
   if (!campaignId) return;
   let cancelled = false;
-  const load = async () => {
-    if (cancelled) return;
+    const load = async () => {
+    if (cancelled || loadedRef.current) return;
+    loadedRef.current = true;
     setLoading(true);
     const [{ data: logs }, { data: campaignLore }] = await Promise.all([
       supabase.from('session_logs').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: false }),
