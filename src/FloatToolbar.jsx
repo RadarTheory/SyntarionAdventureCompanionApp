@@ -239,12 +239,12 @@ export default function FloatToolbar({ buttons }) {
             scrollbarWidth: 'none',
           }),
           ...(!isHorizontal && {
-            maxHeight: 'calc(100vh - 32px)',
+            maxHeight: `calc(100vh - ${pos.y + 16}px)`,
             overflowY: 'auto',
             overflowX: 'visible',
             WebkitOverflowScrolling: 'touch',
             scrollbarWidth: 'none',
-          }),
+          }),          
         }}
       >
         {/* Drag handle + collapse/redock toggle */}
