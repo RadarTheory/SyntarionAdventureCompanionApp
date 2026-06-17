@@ -19,7 +19,7 @@ import { QuestorPlayerPanel } from './QuestorPanel';
 import { WorldMapPanel } from './WorldMapPanel';
 import { SoteriaClockDisplay } from './SoteriaClockPanel';
 import SessionCheckin from './SessionCheckin';
-import IntentDeclare from './IntentDeclare';
+import IntentDeclare from "./IntentDeclare";
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -2043,7 +2043,7 @@ useEffect(() => {
           id: 'intent',
           title: 'Declare Intent',
           onClick: () => setShowIntent(o => !o),
-          children: <span style={{ fontSize: 16, lineHeight: 1 }}>◎</span>,
+          children: <img src="/intentDeclareIcon.png" alt="Intent" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
                    { id: 'bazaar', title: 'Bazaar — Trade & Loot', onClick: () => setShowBazaar(o => !o),
         children: <img src="/Bazaaricon.png" alt="Bazaar" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
