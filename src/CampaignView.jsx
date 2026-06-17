@@ -1889,12 +1889,8 @@ function SessionLogTab({ campaignId, userChar }) {
     setEntries(combined);
     setLoading(false);
   };
-  load();
-  const sub = supabase.channel(`log-${campaignId}`)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'dm_memory' }, load)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'session_logs' }, load)
-    .subscribe();
-   return () => { cancelled = true; supabase.removeChannel(sub); };
+    load();
+  return () => { cancelled = true; };
 }, [campaignId]);
   if (loading) return (
     <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '40px 0' }}>
