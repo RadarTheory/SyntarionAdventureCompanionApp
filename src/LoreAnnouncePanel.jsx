@@ -17,7 +17,6 @@ export default function LoreAnnouncePanel({ campaignId, embedded }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!campaignId) return;
     // Load approved characters for this campaign
     supabase.from('characters').select('*')
       .eq('campaign_id', String(campaignId))
@@ -33,14 +32,15 @@ export default function LoreAnnouncePanel({ campaignId, embedded }) {
         }
       });
 
+      
+
     // Check for active session
     supabase.from('sessions').select('*')
-      .eq('campaign_id', String(campaignId))
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => setActiveSession(data || null));
+  .eq('status', 'active')
+  .order('created_at', { ascending: false })
+  .limit(1)
+  .maybeSingle()
+  .then(({ data }) => setActiveSession(data || null));
   }, [campaignId]);
 
   const toggleChar = (id) => {
@@ -48,6 +48,32 @@ export default function LoreAnnouncePanel({ campaignId, embedded }) {
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     );
   };
+
+  useEffect(() => {
+  if (campaignId) {
+    supabase.from('characters').select('*')
+      .eq('campaign_id', String(campaignId))
+      .eq('status', 'approved')
+      .then(({ data }) => {
+        if (data) {
+          const chars = data.map(row => ({
+            id: row.id,
+            name: row.data?.name || row.name || 'Unknown',
+          }));
+          setCharacters(chars);
+          setSelected(chars.map(c => c.id));
+        }
+      });
+  }
+
+  // Always check for active session regardless of campaignId
+  supabase.from('sessions').select('*')
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+    .then(({ data }) => setActiveSession(data || null));
+}, [campaignId]);
 
   const handleAnnounce = async () => {
     if (!text.trim() || !activeSession) return;
