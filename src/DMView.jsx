@@ -123,7 +123,7 @@ function ChatPanel({ session, onClose, isDM }) {
     setSending(true);
     await supabase.from('messages').insert({
       session_id: session.session_id,
-      sender_id: DM_USER_ID,
+     sender_id: null,
       character_id: session.character_id,
       campaign_id: session.campaign_id,
       type: 'dm_reply',
@@ -138,7 +138,7 @@ function ChatPanel({ session, onClose, isDM }) {
   const handleEndConsult = async () => {
     await supabase.from('messages').insert({
       session_id: session.session_id,
-      sender_id: DM_USER_ID,
+     sender_id: null,
       character_id: session.character_id,
       campaign_id: session.campaign_id,
       type: 'dm_system',

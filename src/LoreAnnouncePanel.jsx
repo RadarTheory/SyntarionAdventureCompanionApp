@@ -68,11 +68,29 @@ export default function LoreAnnouncePanel({ campaignId, embedded }) {
 
   // Always check for active session regardless of campaignId
   supabase.from('sessions').select('*')
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-    .then(({ data }) => setActiveSession(data || null));
+  .eq('status', 'active')
+  .order('created_at', { ascending: false })
+  .limit(1)
+  .maybeSingle()
+  .then(({ data }) => {
+    if (data) {
+      setActiveSession(data);
+      // Load characters from the active session's campaign
+      supabase.from('characters').select('*')
+        .eq('campaign_id', String(data.campaign_id))
+        .eq('status', 'approved')
+        .then(({ data: chars }) => {
+          if (chars) {
+            const mapped = chars.map(row => ({
+              id: row.id,
+              name: row.data?.name || row.name || 'Unknown',
+            }));
+            setCharacters(mapped);
+            setSelected(mapped.map(c => c.id));
+          }
+        });
+    }
+  });
 }, [campaignId]);
 
   const handleAnnounce = async () => {

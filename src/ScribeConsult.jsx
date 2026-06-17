@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import supabase from './lib/supabase';
-import { COLORS, CAMPAIGNS } from './constants';
+import { COLORS } from './constants';
 import { SOTERIA_LORE } from './soteria-lore';
 
 const SOTERIA_CONTEXT = `
@@ -201,7 +201,7 @@ export function DMConsult({ char, user }) {
   const [thread, setThread] = useState([]);
   const bottomRef = useRef(null);
 
-  const sessionId = char.user_id || user?.id;
+ const sessionId = `char_${char.id}`;
 
   useEffect(() => {
     if (!open || !sessionId) return;
