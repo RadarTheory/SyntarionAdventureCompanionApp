@@ -328,6 +328,9 @@ function CampaignList({ onSelect, userChar, onHome }) {
     description: '', setting: 'Soteria · 178 E.U.',
     max_players: 6, suggested_level: '',
   });
+  const [editTarget, setEditTarget] = useState(null);
+  const [showDelete, setShowDelete] = useState(null);
+  const [dmUnlocked, setDmUnlocked] = useState(false);
   const load = async () => {
     setLoading(true);
     const { data } = await supabase.from('campaigns').select('*').order('created_at', { ascending: true });
@@ -386,6 +389,7 @@ function CampaignList({ onSelect, userChar, onHome }) {
     onCancel={() => { setShowSigil(false); setEditTarget(null); setShowDelete(null); }}
   />
 )}
+
 
 {/* ── DELETE CONFIRM ── */}
 {showDelete && dmUnlocked && (
@@ -2109,7 +2113,7 @@ useEffect(() => {
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
         <div style={{ padding: isMobile ? '20px 16px' : '28px 32px', maxWidth: 680, width: '100%', margin: '0 auto' }}>
-          {!isAssigned && userChar && (
+          {false && !isAssigned && userChar && (
             <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '16px 20px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Assign your character to this campaign</div>
               <button onClick={handleAssign} disabled={assigning}
