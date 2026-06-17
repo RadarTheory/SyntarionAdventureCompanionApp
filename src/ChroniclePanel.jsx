@@ -24,6 +24,7 @@ const EVENT_CONFIG = {
   session_note:   { icon: '◆', label: 'Session Note',      color: COLORS.muted, show: true  },
   loot_granted:   { icon: '⬡', label: 'Loot Granted',      color: '#e8c84a', show: true  },
   message:        { icon: '✉', label: 'Message',           color: COLORS.muted, show: true  },
+  intent: { icon: '◎', label: 'Intent', color: '#a8c4e8', show: true },
 };
 
 function getEventConfig(type) {

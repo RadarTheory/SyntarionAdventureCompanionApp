@@ -19,6 +19,7 @@ import { QuestorPlayerPanel } from './QuestorPanel';
 import { WorldMapPanel } from './WorldMapPanel';
 import { SoteriaClockDisplay } from './SoteriaClockPanel';
 import SessionCheckin from './SessionCheckin';
+import IntentDeclare from './IntentDeclare';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -1732,6 +1733,8 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign, onUpdateChar 
   const [clockState, setClockState] = useState(null);
   const [lobbyOpen, setLobbyOpen] = useState(false);
   const [authUser, setAuthUser] = useState(null);
+  const [showIntent, setShowIntent] = useState(false);
+
 useEffect(() => {
   supabase.auth.getUser().then(({ data }) => setAuthUser(data?.user || null));
 }, []);
@@ -1871,6 +1874,10 @@ useEffect(() => {
       case 'Actions':
         return userChar ? (
           <div>
+            <div style={{ ...label8(), marginBottom: 8 }}>Declare Intent</div>
+            <div style={{ marginBottom: 16 }}>
+              <IntentDeclare campaignId={String(campaign.id)} char={userChar} />
+            </div>
             <div style={{ ...label8(), marginBottom: 12 }}>Your Actions</div>
             {Object.entries(ACTIONS).map(([category, actions]) => {
               if (category === 'magic' && userChar.cp !== 'magic') return null;
@@ -2031,6 +2038,13 @@ useEffect(() => {
             />
           ),
         },
+        // After the last existing button before the closing ]} add:
+        {
+          id: 'intent',
+          title: 'Declare Intent',
+          onClick: () => setShowIntent(o => !o),
+          children: <span style={{ fontSize: 16, lineHeight: 1 }}>◎</span>,
+        },
                    { id: 'bazaar', title: 'Bazaar — Trade & Loot', onClick: () => setShowBazaar(o => !o),
         children: <img src="/Bazaaricon.png" alt="Bazaar" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
       { id: 'questor', title: 'Questor — Quest Board', onClick: () => setShowQuestor(o => !o),
@@ -2112,6 +2126,13 @@ useEffect(() => {
     </div>
   </DraggablePanel>
 )}
+
+      {showIntent && (
+        <div style={{ position: 'fixed', bottom: 90, left: 16, zIndex: 300000, background: '#100d0a', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 10, padding: '10px 12px', width: 300, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+          <div style={{ fontSize: 8, fontFamily: "'Cinzel',serif", letterSpacing: '0.14em', color: COLORS.muted, marginBottom: 8 }}>DECLARE INTENT</div>
+          <IntentDeclare campaignId={campaign.id} char={userChar} compact />
+        </div>
+      )}
 
       {/* Header */}
       <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
