@@ -1636,6 +1636,72 @@ function LootboxPanel({ campaignId, userChar, onClaimed }) {
 
 // ─── CAMPAIGN DASHBOARD ───────────────────────────────────────────────────────
 const TABS = ['Map', 'Sheet', 'Scales', 'Actions', 'Abilities', 'Inventory', 'Loot', 'Log'];
+function SessionLogTab({ campaignId }) {
+  const [entries, setEntries] = useState(null);
+
+  useEffect(() => {
+    if (!entries && campaignId) {
+      Promise.all([
+        supabase.from('session_logs').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: false }),
+        supabase.from('dm_memory').select('*').eq('campaign_id', campaignId).eq('category', 'lore').order('created_at', { ascending: false }),
+      ]).then(([{ data: logs }, { data: lore }]) => {
+        const combined = [
+          ...(logs || []).map(l => ({ ...l, _kind: 'session' })),
+          ...(lore || []).map(l => ({
+            ...l,
+            _kind: 'lore',
+            title: l.content.startsWith('[LORE ANNOUNCEMENT]')
+              ? l.content.replace('[LORE ANNOUNCEMENT] ', '').split(':')[0]
+              : 'Lore Event',
+            body: l.content.startsWith('[LORE ANNOUNCEMENT]')
+              ? l.content.split(':').slice(1).join(':').trim()
+              : l.content,
+          })),
+        ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        setEntries(combined);
+      });
+    }
+  });
+
+  if (entries === null) return (
+    <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '40px 0' }}>Consulting the archives…</div>
+  );
+
+  if (entries.length === 0) return (
+    <div style={{ background: COLORS.card, border: `1px dashed ${COLORS.border}`, borderRadius: 8, padding: '40px 20px', textAlign: 'center' }}>
+      <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No logs yet. The Scribe will write here.</div>
+    </div>
+  );
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {entries.map(entry => (
+        <div key={entry.id} style={{
+          background: entry._kind === 'lore' ? 'rgba(200,168,74,0.04)' : COLORS.card,
+          border: `1px solid ${entry._kind === 'lore' ? 'rgba(200,168,74,0.25)' : COLORS.border}`,
+          borderRadius: 10, padding: '16px 18px',
+        }}>
+          {entry._kind === 'lore' && (
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, color: '#e8c84a', letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 8 }}>
+              ⟦ LORE ⟧ {entry.title}
+            </div>
+          )}
+          {entry._kind === 'session' && (
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, fontWeight: 700, color: COLORS.text, marginBottom: 6 }}>
+              {entry.title || 'Session Record'}
+            </div>
+          )}
+          <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', marginBottom: 10 }}>
+            {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          </div>
+          <p style={{ fontSize: 12, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', lineHeight: 1.75, margin: 0 }}>
+            {entry.body || entry.summary}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function CampaignDashboard({ campaign, userChar, onBack, onAssign, onUpdateChar }) {
   const { isMobile } = useDevice();
