@@ -30,6 +30,7 @@ const FULL_TITLES = {
   'III': 'An Offering to Aeirhyd',
   'IV': 'Frigid Dirge in Galekgarde',
 };
+const CAMPAIGN_NUM = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4 };
 
 // ─── EIGHT STATS ──────────────────────────────────────────────────────────────
 const MAGIC_STATS = [
@@ -1394,10 +1395,10 @@ useEffect(() => {
 
 useEffect(() => {
   if (!campaign?.id) return;
-  supabase.from('world_clock').select('*').eq('campaign_id', campaign.id).maybeSingle()
+  supabase.from('world_clock').select('*').eq('campaign_id', CAMPAIGN_NUM[campaign.id]).maybeSingle()
     .then(({ data }) => { if (data) setClockState(data); });
   const ch = supabase.channel(`world_clock_cv_${campaign.id}`)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'world_clock', filter: `campaign_id=eq.${campaign.id}` },
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'world_clock', filter: `campaign_id=eq.${CAMPAIGN_NUM[campaign.id]}` },
       ({ new: u }) => { if (u) setClockState(u); })
     .subscribe();
   return () => supabase.removeChannel(ch);

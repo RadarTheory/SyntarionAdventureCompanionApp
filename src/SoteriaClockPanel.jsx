@@ -135,6 +135,7 @@ export default function SoteriaClockPanel({ campaignId }) {
         if (data) {
           setClock(data);
         } else {
+          if (!campaignId || isNaN(Number(campaignId))) return;
           // Create default clock at 178 E.U., Aman, Turn 1, Ba'el
           supabase.from('world_clock').insert({
             campaign_id: campaignId,

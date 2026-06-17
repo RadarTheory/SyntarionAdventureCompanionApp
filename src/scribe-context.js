@@ -1,12 +1,4 @@
 // ─── SCRIBE CONTEXT RETRIEVAL ─────────────────────────────────────────────────
-// Replaces full-corpus injection (≈85KB/call) with query-relevant sections
-// (≈8–10KB/call). Splits each corpus on its ━━━ TITLE ━━━ headers, scores
-// sections against the question, and packs the best ones into a char budget.
-//
-// Usage:
-//   import { buildScribeContext } from './scribe-context';
-//   const worldContext = buildScribeContext(question);            // default budget
-//   const worldContext = buildScribeContext(question, 14000);     // DM: bigger budget
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { SOTERIA_LORE } from './soteria-lore';

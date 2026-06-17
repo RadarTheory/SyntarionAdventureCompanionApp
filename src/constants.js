@@ -41,10 +41,10 @@ export const COLORS = {
 
 // ─── CAMPAIGNS ────────────────────────────────────────────────────────────────
 export const CAMPAIGNS = [
-  { id: 'I',   name: 'Campaign I',   subtitle: 'Veinrunner'           },
-  { id: 'II',  name: 'Campaign II',  subtitle: 'The Keys of Aerithos' },
-  { id: 'III', name: 'Campaign III', subtitle: 'Prints from Gamdon'   },
-  { id: 'IV',  name: 'Campaign IV',  subtitle: 'Veyline'              },
+  { id: 1, roman: 'I',   name: 'Campaign I',   subtitle: 'Veinrunner'           },
+  { id: 2, roman: 'II',  name: 'Campaign II',  subtitle: 'The Keys of Aerithos' },
+  { id: 3, roman: 'III', name: 'Campaign III', subtitle: 'Prints from Gamdon'   },
+  { id: 4, roman: 'IV',  name: 'Campaign IV',  subtitle: 'Veyline'              },
 ];
 
 // ─── RACES ────────────────────────────────────────────────────────────────────

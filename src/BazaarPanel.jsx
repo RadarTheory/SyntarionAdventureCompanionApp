@@ -50,7 +50,7 @@ export function BazaarPlayerPanel({ char, campaignId, embedded = false }) {
       supabase.from('trades').select('*, trade_items(*)').eq('initiator_character_id', String(char.id)).order('created_at', { ascending: false }),
       supabase.from('lootboxes').select('*, lootbox_items(*)').eq('claimed', false).or(`campaign_id.eq.${campaignId},campaign_id.is.null`),
       supabase.from('character_items').select('*').eq('character_id', String(char.id)),
-      supabase.from('npcs').select('id, name, role, faction, tags').or('tags.cs.{trader},role.ilike.%trader%,role.ilike.%merchant%,role.ilike.%innkeep%,role.ilike.%vendor%'),
+      supabase.from('npcs').select('id, name, role, faction, tags').eq('active', true).or('tags.cs.{trader},role.ilike.%trader%,role.ilike.%merchant%,role.ilike.%innkeep%,role.ilike.%vendor%'),
     ]);
     if (tradesRes.data) setTrades(tradesRes.data);
     if (npcRes.data) setNpcs(npcRes.data);
@@ -283,8 +283,7 @@ export function BazaarPlayerPanel({ char, campaignId, embedded = false }) {
               </div>
               {counterpartyType === 'npc' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 160, overflowY: 'auto' }}>
-                  {npcs.length === 0 && <div style={{ fontSize: 10, color: COLORS.dim, fontStyle: 'italic' }}>No traders found in your region.</div>}
-                  {npcs.map(npc => (
+                  {npcs.length === 0 && <div style={{ fontSize: 10, color: COLORS.dim, fontStyle: 'italic' }}>No traders nearby. The Architect will make merchants available when you're in range.</div>}                  {npcs.map(npc => (
                     <button key={npc.id} onClick={() => setSelectedNpc(selectedNpc?.id === npc.id ? null : npc)}
                       style={{ background: selectedNpc?.id === npc.id ? 'rgba(200,168,74,0.10)' : COLORS.card, border: `1px solid ${selectedNpc?.id === npc.id ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 6, padding: '7px 10px', cursor: 'pointer', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
