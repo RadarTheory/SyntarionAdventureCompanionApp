@@ -338,26 +338,28 @@ function CampaignList({ onSelect, userChar, onHome }) {
 
   useEffect(() => { load(); }, []);
 
-    const handleCreate = async () => {
-    if (!draft.name.trim() || !draft.subtitle.trim()) return;
-    setCreating(true);
-    const { data, error } = await supabase.from('campaigns').insert({
-      name: draft.name.trim(),
-      subtitle: draft.subtitle.trim(),
-      type: draft.type,
-      description: draft.description.trim(),
-      setting: draft.setting.trim() || 'Soteria · 178 E.U.',
-      max_players: Number(draft.max_players) || 6,
-      suggested_level: draft.suggested_level.trim(),
-    }).select().single();
-    setCreating(false);
-    if (error) { console.error('Insert failed:', error.message); return; }
-    if (data) {
-      setShowCreate(false);
-      setDraft({ name: '', subtitle: '', type: 'Campaign', description: '', setting: 'Soteria · 178 E.U.', max_players: 6, suggested_level: '' });
-      load();
-    }
+     const handleCreate = async () => {
+  if (!draft.name.trim() || !draft.subtitle.trim()) return;
+  setCreating(true);
+  const payload = {
+    name: draft.name.trim(),
+    subtitle: draft.subtitle.trim(),
+    type: draft.type,
+    description: draft.description.trim(),
+    setting: draft.setting.trim() || 'Soteria · 178 E.U.',
+    max_players: Number(draft.max_players) || 6,
+    suggested_level: draft.suggested_level.trim(),
   };
+  const { error } = editTarget
+    ? await supabase.from('campaigns').update(payload).eq('id', editTarget.id)
+    : await supabase.from('campaigns').insert(payload);
+  setCreating(false);
+  if (error) { console.error('Save failed:', error.message); return; }
+  setShowCreate(false);
+  setEditTarget(null);
+  setDraft({ name: '', subtitle: '', type: 'Campaign', description: '', setting: 'Soteria · 178 E.U.', max_players: 6, suggested_level: '' });
+  load();
+};
 
   const inputStyle = {
     width: '100%', background: 'rgba(240,238,235,0.06)', border: '1px solid rgba(240,238,235,0.14)',
@@ -374,11 +376,98 @@ function CampaignList({ onSelect, userChar, onHome }) {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap'); * { box-sizing: border-box; } body { margin: 0; }`}</style>
 
       {showSigil && (
-        <DMSigilModal
-          onSuccess={() => { setShowSigil(false); setShowCreate(true); }}
-          onCancel={() => setShowSigil(false)}
-        />
-      )}
+  <DMSigilModal
+    onSuccess={() => {
+      setShowSigil(false);
+      setDmUnlocked(true);
+      if (showDelete) { /* delete confirm will show */ }
+      else { setShowCreate(true); }
+    }}
+    onCancel={() => { setShowSigil(false); setEditTarget(null); setShowDelete(null); }}
+  />
+)}
+
+{/* ── DELETE CONFIRM ── */}
+{showDelete && dmUnlocked && (
+  <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,8,6,0.8)', backdropFilter: 'blur(8px)', zIndex: 300100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ background: '#13100d', border: '1px solid rgba(224,90,90,0.3)', borderRadius: 14, padding: '32px 36px', maxWidth: 380, width: '100%', textAlign: 'center', boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
+      <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: '#f0eeeb', marginBottom: 8 }}>Remove Module?</div>
+      <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(240,238,235,0.45)', marginBottom: 24 }}>
+        "{showDelete.subtitle}" will be permanently removed from the archives.
+      </div>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button onClick={() => setShowDelete(null)} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 8, padding: '11px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: 'rgba(240,238,235,0.35)' }}>Cancel</button>
+        <button onClick={async () => {
+          await supabase.from('campaigns').delete().eq('id', showDelete.id);
+          setShowDelete(null);
+          load();
+        }} style={{ flex: 2, background: 'rgba(224,90,90,0.12)', border: '1px solid rgba(224,90,90,0.4)', borderRadius: 8, padding: '11px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: '#ef4444', fontWeight: 700, letterSpacing: '0.1em' }}>
+          ✕ Remove
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* ── CREATE / EDIT MODAL ── */}
+{showCreate && (
+  <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,8,6,0.8)', backdropFilter: 'blur(8px)', zIndex: 300100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ background: '#13100d', border: '1px solid rgba(240,238,235,0.14)', borderRadius: 16, padding: '32px 36px', maxWidth: 480, width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: '#f0eeeb', letterSpacing: '0.14em' }}>{editTarget ? 'EDIT MODULE' : 'NEW MODULE'}</div>
+        <button onClick={() => { setShowCreate(false); setEditTarget(null); }} style={{ background: 'transparent', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 5, padding: '4px 9px', cursor: 'pointer', color: 'rgba(240,238,235,0.4)', fontSize: 11, fontFamily: "'Cinzel', serif" }}>✕</button>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div>
+          <span style={labelStyle}>Type</span>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {['Campaign', 'One-Shot'].map(t => (
+              <button key={t} onClick={() => setDraft(d => ({ ...d, type: t }))}
+                style={{ flex: 1, background: draft.type === t ? 'rgba(200,168,74,0.16)' : 'transparent', border: `1px solid ${draft.type === t ? 'rgba(200,168,74,0.55)' : 'rgba(240,238,235,0.14)'}`, borderRadius: 7, padding: '9px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: draft.type === t ? '#e8c84a' : 'rgba(240,238,235,0.4)', letterSpacing: '0.1em', transition: 'all 0.15s' }}>
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label style={labelStyle}>Title *</label>
+          <input value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} placeholder="e.g. The Galekgarde Accord" style={inputStyle} />
+        </div>
+        <div>
+          <label style={labelStyle}>Subtitle / Short Name *</label>
+          <input value={draft.subtitle} onChange={e => setDraft(d => ({ ...d, subtitle: e.target.value }))} placeholder="e.g. Frigid Dirge" style={inputStyle} />
+        </div>
+        <div>
+          <label style={labelStyle}>Premise / Description</label>
+          <textarea value={draft.description} onChange={e => setDraft(d => ({ ...d, description: e.target.value }))} rows={3} placeholder="A brief summary of the module's premise…" style={{ ...inputStyle, resize: 'vertical' }} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div>
+            <label style={labelStyle}>Setting / Era</label>
+            <input value={draft.setting} onChange={e => setDraft(d => ({ ...d, setting: e.target.value }))} placeholder="Soteria · 178 E.U." style={inputStyle} />
+          </div>
+          <div>
+            <label style={labelStyle}>Suggested Level</label>
+            <input value={draft.suggested_level} onChange={e => setDraft(d => ({ ...d, suggested_level: e.target.value }))} placeholder="e.g. 3–5" style={inputStyle} />
+          </div>
+        </div>
+        <div>
+          <label style={labelStyle}>Max Players</label>
+          <input type="number" min={1} max={12} value={draft.max_players} onChange={e => setDraft(d => ({ ...d, max_players: e.target.value }))} style={{ ...inputStyle, width: 80 }} />
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+        <button onClick={() => { setShowCreate(false); setEditTarget(null); }} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 8, padding: '11px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: 'rgba(240,238,235,0.35)' }}>Cancel</button>
+        <button onClick={handleCreate} disabled={creating || !draft.name.trim() || !draft.subtitle.trim()}
+          style={{ flex: 2, background: (!draft.name.trim() || creating) ? 'rgba(200,168,74,0.06)' : 'rgba(200,168,74,0.16)', border: `1px solid ${(!draft.name.trim() || creating) ? 'rgba(200,168,74,0.2)' : 'rgba(200,168,74,0.55)'}`, borderRadius: 8, padding: '11px', cursor: (creating || !draft.name.trim()) ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: '#e8c84a', fontWeight: 700, letterSpacing: '0.12em', transition: 'all 0.15s' }}>
+          {creating ? 'Saving…' : editTarget ? '✦ Save Changes' : '✦ Create Module'}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* ── CREATE MODAL ── */}
       {showCreate && (
@@ -456,7 +545,7 @@ function CampaignList({ onSelect, userChar, onHome }) {
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 24 : 32, fontWeight: 700, color: '#1a1714' }}>CAMPAIGNS</div>
           <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,23,20,0.45)', marginTop: 8 }}>Select a campaign to enter the world.</div>
         </div>
-        <button onClick={() => setShowSigil(true)}
+       <button onClick={() => dmUnlocked ? setShowCreate(true) : setShowSigil(true)}
           style={{ background: '#1a1714', border: '1px solid rgba(26,23,20,0.3)', borderRadius: 8, padding: isMobile ? '10px 14px' : '11px 18px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: '#f0eeeb', letterSpacing: '0.12em', whiteSpace: 'nowrap', flexShrink: 0, marginLeft: 16 }}>
           + Add Module
         </button>
@@ -489,7 +578,18 @@ function CampaignList({ onSelect, userChar, onHome }) {
                 {c.description && <div style={{ fontFamily: 'Georgia, serif', fontSize: 11, color: 'rgba(26,23,20,0.55)', lineHeight: 1.55 }}>{c.description}</div>}
                 {c.setting && <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.14em', color: 'rgba(26,23,20,0.28)', marginTop: 8, textTransform: 'uppercase' }}>{c.setting}</div>}
               </div>
-              <div style={{ fontSize: 16, color: 'rgba(26,23,20,0.2)', marginLeft: 16, flexShrink: 0 }}>→</div>
+             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginLeft: 16, flexShrink: 0 }}>
+  {dmUnlocked ? (
+    <>
+      <button onClick={e => { e.stopPropagation(); setEditTarget(c); setDraft({ name: c.name, subtitle: c.subtitle, type: c.type || 'Campaign', description: c.description || '', setting: c.setting || 'Soteria · 178 E.U.', max_players: c.max_players || 6, suggested_level: c.suggested_level || '' }); setShowCreate(true); }}
+        style={{ background: 'rgba(200,168,74,0.1)', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: '#e8c84a' }}>✎</button>
+      <button onClick={e => { e.stopPropagation(); setShowDelete(c); }}
+        style={{ background: 'rgba(224,90,90,0.08)', border: '1px solid rgba(224,90,90,0.25)', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: '#ef4444' }}>✕</button>
+    </>
+  ) : (
+    <div style={{ fontSize: 16, color: 'rgba(26,23,20,0.2)' }}>→</div>
+  )}
+</div>
             </button>
           );
         })}
@@ -1010,6 +1110,9 @@ function InventoryPanel({ char, onInventoryChange, isDM = false, campaignId }) {
   const [draft, setDraft] = useState(null);
   const [loadedFromDB, setLoadedFromDB] = useState(false);
   const [playerSlot, setPlayerSlot] = useState(null);
+  const [editTarget, setEditTarget] = useState(null); // campaign being edited
+  const [showDelete, setShowDelete] = useState(null); // campaign pending delete
+  const [dmUnlocked, setDmUnlocked] = useState(false); // sigil passed this session
 
   const STORAGE_KEY = `syntarion_inv_${char?.id}`;
   const PACK_STORAGE_KEY = `syntarion_pack_${char?.id}`;
