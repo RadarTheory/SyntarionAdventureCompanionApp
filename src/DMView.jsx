@@ -700,6 +700,7 @@ export default function DMView({ user, session, onHome }) {
   const [showLarks, setShowLarks] = useState(false);
   const [showBazaar, setShowBazaar] = useState(false);
   const [showQuestor, setShowQuestor] = useState(false);
+  const [showClock, setShowClock] = useState(false);
 
   // LOBBY STATE
   const [checkedInPlayers, setCheckedInPlayers] = useState([]);
@@ -1171,6 +1172,13 @@ export default function DMView({ user, session, onHome }) {
           <QuestorDMPanel campaignId={activeCampaignTab} onClose={() => setShowQuestor(false)} />
         </DraggablePanel>
       )}
+      {showClock && (
+          <DraggablePanel defaultX={120} defaultY={80} onClose={() => setShowClock(false)} title="SOTERIA · World Clock" width={320} accentColor="rgba(201,185,145,0.3)">
+            <div style={{ padding: 14 }}>
+              <SoteriaClockPanel campaignId={activeCampaignTab} />
+            </div>
+          </DraggablePanel>
+        )}
       <FloatToolbar buttons={[
         {
           id: 'astragal',
@@ -1244,6 +1252,12 @@ export default function DMView({ user, session, onHome }) {
           title: 'QUESTOR — Quest Board',
           onClick: () => setShowQuestor(o => !o),
           children: <img src="/Questoricon.png" alt="Questor" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+        },
+        {
+          id: 'clock',
+          title: 'Soteria World Clock',
+          onClick: () => setShowClock(o => !o),
+          children: <img src="/clockIcon.png" alt="Clock" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
       ]} />
     </div>
