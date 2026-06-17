@@ -702,8 +702,7 @@ export default function DMView({ user, session, onHome }) {
   const [showBazaar, setShowBazaar] = useState(false);
   const [showQuestor, setShowQuestor] = useState(false);
   const [showClock, setShowClock] = useState(false);
-  const [dbCampaigns, setDbCampaigns] = useState([]);
-  useEffect(() => {
+   useEffect(() => {
   if (dbCampaigns.length > 0 && !activeCampaignTab) {
     setActiveCampaignTab(dbCampaigns[0].id);
   }
