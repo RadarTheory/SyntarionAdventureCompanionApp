@@ -471,16 +471,14 @@ useEffect(() => {
 
   const handlePointerLeave = useCallback(() => {
     setBrushPreview(null);
-    paintingRef.current = false;
   }, []);
 
   useEffect(() => {
     const handleWindowMove = (e) => {
-      if (!panRef.current.active) return;
+      if (!panRef.current.active && !paintingRef.current) return;
       handlePointerMove(e);
     };
     const handleWindowUp = () => {
-      if (!panRef.current.active) return;
       handlePointerUp();
     };
 

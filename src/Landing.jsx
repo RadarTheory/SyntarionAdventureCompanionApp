@@ -275,13 +275,13 @@ function DMSigilModal({ onSuccess, onCancel }) {
 // ─── MAIN LANDING COMPONENT ──────────────────────────────────────────────────
 export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   const { isMobile } = useDevice();
-  const [appView, setAppView] = useState('home');
+  const [appView, setAppView] = useState(() => localStorage.getItem('syn_view') || 'home');
   const [savedChars, setSavedChars] = useState([]);
   const campaignChars = savedChars.filter(c => c.status === 'approved' && c.campaign_id);
   const [loading, setLoading] = useState(true);
   const [showDMModal, setShowDMModal] = useState(false);
   const [hoveredBtn, setHoveredBtn] = useState(null);
-  const [selectedChar, setSelectedChar] = useState(null);
+  const [selectedChar, setSelectedChar] = useState(() => { try { const c = localStorage.getItem('syn_char'); return c ? JSON.parse(c) : null; } catch { return null; } });
 
   const fetchCharacters = async () => {
     if (!user?.id) return;
@@ -309,15 +309,15 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
 
   useEffect(() => { fetchCharacters(); }, [user?.id]);
 
-  const goHome = () => { setAppView('home'); fetchCharacters(); };
-  const handlePlay = () => setAppView(savedChars.length > 0 ? 'character-select' : 'wizard');
-  const handleDMSuccess = () => { setShowDMModal(false); setAppView('dm'); };
+  const goHome = () => { localStorage.setItem('syn_view', 'home'); setAppView('home'); fetchCharacters(); };
+  const handlePlay = () => { const v = savedChars.length > 0 ? 'character-select' : 'wizard'; localStorage.setItem('syn_view', v); setAppView(v); };
+  const handleDMSuccess = () => { setShowDMModal(false); localStorage.setItem('syn_view', 'dm'); setAppView('dm'); };
 
   // ── Render Views ───────────────────────────────────────────────────────────
   if (appView === 'character-select') return (
     <CharacterSelect
       savedChars={savedChars}
-      onSelect={(char) => { setSelectedChar(char); setAppView('sheet'); }}
+      onSelect={(char) => { setSelectedChar(char); localStorage.setItem('syn_view', 'sheet'); localStorage.setItem('syn_char', JSON.stringify(char)); setAppView('sheet'); }}
       onCreate={() => setAppView('wizard')}
       onHome={goHome}
     />
@@ -376,7 +376,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
       id: 'campaigns',
       label: 'CAMPAIGNS',
       sub: 'Enter the age of steam',
-      onClick: () => setAppView('campaigns'),
+      onClick: () => { localStorage.setItem('syn_view', 'campaigns'); setAppView('campaigns'); },
     }] : []),
        {
       id: 'settings',

@@ -12,7 +12,7 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [splashLoading, setSplashLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
-  const [view, setView] = useState('landing');
+  const [view, setView] = useState(() => localStorage.getItem('syntarion_view') || 'landing');
 
   useEffect(() => {
     document.body.style.background = darkMode ? '#14110c' : '#f0eeeb';
@@ -70,7 +70,7 @@ export default function App() {
         user={session.user}
         darkMode={darkMode}
         setDarkMode={setDarkMode}
-        onOpenBag={() => setView('bag')}
+        onOpenBag={() => { setView('bag'); localStorage.setItem('syntarion_view', 'bag'); }}
       />
     </>
   );
