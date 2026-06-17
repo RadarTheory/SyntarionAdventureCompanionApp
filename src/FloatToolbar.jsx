@@ -209,13 +209,7 @@ export default function FloatToolbar({ buttons }) {
   const undockedButtons = buttons.filter(b =>  undocked[b.id]);
 
   // Scale button size on mobile to fit all buttons on screen
-  const btnSize = (() => {
-    if (!mobile) return 56;
-    const count = dockedButtons.length || 1;
-    const available = window.innerWidth - 48 - (count - 1) * 8;
-    return Math.max(36, Math.min(52, Math.floor(available / count)));
-  })();
-
+  const btnSize = mobile ? 48 : 56;
   const isHorizontal = mobile;
 
   return (
@@ -237,6 +231,20 @@ export default function FloatToolbar({ buttons }) {
           touchAction: 'none',
           transition: dragging ? 'none' : 'padding 0.2s ease',
           userSelect: 'none',
+          ...(isHorizontal && {
+            maxWidth: 'calc(100vw - 16px)',
+            overflowX: 'auto',
+            overflowY: 'visible',
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none',
+          }),
+          ...(!isHorizontal && {
+            maxHeight: 'calc(100vh - 32px)',
+            overflowY: 'auto',
+            overflowX: 'visible',
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none',
+          }),
         }}
       >
         {/* Drag handle + collapse/redock toggle */}
