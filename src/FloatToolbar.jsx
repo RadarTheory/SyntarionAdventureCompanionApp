@@ -67,7 +67,7 @@ export function FloatButton({ storageKey, defaultPos, children, onClick, title, 
         transform: hovered ? 'translateY(-2px) scale(1.05)' : 'none',
         boxShadow: hovered ? '0 0 24px rgba(201,185,145,0.35), 0 14px 42px rgba(0,0,0,0.75)' : '0 10px 28px rgba(0,0,0,0.55)',
         transition: dragging ? 'none' : 'all 0.18s ease',
-        backdropFilter: 'blur(8px)', touchAction: isHorizontal ? 'pan-x' : 'pan-y',
+        backdropFilter: 'blur(8px)', touchAction: 'none',
       }}
     >
       <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -228,7 +228,7 @@ export default function FloatToolbar({ buttons }) {
           borderRadius: 40,
           boxShadow: '0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)',
           backdropFilter: 'blur(12px)',
-          touchAction: 'none',
+          touchAction: dragging ? 'none' : 'pan-y',
           transition: dragging ? 'none' : 'padding 0.2s ease',
           userSelect: 'none',
           ...(isHorizontal && {
