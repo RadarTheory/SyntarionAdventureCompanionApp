@@ -23,6 +23,7 @@ import LarkPanel from './LarkPanel';
 import { BazaarDMPanel } from './BazaarPanel';
 import { QuestorDMPanel } from './QuestorPanel';
 import SoteriaClockPanel from './SoteriaClockPanel';
+import LoreAnnouncePanel from './LoreAnnouncePanel';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -702,6 +703,7 @@ export default function DMView({ user, session, onHome }) {
   const [showBazaar, setShowBazaar] = useState(false);
   const [showQuestor, setShowQuestor] = useState(false);
   const [showClock, setShowClock] = useState(false);
+  const [showLore, setShowLore] = useState(false);
    useEffect(() => {
   if (dbCampaigns.length > 0 && !activeCampaignTab) {
     setActiveCampaignTab(dbCampaigns[0].id);
@@ -899,6 +901,17 @@ export default function DMView({ user, session, onHome }) {
                       </div>
                       <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 4 }}>{dbCampaigns.find(c => String(c.id) === String(session.campaign_id))?.subtitle || 'No campaign'}</div>
                       <div style={{ fontSize: 12, color: COLORS.textSub, fontFamily: 'Georgia, serif', lineHeight: 1.5 }}>{session.content?.substring(0, 120)}{session.content?.length > 120 ? '…' : ''}</div>
+                    <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 4 }}>{dbCampaigns.find(c => String(c.id) === String(session.campaign_id))?.subtitle || 'No campaign'}</div>
+
+{session.type === 'lore_announcement' && session.lore_title && (
+  <div style={{
+    fontSize: 8, color: '#e8c84a', fontFamily: "'Cinzel', serif",
+    letterSpacing: '0.14em', textTransform: 'uppercase',
+    marginBottom: 4,
+  }}>⟦ LORE ⟧ {session.lore_title}</div>
+)}
+
+<div style={{ fontSize: 12, color: COLORS.textSub, fontFamily: 'Georgia, serif', lineHeight: 1.5 }}>{session.content?.substring(0, 120)}{session.content?.length > 120 ? '…' : ''}</div>
                     </div>
                   );
                 })}
@@ -1148,6 +1161,12 @@ export default function DMView({ user, session, onHome }) {
     </div>
   </DraggablePanel>
 )}
+
+{showLore && (
+  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowLore(false)} title="⟦ LORE ⟧ World Announcement" width={440} accentColor="rgba(200,168,74,0.5)">
+    <LoreAnnouncePanel campaignId={activeCampaignTab} embedded />
+  </DraggablePanel>
+)}
         {/* CORRECTED PROP PASSING HERE */}
         <SessionManager
           onTimerLabel={setSessionTimerLabel}
@@ -1291,6 +1310,12 @@ export default function DMView({ user, session, onHome }) {
           title: 'Soteria World Clock',
           onClick: () => setShowClock(o => !o),
           children: <img src="/clockIcon.png" alt="Clock" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+        },
+        {
+          id: 'lore',
+          title: 'Lore Announce — Broadcast to World',
+          onClick: () => setShowLore(o => !o),
+          children: <img src="/loreicon.png" alt="Lore" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
       ]} />
     </div>
