@@ -153,8 +153,8 @@ function ChatPanel({ session, onClose, isDM }) {
 
   const headerName = session.character_name || 'Player';
   const headerSub = session.player_username
-    ? `${dbCampaigns.find(c => c.id === String(session.campaign_id))?.subtitle || 'Private'} · @${session.player_username}`
-    : session.campaign_id ? `Campaign ${session.campaign_id}` : 'Private' || 'Private';
+  ? `Campaign ${session.campaign_id} · @${session.player_username}`
+  : session.campaign_id ? `Campaign ${session.campaign_id}` : 'Private';
 
   return (
     <div style={{ position: 'fixed', bottom: 24, right: 24, width: 360, maxHeight: 520, zIndex: 200, display: 'flex', flexDirection: 'column', background: '#13100d', border: `1px solid rgba(240,238,235,0.12)`, borderRadius: 14, boxShadow: '0 24px 64px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
@@ -933,7 +933,25 @@ export default function DMView({ user, session, onHome }) {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 3 }}>{char.name || 'Unnamed'}</div>
                       <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 3 }}>{getRaceDisplay(char.race, char.rv, char.pmV)}{cls ? ` · ${cls.name}` : ''}</div>
-                      <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase' }}>{char.campaign_id ? (dbCampaigns.find(c => String(c.id) === String(char.campaign_id))?.subtitle || char.campaign_id) : 'Unassigned'}{char.user_id ? '' : ' · Unclaimed'}</div>
+                     <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                              {char.campaign_id ? (dbCampaigns.find(c => String(c.id) === String(char.campaign_id))?.subtitle || char.campaign_id) : 'Unassigned'}
+                              {char.user_id ? '' : ' · Unclaimed'}
+                            </div>
+                            {char.player_email && (
+                              <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>
+                                {char.player_email}
+                              </div>
+                            )}
+                            {char.submitted_at && (
+                              <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginTop: 1 }}>
+                                Submitted {new Date(char.submitted_at).toLocaleDateString()}
+                              </div>
+                            )}
+                      {char.created_at && (
+                        <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginTop: 1 }}>
+                          Submitted {new Date(char.created_at).toLocaleDateString()}
+                        </div>
+                      )}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                       <StatusBadge status={char.status} />

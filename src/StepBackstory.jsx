@@ -70,16 +70,20 @@ const handleSubmit = async (type) => {
       submittedAt: Date.now(),
     };
 
+    const { data: { user } } = await supabase.auth.getUser();
     const { error } = await supabase
-      .from('characters')
-      .upsert({
-        id:          finalChar.id,
-        name:        finalChar.name,
-        campaign_id: finalChar.campaign || null,
-        owner_name:  finalChar.fn,
-        status,
-        data:        finalChar,
-      });
+  .from('characters')
+  .upsert({
+    id:          finalChar.id,
+    name:        finalChar.name,
+    campaign_id: finalChar.campaign || null,
+    owner_name:  finalChar.fn,
+    status,
+    data:        finalChar,
+    user_id:     user?.id || null,
+    player_email: user?.email || null,
+    submitted_at: new Date().toISOString(),
+  });
 
     if (error) {
       console.error('Supabase error:', JSON.stringify(error));
