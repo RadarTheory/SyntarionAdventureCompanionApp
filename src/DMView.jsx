@@ -153,8 +153,8 @@ function ChatPanel({ session, onClose, isDM }) {
 
   const headerName = session.character_name || 'Player';
   const headerSub = session.player_username
-    ? `${CAMPAIGNS.find(c => c.id === session.campaign_id)?.subtitle || 'Private'} · @${session.player_username}`
-    : CAMPAIGNS.find(c => c.id === session.campaign_id)?.subtitle || 'Private';
+    ? `${dbCampaigns.find(c => c.id === String(session.campaign_id))?.subtitle || 'Private'} · @${session.player_username}`
+    : session.campaign_id ? `Campaign ${session.campaign_id}` : 'Private' || 'Private';
 
   return (
     <div style={{ position: 'fixed', bottom: 24, right: 24, width: 360, maxHeight: 520, zIndex: 200, display: 'flex', flexDirection: 'column', background: '#13100d', border: `1px solid rgba(240,238,235,0.12)`, borderRadius: 14, boxShadow: '0 24px 64px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
@@ -283,7 +283,7 @@ function ScribePanel({ onClose }) {
 }
 
 // ─── CHARACTER EDITOR ─────────────────────────────────────────────────────────
-function CharacterEditor({ char, onSave, onClose }) {
+function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
   const [data, setData] = useState({ ...char });
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState('');
@@ -319,7 +319,7 @@ function CharacterEditor({ char, onSave, onClose }) {
         <div style={{ marginBottom: 16 }}>
           <div style={{ ...label8(), marginBottom: 8 }}>Campaign</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {CAMPAIGNS.map(c => <div key={c.id} onClick={() => set('campaign', data.campaign === c.id ? null : c.id)} style={{ background: data.campaign === c.id ? COLORS.magicBg : 'transparent', border: `1px solid ${data.campaign === c.id ? COLORS.magic : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontSize: 10, color: data.campaign === c.id ? COLORS.magicText : COLORS.muted, fontFamily: "'Cinzel', serif", letterSpacing: '0.06em' }}>{c.subtitle}</div>)}
+            {campaigns.map(c => <div key={c.id}onClick={() => set('campaign', data.campaign === c.id ? null : c.id)} style={{ background: data.campaign === c.id ? COLORS.magicBg : 'transparent', border: `1px solid ${data.campaign === c.id ? COLORS.magic : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontSize: 10, color: data.campaign === c.id ? COLORS.magicText : COLORS.muted, fontFamily: "'Cinzel', serif", letterSpacing: '0.06em' }}>{c.subtitle}</div>)}
           </div>
         </div>
         {[['Name', 'name'], ['Backstory', 'backstory'], ['Notes', 'notes']].map(([lbl, key]) => (
@@ -701,6 +701,7 @@ export default function DMView({ user, session, onHome }) {
   const [showBazaar, setShowBazaar] = useState(false);
   const [showQuestor, setShowQuestor] = useState(false);
   const [showClock, setShowClock] = useState(false);
+  const [dbCampaigns, setDbCampaigns] = useState([]);
 
   // LOBBY STATE
   const [checkedInPlayers, setCheckedInPlayers] = useState([]);
@@ -771,6 +772,13 @@ export default function DMView({ user, session, onHome }) {
               campaign_id: payload.new.campaign_id,
               player_id: payload.new.sender_id,
             });
+                    const fetchAll = async () => {
+          setLoading(true);
+          const { data: campData } = await supabase.from('campaigns').select('*').order('created_at', { ascending: true });
+          if (campData) setDbCampaigns(campData);
+          await Promise.all([fetchCharacters(), fetchMessages()]);
+          setLoading(false);
+        };
           }
         }
       })
@@ -904,7 +912,7 @@ export default function DMView({ user, session, onHome }) {
                 ))}
               </div>
               <div style={{ display: 'flex', gap: 4 }}>
-                {[{ id: 'all', subtitle: 'All' }, ...CAMPAIGNS].map(c => (
+                {[{ id: 'all', subtitle: 'All' }, ...dbCampaigns].map(c => (
                   <div key={c.id} onClick={() => setFilterCampaign(c.id)} style={{ background: filterCampaign === c.id ? COLORS.surface : 'transparent', border: `1px solid ${filterCampaign === c.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: filterCampaign === c.id ? COLORS.text : COLORS.dim, fontFamily: "'Cinzel', serif" }}>{c.subtitle}</div>
                 ))}
               </div>
@@ -918,7 +926,7 @@ export default function DMView({ user, session, onHome }) {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 3 }}>{char.name || 'Unnamed'}</div>
                       <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 3 }}>{getRaceDisplay(char.race, char.rv, char.pmV)}{cls ? ` · ${cls.name}` : ''}</div>
-                      <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase' }}>{char.campaign_id ? (CAMPAIGNS.find(c => c.id === char.campaign_id)?.subtitle || char.campaign_id) : 'Unassigned'}{char.user_id ? '' : ' · Unclaimed'}</div>
+                      <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase' }}>{char.campaign_id ? (dbCampaigns.find(c => String(c.id) === String(char.campaign_id))?.subtitle || char.campaign_id) : 'Unassigned'}{char.user_id ? '' : ' · Unclaimed'}</div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                       <StatusBadge status={char.status} />
@@ -939,7 +947,7 @@ export default function DMView({ user, session, onHome }) {
         return (
           <div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
-              {CAMPAIGNS.map(c => (
+              {dbCampaigns.map(c => (
                 <div key={c.id} onClick={() => setActiveCampaignTab(c.id)} style={{ flex: 1, background: activeCampaignTab === c.id ? COLORS.surface : 'transparent', border: `1px solid ${activeCampaignTab === c.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '8px 4px', cursor: 'pointer', textAlign: 'center' }}>
                   <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: activeCampaignTab === c.id ? COLORS.text : COLORS.dim }}>{c.subtitle}</div>
                 </div>
@@ -1039,7 +1047,7 @@ export default function DMView({ user, session, onHome }) {
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
 
-      {editingChar && <CharacterEditor char={editingChar} onSave={() => { setEditingChar(null); fetchCharacters(); }} onClose={() => setEditingChar(null)} />}
+      {editingChar && <CharacterEditor char={editingChar} campaigns={dbCampaigns} onSave={() => { setEditingChar(null); fetchCharacters(); }} onClose={() => setEditingChar(null)} />}
       {activeSession && <ChatPanel session={activeSession} onClose={() => setActiveSession(null)} isDM={true} />}
       {showBestiary && (
         <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowBestiary(false)} title="BESTIARY · Creatures of Soteria" width={400} accentColor="rgba(168,230,163,0.3)">
@@ -1175,7 +1183,7 @@ export default function DMView({ user, session, onHome }) {
       {showClock && (
           <DraggablePanel defaultX={120} defaultY={80} onClose={() => setShowClock(false)} title="SOTERIA · World Clock" width={320} accentColor="rgba(201,185,145,0.3)">
             <div style={{ padding: 14 }}>
-              <SoteriaClockPanel campaignId={activeCampaignTab} />
+              <SoteriaClockPanel campaignId={CAMPAIGNS.findIndex(c => c.id === activeCampaignTab) + 1} />
             </div>
           </DraggablePanel>
         )}
