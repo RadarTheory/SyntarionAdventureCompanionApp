@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
-import { COLORS, CAMPAIGNS } from './constants';
+import { COLORS } from './constants';
 import { getSessionEvents } from './lib/sessionEvents';
 
 function label8() {
@@ -33,9 +33,17 @@ function ScribeDraftModal({ session, checkins, onClose }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  const campaign = CAMPAIGNS.find(c => c.id === session.campaign_id);
+  const [campaign, setCampaign] = useState(null);
+useEffect(() => {
+  supabase.from('campaigns').select('*').eq('id', session.campaign_id).maybeSingle()
+    .then(({ data }) => { if (data) setCampaign(data); });
+}, [session.campaign_id]);
 
-  useEffect(() => { draft(); }, []);
+  useEffect(() => {
+  supabase.from('campaigns').select('*').eq('id', session.campaign_id).maybeSingle()
+    .then(({ data }) => { if (data) setCampaign(data); });
+  draft();
+}, []);
 
   const draft = async () => {
     try {
@@ -252,6 +260,12 @@ function PlayModal({ onClose, onSessionStarted, existingSession }) {
   const [session, setSession] = useState(existingSession || null);
   const [checkins, setCheckins] = useState([]);
   const [starting, setStarting] = useState(false);
+  const [dbCampaigns, setDbCampaigns] = useState([]);
+
+  useEffect(() => {
+    supabase.from('campaigns').select('*').order('created_at', { ascending: true })
+      .then(({ data }) => { if (data) setDbCampaigns(data); });
+  }, []);
 
   useEffect(() => {
     if (!session) return;
@@ -299,7 +313,7 @@ function PlayModal({ onClose, onSessionStarted, existingSession }) {
     onClose();
   };
 
-  const campaign = CAMPAIGNS.find(c => c.id === selectedCampaign);
+  const campaign = dbCampaigns.find(c => String(c.id) === String(selectedCampaign));
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,8,6,0.85)', backdropFilter: 'blur(6px)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
@@ -309,8 +323,8 @@ function PlayModal({ onClose, onSessionStarted, existingSession }) {
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 15, fontWeight: 700, color: COLORS.text, marginBottom: 6, letterSpacing: '0.06em' }}>Start a Session</div>
             <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 24 }}>Select a campaign to open the lobby.</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
-              {CAMPAIGNS.map(c => (
-                <div key={c.id} onClick={() => setSelectedCampaign(c.id)}
+              {dbCampaigns.map(c => (
+                  <div key={c.id} onClick={() => setSelectedCampaign(c.id)}
                   style={{ background: selectedCampaign === c.id ? COLORS.magicBg : COLORS.card, border: `1px solid ${selectedCampaign === c.id ? COLORS.magic : COLORS.border}`, borderRadius: 8, padding: '12px 16px', cursor: 'pointer' }}>
                   <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, color: selectedCampaign === c.id ? COLORS.magicText : COLORS.text }}>{c.subtitle}</div>
                 </div>

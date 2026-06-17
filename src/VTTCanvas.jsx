@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import supabase from './lib/supabase';
-import { COLORS, CAMPAIGNS } from './constants';
+import { COLORS } from './constants';
 import { LOCATIONS } from './MapPanel';
 
 const BRUSH_SIZES = [20, 40, 70, 110];
@@ -151,6 +151,12 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensCh
   const [mapSearch, setMapSearch]             = useState('');
   const [showCommitPicker, setShowCommitPicker] = useState(false);
   const [feather, setFeather]                 = useState(0.3);
+  const [dbCampaigns, setDbCampaigns] = useState([]);
+
+useEffect(() => {
+  supabase.from('campaigns').select('*').order('created_at', { ascending: true })
+    .then(({ data }) => { if (data) setDbCampaigns(data); });
+}, []);
 
   const conjureTokenToMap = async token => {
   if (!token?.id && !token?.token_id && !token?.name && !token?.label) return;
@@ -639,12 +645,12 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensCh
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8c84a', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>Commit to Campaign</div>
             <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>Choose which campaign this map and fog state applies to.</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {CAMPAIGNS.map(c => (
+              {dbCampaigns.map(c => (
                 <button key={c.id} onClick={() => save(c.id)} style={{ textAlign: 'left', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '12px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = '#c8a84a88'; e.currentTarget.style.background = 'rgba(200,168,74,0.08)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.background = 'rgba(240,238,235,0.04)'; }}
                 >
-                  <div style={{ fontSize: 8, color: COLORS.dim, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4, fontFamily: "'Cinzel', serif" }}>Campaign {c.id}</div>
+                  <div style={{ fontSize: 8, color: COLORS.dim, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4, fontFamily: "'Cinzel', serif" }}>{c.type || 'Campaign'}</div>
                   {c.subtitle}
                 </button>
               ))}
