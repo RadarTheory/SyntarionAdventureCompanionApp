@@ -674,7 +674,8 @@ export default function DMView({ user, session, onHome }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingChar, setEditingChar] = useState(null);
-  const [activeCampaignTab, setActiveCampaignTab] = useState('I');
+  const [activeCampaignTab, setActiveCampaignTab] = useState(null);
+  const [dbCampaigns, setDbCampaigns] = useState([]);  
   const [campaignSubTab, setCampaignSubTab] = useState('log');
   const [activeSession, setActiveSession] = useState(null);
   const [manualLogText, setManualLogText] = useState('');
@@ -702,6 +703,11 @@ export default function DMView({ user, session, onHome }) {
   const [showQuestor, setShowQuestor] = useState(false);
   const [showClock, setShowClock] = useState(false);
   const [dbCampaigns, setDbCampaigns] = useState([]);
+  useEffect(() => {
+  if (dbCampaigns.length > 0 && !activeCampaignTab) {
+    setActiveCampaignTab(dbCampaigns[0].id);
+  }
+}, [dbCampaigns]);
 
   // LOBBY STATE
   const [checkedInPlayers, setCheckedInPlayers] = useState([]);
@@ -772,21 +778,23 @@ export default function DMView({ user, session, onHome }) {
               campaign_id: payload.new.campaign_id,
               player_id: payload.new.sender_id,
             });
-                    const fetchAll = async () => {
-          setLoading(true);
-          const { data: campData } = await supabase.from('campaigns').select('*').order('created_at', { ascending: true });
-          if (campData) setDbCampaigns(campData);
-          await Promise.all([fetchCharacters(), fetchMessages()]);
-          setLoading(false);
-        };
-          }
+                    }
         }
       })
       .subscribe();
     return () => supabase.removeChannel(channel);
   }, [fetchMessages]);
 
-  const fetchAll = async () => { setLoading(true); await Promise.all([fetchCharacters(), fetchMessages()]); setLoading(false); };
+  const fetchAll = async () => {
+  setLoading(true);
+  const { data: campData } = await supabase.from('campaigns').select('*').order('created_at', { ascending: true });
+  if (campData && campData.length > 0) {
+    setDbCampaigns(campData);
+    setActiveCampaignTab(prev => prev ?? campData[0].id);
+  }
+  await Promise.all([fetchCharacters(), fetchMessages()]);
+  setLoading(false);
+};
 
   const fetchCharacters = async () => {
     const { data } = await supabase.from('characters').select('*');
@@ -890,7 +898,7 @@ export default function DMView({ user, session, onHome }) {
                           <button onClick={session.archived ? (e) => unarchiveSession(e, session.session_id) : (e) => archiveSession(e, session.session_id)} title={session.archived ? 'Restore' : 'Archive'} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 3, padding: '2px 6px', cursor: 'pointer', fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>{session.archived ? '↩' : '⌂'}</button>
                         </div>
                       </div>
-                      <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 4 }}>{CAMPAIGNS.find(c => c.id === session.campaign_id)?.subtitle || 'No campaign'}</div>
+                      <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 4 }}>{dbCampaigns.find(c => String(c.id) === String(session.campaign_id))?.subtitle || 'No campaign'}</div>
                       <div style={{ fontSize: 12, color: COLORS.textSub, fontFamily: 'Georgia, serif', lineHeight: 1.5 }}>{session.content?.substring(0, 120)}{session.content?.length > 120 ? '…' : ''}</div>
                     </div>
                   );
@@ -943,7 +951,7 @@ export default function DMView({ user, session, onHome }) {
         );
 
       case 'Campaigns': {
-        const camp = CAMPAIGNS.find(c => c.id === activeCampaignTab);
+        const camp = dbCampaigns.find(c => c.id === activeCampaignTab);
         return (
           <div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
@@ -1183,7 +1191,7 @@ export default function DMView({ user, session, onHome }) {
       {showClock && (
           <DraggablePanel defaultX={120} defaultY={80} onClose={() => setShowClock(false)} title="SOTERIA · World Clock" width={320} accentColor="rgba(201,185,145,0.3)">
             <div style={{ padding: 14 }}>
-              <SoteriaClockPanel campaignId={CAMPAIGNS.findIndex(c => c.id === activeCampaignTab) + 1} />
+              <SoteriaClockPanel campaignId={activeCampaignTab} />
             </div>
           </DraggablePanel>
         )}
