@@ -210,7 +210,7 @@ export default function FloatToolbar({ buttons }) {
 
   // Scale button size on mobile to fit all buttons on screen
   const btnSize = mobile ? 48 : 56;
-  const isHorizontal = mobile;
+  const isHorizontal = false;
 
   return (
     <>

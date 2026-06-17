@@ -1857,21 +1857,17 @@ useEffect(() => {
         );
 
       case 'Log':
-        return (
-          <div>
-            <div style={{ ...label8(), marginBottom: 12 }}>Session Log</div>
-            <div style={{ background: COLORS.card, border: `1px dashed ${COLORS.border}`, borderRadius: 8, padding: '40px 20px', textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No session logs yet. The Scribe will write here.</div>
-            </div>
-          </div>
-        );
+  return <SessionLogTab campaignId={String(campaign.id)} userChar={userChar} />;
+
 function SessionLogTab({ campaignId, userChar }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
   if (!campaignId) return;
+  let cancelled = false;
   const load = async () => {
+    if (cancelled) return;
     setLoading(true);
     const [{ data: logs }, { data: campaignLore }] = await Promise.all([
       supabase.from('session_logs').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: false }),
@@ -1898,7 +1894,7 @@ function SessionLogTab({ campaignId, userChar }) {
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'dm_memory' }, load)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'session_logs' }, load)
     .subscribe();
-  return () => supabase.removeChannel(sub);
+   return () => { cancelled = true; supabase.removeChannel(sub); };
 }, [campaignId]);
   if (loading) return (
     <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '40px 0' }}>
