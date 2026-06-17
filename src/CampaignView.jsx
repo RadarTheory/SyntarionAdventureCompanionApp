@@ -338,7 +338,7 @@ function CampaignList({ onSelect, userChar, onHome }) {
 
   useEffect(() => { load(); }, []);
 
-  const handleCreate = async () => {
+    const handleCreate = async () => {
     if (!draft.name.trim() || !draft.subtitle.trim()) return;
     setCreating(true);
     const { data, error } = await supabase.from('campaigns').insert({
@@ -351,7 +351,8 @@ function CampaignList({ onSelect, userChar, onHome }) {
       suggested_level: draft.suggested_level.trim(),
     }).select().single();
     setCreating(false);
-    if (!error && data) {
+    if (error) { console.error('Insert failed:', error.message); return; }
+    if (data) {
       setShowCreate(false);
       setDraft({ name: '', subtitle: '', type: 'Campaign', description: '', setting: 'Soteria · 178 E.U.', max_players: 6, suggested_level: '' });
       load();
@@ -470,7 +471,7 @@ function CampaignList({ onSelect, userChar, onHome }) {
           <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,23,20,0.4)', textAlign: 'center', padding: '40px 0' }}>No campaigns yet. The Architect will open the world.</div>
         )}
         {campaigns.map((c) => {
-          const isAssigned = userChar?.campaign === String(c.id);
+          const isAssigned = userChar?.campaign_id === String(c.id);
           return (
             <button key={c.id} onClick={() => onSelect(c)}
               style={{ background: isAssigned ? 'rgba(26,23,20,0.04)' : '#fff', border: `1px solid ${isAssigned ? 'rgba(26,23,20,0.25)' : 'rgba(26,23,20,0.1)'}`, borderRadius: 8, padding: isMobile ? '18px 20px' : '20px 28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', width: '100%', transition: 'all 0.18s ease' }}
@@ -1542,7 +1543,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign, onUpdateChar 
   const [castorHovered, setCastorHovered] = useState(false);
   const [castorBadge, setCastorBadge] = useState(0);
   const timer = useSessionTimer(campaign.id);
-  const isAssigned = userChar?.campaign === String(campaign.id);
+  const isAssigned = userChar?.campaign_id === String(campaign.id);
   const [showAstragal, setShowAstragal] = useState(false);
   const [showHercules, setShowHercules] = useState(false);
   const [showScribeCV, setShowScribeCV] = useState(false);
@@ -1566,7 +1567,7 @@ useEffect(() => {
   if (!campaign?.id) return;
   supabase.from('world_clock').select('*').eq('campaign_id', campaign.id).maybeSingle()
     .then(({ data }) => { if (data) setClockState(data); });
-  const ch = supabase.channel(`world_clock_cv_${CAMPAIGN_NUM[campaign.id]}`)
+  const ch = supabase.channel(`world_clock_cv_${campaign.id}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'world_clock', filter: `campaign_id=eq.${campaign.id}` },
       ({ new: u }) => { if (u) setClockState(u); })
     .subscribe();
