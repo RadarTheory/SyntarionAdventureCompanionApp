@@ -1860,51 +1860,39 @@ useEffect(() => {
   return <SessionLogTab campaignId={String(campaign.id)} userChar={userChar} />;
 
 function SessionLogTab({ campaignId, userChar }) {
- const [entries, setEntries] = useState([]);
-const [loading, setLoading] = useState(true);
-const loadedRef = useRef(false);
+  const [entries, setEntries] = useState(null);
 
   useEffect(() => {
-  if (!campaignId) return;
-  let cancelled = false;
-    const load = async () => {
-    if (cancelled || loadedRef.current) return;
-    loadedRef.current = true;
-    setLoading(true);
-    const [{ data: logs }, { data: campaignLore }] = await Promise.all([
-      supabase.from('session_logs').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: false }),
-      supabase.from('dm_memory').select('*').eq('campaign_id', campaignId).eq('category', 'lore').order('created_at', { ascending: false }),
-    ]);
-    const combined = [
-      ...(logs || []).map(l => ({ ...l, _kind: 'session' })),
-      ...(campaignLore || []).map(l => ({
-        ...l,
-        _kind: 'lore',
-        title: l.content.startsWith('[LORE ANNOUNCEMENT]')
-          ? l.content.replace('[LORE ANNOUNCEMENT] ', '').split(':')[0]
-          : 'Lore Event',
-        body: l.content.startsWith('[LORE ANNOUNCEMENT]')
-          ? l.content.split(':').slice(1).join(':').trim()
-          : l.content,
-      })),
-    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    setEntries(combined);
-    setLoading(false);
-  };
-    load();
-  return () => { cancelled = true; };
-}, [campaignId]);
-  if (loading) return (
-    <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '40px 0' }}>
-      Consulting the archives…
-    </div>
+    if (!entries && campaignId) {
+      Promise.all([
+        supabase.from('session_logs').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: false }),
+        supabase.from('dm_memory').select('*').eq('campaign_id', campaignId).eq('category', 'lore').order('created_at', { ascending: false }),
+      ]).then(([{ data: logs }, { data: lore }]) => {
+        const combined = [
+          ...(logs || []).map(l => ({ ...l, _kind: 'session' })),
+          ...(lore || []).map(l => ({
+            ...l,
+            _kind: 'lore',
+            title: l.content.startsWith('[LORE ANNOUNCEMENT]')
+              ? l.content.replace('[LORE ANNOUNCEMENT] ', '').split(':')[0]
+              : 'Lore Event',
+            body: l.content.startsWith('[LORE ANNOUNCEMENT]')
+              ? l.content.split(':').slice(1).join(':').trim()
+              : l.content,
+          })),
+        ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        setEntries(combined);
+      });
+    }
+  });
+
+  if (entries === null) return (
+    <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '40px 0' }}>Consulting the archives…</div>
   );
 
   if (entries.length === 0) return (
     <div style={{ background: COLORS.card, border: `1px dashed ${COLORS.border}`, borderRadius: 8, padding: '40px 20px', textAlign: 'center' }}>
-      <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
-        No session logs yet. The Scribe will write here.
-      </div>
+      <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No logs yet. The Scribe will write here.</div>
     </div>
   );
 
