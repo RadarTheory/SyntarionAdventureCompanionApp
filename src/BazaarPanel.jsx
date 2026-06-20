@@ -361,8 +361,16 @@ export function BazaarDMPanel({ campaignId, onClose }) {
   const [traderNpcs, setTraderNpcs]       = useState([]);
   const [generatingFor, setGeneratingFor] = useState(null);
   const ITEM_CATEGORIES = ['Armor','Weapons','Consumables','Gear','Artifacts','Spellcasting Items','Magic Items','Trade Goods','Documents','Packs','Black Market'];
-  const [wareCategory, setWareCategory]   = useState('Weapons');
-  const [wareCount, setWareCount]         = useState(6);
+  const RARITIES = ['common','uncommon','rare','epic','legendary','mythic','artifact','exotic'];
+  const [wareCategories, setWareCategories] = useState(['Weapons']);
+  const [wareRarities, setWareRarities]     = useState(['common','uncommon']);
+  const [wareCount, setWareCount]           = useState(6);
+
+  // Quick trader creation
+  const [showNewTrader, setShowNewTrader] = useState(false);
+  const [newTraderName, setNewTraderName] = useState('');
+  const [newTraderRole, setNewTraderRole] = useState('Merchant');
+  const [creatingTrader, setCreatingTrader] = useState(false);
 
   // Loot divvy state
   const [divvyBox, setDivvyBox]       = useState(null);
