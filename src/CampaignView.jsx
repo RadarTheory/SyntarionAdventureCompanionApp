@@ -1746,7 +1746,7 @@ useEffect(() => {
 
 useEffect(() => {
   if (!campaign?.id) return;
-  supabase.from('world_clock').select('*').eq('campaign_id', String(activeCampaignTab)).maybeSingle()
+  supabase.from('world_clock').select('*').eq('campaign_id', String(campaign.id)).maybeSingle()
     .then(({ data, error }) => {
       console.log('[ClockDebug] campaign.id:', campaign.id, typeof campaign.id, '→ data:', data, 'error:', error);
       if (data) setClockState(data);
@@ -2143,15 +2143,15 @@ useEffect(() => {
       )}
 
       {/* Header */}
-      <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-        <button onClick={onBack} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.muted, padding: 0 }}>← Campaigns</button>
+      <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', flexShrink: 0, gap: 12 }}>
+        <button onClick={onBack} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.muted, padding: 0, justifySelf: 'start' }}>← Campaigns</button>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 10 : 12, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.text }}>{campaign.subtitle}</div>
           <div style={{ fontSize: 8, color: timer ? COLORS.magic : COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: timer ? 700 : 400 }}>
             {timer ? `⏱ ${timer}` : (FULL_TITLES[campaign.id] || campaign.name)}
           </div>
         </div>
-        <div style={{ minWidth: 60, display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', justifySelf: 'end' }}>
           {clockState && <SoteriaClockDisplay clock={clockState} compact />}
         </div>
       </div>
