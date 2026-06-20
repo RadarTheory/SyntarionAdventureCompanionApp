@@ -353,7 +353,7 @@ export function BazaarPlayerPanel({ char, campaignId, embedded = false }) {
 
 // ─── DM BAZAAR PANEL ──────────────────────────────────────────────────────────
 export function BazaarDMPanel({ campaignId, onClose }) {
-  const [view, setView]       = useState('trades');  // 'trades' | 'loot'
+  const [view, setView]       = useState('trades');  // 'trades' | 'loot' | 'merchants'
   const [trades, setTrades]   = useState([]);
   const [lootboxes, setLootboxes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -362,6 +362,17 @@ export function BazaarDMPanel({ campaignId, onClose }) {
   const [responseNote, setResponseNote] = useState('');
   const [saving, setSaving]   = useState(false);
   const [toast, setToast]     = useState(null);
+
+  // Merchant state
+  const [merchants, setMerchants]           = useState([]);
+  const [merchantNpcs, setMerchantNpcs]     = useState([]);
+  const [showMerchantForm, setShowMerchantForm] = useState(false);
+  const [merchantDraft, setMerchantDraft]   = useState({ name: '', npc_id: '', location: '', is_traveling: false });
+  const [merchantSaving, setMerchantSaving] = useState(false);
+  const [generatingFor, setGeneratingFor]   = useState(null); // merchant id
+  const ITEM_CATEGORIES = ['Armor','Weapons','Consumables','Gear','Artifacts','Spellcasting Items','Magic Items','Trade Goods','Documents','Packs','Black Market'];
+  const [wareCategory, setWareCategory]     = useState('Weapons');
+  const [wareCount, setWareCount]           = useState(6);
 
   // Loot divvy state
   const [divvyBox, setDivvyBox]       = useState(null);
@@ -372,12 +383,96 @@ export function BazaarDMPanel({ campaignId, onClose }) {
 
   useEffect(() => {
     loadAll();
+    loadMerchants();
     const sub = supabase.channel(`bazaar-dm-${campaignId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'trades' }, loadAll)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'lootboxes' }, loadAll)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'merchants' }, loadMerchants)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'merchant_inventory' }, loadMerchants)
       .subscribe();
     return () => supabase.removeChannel(sub);
   }, [campaignId]);
+
+  const loadMerchants = async () => {
+    const [merchRes, npcRes] = await Promise.all([
+      supabase.from('merchants').select('*, merchant_inventory(*)').eq('campaign_id', String(campaignId)).order('created_at', { ascending: false }),
+      supabase.from('npcs').select('id, name, role').eq('active', true),
+    ]);
+    if (merchRes.data) setMerchants(merchRes.data);
+    if (npcRes.data) setMerchantNpcs(npcRes.data);
+  };
+
+  const createMerchant = async () => {
+    if (!merchantDraft.name.trim()) return;
+    setMerchantSaving(true);
+    await supabase.from('merchants').insert({
+      campaign_id: String(campaignId),
+      npc_id: merchantDraft.npc_id || null,
+      name: merchantDraft.name.trim(),
+      location: merchantDraft.location.trim(),
+      is_traveling: merchantDraft.is_traveling,
+      active: true,
+    });
+    setMerchantSaving(false);
+    setShowMerchantForm(false);
+    setMerchantDraft({ name: '', npc_id: '', location: '', is_traveling: false });
+    showToast('Merchant added.');
+    loadMerchants();
+  };
+
+  const toggleMerchantActive = async (merchant) => {
+    await supabase.from('merchants').update({ active: !merchant.active }).eq('id', merchant.id);
+    loadMerchants();
+  };
+
+  const deleteMerchant = async (merchant) => {
+    if (!window.confirm(`Remove ${merchant.name}? This deletes their inventory too.`)) return;
+    await supabase.from('merchants').delete().eq('id', merchant.id);
+    showToast('Merchant removed.');
+    loadMerchants();
+  };
+
+  const generateWares = async (merchant, category, count) => {
+    setGeneratingFor(merchant.id);
+    const { data: pool, error } = await supabase
+      .from('items')
+      .select('name, category, type, description')
+      .eq('category', category)
+      .limit(500);
+
+    if (error || !pool?.length) {
+      showToast(`No items found in category "${category}".`);
+      setGeneratingFor(null);
+      return;
+    }
+
+    const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, count);
+    const rows = shuffled.map(item => ({
+      merchant_id: merchant.id,
+      item_name: item.name,
+      item_category: item.category,
+      item_desc: item.description,
+      qty: 1,
+      price: Math.floor(Math.random() * 90) + 10,
+      sold: false,
+    }));
+
+    await supabase.from('merchant_inventory').insert(rows);
+    showToast(`Generated ${rows.length} wares for ${merchant.name}.`);
+    setGeneratingFor(null);
+    loadMerchants();
+  };
+
+  const removeWare = async (itemId) => {
+    await supabase.from('merchant_inventory').delete().eq('id', itemId);
+    loadMerchants();
+  };
+
+  const clearWares = async (merchant) => {
+    if (!window.confirm(`Clear all wares from ${merchant.name}?`)) return;
+    await supabase.from('merchant_inventory').delete().eq('merchant_id', merchant.id);
+    loadMerchants();
+  };
 
   const loadAll = async () => {
     setLoading(true);
@@ -517,7 +612,7 @@ export function BazaarDMPanel({ campaignId, onClose }) {
       )}
 
       <div style={{ display: 'flex', gap: 5, padding: '10px 14px', borderBottom: '1px solid rgba(200,168,74,0.15)', flexShrink: 0 }}>
-        {[['trades', `Trades (${trades.filter(t => t.status === 'pending').length} pending)`], ['loot', `Loot (${lootboxes.length})`]].map(([v, lbl]) => (
+        {[['trades', `Trades (${trades.filter(t => t.status === 'pending').length} pending)`], ['loot', `Loot (${lootboxes.length})`], ['merchants', `Merchants (${merchants.length})`]].map(([v, lbl]) => (
           <button key={v} onClick={() => setView(v)}
             style={{ background: view === v ? 'rgba(200,168,74,0.14)' : 'transparent', border: `1px solid ${view === v ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 5, padding: '4px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.12em', color: view === v ? '#e8c84a' : COLORS.dim }}>
             {lbl}
@@ -593,6 +688,112 @@ export function BazaarDMPanel({ campaignId, onClose }) {
                           <button onClick={() => { setResponding(null); setResponseNote(''); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: COLORS.dim }}>← Cancel</button>
                         </div>
                       )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── MERCHANTS ── */}
+        {!loading && view === 'merchants' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button onClick={() => setShowMerchantForm(o => !o)}
+              style={{ background: showMerchantForm ? 'rgba(200,168,74,0.14)' : 'rgba(200,168,74,0.08)', border: '1px solid rgba(200,168,74,0.4)', borderRadius: 6, padding: '8px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: '#e8c84a', alignSelf: 'flex-start' }}>
+              {showMerchantForm ? '× Cancel' : '+ Add Merchant'}
+            </button>
+
+            {showMerchantForm && (
+              <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <input value={merchantDraft.name} onChange={e => setMerchantDraft(d => ({ ...d, name: e.target.value }))}
+                  placeholder="Merchant name…"
+                  style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none' }} />
+                <select value={merchantDraft.npc_id} onChange={e => setMerchantDraft(d => ({ ...d, npc_id: e.target.value }))}
+                  style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none' }}>
+                  <option value="">No linked NPC</option>
+                  {merchantNpcs.map(n => <option key={n.id} value={n.id}>{n.name}{n.role ? ` — ${n.role}` : ''}</option>)}
+                </select>
+                <input value={merchantDraft.location} onChange={e => setMerchantDraft(d => ({ ...d, location: e.target.value }))}
+                  placeholder="Location (e.g. Avalora Bazaar)…"
+                  style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none' }} />
+                <button onClick={() => setMerchantDraft(d => ({ ...d, is_traveling: !d.is_traveling }))}
+                  style={{ alignSelf: 'flex-start', background: merchantDraft.is_traveling ? 'rgba(56,189,248,0.12)' : 'transparent', border: `1px solid ${merchantDraft.is_traveling ? 'rgba(56,189,248,0.5)' : COLORS.border}`, borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: merchantDraft.is_traveling ? '#7dd3fc' : COLORS.dim }}>
+                  {merchantDraft.is_traveling ? '✓ Traveling Merchant' : '⬡ Mark as Traveling'}
+                </button>
+                <button onClick={createMerchant} disabled={merchantSaving || !merchantDraft.name.trim()}
+                  style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.magicText, fontWeight: 700 }}>
+                  {merchantSaving ? 'Saving…' : '✦ Create Merchant'}
+                </button>
+              </div>
+            )}
+
+            {merchants.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '24px 0' }}>No merchants yet.</div>}
+
+            {merchants.map(m => {
+              const wares = m.merchant_inventory || [];
+              const isGenerating = generatingFor === m.id;
+              return (
+                <div key={m.id} style={{ background: COLORS.card, border: `1px solid ${m.active ? 'rgba(180,122,58,0.5)' : COLORS.border}`, borderRadius: 8, padding: '12px 14px', opacity: m.active ? 1 : 0.55 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8a84a' }}>{m.name}</div>
+                        {m.is_traveling && <div style={{ fontSize: 7, color: '#7dd3fc', fontFamily: "'Cinzel', serif", border: '1px solid rgba(56,189,248,0.4)', borderRadius: 3, padding: '1px 5px' }}>TRAVELING</div>}
+                        {!m.active && <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", border: `1px solid ${COLORS.border}`, borderRadius: 3, padding: '1px 5px' }}>INACTIVE</div>}
+                      </div>
+                      {m.location && <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>{m.location}</div>}
+                    </div>
+                    <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+                      <button onClick={() => toggleMerchantActive(m)}
+                        style={{ background: m.active ? 'rgba(121,245,167,0.1)' : 'rgba(200,168,74,0.1)', border: `1px solid ${m.active ? 'rgba(121,245,167,0.4)' : 'rgba(200,168,74,0.4)'}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: m.active ? '#79f5a7' : '#e8c84a' }}>
+                        {m.active ? '✓ Active' : 'Activate'}
+                      </button>
+                      <button onClick={() => deleteMerchant(m)}
+                        style={{ background: 'rgba(224,90,90,0.08)', border: '1px solid rgba(224,90,90,0.3)', borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: '#e05a5a' }}>
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <select value={wareCategory} onChange={e => setWareCategory(e.target.value)}
+                      style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '4px 8px', fontFamily: "'Cinzel', serif", fontSize: 8, color: COLORS.text, outline: 'none' }}>
+                      {ITEM_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <input type="number" min={1} max={20} value={wareCount} onChange={e => setWareCount(Number(e.target.value) || 1)}
+                      style={{ width: 44, background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '4px 6px', fontFamily: 'monospace', fontSize: 11, color: COLORS.text, outline: 'none', textAlign: 'center' }} />
+                    <button onClick={() => generateWares(m, wareCategory, wareCount)} disabled={isGenerating}
+                      style={{ background: 'rgba(200,168,74,0.12)', border: '1px solid rgba(200,168,74,0.4)', borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: '#e8c84a' }}>
+                      {isGenerating ? 'Generating…' : '⟳ Generate Wares'}
+                    </button>
+                    {wares.length > 0 && (
+                      <button onClick={() => clearWares(m)}
+                        style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: COLORS.dim }}>
+                        Clear All
+                      </button>
+                    )}
+                  </div>
+
+                  {wares.length === 0 ? (
+                    <div style={{ fontSize: 10, color: COLORS.dim, fontStyle: 'italic' }}>No wares yet. Generate some above.</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {wares.map(item => (
+                        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '6px 9px', opacity: item.sold ? 0.4 : 1 }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.text }}>{item.item_name}</div>
+                              <div style={{ fontSize: 7, color: COLORS.dim }}>{item.item_category}</div>
+                              {item.sold && <div style={{ fontSize: 7, color: '#e05a5a', fontFamily: "'Cinzel', serif" }}>SOLD</div>}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                            <div style={{ fontSize: 10, color: '#e8c84a', fontFamily: "'Cinzel', serif" }}>{item.price}g</div>
+                            <button onClick={() => removeWare(item.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#e05a5a', fontSize: 11 }}>×</button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
