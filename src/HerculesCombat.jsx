@@ -1,20 +1,7 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import supabase from './lib/supabase';
-import { COLORS, CAMPAIGNS } from './constants';
+import { COLORS } from './constants';
 import { SOTERIA_BESTIARY } from './soteria-bestiary';
-
-function normalizeCampaigns() {
-  if (Array.isArray(CAMPAIGNS)) return CAMPAIGNS;
-
-  if (CAMPAIGNS && typeof CAMPAIGNS === 'object') {
-    return Object.entries(CAMPAIGNS).map(([id, value]) => ({
-      id,
-      ...(typeof value === 'object' ? value : { name: String(value) }),
-    }));
-  }
-
-  return [];
-}
 
 function getBestiaryText() {
   if (typeof SOTERIA_BESTIARY === 'string') return SOTERIA_BESTIARY;
@@ -188,9 +175,23 @@ function VitalsPanel({ row, onClose, campaignId }) {
 }
 
 export default function HerculesCombat({ defaultCampaignId, darkMode = true, onPlaceToken, onRegisterAddCreature }) {
-  const campaignList = useMemo(normalizeCampaigns, []);
+   const [campaignList, setCampaignList] = useState([]);
   const creatureNames = useMemo(parseCreatureNames, []);
   const firstCampaignId = campaignList?.[0]?.id || '';
+
+  useEffect(() => {
+    supabase
+      .from('campaigns')
+      .select('*')
+      .order('created_at', { ascending: true })
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('Failed to load campaigns for Hercules:', error);
+          return;
+        }
+        setCampaignList((data || []).map(c => ({ ...c, id: String(c.id) })));
+      });
+  }, []);
   const [manualLogText, setManualLogText] = useState('');
   const [manualCombatantName, setManualCombatantName] = useState('');
   const [vitalsOpen, setVitalsOpen] = useState(null);
