@@ -406,34 +406,83 @@ export function BazaarDMPanel({ campaignId, onClose }) {
     loadTraderNpcs();
   };
 
-  const generateWares = async (npc, category, count) => {
+  const RARITY_PRICE = {
+    common: [5, 25], uncommon: [20, 60], rare: [50, 150],
+    epic: [120, 300], legendary: [250, 600], mythic: [400, 900],
+    artifact: [500, 1200], exotic: [300, 800],
+  };
+
+  const generateWares = async (npc, categories, rarities, count) => {
+    if (categories.length === 0 || rarities.length === 0) {
+      showToast('Pick at least one category and one rarity.');
+      return;
+    }
     setGeneratingFor(npc.id);
+
     const { data: pool, error } = await supabase
       .from('items')
-      .select('name, category, type, description')
-      .eq('category', category)
-      .limit(500);
+      .select('name, category, type, description, tags')
+      .in('category', categories)
+      .limit(2000);
 
     if (error || !pool?.length) {
-      showToast(`No items found in category "${category}".`);
+      showToast(`No items found for selected categories.`);
       setGeneratingFor(null);
       return;
     }
 
-    const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, count);
-    const rows = shuffled.map(item => ({
-      npc_id: npc.id,
-      item_name: item.name,
-      item_category: item.category,
-      item_desc: item.description,
-      qty: 1,
-      price: Math.floor(Math.random() * 90) + 10,
-      sold: false,
-    }));
+    const filtered = pool.filter(item =>
+      Array.isArray(item.tags) && item.tags.some(t => rarities.includes(t))
+    );
+
+    if (filtered.length === 0) {
+      showToast(`No items match that category + rarity combination.`);
+      setGeneratingFor(null);
+      return;
+    }
+
+    const shuffled = [...filtered].sort(() => Math.random() - 0.5).slice(0, count);
+    const rows = shuffled.map(item => {
+      const rarity = item.tags.find(t => rarities.includes(t)) || 'common';
+      const [lo, hi] = RARITY_PRICE[rarity] || [10, 50];
+      return {
+        npc_id: npc.id,
+        item_name: item.name,
+        item_category: item.category,
+        item_desc: item.description,
+        qty: 1,
+        price: Math.floor(Math.random() * (hi - lo + 1)) + lo,
+        sold: false,
+      };
+    });
 
     await supabase.from('npc_inventory').insert(rows);
     showToast(`Generated ${rows.length} wares for ${npc.name}.`);
     setGeneratingFor(null);
+    loadTraderNpcs();
+  };
+
+  const toggleWareCategory = (cat) => {
+    setWareCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]);
+  };
+
+  const toggleWareRarity = (rarity) => {
+    setWareRarities(prev => prev.includes(rarity) ? prev.filter(r => r !== rarity) : [...prev, rarity]);
+  };
+
+  const createTrader = async () => {
+    if (!newTraderName.trim()) return;
+    setCreatingTrader(true);
+    await supabase.from('npcs').insert({
+      name: newTraderName.trim(),
+      role: newTraderRole,
+      tags: ['trader'],
+      active: true,
+    });
+    setCreatingTrader(false);
+    setShowNewTrader(false);
+    setNewTraderName('');
+    showToast(`${newTraderName.trim()} added as a trader.`);
     loadTraderNpcs();
   };
 
@@ -671,8 +720,53 @@ export function BazaarDMPanel({ campaignId, onClose }) {
               Toggle a trader active to make them available to players this session. Inactive traders stay hidden.
             </div>
 
-            {traderNpcs.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '24px 0' }}>No trader-tagged NPCs found. Tag an NPC's role with "Trader", "Merchant", "Innkeep", or "Vendor", or add "trader" to its tags.</div>}
+            <button onClick={() => setShowNewTrader(o => !o)}
+              style={{ background: showNewTrader ? 'rgba(200,168,74,0.14)' : 'rgba(200,168,74,0.08)', border: '1px solid rgba(200,168,74,0.4)', borderRadius: 6, padding: '8px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: '#e8c84a', alignSelf: 'flex-start' }}>
+              {showNewTrader ? '× Cancel' : '+ New Trader'}
+            </button>
 
+            {showNewTrader && (
+              <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <input value={newTraderName} onChange={e => setNewTraderName(e.target.value)}
+                  placeholder="Trader name…"
+                  style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none' }} />
+                <input value={newTraderRole} onChange={e => setNewTraderRole(e.target.value)}
+                  placeholder="Role (e.g. Merchant, Innkeep, Vendor)…"
+                  style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none' }} />
+                <button onClick={createTrader} disabled={creatingTrader || !newTraderName.trim()}
+                  style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.magicText, fontWeight: 700 }}>
+                  {creatingTrader ? 'Creating…' : '✦ Create Trader NPC'}
+                </button>
+              </div>
+            )}
+
+            <div style={{ background: 'rgba(200,168,74,0.04)', border: '1px solid rgba(200,168,74,0.2)', borderRadius: 8, padding: '10px 12px' }}>
+              <div style={{ ...label8(), marginBottom: 6 }}>Wares Generation — Categories</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 10 }}>
+                {ITEM_CATEGORIES.map(c => (
+                  <button key={c} onClick={() => toggleWareCategory(c)}
+                    style={{ background: wareCategories.includes(c) ? 'rgba(200,168,74,0.16)' : 'transparent', border: `1px solid ${wareCategories.includes(c) ? 'rgba(200,168,74,0.55)' : COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: wareCategories.includes(c) ? '#e8c84a' : COLORS.dim }}>
+                    {c}
+                  </button>
+                ))}
+              </div>
+              <div style={{ ...label8(), marginBottom: 6 }}>Rarities</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 10 }}>
+                {RARITIES.map(r => (
+                  <button key={r} onClick={() => toggleWareRarity(r)}
+                    style={{ background: wareRarities.includes(r) ? 'rgba(56,189,248,0.14)' : 'transparent', border: `1px solid ${wareRarities.includes(r) ? 'rgba(56,189,248,0.5)' : COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: wareRarities.includes(r) ? '#7dd3fc' : COLORS.dim, textTransform: 'capitalize' }}>
+                    {r}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ ...label8() }}>Count</div>
+                <input type="number" min={1} max={30} value={wareCount} onChange={e => setWareCount(Number(e.target.value) || 1)}
+                  style={{ width: 50, background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '4px 6px', fontFamily: 'monospace', fontSize: 11, color: COLORS.text, outline: 'none', textAlign: 'center' }} />
+              </div>
+            </div>
+
+            {traderNpcs.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '24px 0' }}>No trader-tagged NPCs found. Tag an NPC's role with "Trader", "Merchant", "Innkeep", or "Vendor", or add "trader" to its tags — or use "+ New Trader" above.</div>}
             {traderNpcs.map(npc => {
               const wares = npc.npc_inventory || [];
               const isGenerating = generatingFor === npc.id;
@@ -693,15 +787,9 @@ export function BazaarDMPanel({ campaignId, onClose }) {
                   </div>
 
                   <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <select value={wareCategory} onChange={e => setWareCategory(e.target.value)}
-                      style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '4px 8px', fontFamily: "'Cinzel', serif", fontSize: 8, color: COLORS.text, outline: 'none' }}>
-                      {ITEM_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                    <input type="number" min={1} max={20} value={wareCount} onChange={e => setWareCount(Number(e.target.value) || 1)}
-                      style={{ width: 44, background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '4px 6px', fontFamily: 'monospace', fontSize: 11, color: COLORS.text, outline: 'none', textAlign: 'center' }} />
-                    <button onClick={() => generateWares(npc, wareCategory, wareCount)} disabled={isGenerating}
+                    <button onClick={() => generateWares(npc, wareCategories, wareRarities, wareCount)} disabled={isGenerating}
                       style={{ background: 'rgba(200,168,74,0.12)', border: '1px solid rgba(200,168,74,0.4)', borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: '#e8c84a' }}>
-                      {isGenerating ? 'Generating…' : '⟳ Generate Wares'}
+                      {isGenerating ? 'Generating…' : `⟳ Generate ${wareCount} Wares`}
                     </button>
                     {wares.length > 0 && (
                       <button onClick={() => clearWares(npc)}
