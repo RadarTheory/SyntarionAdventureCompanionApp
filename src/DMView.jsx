@@ -703,7 +703,10 @@ export default function DMView({ user, session, onHome }) {
   const [showLarks, setShowLarks] = useState(false);
   const [showBazaar, setShowBazaar] = useState(false);
   const [showQuestor, setShowQuestor] = useState(false);
+  const [showClock, setShowClock] = useState(false);
+  const [showLore, setShowLore] = useState(false);
   const [headerClock, setHeaderClock] = useState(null);
+  
    // Live world clock for the header, scoped to the active campaign tab
   useEffect(() => {
     if (!activeCampaignTab) { setHeaderClock(null); return; }
@@ -1154,20 +1157,26 @@ export default function DMView({ user, session, onHome }) {
         )}
 
       {/* ─── Header ─────────────────────────────────────────────────────── */}
-      <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-        <button onClick={onHome} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.muted, padding: 0 }}>← Home</button>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 10 : 12, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.text }}>DM Mode</div>
-          <div style={{ fontSize: 8, color: sessionTimerLabel ? COLORS.magic : COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: sessionTimerLabel ? 700 : 400 }}>
-            {sessionTimerLabel || "The Architect's Chamber"}
+      <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', flexShrink: 0, gap: 12 }}>
+        <button onClick={onHome} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.muted, padding: 0, justifySelf: 'start' }}>← Home</button>
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 10 : 12, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.text }}>DM Mode</div>
+            <div style={{ fontSize: 8, color: sessionTimerLabel ? COLORS.magic : COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: sessionTimerLabel ? 700 : 400 }}>
+              {sessionTimerLabel || "The Architect's Chamber"}
+            </div>
           </div>
+          {headerClock && <SoteriaClockDisplay clock={headerClock} compact />}
         </div>
 
-        {headerClock && (
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <SoteriaClockDisplay clock={headerClock} compact />
-          </div>
-        )}
+        <div style={{ justifySelf: 'end' }}>
+          <SessionManager
+            onTimerLabel={setSessionTimerLabel}
+            checkedInPlayers={uniqueCheckins}
+          />
+        </div>
+
        {showWorldMap && (
   <DraggablePanel defaultX={120} defaultY={40} onClose={() => setShowWorldMap(false)} title="WORLD MAP · Soteria" width={Math.min(window.innerWidth - 140, 900)} accentColor="rgba(200,168,74,0.4)">
     <div style={{ height: '70vh' }}>
@@ -1181,12 +1190,7 @@ export default function DMView({ user, session, onHome }) {
     <LoreAnnouncePanel campaignId={activeSession?.campaign_id || activeCampaignTab} embedded />
   </DraggablePanel>
 )}
-        {/* CORRECTED PROP PASSING HERE */}
-        <SessionManager
-          onTimerLabel={setSessionTimerLabel}
-          checkedInPlayers={uniqueCheckins}
-        />
-      </div>
+        </div>
 
       {/* ─── Tab bar ─────────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', borderBottom: `1px solid ${COLORS.border}`, overflowX: 'auto', background: COLORS.surface, flexShrink: 0 }}>

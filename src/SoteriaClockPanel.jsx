@@ -170,7 +170,7 @@ export default function SoteriaClockPanel({ campaignId }) {
     tickRef.current = setInterval(async () => {
       setClock(prev => {
         if (!prev || prev.paused) return prev;
-        const fragsToAdd = prev.travel_mode ? prev.travel_rate * 120 : 2;
+       const fragsToAdd = prev.travel_mode ? prev.travel_rate : 1;
         const next = advanceFragments(prev, fragsToAdd);
         // Persist async
         supabase.from('world_clock')
@@ -192,10 +192,36 @@ export default function SoteriaClockPanel({ campaignId }) {
     setSaving(false);
   };
 
-  const togglePause   = () => save({ paused: !clock.paused });
-  const toggleTravel  = () => save({ travel_mode: !clock.travel_mode });
-  const longRest      = () => save(advanceFragments(clock, 13 * 120)); // advance 1 full turn
-  const shortRest     = () => save(advanceFragments(clock, 4 * 120));  // advance 4 passes
+  const logClockEvent = async (message) => {
+    if (!campaignId) return;
+    await supabase.from('dm_memory').insert({
+      campaign_id: String(campaignId),
+      category: 'clock',
+      content: `[CLOCK] ${message}`,
+    });
+  };
+
+  const togglePause = () => {
+    const next = !clock.paused;
+    save({ paused: next });
+    logClockEvent(next ? 'Time paused.' : 'Time resumed.');
+  };
+
+  const toggleTravel = () => {
+    const next = !clock.travel_mode;
+    save({ travel_mode: next });
+    logClockEvent(next ? `Travel mode activated (${clock.travel_rate} passes/min).` : 'Travel mode deactivated.');
+  };
+
+  const longRest = () => {
+    save(advanceFragments(clock, 13 * 120));
+    logClockEvent('The party takes a long rest. One full turn passes.');
+  };
+
+  const shortRest = () => {
+    save(advanceFragments(clock, 4 * 120));
+    logClockEvent('The party takes a short rest. Four passes elapse.');
+  };
 
   const openEdit = () => {
     setDraft({
@@ -217,6 +243,7 @@ export default function SoteriaClockPanel({ campaignId }) {
       fragment: Math.min(119, Math.max(0, parseInt(draft.fragment) || 0)),
       travel_rate: Math.max(1, parseInt(draft.travel_rate) || 6),
     });
+    logClockEvent('The Architect manually set the world time.');
     setEditing(false);
   };
 
