@@ -129,16 +129,16 @@ export default function SoteriaClockPanel({ campaignId }) {
     supabase
       .from('world_clock')
       .select('*')
-      .eq('campaign_id', campaignId)
+      .eq('campaign_id', String(campaignId))
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
           setClock(data);
         } else {
-          if (!campaignId || isNaN(Number(campaignId))) return;
+          if (!campaignId) return;
           // Create default clock at 178 E.U., Aman, Turn 1, Ba'el
           supabase.from('world_clock').insert({
-            campaign_id: campaignId,
+            campaign_id: String(campaignId),
             era: 'EU', anui: 178, greater_cycle: 1,
             turn: 1, pass: 1, fragment: 0,
             travel_mode: false, travel_rate: 6, paused: false,

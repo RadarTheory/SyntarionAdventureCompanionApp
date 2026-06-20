@@ -336,6 +336,58 @@ export default function ItemCatalog() {
   const [ITEMS, setItems] = useState([]);
   const [itemsLoading, setItemsLoading] = useState(true);
 
+  useEffect(() => {
+    const loadAllItems = async () => {
+      let all = [];
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from('items').select('*')
+          .order('category').order('name')
+          .range(from, from + pageSize - 1);
+        if (error) {
+          console.error('Failed to load items catalog:', error);
+          break;
+        }
+        if (!data?.length) break;
+        all = all.concat(data);
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
+      setItems(all.map(row => ({
+        name: row.name,
+        category: row.category,
+        type: row.type,
+        desc: row.description,
+        tags: row.tags || [],
+        meta: row.meta || '',
+      })));
+      setItemsLoading(false);
+    };
+    loadAllItems();
+  }, []);
+
+  useEffect(() => {
+    supabase.from('items').select('*').order('name', { ascending: true })
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('Failed to load items catalog:', error);
+          setItemsLoading(false);
+          return;
+        }
+        setItems((data || []).map(row => ({
+          name: row.name,
+          category: row.category,
+          type: row.type,
+          desc: row.description,
+          tags: row.tags || [],
+          meta: row.meta || '',
+        })));
+        setItemsLoading(false);
+      });
+  }, []);
+
   const categories = useMemo(() => [...new Set(ITEMS.map(i => i.category))], []);
   const types = useMemo(() => activeCategory
     ? [...new Set(ITEMS.filter(i => i.category === activeCategory).map(i => i.type))]

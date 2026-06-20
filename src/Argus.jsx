@@ -534,9 +534,23 @@ export function ArgusDMPanel({ onClose }) {
   const [showNewItem, setShowNewItem] = useState(false);
 
   useEffect(() => {
-    supabase.from('items').select('*', { count: 'exact' }).order('category').order('name').range(0, 2500).then(({ data }) => {
-      if (data) setAllItems(data.map(r => ({ ...r, desc: r.description })));
-    });
+    const loadAllItems = async () => {
+      let all = [];
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from('items').select('*')
+          .order('category').order('name')
+          .range(from, from + pageSize - 1);
+        if (error || !data?.length) break;
+        all = all.concat(data);
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
+      setAllItems(all.map(r => ({ ...r, desc: r.description })));
+    };
+    loadAllItems();
   }, []);
 
   const categories = useMemo(() => [...new Set(allItems.map(i => i.category))], [allItems]);
