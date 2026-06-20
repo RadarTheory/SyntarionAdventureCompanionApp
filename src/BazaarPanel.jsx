@@ -62,12 +62,7 @@ export function BazaarPlayerPanel({ char, campaignId, embedded = false }) {
         qty: Number(r.weight) || 1,
       })));
     }
-    // Only show lootboxes where this character has pending items
     if (lootRes.data) {
-      const mine = lootRes.data.filter(box =>
-        box.lootbox_items?.some(i => i.claimed_by === String(char.id) || i.claim_status === 'approved')
-        || box.reveal_mode !== 'multi'
-      );
       setLootboxes(lootRes.data);
     }
     setLoading(false);
@@ -104,7 +99,6 @@ export function BazaarPlayerPanel({ char, campaignId, embedded = false }) {
       ];
       if (rows.length) await supabase.from('trade_items').insert(rows);
 
-      // Log to grimoire
       await supabase.from('grimoire_entries').insert({
         character_id: String(char.id),
         campaign_id: campaignId,
@@ -153,7 +147,6 @@ export function BazaarPlayerPanel({ char, campaignId, embedded = false }) {
         </div>
       )}
 
-      {/* Tab bar */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexShrink: 0 }}>
         {[['trades', 'My Trades'], ['loot', `Loot (${lootboxes.length})`], ['new', '+ Propose Trade']].map(([v, lbl]) => (
           <button key={v} onClick={() => setView(v)}
@@ -283,7 +276,8 @@ export function BazaarPlayerPanel({ char, campaignId, embedded = false }) {
               </div>
               {counterpartyType === 'npc' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 160, overflowY: 'auto' }}>
-                  {npcs.length === 0 && <div style={{ fontSize: 10, color: COLORS.dim, fontStyle: 'italic' }}>No traders nearby. The Architect will make merchants available when you're in range.</div>}                  {npcs.map(npc => (
+                  {npcs.length === 0 && <div style={{ fontSize: 10, color: COLORS.dim, fontStyle: 'italic' }}>No traders nearby. The Architect will make merchants available when you're in range.</div>}
+                  {npcs.map(npc => (
                     <button key={npc.id} onClick={() => setSelectedNpc(selectedNpc?.id === npc.id ? null : npc)}
                       style={{ background: selectedNpc?.id === npc.id ? 'rgba(200,168,74,0.10)' : COLORS.card, border: `1px solid ${selectedNpc?.id === npc.id ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 6, padding: '7px 10px', cursor: 'pointer', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
@@ -358,82 +352,54 @@ export function BazaarDMPanel({ campaignId, onClose }) {
   const [lootboxes, setLootboxes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
-  const [responding, setResponding] = useState(null); // trade id
+  const [responding, setResponding] = useState(null);
   const [responseNote, setResponseNote] = useState('');
   const [saving, setSaving]   = useState(false);
   const [toast, setToast]     = useState(null);
 
-  // Merchant state
-  const [merchants, setMerchants]           = useState([]);
-  const [merchantNpcs, setMerchantNpcs]     = useState([]);
-  const [showMerchantForm, setShowMerchantForm] = useState(false);
-  const [merchantDraft, setMerchantDraft]   = useState({ name: '', npc_id: '', location: '', is_traveling: false });
-  const [merchantSaving, setMerchantSaving] = useState(false);
-  const [generatingFor, setGeneratingFor]   = useState(null); // merchant id
+  // Merchant (NPC-based) state
+  const [traderNpcs, setTraderNpcs]       = useState([]);
+  const [generatingFor, setGeneratingFor] = useState(null);
   const ITEM_CATEGORIES = ['Armor','Weapons','Consumables','Gear','Artifacts','Spellcasting Items','Magic Items','Trade Goods','Documents','Packs','Black Market'];
-  const [wareCategory, setWareCategory]     = useState('Weapons');
-  const [wareCount, setWareCount]           = useState(6);
+  const [wareCategory, setWareCategory]   = useState('Weapons');
+  const [wareCount, setWareCount]         = useState(6);
 
   // Loot divvy state
   const [divvyBox, setDivvyBox]       = useState(null);
   const [characters, setCharacters]   = useState([]);
-  const [assignments, setAssignments] = useState({}); // { itemId: charId }
+  const [assignments, setAssignments] = useState({});
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 4000); };
 
   useEffect(() => {
     loadAll();
-    loadMerchants();
+    loadTraderNpcs();
     const sub = supabase.channel(`bazaar-dm-${campaignId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'trades' }, loadAll)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'lootboxes' }, loadAll)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'merchants' }, loadMerchants)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'merchant_inventory' }, loadMerchants)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'npcs' }, loadTraderNpcs)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'npc_inventory' }, loadTraderNpcs)
       .subscribe();
     return () => supabase.removeChannel(sub);
   }, [campaignId]);
 
-  const loadMerchants = async () => {
-    const [merchRes, npcRes] = await Promise.all([
-      supabase.from('merchants').select('*, merchant_inventory(*)').eq('campaign_id', String(campaignId)).order('created_at', { ascending: false }),
-      supabase.from('npcs').select('id, name, role').eq('active', true),
-    ]);
-    if (merchRes.data) setMerchants(merchRes.data);
-    if (npcRes.data) setMerchantNpcs(npcRes.data);
+  const loadTraderNpcs = async () => {
+    const { data } = await supabase
+      .from('npcs')
+      .select('id, name, role, faction, tags, active, npc_inventory(*)')
+      .or('tags.cs.{trader},role.ilike.%trader%,role.ilike.%merchant%,role.ilike.%innkeep%,role.ilike.%vendor%')
+      .order('active', { ascending: false })
+      .order('name', { ascending: true });
+    if (data) setTraderNpcs(data);
   };
 
-  const createMerchant = async () => {
-    if (!merchantDraft.name.trim()) return;
-    setMerchantSaving(true);
-    await supabase.from('merchants').insert({
-      campaign_id: String(campaignId),
-      npc_id: merchantDraft.npc_id || null,
-      name: merchantDraft.name.trim(),
-      location: merchantDraft.location.trim(),
-      is_traveling: merchantDraft.is_traveling,
-      active: true,
-    });
-    setMerchantSaving(false);
-    setShowMerchantForm(false);
-    setMerchantDraft({ name: '', npc_id: '', location: '', is_traveling: false });
-    showToast('Merchant added.');
-    loadMerchants();
+  const toggleNpcActive = async (npc) => {
+    await supabase.from('npcs').update({ active: !npc.active }).eq('id', npc.id);
+    loadTraderNpcs();
   };
 
-  const toggleMerchantActive = async (merchant) => {
-    await supabase.from('merchants').update({ active: !merchant.active }).eq('id', merchant.id);
-    loadMerchants();
-  };
-
-  const deleteMerchant = async (merchant) => {
-    if (!window.confirm(`Remove ${merchant.name}? This deletes their inventory too.`)) return;
-    await supabase.from('merchants').delete().eq('id', merchant.id);
-    showToast('Merchant removed.');
-    loadMerchants();
-  };
-
-  const generateWares = async (merchant, category, count) => {
-    setGeneratingFor(merchant.id);
+  const generateWares = async (npc, category, count) => {
+    setGeneratingFor(npc.id);
     const { data: pool, error } = await supabase
       .from('items')
       .select('name, category, type, description')
@@ -448,7 +414,7 @@ export function BazaarDMPanel({ campaignId, onClose }) {
 
     const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, count);
     const rows = shuffled.map(item => ({
-      merchant_id: merchant.id,
+      npc_id: npc.id,
       item_name: item.name,
       item_category: item.category,
       item_desc: item.description,
@@ -457,21 +423,21 @@ export function BazaarDMPanel({ campaignId, onClose }) {
       sold: false,
     }));
 
-    await supabase.from('merchant_inventory').insert(rows);
-    showToast(`Generated ${rows.length} wares for ${merchant.name}.`);
+    await supabase.from('npc_inventory').insert(rows);
+    showToast(`Generated ${rows.length} wares for ${npc.name}.`);
     setGeneratingFor(null);
-    loadMerchants();
+    loadTraderNpcs();
   };
 
   const removeWare = async (itemId) => {
-    await supabase.from('merchant_inventory').delete().eq('id', itemId);
-    loadMerchants();
+    await supabase.from('npc_inventory').delete().eq('id', itemId);
+    loadTraderNpcs();
   };
 
-  const clearWares = async (merchant) => {
-    if (!window.confirm(`Clear all wares from ${merchant.name}?`)) return;
-    await supabase.from('merchant_inventory').delete().eq('merchant_id', merchant.id);
-    loadMerchants();
+  const clearWares = async (npc) => {
+    if (!window.confirm(`Clear all wares from ${npc.name}?`)) return;
+    await supabase.from('npc_inventory').delete().eq('npc_id', npc.id);
+    loadTraderNpcs();
   };
 
   const loadAll = async () => {
@@ -496,17 +462,14 @@ export function BazaarDMPanel({ campaignId, onClose }) {
     await supabase.from('trades').update({ status, dm_response_notes: responseNote, updated_at: new Date().toISOString() }).eq('id', trade.id);
 
     if (status === 'approved') {
-      // Move offered items from initiator pack to counterparty, and vice versa (simplified: log to grimoire)
       const myItems = trade.trade_items?.filter(i => i.side === 'initiator') || [];
       const theirItems = trade.trade_items?.filter(i => i.side === 'counterparty') || [];
 
-      // Remove offered items from initiator's pack
       for (const item of myItems) {
         if (item.from_pack_id) {
           await supabase.from('character_items').delete().eq('id', item.from_pack_id);
         }
       }
-      // Add requested items to initiator's pack
       for (const item of theirItems) {
         await supabase.from('character_items').insert({
           character_id: trade.initiator_character_id,
@@ -516,7 +479,6 @@ export function BazaarDMPanel({ campaignId, onClose }) {
           attuned: false, bonuses: {}, weight: item.qty || 1,
         });
       }
-      // Grimoire log
       await supabase.from('grimoire_entries').insert({
         character_id: trade.initiator_character_id,
         campaign_id: campaignId,
@@ -526,7 +488,6 @@ export function BazaarDMPanel({ campaignId, onClose }) {
         is_dm: false,
         architect_note: responseNote || null,
       });
-      // Message player
       await supabase.from('messages').insert({
         type: 'dm', is_dm: true, sender_name: 'The Architect',
         character_id: trade.initiator_character_id,
@@ -569,7 +530,7 @@ export function BazaarDMPanel({ campaignId, onClose }) {
     loadAll();
   };
 
- return (
+  return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
 
       {toast && (
@@ -578,7 +539,6 @@ export function BazaarDMPanel({ campaignId, onClose }) {
         </div>
       )}
 
-      {/* Divvy modal */}
       {divvyBox && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.78)', zIndex: 400000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: '#120e0a', border: `1px solid ${COLORS.border}`, borderRadius: 14, width: '100%', maxWidth: 460, maxHeight: '88vh', overflowY: 'auto', padding: 24 }}>
@@ -612,7 +572,7 @@ export function BazaarDMPanel({ campaignId, onClose }) {
       )}
 
       <div style={{ display: 'flex', gap: 5, padding: '10px 14px', borderBottom: '1px solid rgba(200,168,74,0.15)', flexShrink: 0 }}>
-        {[['trades', `Trades (${trades.filter(t => t.status === 'pending').length} pending)`], ['loot', `Loot (${lootboxes.length})`], ['merchants', `Merchants (${merchants.length})`]].map(([v, lbl]) => (
+        {[['trades', `Trades (${trades.filter(t => t.status === 'pending').length} pending)`], ['loot', `Loot (${lootboxes.length})`], ['merchants', `Merchants (${traderNpcs.filter(n => n.active).length}/${traderNpcs.length} active)`]].map(([v, lbl]) => (
           <button key={v} onClick={() => setView(v)}
             style={{ background: view === v ? 'rgba(200,168,74,0.14)' : 'transparent', border: `1px solid ${view === v ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 5, padding: '4px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.12em', color: view === v ? '#e8c84a' : COLORS.dim }}>
             {lbl}
@@ -699,61 +659,29 @@ export function BazaarDMPanel({ campaignId, onClose }) {
         {/* ── MERCHANTS ── */}
         {!loading && view === 'merchants' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <button onClick={() => setShowMerchantForm(o => !o)}
-              style={{ background: showMerchantForm ? 'rgba(200,168,74,0.14)' : 'rgba(200,168,74,0.08)', border: '1px solid rgba(200,168,74,0.4)', borderRadius: 6, padding: '8px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: '#e8c84a', alignSelf: 'flex-start' }}>
-              {showMerchantForm ? '× Cancel' : '+ Add Merchant'}
-            </button>
+            <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+              Toggle a trader active to make them available to players this session. Inactive traders stay hidden.
+            </div>
 
-            {showMerchantForm && (
-              <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <input value={merchantDraft.name} onChange={e => setMerchantDraft(d => ({ ...d, name: e.target.value }))}
-                  placeholder="Merchant name…"
-                  style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none' }} />
-                <select value={merchantDraft.npc_id} onChange={e => setMerchantDraft(d => ({ ...d, npc_id: e.target.value }))}
-                  style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none' }}>
-                  <option value="">No linked NPC</option>
-                  {merchantNpcs.map(n => <option key={n.id} value={n.id}>{n.name}{n.role ? ` — ${n.role}` : ''}</option>)}
-                </select>
-                <input value={merchantDraft.location} onChange={e => setMerchantDraft(d => ({ ...d, location: e.target.value }))}
-                  placeholder="Location (e.g. Avalora Bazaar)…"
-                  style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none' }} />
-                <button onClick={() => setMerchantDraft(d => ({ ...d, is_traveling: !d.is_traveling }))}
-                  style={{ alignSelf: 'flex-start', background: merchantDraft.is_traveling ? 'rgba(56,189,248,0.12)' : 'transparent', border: `1px solid ${merchantDraft.is_traveling ? 'rgba(56,189,248,0.5)' : COLORS.border}`, borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: merchantDraft.is_traveling ? '#7dd3fc' : COLORS.dim }}>
-                  {merchantDraft.is_traveling ? '✓ Traveling Merchant' : '⬡ Mark as Traveling'}
-                </button>
-                <button onClick={createMerchant} disabled={merchantSaving || !merchantDraft.name.trim()}
-                  style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.magicText, fontWeight: 700 }}>
-                  {merchantSaving ? 'Saving…' : '✦ Create Merchant'}
-                </button>
-              </div>
-            )}
+            {traderNpcs.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '24px 0' }}>No trader-tagged NPCs found. Tag an NPC's role with "Trader", "Merchant", "Innkeep", or "Vendor", or add "trader" to its tags.</div>}
 
-            {merchants.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '24px 0' }}>No merchants yet.</div>}
-
-            {merchants.map(m => {
-              const wares = m.merchant_inventory || [];
-              const isGenerating = generatingFor === m.id;
+            {traderNpcs.map(npc => {
+              const wares = npc.npc_inventory || [];
+              const isGenerating = generatingFor === npc.id;
               return (
-                <div key={m.id} style={{ background: COLORS.card, border: `1px solid ${m.active ? 'rgba(180,122,58,0.5)' : COLORS.border}`, borderRadius: 8, padding: '12px 14px', opacity: m.active ? 1 : 0.55 }}>
+                <div key={npc.id} style={{ background: COLORS.card, border: `1px solid ${npc.active ? 'rgba(180,122,58,0.5)' : COLORS.border}`, borderRadius: 8, padding: '12px 14px', opacity: npc.active ? 1 : 0.6 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8a84a' }}>{m.name}</div>
-                        {m.is_traveling && <div style={{ fontSize: 7, color: '#7dd3fc', fontFamily: "'Cinzel', serif", border: '1px solid rgba(56,189,248,0.4)', borderRadius: 3, padding: '1px 5px' }}>TRAVELING</div>}
-                        {!m.active && <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", border: `1px solid ${COLORS.border}`, borderRadius: 3, padding: '1px 5px' }}>INACTIVE</div>}
+                        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8a84a' }}>{npc.name}</div>
+                        {!npc.active && <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", border: `1px solid ${COLORS.border}`, borderRadius: 3, padding: '1px 5px' }}>INACTIVE</div>}
                       </div>
-                      {m.location && <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>{m.location}</div>}
+                      {npc.role && <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>{npc.role}{npc.faction ? ` · ${npc.faction}` : ''}</div>}
                     </div>
-                    <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
-                      <button onClick={() => toggleMerchantActive(m)}
-                        style={{ background: m.active ? 'rgba(121,245,167,0.1)' : 'rgba(200,168,74,0.1)', border: `1px solid ${m.active ? 'rgba(121,245,167,0.4)' : 'rgba(200,168,74,0.4)'}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: m.active ? '#79f5a7' : '#e8c84a' }}>
-                        {m.active ? '✓ Active' : 'Activate'}
-                      </button>
-                      <button onClick={() => deleteMerchant(m)}
-                        style={{ background: 'rgba(224,90,90,0.08)', border: '1px solid rgba(224,90,90,0.3)', borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: '#e05a5a' }}>
-                        ✕
-                      </button>
-                    </div>
+                    <button onClick={() => toggleNpcActive(npc)}
+                      style={{ background: npc.active ? 'rgba(121,245,167,0.1)' : 'rgba(200,168,74,0.1)', border: `1px solid ${npc.active ? 'rgba(121,245,167,0.4)' : 'rgba(200,168,74,0.4)'}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: npc.active ? '#79f5a7' : '#e8c84a', flexShrink: 0 }}>
+                      {npc.active ? '✓ Active' : 'Activate'}
+                    </button>
                   </div>
 
                   <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -763,12 +691,12 @@ export function BazaarDMPanel({ campaignId, onClose }) {
                     </select>
                     <input type="number" min={1} max={20} value={wareCount} onChange={e => setWareCount(Number(e.target.value) || 1)}
                       style={{ width: 44, background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '4px 6px', fontFamily: 'monospace', fontSize: 11, color: COLORS.text, outline: 'none', textAlign: 'center' }} />
-                    <button onClick={() => generateWares(m, wareCategory, wareCount)} disabled={isGenerating}
+                    <button onClick={() => generateWares(npc, wareCategory, wareCount)} disabled={isGenerating}
                       style={{ background: 'rgba(200,168,74,0.12)', border: '1px solid rgba(200,168,74,0.4)', borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: '#e8c84a' }}>
                       {isGenerating ? 'Generating…' : '⟳ Generate Wares'}
                     </button>
                     {wares.length > 0 && (
-                      <button onClick={() => clearWares(m)}
+                      <button onClick={() => clearWares(npc)}
                         style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: COLORS.dim }}>
                         Clear All
                       </button>
