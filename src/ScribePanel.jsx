@@ -179,7 +179,6 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
       lockRef.current = false;
     }
   };
-if ((char?.scribeTokens ?? 0) <= 0) { setMessages(p => [...p, { role: 'scribe', content: 'The archives demand payment. Seek a Scribe Token from the Architect.', time: new Date() }]); return; }
   const inner = (
     <>
       {/* Token bar */}

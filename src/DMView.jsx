@@ -22,7 +22,7 @@ import NPCPanel from './NPCPanel';
 import LarkPanel from './LarkPanel';
 import { BazaarDMPanel } from './BazaarPanel';
 import { QuestorDMPanel } from './QuestorPanel';
-import SoteriaClockPanel from './SoteriaClockPanel';
+import SoteriaClockPanel, { SoteriaClockDisplay } from './SoteriaClockPanel';
 import LoreAnnouncePanel from './LoreAnnouncePanel';
 import MapPanel from './MapPanel';
 
@@ -703,13 +703,21 @@ export default function DMView({ user, session, onHome }) {
   const [showLarks, setShowLarks] = useState(false);
   const [showBazaar, setShowBazaar] = useState(false);
   const [showQuestor, setShowQuestor] = useState(false);
-  const [showClock, setShowClock] = useState(false);
-  const [showLore, setShowLore] = useState(false);
-   useEffect(() => {
-  if (dbCampaigns.length > 0 && !activeCampaignTab) {
-    setActiveCampaignTab(dbCampaigns[0].id);
-  }
-}, [dbCampaigns]);
+  const [headerClock, setHeaderClock] = useState(null);
+   // Live world clock for the header, scoped to the active campaign tab
+  useEffect(() => {
+    if (!activeCampaignTab) { setHeaderClock(null); return; }
+
+    supabase.from('world_clock').select('*').eq('campaign_id', activeCampaignTab).maybeSingle()
+      .then(({ data }) => { if (data) setHeaderClock(data); });
+
+    const ch = supabase.channel(`world_clock_dm_${activeCampaignTab}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'world_clock', filter: `campaign_id=eq.${activeCampaignTab}` },
+        ({ new: u }) => { if (u) setHeaderClock(u); })
+      .subscribe();
+
+    return () => supabase.removeChannel(ch);
+  }, [activeCampaignTab]);
 
   // LOBBY STATE
   const [checkedInPlayers, setCheckedInPlayers] = useState([]);
@@ -1155,6 +1163,11 @@ export default function DMView({ user, session, onHome }) {
           </div>
         </div>
 
+        {headerClock && (
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <SoteriaClockDisplay clock={headerClock} compact />
+          </div>
+        )}
        {showWorldMap && (
   <DraggablePanel defaultX={120} defaultY={40} onClose={() => setShowWorldMap(false)} title="WORLD MAP · Soteria" width={Math.min(window.innerWidth - 140, 900)} accentColor="rgba(200,168,74,0.4)">
     <div style={{ height: '70vh' }}>
