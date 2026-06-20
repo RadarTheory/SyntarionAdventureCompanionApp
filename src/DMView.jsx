@@ -24,6 +24,7 @@ import { BazaarDMPanel } from './BazaarPanel';
 import { QuestorDMPanel } from './QuestorPanel';
 import SoteriaClockPanel from './SoteriaClockPanel';
 import LoreAnnouncePanel from './LoreAnnouncePanel';
+import MapPanel from './MapPanel';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
