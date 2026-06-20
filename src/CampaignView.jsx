@@ -1687,6 +1687,11 @@ function SessionLogTab({ campaignId }) {
               ⟦ LORE ⟧ {entry.title}
             </div>
           )}
+          {entry._kind === 'intent' && (
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, color: '#7dd3fc', letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 8 }}>
+              ⟦ INTENT ⟧ {entry.title}
+            </div>
+          )}
           {entry._kind === 'session' && (
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, fontWeight: 700, color: COLORS.text, marginBottom: 6 }}>
               {entry.title || 'Session Record'}

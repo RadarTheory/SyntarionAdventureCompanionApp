@@ -1200,6 +1200,20 @@ const denyEvent = async event => {
     };
   }, [onMove, stopDrag]);
 
+    useEffect(() => {
+    window.addEventListener('mousemove', onWindowMove);
+    window.addEventListener('mouseup', stopWindowDrag);
+    window.addEventListener('touchmove', onWindowMove, { passive: false });
+    window.addEventListener('touchend', stopWindowDrag);
+
+    return () => {
+      window.removeEventListener('mousemove', onWindowMove);
+      window.removeEventListener('mouseup', stopWindowDrag);
+      window.removeEventListener('touchmove', onWindowMove);
+      window.removeEventListener('touchend', stopWindowDrag);
+    };
+  }, [onWindowMove, stopWindowDrag]);
+
   const filteredCreatures = creatureNames.filter(name =>
     name.toLowerCase().includes(creatureSearch.toLowerCase())
   );
@@ -1251,8 +1265,8 @@ const denyEvent = async event => {
           className="hercules-shell combat-shell"
           style={{
             position: 'fixed',
-            right: 24,
-            top: 76,
+            left: windowPos.x,
+            top: windowPos.y,
             width: 'min(1100px, calc(100vw - 48px))',
             height: 'min(760px, calc(100vh - 110px))',
             background: '#100d0a',
@@ -1266,15 +1280,25 @@ const denyEvent = async event => {
           }}
         >
           <div
+            onMouseDown={e => {
+              if (['BUTTON', 'SELECT', 'INPUT', 'OPTION'].includes(e.target.tagName)) return;
+              startWindowDrag(e);
+            }}
+            onTouchStart={e => {
+              if (['BUTTON', 'SELECT', 'INPUT', 'OPTION'].includes(e.target.tagName)) return;
+              startWindowDrag(e);
+            }}
             style={{
               padding: '14px 18px',
               borderBottom: '1px solid rgba(200,168,74,0.25)',
               display: 'flex',
               alignItems: 'center',
               gap: 12,
+              cursor: isWindowDragging ? 'grabbing' : 'grab',
+              userSelect: 'none',
             }}
           >
-            <div
+              <div
               style={{
                 width: 52,
                 height: 52,

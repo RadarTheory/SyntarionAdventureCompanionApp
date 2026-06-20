@@ -21,7 +21,28 @@ export default function IntentDeclare({ campaignId, char, compact = false }) {
     if (!text.trim() || !sessionId || sending) return;
     setSending(true);
 
-    // Log to combat tracker if a HERCULES encounter is currently active
+    const intentText = text.trim();
+    const actorName = char?.name || 'Player';
+    const actorId = char?.id ? String(char.id) : null;
+
+    // 1. Grimoire — personal journal entry
+    await supabase.from('grimoire_entries').insert({
+      character_id: actorId,
+      campaign_id: String(campaignId),
+      type: 'event',
+      title: `Intent Declared`,
+      content: `${actorName} declared intent: ${intentText}`,
+      is_dm: false,
+    });
+
+    // 2. DM Memory — so it surfaces in the Log tab for the table
+    await supabase.from('dm_memory').insert({
+      campaign_id: String(campaignId),
+      category: 'intent',
+      content: `[INTENT] ${actorName}: ${intentText}`,
+    });
+
+    // 3. Hercules combat log — only if a HERCULES encounter is currently active
     const { data: hsession } = await supabase
       .from('hercules_sessions').select('id')
       .eq('campaign_id', String(campaignId)).eq('status', 'active')
@@ -31,20 +52,9 @@ export default function IntentDeclare({ campaignId, char, compact = false }) {
       await supabase.from('hercules_events').insert({
         session_id: hsession.id,
         type: 'intent',
-        actor_name: char?.name || 'Player',
-        actor_id: char?.id ? String(char.id) : null,
-        description: `[Intent] ${text.trim()}`,
-      });
-    } else {
-      // Outside combat — log as a DM-visible message instead
-      await supabase.from('messages').insert({
-        type: 'dm',
-        is_dm: false,
-        sender_name: char?.name || 'Player',
-        character_id: char?.id ? String(char.id) : null,
-        campaign_id: String(campaignId),
-        content: `[Intent] ${text.trim()}`,
-        session_id: sessionId,
+        actor_name: actorName,
+        actor_id: actorId,
+        description: `[Intent] ${intentText}`,
       });
     }
 
