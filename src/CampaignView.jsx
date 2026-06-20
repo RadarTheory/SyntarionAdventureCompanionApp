@@ -2209,10 +2209,11 @@ useEffect(() => {
   );
 }
 
-export default function CampaignView({ userChar, onHome, onAssign, onUpdateChar }) {
+export default function CampaignView({ campaignChars = [], onHome, onAssign, onUpdateChar }) {
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   if (selectedCampaign) {
+    const userChar = campaignChars.find(c => c.campaign_id === String(selectedCampaign.id)) || null;
     return <CampaignDashboard campaign={selectedCampaign} userChar={userChar} onBack={() => setSelectedCampaign(null)} onAssign={onAssign} onUpdateChar={onUpdateChar} />;
   }
-  return <CampaignList onSelect={setSelectedCampaign} userChar={userChar} onHome={onHome} />;
+  return <CampaignList onSelect={setSelectedCampaign} userChar={campaignChars[0] || null} onHome={onHome} />;
 }

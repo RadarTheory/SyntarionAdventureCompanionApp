@@ -24,7 +24,7 @@ ${SOTERIA_LORE}
 `;
 
 function buildCharacterContext(char) {
-  const campaign = CAMPAIGNS.find(c => c.id === char?.campaign || c.id === char?.campaign_id);
+  const campaign = null; // Campaign context not needed for Scribe
   return `
 CHARACTER CONSULTING THE SCRIBE:
 Name: ${char?.name || 'Unknown'}

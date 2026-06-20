@@ -8,9 +8,9 @@ export default function IntentDeclare({ campaignId, char, compact = false }) {
   const [sending, setSending] = useState(false);
   const [sent, setSent]       = useState(false);
 
-  useEffect(() => {
+ useEffect(() => {
     if (!campaignId) return;
-    supabase.from('hercules_sessions')
+    supabase.from('sessions')
       .select('id').eq('campaign_id', String(campaignId))
       .eq('status', 'active').order('created_at', { ascending: false })
       .limit(1).maybeSingle()
@@ -20,13 +20,34 @@ export default function IntentDeclare({ campaignId, char, compact = false }) {
   const submit = async () => {
     if (!text.trim() || !sessionId || sending) return;
     setSending(true);
-    await supabase.from('hercules_events').insert({
-      session_id: sessionId,
-      type: 'intent',
-      actor_name: char?.name || 'Player',
-      actor_id: char?.id ? String(char.id) : null,
-      description: `[Intent] ${text.trim()}`,
-    });
+
+    // Log to combat tracker if a HERCULES encounter is currently active
+    const { data: hsession } = await supabase
+      .from('hercules_sessions').select('id')
+      .eq('campaign_id', String(campaignId)).eq('status', 'active')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+    if (hsession?.id) {
+      await supabase.from('hercules_events').insert({
+        session_id: hsession.id,
+        type: 'intent',
+        actor_name: char?.name || 'Player',
+        actor_id: char?.id ? String(char.id) : null,
+        description: `[Intent] ${text.trim()}`,
+      });
+    } else {
+      // Outside combat — log as a DM-visible message instead
+      await supabase.from('messages').insert({
+        type: 'dm',
+        is_dm: false,
+        sender_name: char?.name || 'Player',
+        character_id: char?.id ? String(char.id) : null,
+        campaign_id: String(campaignId),
+        content: `[Intent] ${text.trim()}`,
+        session_id: sessionId,
+      });
+    }
+
     setText('');
     setSending(false);
     setSent(true);

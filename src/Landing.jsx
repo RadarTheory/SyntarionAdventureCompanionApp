@@ -327,9 +327,9 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
     <Wizard onComplete={goHome} onHome={goHome} />
   );
 
-  if (appView === 'campaigns') return (
+    if (appView === 'campaigns') return (
     <CampaignView
-      userChar={campaignChars[0] || null}
+      campaignChars={campaignChars}
       onHome={goHome}
       onUpdateChar={(updated) => setSavedChars(prev => prev.map(c => c.id === updated.id ? updated : c))}
       onAssign={(campaignId) => {

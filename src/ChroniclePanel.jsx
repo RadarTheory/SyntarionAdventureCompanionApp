@@ -24,7 +24,7 @@ const EVENT_CONFIG = {
   session_note:   { icon: '◆', label: 'Session Note',      color: COLORS.muted, show: true  },
   loot_granted:   { icon: '⬡', label: 'Loot Granted',      color: '#e8c84a', show: true  },
   message:        { icon: '✉', label: 'Message',           color: COLORS.muted, show: true  },
-  intent: { icon: '◎', label: 'Intent', color: '#a8c4e8', show: true },
+  intent:         { icon: '◎', label: 'Intent',            color: '#a8c4e8', show: true },
 };
 
 function getEventConfig(type) {
@@ -300,7 +300,7 @@ export default function ChroniclePanel({ campaignId, userChar }) {
   const filteredEvents = events.filter(ev => {
     const cfg = getEventConfig(ev.type);
     if (!cfg.show) return false;
-    if (filter === 'combat') return ['combat_start', 'combat_end', 'initiative', 'action', 'ability', 'enemy_added', 'death', 'turn_advance', 'architect_edict'].includes(ev.type);
+       if (filter === 'combat') return ['combat_start', 'combat_end', 'initiative', 'action', 'ability', 'enemy_added', 'death', 'turn_advance', 'architect_edict', 'intent'].includes(ev.type);
     if (filter === 'rolls') return ['roll', 'dm_roll', 'initiative', 'action'].includes(ev.type);
     if (filter === 'notes') return ['dm_note', 'session_note', 'loot_granted', 'cast_resolved'].includes(ev.type);
     return true;
@@ -508,4 +508,5 @@ export default function ChroniclePanel({ campaignId, userChar }) {
       </div>
     </div>
   );
+
 }

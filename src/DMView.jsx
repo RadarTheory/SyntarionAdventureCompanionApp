@@ -1164,7 +1164,7 @@ export default function DMView({ user, session, onHome }) {
 
 {showLore && (
   <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowLore(false)} title="⟦ LORE ⟧ World Announcement" width={440} accentColor="rgba(200,168,74,0.5)">
-    <LoreAnnouncePanel campaignId={activeCampaignTab} embedded />
+    <LoreAnnouncePanel campaignId={activeSession?.campaign_id || activeCampaignTab} embedded />
   </DraggablePanel>
 )}
         {/* CORRECTED PROP PASSING HERE */}
