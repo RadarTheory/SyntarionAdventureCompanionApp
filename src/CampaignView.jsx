@@ -1746,8 +1746,11 @@ useEffect(() => {
 
 useEffect(() => {
   if (!campaign?.id) return;
-  supabase.from('world_clock').select('*').eq('campaign_id', campaign.id).maybeSingle()
-    .then(({ data }) => { if (data) setClockState(data); });
+  supabase.from('world_clock').select('*').eq('campaign_id', String(activeCampaignTab)).maybeSingle()
+    .then(({ data, error }) => {
+      console.log('[ClockDebug] campaign.id:', campaign.id, typeof campaign.id, '→ data:', data, 'error:', error);
+      if (data) setClockState(data);
+    });
   const ch = supabase.channel(`world_clock_cv_${campaign.id}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'world_clock', filter: `campaign_id=eq.${campaign.id}` },
       ({ new: u }) => { if (u) setClockState(u); })
