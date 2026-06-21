@@ -8,32 +8,57 @@ function useDraggable(initial = { x: 24, y: 24 }) {
   const dragRef = useRef(null);
   const offset = useRef({ x: 0, y: 0 });
 
-  const onMouseDown = (e) => {
+  const beginDrag = (clientX, clientY) => {
     dragRef.current = true;
-    offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+    offset.current = { x: clientX - pos.x, y: clientY - pos.y };
     document.body.style.userSelect = 'none';
   };
 
+  const onMouseDown = (e) => beginDrag(e.clientX, e.clientY);
+  const onTouchStart = (e) => {
+    const t = e.touches[0];
+    if (t) beginDrag(t.clientX, t.clientY);
+  };
+
   useEffect(() => {
+    const clampPos = (x, y) => {
+      const maxX = window.innerWidth - 60;
+      const maxY = window.innerHeight - 60;
+      return { x: Math.min(Math.max(x, 0), maxX), y: Math.min(Math.max(y, 0), maxY) };
+    };
+
     const onMove = (e) => {
       if (!dragRef.current) return;
-      setPos({ x: e.clientX - offset.current.x, y: e.clientY - offset.current.y });
+      setPos(clampPos(e.clientX - offset.current.x, e.clientY - offset.current.y));
+    };
+    const onTouchMove = (e) => {
+      if (!dragRef.current) return;
+      const t = e.touches[0];
+      if (!t) return;
+      e.preventDefault();
+      setPos(clampPos(t.clientX - offset.current.x, t.clientY - offset.current.y));
     };
     const onUp = () => { dragRef.current = false; document.body.style.userSelect = ''; };
+
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onUp);
     return () => {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onUp);
     };
   }, []);
 
-  return { pos, onMouseDown };
+  return { pos, onMouseDown, onTouchStart };
 }
 
 function useDictation(onResult) {
   const [listening, setListening] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
+  const [micError, setMicError] = useState(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   const supported = typeof window !== 'undefined' && !!navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== 'undefined';
@@ -49,6 +74,7 @@ function useDictation(onResult) {
 
   const start = async () => {
     if (!supported || listening) return;
+    setMicError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mimeType = pickMimeType();
@@ -72,12 +98,24 @@ function useDictation(onResult) {
             reader.onerror = reject;
             reader.readAsDataURL(blob);
           });
-          const { data, error } = await supabase.functions.invoke('transcribe', {
-            body: { audioBase64, mimeType: blob.type },
-          });
-          if (!error && data?.text) onResult(data.text.trim());
-        } catch (_) {
-          // transcription failed silently — player can just type instead
+
+          const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Transcription timed out')), 15000));
+          const { data, error } = await Promise.race([
+            supabase.functions.invoke('transcribe', { body: { audioBase64, mimeType: blob.type } }),
+            timeout,
+          ]);
+
+          if (error) {
+            console.error('Transcribe error:', error);
+            setMicError(error.message || 'Transcription failed.');
+          } else if (data?.text) {
+            onResult(data.text.trim());
+          } else {
+            setMicError('No speech detected.');
+          }
+        } catch (err) {
+          console.error('Transcription failed:', err);
+          setMicError(err?.message || 'Transcription failed.');
         }
         setTranscribing(false);
       };
@@ -85,14 +123,21 @@ function useDictation(onResult) {
       mediaRecorderRef.current = rec;
       rec.start();
       setListening(true);
-    } catch (_) {
+    } catch (err) {
       setListening(false);
+      if (err?.name === 'NotAllowedError' || err?.name === 'SecurityError') {
+        setMicError('Microphone access is blocked. Check your browser/site settings.');
+      } else if (err?.name === 'NotFoundError') {
+        setMicError('No microphone found.');
+      } else {
+        setMicError('Could not access the microphone.');
+      }
     }
   };
 
   const toggle = () => { if (listening) stop(); else start(); };
 
-  return { listening, transcribing, toggle, supported };
+  return { listening, transcribing, toggle, supported, micError };
 }
 
 export default function IntentDeclare({ campaignId, char, compact = false, embedded = false }) {
@@ -104,7 +149,7 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
   const [entities, setEntities] = useState([]);
   const [targetId, setTargetId] = useState('');
 
-  const { pos, onMouseDown } = useDraggable({ x: 24, y: window.innerHeight - 150 });
+  const { pos, onMouseDown, onTouchStart } = useDraggable({ x: 24, y: window.innerHeight - 150 });
 
   useEffect(() => {
     if (!campaignId) return;
@@ -334,6 +379,9 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
           </button>
         )}
       </div>
+      {dictation.micError && (
+        <div style={{ fontSize: 9, color: '#e05a5a', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{dictation.micError}</div>
+      )}
       {hasSpeech && !hasTarget && entities.length > 0 && (
         <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Said aloud to the room. Pick a target above to speak directly to someone.</div>
       )}
@@ -370,9 +418,10 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
       borderRadius: 10, boxShadow: '0 16px 50px rgba(0,0,0,0.6)', overflow: 'hidden',
     }}>
       {/* Drag handle */}
-      <div onMouseDown={onMouseDown} style={{
+      <div onMouseDown={onMouseDown} onTouchStart={onTouchStart} style={{
         display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px',
         background: 'rgba(255,255,255,0.03)', cursor: 'grab', borderBottom: `1px solid ${COLORS.border}`,
+        touchAction: 'none',
       }}>
         <span style={{ color: COLORS.dim, fontSize: 10 }}>⠿</span>
         <span style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.dim, letterSpacing: '0.1em' }}>INTENT &amp; SPEECH</span>

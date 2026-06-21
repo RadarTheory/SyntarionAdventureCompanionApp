@@ -258,6 +258,7 @@ export function ScribeDMPanel({ onClose, embedded = false, activeCampaignId }) {
   const [tokenInputs, setTokenInputs] = useState({});
   const [pendingImage, setPendingImage] = useState(null); // { data, mimeType, previewUrl }
   const fileInputRef = useRef(null);
+  
 
   const handleImagePick = (e) => {
     const file = e.target.files?.[0];
@@ -325,7 +326,9 @@ const handleAsk = async () => {
         content: m.content,
       }));
       const answer = await callGemini(DM_SCRIBE_SYSTEM((await buildScribeContext(question, 12000, activeCampaignId)) + (liveContext ? `\n\n${liveContext}` : '')), geminiHistory);
-    } catch (err) {
+      setMessages(p => [...p, { role: 'scribe', content: answer, time: new Date() }]);
+      setPendingImage(null);
+   } catch (err) {
       setMessages(p => [...p, { role: 'scribe', content: `The archives are silent. ${err?.message || 'Try again.'}`, time: new Date() }]);
     } finally {
       setLoading(false);
