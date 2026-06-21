@@ -1,5 +1,5 @@
 import supabase from '../lib/supabase';
- 
+
 // ─── BROADCAST — same 4-destination pipe LoreAnnouncePanel uses ──────────────
 // Fires to: DM Memory · Player Grimoires (per participant) · Hercules Log (if combat active) · Player Inboxes
 export async function broadcastDialogueLine({ campaignId, sessionId, participantIds, speakerName, content, isDM }) {
@@ -9,12 +9,12 @@ export async function broadcastDialogueLine({ campaignId, sessionId, participant
     category: 'dialogue',
     content: `[DIALOGUE] ${speakerName}: ${content}`,
   });
- 
+
   // 2. Hercules combat log, only if combat is active
   const { data: hsession } = await supabase.from('hercules_sessions').select('id')
     .eq('campaign_id', String(campaignId)).eq('status', 'active')
     .order('created_at', { ascending: false }).limit(1).maybeSingle();
- 
+
   if (hsession?.id) {
     await supabase.from('hercules_events').insert({
       session_id: hsession.id,
@@ -24,7 +24,7 @@ export async function broadcastDialogueLine({ campaignId, sessionId, participant
       description: `${speakerName}: "${content}"`,
     });
   }
- 
+
   // 3. Player inboxes (only when DM/entity speaks — player's own line doesn't need to message themself)
   if (isDM && participantIds?.length) {
     await Promise.all(participantIds.map(charId =>
@@ -40,7 +40,7 @@ export async function broadcastDialogueLine({ campaignId, sessionId, participant
     ));
   }
 }
- 
+
 // ─── CONVERSATION MANAGEMENT ──────────────────────────────────────────────────
 export async function getOrCreateConversation({ campaignId, entityType, entityId, entityName, participantIds = [] }) {
   const { data: existing } = await supabase.from('dialogue_conversations')
@@ -51,7 +51,7 @@ export async function getOrCreateConversation({ campaignId, entityType, entityId
     .eq('status', 'active')
     .order('created_at', { ascending: false })
     .limit(1).maybeSingle();
- 
+
   if (existing) {
     // Merge in any new participants
     const merged = Array.from(new Set([...(existing.participant_ids || []), ...participantIds]));
@@ -61,7 +61,7 @@ export async function getOrCreateConversation({ campaignId, entityType, entityId
     }
     return existing;
   }
- 
+
   const { data: created } = await supabase.from('dialogue_conversations').insert({
     campaign_id: String(campaignId),
     entity_type: entityType,
@@ -70,16 +70,16 @@ export async function getOrCreateConversation({ campaignId, entityType, entityId
     participant_ids: participantIds,
     status: 'active',
   }).select().single();
- 
+
   return created;
 }
- 
+
 export async function endConversation(conversationId) {
   await supabase.from('dialogue_conversations').update({
     status: 'ended', ended_at: new Date().toISOString(),
   }).eq('id', conversationId);
 }
- 
+
 // ─── POST A LINE ───────────────────────────────────────────────────────────────
 export async function postDialogueLine({
   conversationId, campaignId, sessionId, speaker, playerId, playerName,
@@ -96,7 +96,7 @@ export async function postDialogueLine({
     flagged_for_roll: flaggedForRoll,
     status,
   }).select().single();
- 
+
   if (status === 'approved') {
     const { data: conv } = await supabase.from('dialogue_conversations').select('*').eq('id', conversationId).single();
     if (conv) {
@@ -110,10 +110,10 @@ export async function postDialogueLine({
       });
     }
   }
- 
+
   return entry;
 }
- 
+
 // ─── SAVE FULL CONVERSATION TO GRIMOIRE (full thread, not per-line) ───────────
 export async function saveConversationToGrimoire({ conversation, entries, campaignId }) {
   if (!conversation || entries.length === 0) return { count: 0 };
@@ -121,11 +121,11 @@ export async function saveConversationToGrimoire({ conversation, entries, campai
     .filter(e => e.status === 'approved')
     .map(e => `${e.speaker === 'entity' ? conversation.entity_name : (e.player_name || 'Player')}: ${e.content}`)
     .join('\n');
- 
+
   const grimoireType = conversation.entity_type === 'beast' ? 'beast' : 'npc';
   const targets = conversation.participant_ids || [];
   if (!targets.length) return { count: 0 };
- 
+
   await Promise.all(targets.map(charId =>
     supabase.from('grimoire_entries').insert({
       character_id: String(charId),
@@ -135,7 +135,6 @@ export async function saveConversationToGrimoire({ conversation, entries, campai
       body: transcript,
     })
   ));
- 
+
   return { count: targets.length };
 }
- 
