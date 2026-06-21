@@ -713,18 +713,20 @@ export default function DMView({ user, session, onHome }) {
    // Live world clock for the header, scoped to the active campaign tab
 useEffect(() => {
     if (!activeCampaignTab) { setHeaderClock(null); return; }
-    console.log('[ClockHeader] activeCampaignTab:', activeCampaignTab, typeof activeCampaignTab);
+    const cid = String(activeCampaignTab);
 
-    supabase.from('world_clock').select('*').eq('campaign_id', String(activeCampaignTab)).maybeSingle()
-      .then(({ data, error }) => {
-        console.log('[ClockHeader] fetch result:', data, error);
-        if (data) setHeaderClock(data);
-      });
+    supabase.from('world_clock').select('*').eq('campaign_id', cid).maybeSingle()
+      .then(({ data }) => { if (data) setHeaderClock(data); });
 
-    const ch = supabase.channel(`world_clock_dm_${activeCampaignTab}`)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'world_clock', filter: `campaign_id=eq.${String(activeCampaignTab)}` },
-    ({ new: u }) => { console.log('[ClockHeader] realtime event:', u); if (u) setHeaderClock(u); })
-  .subscribe((status) => console.log('[ClockHeader] subscription status:', status));
+    const ch = supabase
+      .channel(`world_clock_dm_${cid}`)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'world_clock',
+        filter: `campaign_id=eq.${cid}`,
+      }, ({ new: updated }) => {
+        if (updated && String(updated.campaign_id) === cid) setHeaderClock(updated);
+      })
+      .subscribe();
 
     return () => supabase.removeChannel(ch);
   }, [activeCampaignTab]);
