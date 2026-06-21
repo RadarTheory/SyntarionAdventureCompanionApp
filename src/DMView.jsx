@@ -711,14 +711,14 @@ export default function DMView({ user, session, onHome }) {
   
   
    // Live world clock for the header, scoped to the active campaign tab
-  useEffect(() => {
+useEffect(() => {
     if (!activeCampaignTab) { setHeaderClock(null); return; }
 
-    supabase.from('world_clock').select('*').eq('campaign_id', activeCampaignTab).maybeSingle()
+    supabase.from('world_clock').select('*').eq('campaign_id', String(activeCampaignTab)).maybeSingle()
       .then(({ data }) => { if (data) setHeaderClock(data); });
 
     const ch = supabase.channel(`world_clock_dm_${activeCampaignTab}`)
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'world_clock', filter: `campaign_id=eq.${activeCampaignTab}` },
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'world_clock', filter: `campaign_id=eq.${String(activeCampaignTab)}` },
     ({ new: u }) => { console.log('[ClockHeader] realtime event:', u); if (u) setHeaderClock(u); })
   .subscribe((status) => console.log('[ClockHeader] subscription status:', status));
 
