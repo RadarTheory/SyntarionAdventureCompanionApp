@@ -1,4 +1,4 @@
-import supabase from '../lib/supabase';
+import supabase from './supabase';
 
 // ─── BROADCAST — same 4-destination pipe LoreAnnouncePanel uses ──────────────
 // Fires to: DM Memory · Player Grimoires (per participant) · Hercules Log (if combat active) · Player Inboxes

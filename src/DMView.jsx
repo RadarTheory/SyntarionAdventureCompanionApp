@@ -1348,7 +1348,7 @@ export default function DMView({ user, session, onHome }) {
           id: 'speak',
           title: 'Dialogue — Speak as NPC or Beast',
           onClick: () => setShowSpeak(o => !o),
-          children: <span style={{ fontSize: 20 }}>💬</span>,
+          children: <img src="/speakicon.png" alt="Speak" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
       ]} />
     </div>
