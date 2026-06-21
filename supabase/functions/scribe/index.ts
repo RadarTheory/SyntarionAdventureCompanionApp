@@ -1,12 +1,7 @@
-// supabase/functions/transcribe/index.ts
-// Deploy with: supabase functions deploy transcribe
-// Requires a GROQ_API_KEY secret: supabase secrets set GROQ_API_KEY=your_key_here
-// Get a free Groq key (no credit card) at https://console.groq.com
-
-// supabase/functions/transcribe/index.ts
-// Relays a short audio clip to Groq's Whisper API and returns text only.
-// The audio is never written to disk or any table — decoded in memory, sent, discarded.
-// Requires a logged-in Syntarion user, same as scribe.
+// supabase/functions/scribe/index.ts
+// Server-side Gemini relay for Syntarion's Scribe.
+// The API key lives ONLY here (Supabase secret), never in the client bundle.
+// Requires a logged-in Supabase user — anonymous internet traffic gets 401.
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -27,54 +22,39 @@ Deno.serve(async (req) => {
     );
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return new Response(JSON.stringify({ error: 'The archives do not answer strangers.' }), {
+      return new Response(JSON.stringify({ error: { message: 'The archives do not answer strangers.' } }), {
         status: 401, headers: { ...CORS, 'Content-Type': 'application/json' },
       });
     }
 
-    const { audioBase64, mimeType } = await req.json();
-    if (!audioBase64) {
-      return new Response(JSON.stringify({ error: 'No audio provided.' }), {
+    // ── Relay to Gemini ──
+    const { system, messages, max_tokens = 1024 } = await req.json();
+    if (!system || !Array.isArray(messages)) {
+      return new Response(JSON.stringify({ error: { message: 'Bad request: system and messages required.' } }), {
         status: 400, headers: { ...CORS, 'Content-Type': 'application/json' },
       });
     }
 
-    const groqKey = Deno.env.get('GROQ_API_KEY');
-    if (!groqKey) {
-      return new Response(JSON.stringify({ error: 'Transcription is not configured.' }), {
-        status: 500, headers: { ...CORS, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Decode base64 -> bytes, no disk write, in-memory only
-    const binary = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
-    const ext = (mimeType || '').includes('mp4') ? 'mp4' : (mimeType || '').includes('webm') ? 'webm' : 'm4a';
-
-    const form = new FormData();
-    form.append('file', new Blob([binary], { type: mimeType || 'audio/m4a' }), `clip.${ext}`);
-    form.append('model', 'whisper-large-v3-turbo');
-    form.append('response_format', 'json');
-
-    const groqRes = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${groqKey}` },
-      body: form,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('GEMINI_API_KEY')}`,
+      },
+      body: JSON.stringify({
+        model: 'gemini-2.5-flash',
+        messages: [{ role: 'system', content: system }, ...messages],
+        max_tokens: Math.min(max_tokens, 2048),
+        temperature: 0.82,
+      }),
     });
 
-    if (!groqRes.ok) {
-      const errText = await groqRes.text();
-      return new Response(JSON.stringify({ error: `Transcription failed: ${errText.slice(0, 200)}` }), {
-        status: 502, headers: { ...CORS, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const data = await groqRes.json();
-    // audio bytes (`binary`) go out of scope here and are never written anywhere
-    return new Response(JSON.stringify({ text: data.text || '' }), {
-      headers: { ...CORS, 'Content-Type': 'application/json' },
+    const data = await res.json();
+    return new Response(JSON.stringify(data), {
+      status: res.status, headers: { ...CORS, 'Content-Type': 'application/json' },
     });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message || 'Transcription error.' }), {
+  } catch (e) {
+    return new Response(JSON.stringify({ error: { message: String(e) } }), {
       status: 500, headers: { ...CORS, 'Content-Type': 'application/json' },
     });
   }
