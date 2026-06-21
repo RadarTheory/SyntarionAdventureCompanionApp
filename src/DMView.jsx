@@ -871,6 +871,7 @@ useEffect(() => {
           campaignId={activeCampaignTab}
           onRegisterPlaceToken={fn => { vttPlaceTokenRef.current = fn; }}
           checkedInPlayers={uniqueCheckins}
+          isDM={true}
         />;
 
       case 'Scribe':
@@ -1131,6 +1132,7 @@ useEffect(() => {
               color: '#4a9edd',
               type: 'player',
               characterId: char.id,
+              race: char.race || null,
             });
           }
         }}

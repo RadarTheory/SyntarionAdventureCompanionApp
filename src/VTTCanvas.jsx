@@ -10,6 +10,36 @@ const MAX_SCALE = 10;
 
 function uid() { return Math.random().toString(36).slice(2, 9); }
 
+// ─── Race icon silhouette cache ────────────────────────────────────────────
+// Loads each race icon once, strips its original colors, and forces it to a
+// white silhouette (alpha preserved) so it reads against any token color.
+const raceIconCache = {};
+function getRaceIcon(race, onReady) {
+  if (!race) return null;
+  const key = race.toLowerCase().replace(/[^a-z]/g, '');
+  if (raceIconCache[key] === undefined) {
+    raceIconCache[key] = null; // mark as loading
+    const img = new Image();
+    img.onload = () => {
+      const off = document.createElement('canvas');
+      off.width = img.width; off.height = img.height;
+      const octx = off.getContext('2d');
+      octx.drawImage(img, 0, 0);
+      const imgData = octx.getImageData(0, 0, off.width, off.height);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        d[i] = 255; d[i + 1] = 255; d[i + 2] = 255; // force white, keep alpha
+      }
+      octx.putImageData(imgData, 0, 0);
+      raceIconCache[key] = off;
+      onReady?.();
+    };
+    img.onerror = () => { raceIconCache[key] = false; }; // mark as failed
+    img.src = `/RaceIcons/${key}.png`;
+  }
+  return raceIconCache[key] || null;
+}
+
 function getMapRect(canvas, mapImg) {
   const W = canvas.width;
   const H = canvas.height;
@@ -35,7 +65,24 @@ function getMapRect(canvas, mapImg) {
     h: drawH,
   };
 }
-function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, transform }) {
+function isTokenFogged(tok, fogZones) {
+  // A point is hidden if any 'hide' zone covers it, OR if 'reveal' zones exist
+  // and none of them cover it (fog defaults to hidden until revealed).
+  const hideZones = fogZones.filter(z => z.type === 'hide');
+  const revealZones = fogZones.filter(z => z.type === 'reveal');
+
+  const inZone = (zone) => {
+    const dx = tok.x - zone.x;
+    const dy = tok.y - zone.y;
+    return Math.sqrt(dx * dx + dy * dy) <= zone.r;
+  };
+
+  if (hideZones.some(inZone)) return true;
+  if (revealZones.length > 0 && !revealZones.some(inZone)) return true;
+  return false;
+}
+
+function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, transform, isDM }) {
   if (!canvas || !mapImg) return;
   const ctx = canvas.getContext('2d');
   const W = canvas.width;
@@ -93,19 +140,34 @@ fogZones.forEach(zone => {
 });
   ctx.drawImage(fogCanvas, 0, 0);
 
-  tokens.forEach(tok => {
+ tokens.forEach(tok => {
+    const fogged = isTokenFogged(tok, fogZones);
+    if (fogged && !isDM) return; // players never see fogged tokens at all
+
     const tx = mapRect.x + tok.x * mapRect.w;
 const ty = mapRect.y + tok.y * mapRect.h;
 const r = 14;
     ctx.save();
+    if (fogged) ctx.globalAlpha = 0.4; // DM sees fogged tokens dimmed, as a reminder
+
     if (tok.type === 'player') { ctx.beginPath(); ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4); }
     else { ctx.beginPath(); ctx.arc(tx, ty, r, 0, Math.PI * 2); }
     ctx.fillStyle = tok.color || '#4a9edd';
     ctx.fill();
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 9px sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
+    ctx.strokeStyle = fogged ? '#e8c84a' : '#fff'; ctx.lineWidth = 2;
+    if (fogged) ctx.setLineDash([3, 2]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const icon = tok.race ? getRaceIcon(tok.race, () => {}) : null;
+    if (icon) {
+      const iconSize = r * 1.3;
+      ctx.drawImage(icon, tx - iconSize / 2, ty - iconSize / 2, iconSize, iconSize);
+    } else {
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 9px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
+    }
     ctx.restore();
   });
 
@@ -127,7 +189,7 @@ const r = 14;
 //                             can sync player tokens into the initiative board
 //   onRegisterPlaceToken(fn) — registers a callback DMView calls to place tokens
 //                              from HERCULES (enemies) or PlayersPanel (PCs)
-export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensChange, checkedInPlayers }) {
+export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensChange, checkedInPlayers, isDM = false }) {
   const canvasRef    = useRef(null);
   const mapImgRef    = useRef(null);
   const paintingRef  = useRef(false);
@@ -208,6 +270,7 @@ useEffect(() => {
       color: token.color || '#4a9edd',
       characterId: token.characterId || token.character_id || null,
       creatureName: token.creatureName || token.name || null,
+      race: token.race || null,
       x: 0.5,
       y: 0.5,
       visible: true,
@@ -274,6 +337,7 @@ useEffect(() => {
           color: tokenData.color,
           characterId: tokenData.characterId || null,
           creatureName: tokenData.creatureName || null,
+          race: tokenData.race || null,
           x,
           y,
         }];
@@ -363,10 +427,10 @@ useEffect(() => {
     img.src = `/Maps/${encodeURIComponent(mapFilename)}`;
   }, [mapFilename]);
 
-  useEffect(() => {
+ useEffect(() => {
     if (!mapLoaded) return;
-    drawCanvas({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, brushPreview, tool, transform });
-  }, [fogZones, tokens, brushPreview, mapLoaded, tool, transform]);
+    drawCanvas({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, brushPreview, tool, transform, isDM });
+  }, [fogZones, tokens, brushPreview, mapLoaded, tool, transform, isDM]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
