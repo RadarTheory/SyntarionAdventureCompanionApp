@@ -4,6 +4,7 @@
 import { SOTERIA_LORE } from './soteria-lore';
 import { SOTERIA_MECHANICS } from './soteria-mechanics';
 import { SOTERIA_BESTIARY } from './soteria-bestiary';
+import supabase from './lib/supabase';
 
 const HEADER = /━{10,}\s*\n([^\n]+)\n━{10,}/g;
 
@@ -57,10 +58,27 @@ function scoreSection(queryTerms, section) {
  * Always includes the WORLD PRIMER (first lore section) as grounding,
  * then fills the remaining budget with the highest-scoring sections.
  */
-export function buildScribeContext(question, budget = 10000) {
+async function loadLiveBeastSections(campaignId) {
+  let query = supabase.from('beasts').select('name, description, category, biome, disposition, source, campaign_id');
+  query = campaignId
+    ? query.or(`source.eq.global,campaign_id.eq.${campaignId}`)
+    : query.eq('source', 'global');
+  const { data, error } = await query;
+  if (error || !data) return [];
+  return data.map(b => ({
+    source: 'BESTIARY',
+    title: b.name,
+    body: [b.description, b.category ? `Category: ${b.category}` : '', b.biome ? `Biome: ${b.biome}` : '', b.disposition ? `Disposition: ${b.disposition}` : ''].filter(Boolean).join('\n'),
+  }));
+}
+
+export async function buildScribeContext(question, budget = 10000, campaignId = null) {
+  const liveBeasts = await loadLiveBeastSections(campaignId);
+  const allSections = [...SECTIONS, ...liveBeasts];
+
   const queryTerms = terms(question || '');
   const primer = SECTIONS[0]; // SOTERIA — WORLD PRIMER
-  const ranked = SECTIONS
+  const ranked = allSections
     .slice(1)
     .map(s => ({ s, score: scoreSection(queryTerms, s) }))
     .filter(r => r.score > 0)

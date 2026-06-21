@@ -281,6 +281,41 @@ useEffect(() => {
     });
   }, [onRegisterPlaceToken]);
 
+  // Listen for NPCs pushed from the NPC Tracker — lands at map center, DM drags into place
+  useEffect(() => {
+    const handler = async (e) => {
+      const npc = e.detail;
+      if (!npc?.id) return;
+      const tokenKey = `npc_${npc.id}`;
+
+      setTokens(prev => {
+        if (prev.some(t => t.id === tokenKey)) return prev; // already on map
+        const next = [...prev, {
+          id: tokenKey,
+          type: 'npc',
+          label: (npc.name || 'NPC').slice(0, 6),
+          color: '#c8a860',
+          npc_id: npc.id,
+          creatureName: npc.name,
+          x: 0.5,
+          y: 0.5,
+        }];
+
+        // Persist immediately so it's visible without waiting for Commit
+        if (vttSession?.id) {
+          supabase.from('vtt_sessions')
+            .update({ tokens: next, updated_at: new Date().toISOString() })
+            .eq('id', vttSession.id)
+            .then(({ error }) => { if (error) console.error('Failed to add NPC token:', error); });
+        }
+
+        return next;
+      });
+    };
+    window.addEventListener('vtt:add_npc_token', handler);
+    return () => window.removeEventListener('vtt:add_npc_token', handler);
+  }, [vttSession]);
+
   const loadSession = async () => {
     const { data } = await supabase.from('vtt_sessions').select('*').eq('campaign_id', campaignId).maybeSingle();
     if (data) {

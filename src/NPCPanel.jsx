@@ -203,7 +203,6 @@ function getNodeAffinities(role, alignment) {
   }).filter(Boolean);
 }
 
-
 const FACTIONS = ['The Gryndal','The Synod','The Kira Deu','The Yarositan Empire','Cult of Thorns','The Ebonshroud Hand','The Conclave of Mages','The Circle of Eight','The Orphaned','Banat Al-Layl','The Luminary','The Thieves Underground','Managerie Council','Brunar Separatists','Legion of Elddim','Sovereign Kingdom Directorate','The Orinscess Triage','Mörkhofn','La Marée d\'Or','Caelyn - Wardens of the Caelvern','Draeth - Harbingers of the Caelvern','Iridesce - Starstriders','Whyth - Bearers of the Whythryn Cogmail','Arcani - FaeKnights','Aerephet - Wraithborne Incubi','The Wayward','House Sillmeer','Council of Asherah','Ba_elnariani','Nyumbani','Hadarai','Iloists - Heartkeepers','The Devoted - Way of Devotion','Ylandari','Cult of Dra_agora','Dunerryian','Firretharh','Brogoshk','Sýrethens','The Gilded Syndicate','The Zor_gol','Khoneul Shadow Paragon','Xaloran Creed','Kildrak - Way of the Stone','Claven of Hreidmar','Fortune\'s Children','The Wheel of Mýr','The Auric Order','Týrethanists','Rifters - Worshippers of the Maelstrom','The Malochean','The Haruspex','The Yal Arcana','The Acends','Wardens','Desolaran','Nameahn Pluralists','Unmarked'];
 const S = {
   root:{display:'flex',flexDirection:'column',height:'100%',background:'#0e0c09',color:'#c8b890',fontFamily:"'Crimson Pro','Georgia',serif",fontSize:13,overflow:'hidden',position:'relative'},
@@ -593,6 +592,7 @@ export default function NPCPanel({ campaignId, sessionId }) {
     <div style={{display:'flex',alignItems:'center',gap:4,flexShrink:0}}>
       <button onClick={e=>{e.stopPropagation();markMet(npc,cityName);}} style={{background:'rgba(184,137,42,0.12)',border:'1px solid rgba(184,137,42,0.3)',borderRadius:3,color:'#e8c040',cursor:'pointer',padding:'2px 6px',fontSize:9}}>⬡</button>
       <button onClick={e=>{e.stopPropagation();window.dispatchEvent(new CustomEvent('hercules:add_npc',{detail:{id:npc.id,name:npc.name,role:npc.role||'',conditions:npc.conditions||[],cityName}}));}} style={{background:'rgba(60,120,200,0.12)',border:'1px solid rgba(60,120,200,0.3)',borderRadius:3,color:'#80a0e0',cursor:'pointer',padding:'2px 6px',fontSize:9}}>⚔</button>
+      <button onClick={e=>{e.stopPropagation();window.dispatchEvent(new CustomEvent('vtt:add_npc_token',{detail:{id:npc.id,name:npc.name}}));}} title="Add to map" style={{background:'rgba(96,200,150,0.12)',border:'1px solid rgba(96,200,150,0.3)',borderRadius:3,color:'#60c896',cursor:'pointer',padding:'2px 6px',fontSize:9}}>⛶</button>
       <div style={{...S.npcStatus,color:sc(npc.status)}}>{npc.status}</div>
     </div>
   );
