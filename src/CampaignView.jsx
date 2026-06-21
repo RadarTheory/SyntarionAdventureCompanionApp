@@ -2154,9 +2154,10 @@ useEffect(() => {
             {timer ? `⏱ ${timer}` : (FULL_TITLES[campaign.id] || campaign.name)}
           </div>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', justifySelf: 'end' }}>
-          {clockState && <SoteriaClockDisplay clock={clockState} compact />}
-        </div>
+       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifySelf: 'end' }}>
+  {clockState && <SoteriaClockDisplay clock={clockState} compact />}
+  <div style={{ fontSize: 7, color: '#e05a5a' }}>id={String(campaign.id)} clock_id={clockState?.id}</div>
+</div>
       </div>
 
       {/* Lobby banner */}
