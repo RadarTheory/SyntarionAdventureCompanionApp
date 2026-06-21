@@ -25,6 +25,7 @@ import { QuestorDMPanel } from './QuestorPanel';
 import SoteriaClockPanel, { SoteriaClockDisplay } from './SoteriaClockPanel';
 import LoreAnnouncePanel from './LoreAnnouncePanel';
 import MapPanel from './MapPanel';
+import DMSpeakPanel from './DMSpeakPanel';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -706,6 +707,8 @@ export default function DMView({ user, session, onHome }) {
   const [showClock, setShowClock] = useState(false);
   const [showLore, setShowLore] = useState(false);
   const [headerClock, setHeaderClock] = useState(null);
+  const [showSpeak, setShowSpeak] = useState(false);
+  
   
    // Live world clock for the header, scoped to the active campaign tab
   useEffect(() => {
@@ -1156,6 +1159,12 @@ export default function DMView({ user, session, onHome }) {
           </DraggablePanel>
         )}
 
+        {showSpeak && (
+          <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowSpeak(false)} title="💬 DIALOGUE · Speak as Soteria" width={420} accentColor="rgba(96,150,224,0.4)">
+            <DMSpeakPanel campaignId={activeCampaignTab} sessionId={activeSession?.session_id || null} embedded />
+          </DraggablePanel>
+        )}
+
       {/* ─── Header ─────────────────────────────────────────────────────── */}
       <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', flexShrink: 0, gap: 12 }}>
         <button onClick={onHome} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.muted, padding: 0, justifySelf: 'start' }}>← Home</button>
@@ -1334,6 +1343,12 @@ export default function DMView({ user, session, onHome }) {
           title: 'Lore Announce — Broadcast to World',
           onClick: () => setShowLore(o => !o),
           children: <img src="/loreicon.png" alt="Lore" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+        },
+        {
+          id: 'speak',
+          title: 'Dialogue — Speak as NPC or Beast',
+          onClick: () => setShowSpeak(o => !o),
+          children: <span style={{ fontSize: 20 }}>💬</span>,
         },
       ]} />
     </div>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { SOTERIA_BESTIARY } from './soteria-bestiary';
+import DMSpeakPanel from './DMSpeakPanel';
 
 function getBestiaryText() {
   if (typeof SOTERIA_BESTIARY === 'string') return SOTERIA_BESTIARY;
@@ -195,6 +196,7 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true, onP
   const [manualLogText, setManualLogText] = useState('');
   const [manualCombatantName, setManualCombatantName] = useState('');
   const [vitalsOpen, setVitalsOpen] = useState(null);
+  const [speakRow, setSpeakRow] = useState(null);
 
   const savedPos = (() => {
     try {
@@ -1443,6 +1445,9 @@ const denyEvent = async event => {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
             <IconButton title="Roll action" onClick={() => rollCombatantAction(row)} border="rgba(200,168,74,0.45)" color="#e8c84a">🎲</IconButton>
+            {isCreature && (
+              <IconButton title="Speak as this combatant" onClick={() => setSpeakRow(row)} border="rgba(200,168,74,0.45)" color="#e8c84a">💬</IconButton>
+            )}
             <IconButton title="Mark dead" onClick={() => markCombatantDead(row)} disabled={row.status === 'dead'} border="rgba(220,90,70,0.45)" color="#e0a092">☠</IconButton>
             <IconButton title="Remove" onClick={() => removeCombatantFromTracker(row)} border="rgba(220,90,70,0.35)" color="#b98a7f">✕</IconButton>
             {Number(row.tie_breaker || 0) > 0 && <span style={{ color: '#e8c84a', fontSize: 9 }}>{row.tie_breaker}</span>}
@@ -1628,6 +1633,32 @@ const denyEvent = async event => {
                 ))}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {speakRow && (
+        <div style={{
+          position: 'fixed', left: Math.max(8, windowPos.x - 30), top: windowPos.y + 30,
+          width: 420, maxHeight: '78vh', zIndex: 200001,
+          display: 'flex', flexDirection: 'column',
+          background: '#100d0a', border: '1px solid rgba(200,168,74,0.4)',
+          borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden',
+        }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(200,168,74,0.2)', background: 'rgba(200,168,74,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+            <div>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#e8c84a', letterSpacing: '0.18em', fontWeight: 700 }}>💬 SPEAK</div>
+              <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>as {speakRow.character_name}</div>
+            </div>
+            <button onClick={() => setSpeakRow(null)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
+          </div>
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <DMSpeakPanel
+              campaignId={campaignId}
+              sessionId={null}
+              embedded
+              initialEntity={{ type: 'beast', id: speakRow.character_id, name: speakRow.character_name }}
+            />
           </div>
         </div>
       )}

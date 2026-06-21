@@ -3,11 +3,11 @@ import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { getOrCreateConversation, endConversation, postDialogueLine, saveConversationToGrimoire } from './lib/dialogue';
 
-export default function DMSpeakPanel({ campaignId, sessionId, embedded }) {
+export default function DMSpeakPanel({ campaignId, sessionId, embedded, initialEntity }) {
   const [entities, setEntities] = useState([]);
   const [characters, setCharacters] = useState([]);
-  const [entityType, setEntityType] = useState('npc');
-  const [entityId, setEntityId] = useState('');
+  const [entityType, setEntityType] = useState(initialEntity?.type || 'npc');
+  const [entityId, setEntityId] = useState(initialEntity?.id ? String(initialEntity.id) : '');
   const [participantIds, setParticipantIds] = useState([]);
   const [conversation, setConversation] = useState(null);
   const [activeConversations, setActiveConversations] = useState([]);
@@ -54,10 +54,13 @@ export default function DMSpeakPanel({ campaignId, sessionId, embedded }) {
   const toggleParticipant = (id) => setParticipantIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
 
   const openConversation = async () => {
-    const entity = entities.find(e => e.type === entityType && String(e.id) === String(entityId));
+    const lookupId = initialEntity ? initialEntity.id : entityId;
+    const lookupType = initialEntity ? initialEntity.type : entityType;
+    const entity = entities.find(e => e.type === lookupType && String(e.id) === String(lookupId))
+      || (initialEntity ? { id: initialEntity.id, name: initialEntity.name, type: initialEntity.type } : null);
     if (!entity) return;
     const conv = await getOrCreateConversation({
-      campaignId, entityType, entityId: entity.id, entityName: entity.name, participantIds,
+      campaignId, entityType: entity.type, entityId: entity.id, entityName: entity.name, participantIds,
     });
     setConversation({ ...conv, _entity: entity });
   };
@@ -143,17 +146,26 @@ export default function DMSpeakPanel({ campaignId, sessionId, embedded }) {
 
         <div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.14em', color: COLORS.muted, textTransform: 'uppercase', marginBottom: 6 }}>New Conversation</div>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-            {['npc', 'beast'].map(t => (
-              <button key={t} onClick={() => { setEntityType(t); setEntityId(''); }}
-                style={{ flex: 1, background: entityType === t ? 'rgba(96,150,224,0.15)' : 'transparent', border: `1px solid ${entityType === t ? 'rgba(96,150,224,0.5)' : COLORS.border}`, borderRadius: 6, padding: '6px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: entityType === t ? '#80a0e0' : COLORS.dim, textTransform: 'capitalize' }}>{t}</button>
-            ))}
-          </div>
-          <select value={entityId} onChange={e => setEntityId(e.target.value)}
-            style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none', marginBottom: 10 }}>
-            <option value="">Select {entityType}…</option>
-            {filteredEntities.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-          </select>
+
+          {initialEntity ? (
+            <div style={{ background: 'rgba(96,150,224,0.08)', border: '1px solid rgba(96,150,224,0.3)', borderRadius: 6, padding: '8px 12px', marginBottom: 10, fontFamily: 'Georgia, serif', fontSize: 12, color: COLORS.text }}>
+              💬 {initialEntity.name} <span style={{ color: COLORS.dim, fontSize: 9 }}>({initialEntity.type})</span>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                {['npc', 'beast'].map(t => (
+                  <button key={t} onClick={() => { setEntityType(t); setEntityId(''); }}
+                    style={{ flex: 1, background: entityType === t ? 'rgba(96,150,224,0.15)' : 'transparent', border: `1px solid ${entityType === t ? 'rgba(96,150,224,0.5)' : COLORS.border}`, borderRadius: 6, padding: '6px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: entityType === t ? '#80a0e0' : COLORS.dim, textTransform: 'capitalize' }}>{t}</button>
+                ))}
+              </div>
+              <select value={entityId} onChange={e => setEntityId(e.target.value)}
+                style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none', marginBottom: 10 }}>
+                <option value="">Select {entityType}…</option>
+                {filteredEntities.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+              </select>
+            </>
+          )}
 
           {characters.length > 0 && (
             <div style={{ marginBottom: 10 }}>
