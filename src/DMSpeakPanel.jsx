@@ -2,8 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { getOrCreateConversation, endConversation, postDialogueLine, saveConversationToGrimoire } from './lib/dialogue';
+import { getCheckedInCharacterIds } from './lib/sessionEvents';
 
-export default function DMSpeakPanel({ campaignId, sessionId, embedded, initialEntity }) {
+export default function DMSpeakPanel({ campaignId: defaultCampaignId, sessionId, embedded, initialEntity }) {
+  const [campaignList, setCampaignList] = useState([]);
+  const [campaignId, setCampaignId] = useState(defaultCampaignId ? String(defaultCampaignId) : '');
   const [entities, setEntities] = useState([]);
   const [characters, setCharacters] = useState([]);
   const [entityType, setEntityType] = useState(initialEntity?.type || 'npc');
@@ -19,21 +22,40 @@ export default function DMSpeakPanel({ campaignId, sessionId, embedded, initialE
   const scrollRef = useRef(null);
 
   useEffect(() => {
+    supabase.from('campaigns').select('*').order('created_at', { ascending: true }).then(({ data }) => {
+      setCampaignList((data || []).map(c => ({ ...c, id: String(c.id) })));
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!campaignId && defaultCampaignId) setCampaignId(String(defaultCampaignId));
+  }, [defaultCampaignId, campaignId]);
+
+  useEffect(() => {
     if (!campaignId) return;
     Promise.all([
       supabase.from('npcs').select('id, name, role, notes, faction').order('name'),
       supabase.from('beasts').select('id, name, voice_profile, description').or(`source.eq.global,campaign_id.eq.${campaignId}`).order('name'),
-      supabase.from('characters').select('id, name').eq('campaign_id', String(campaignId)).eq('status', 'approved'),
       supabase.from('dialogue_conversations').select('*').eq('campaign_id', String(campaignId)).eq('status', 'active'),
-    ]).then(([npcRes, beastRes, charRes, convRes]) => {
+    ]).then(([npcRes, beastRes, convRes]) => {
       setEntities([
         ...(npcRes.data || []).map(n => ({ ...n, type: 'npc' })),
         ...(beastRes.data || []).map(b => ({ ...b, type: 'beast' })),
       ]);
-      setCharacters(charRes.data || []);
       setActiveConversations(convRes.data || []);
     });
   }, [campaignId]);
+
+  // Adventurers — only characters actually checked in to the current session
+  useEffect(() => {
+    if (!sessionId) { setCharacters([]); return; }
+    getCheckedInCharacterIds(sessionId).then(async (checkins) => {
+      const ids = (checkins || []).map(c => String(c.character_id));
+      if (ids.length === 0) { setCharacters([]); return; }
+      const { data } = await supabase.from('characters').select('id, name').in('id', ids);
+      setCharacters(data || []);
+    });
+  }, [sessionId]);
 
   const loadEntries = async (convId) => {
     const { data } = await supabase.from('dialogue_entries').select('*').eq('conversation_id', convId).order('created_at', { ascending: true });
@@ -130,6 +152,18 @@ export default function DMSpeakPanel({ campaignId, sessionId, embedded, initialE
   if (!conversation) {
     return (
       <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {campaignList.length > 0 && (
+          <div>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.14em', color: COLORS.muted, textTransform: 'uppercase', marginBottom: 6 }}>Campaign</div>
+            <select value={campaignId} onChange={e => setCampaignId(e.target.value)}
+              style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }}>
+              {campaignList.map(c => (
+                <option key={c.id} value={c.id}>{c.subtitle || c.name || c.id}{c.id === String(defaultCampaignId) ? ' (active)' : ''}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {activeConversations.length > 0 && (
           <div>
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.14em', color: COLORS.muted, textTransform: 'uppercase', marginBottom: 6 }}>Active Conversations</div>
@@ -167,9 +201,9 @@ export default function DMSpeakPanel({ campaignId, sessionId, embedded, initialE
             </>
           )}
 
-          {characters.length > 0 && (
+          {characters.length > 0 ? (
             <div style={{ marginBottom: 10 }}>
-              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.12em', color: COLORS.muted, marginBottom: 6 }}>Participants</div>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.12em', color: COLORS.muted, marginBottom: 6 }}>Adventurers</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                 {characters.map(c => {
                   const on = participantIds.includes(String(c.id));
@@ -181,6 +215,10 @@ export default function DMSpeakPanel({ campaignId, sessionId, embedded, initialE
                   );
                 })}
               </div>
+            </div>
+          ) : (
+            <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 10 }}>
+              No adventurers checked in to this session yet.
             </div>
           )}
 
