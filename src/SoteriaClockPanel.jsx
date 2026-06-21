@@ -5,34 +5,110 @@ import {
   TRAVEL_METHODS, FRAGMENTS_PER_TURN, GREATER_CYCLES_EU, GREATER_CYCLES_ED,
 } from './lib/soteriaClock';
 
-// ─── SUN/MOON CYCLE BAR ───────────────────────────────────────────────────────
-export function SunMoonCycleBar({ clock, width = 280 }) {
+// ─── ORBITAL CELESTIAL DISPLAY ─────────────────────────────────────────────────
+// The Major Sun sits fixed at center by day; orbiting bodies (Green/White Suns,
+// or by night the Yellow/Blue Moons) actually circle around it via CSS animation,
+// appearing/disappearing exactly as the Sovereign Calendar describes per pass.
+export function CelestialOrbit({ clock, size = 36 }) {
+  if (!clock) return null;
+  const live = getLiveClock(clock);
+  const passInfo = getPassInfo(live.pass);
+  const bodies = passInfo.bodies || [];
+
+  const centerBody = bodies.find(b => b.name === 'Major Sun');
+  const orbiters = bodies.filter(b => b.name !== 'Major Sun');
+  const center = size / 2;
+  const dotSize = Math.max(5, Math.round(size * 0.2));
+  const orbitRadius = size / 2 - dotSize;
+
+  return (
+    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+      <style>{`
+        @keyframes orbitSpin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+      `}</style>
+      {/* Central body */}
+      {centerBody ? (
+        <div style={{
+          position: 'absolute', top: center, left: center,
+          width: dotSize + 2, height: dotSize + 2, borderRadius: '50%',
+          background: centerBody.color, boxShadow: `0 0 ${dotSize}px ${centerBody.color}`,
+          transform: 'translate(-50%, -50%)',
+        }} />
+      ) : (
+        <div style={{
+          position: 'absolute', top: center, left: center,
+          width: dotSize, height: dotSize, borderRadius: '50%',
+          border: '1px solid rgba(120,120,140,0.4)',
+          transform: 'translate(-50%, -50%)',
+        }} />
+      )}
+      {/* Orbiting bodies — each on its own ring, own speed, own starting angle */}
+      {orbiters.map((b, i) => (
+        <div key={b.name} style={{
+          position: 'absolute', top: center, left: center, width: 0, height: 0,
+          animation: `orbitSpin ${5 + i * 2.5}s linear infinite`,
+          animationDelay: `${-(i * 1.7)}s`,
+        }}>
+          <div style={{
+            position: 'absolute', top: -dotSize / 2, left: orbitRadius - i * (dotSize * 1.2),
+            width: dotSize, height: dotSize, borderRadius: '50%',
+            background: b.color, boxShadow: `0 0 ${dotSize}px ${b.color}`,
+          }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+// A rounded track showing the 13 passes in order. The bodies actually visible at
+// the current pass (per the Sovereign Calendar) render as small glowing dots that
+// slide smoothly across as fragments tick by — Major/Green/White Suns by day,
+// Yellow/Blue Moons by night.
+export function SunMoonCycleBar({ clock, width = 280, showBodyLabels = true }) {
   if (!clock) return null;
   const live = getLiveClock(clock);
   const progress = ((live.pass - 1) + live.fragment / 120) / 13;
-  const trackHeight = 28;
-  const isNight = getPassInfo(live.pass).segment === 'night';
+  const trackHeight = showBodyLabels ? 30 : 16;
+  const passInfo = getPassInfo(live.pass);
+  const bodies = passInfo.bodies || [];
 
   return (
-    <div style={{ position: 'relative', width, height: trackHeight }}>
-      <div style={{
-        position: 'absolute', inset: 0, borderRadius: trackHeight / 2,
-        background: 'linear-gradient(to right, #1a2a40 0%, #2a3a55 15%, #7aa8c4 30%, #e6c96a 45%, #f0d878 55%, #e6c96a 65%, #7aa8c4 80%, #2a3a55 92%, #1a2a40 100%)',
-        opacity: 0.35,
-      }} />
-      <div style={{ position: 'absolute', inset: 0, borderRadius: trackHeight / 2, border: '1px solid rgba(201,185,145,0.3)' }} />
-      {PASSES.map((p, i) => (
-        <div key={p.id} style={{ position: 'absolute', left: `${(i / 13) * 100}%`, top: 4, bottom: 4, width: 1, background: 'rgba(255,255,255,0.15)' }} />
-      ))}
-      <div style={{
-        position: 'absolute', top: '50%', left: `${progress * 100}%`,
-        transform: 'translate(-50%, -50%)',
-        width: 16, height: 16, borderRadius: '50%',
-        background: isNight ? '#7aa8c4' : '#f0d878',
-        boxShadow: `0 0 10px ${isNight ? '#7aa8c4' : '#f0d878'}`,
-        border: '2px solid rgba(8,6,4,0.8)',
-        transition: 'left 4s linear',
-      }} />
+    <div>
+      <div style={{ position: 'relative', width, height: trackHeight }}>
+        <div style={{
+          position: 'absolute', inset: 0, borderRadius: trackHeight / 2,
+          background: 'linear-gradient(to right, #1a2a40 0%, #2a3a55 15%, #7aa8c4 30%, #e6c96a 45%, #f0d878 55%, #e6c96a 65%, #7aa8c4 80%, #2a3a55 92%, #1a2a40 100%)',
+          opacity: 0.3,
+        }} />
+        <div style={{ position: 'absolute', inset: 0, borderRadius: trackHeight / 2, border: '1px solid rgba(201,185,145,0.3)' }} />
+        {PASSES.map((p, i) => (
+          <div key={p.id} style={{ position: 'absolute', left: `${(i / 13) * 100}%`, top: 4, bottom: 4, width: 1, background: 'rgba(255,255,255,0.15)' }} />
+        ))}
+        {/* Marker position on the track */}
+        <div style={{
+          position: 'absolute', top: '50%', left: `${progress * 100}%`,
+          transform: 'translate(-50%, -50%)',
+          width: showBodyLabels ? 8 : 6, height: showBodyLabels ? 8 : 6, borderRadius: '50%',
+          background: 'rgba(255,255,255,0.9)',
+          boxShadow: '0 0 6px rgba(255,255,255,0.7)',
+          transition: 'left 4s linear',
+        }} />
+      </div>
+      {/* The bodies actually in the sky right now */}
+      {showBodyLabels && (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, justifyContent: 'center', minHeight: 14 }}>
+        {bodies.length === 0 ? (
+          <span style={{ fontSize: 8, color: 'rgba(201,185,145,0.4)', fontFamily: "'Cinzel', serif", letterSpacing: '0.1em' }}>NO BODIES IN THE SKY</span>
+        ) : bodies.map(b => (
+          <div key={b.name} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: b.color, boxShadow: `0 0 6px ${b.color}` }} />
+            <span style={{ fontSize: 8, color: 'rgba(201,185,145,0.6)', fontFamily: "'Cinzel', serif", letterSpacing: '0.06em' }}>{b.name}</span>
+          </div>
+        ))}
+      </div>
+      )}
     </div>
   );
 }
@@ -59,13 +135,14 @@ export function SoteriaClockDisplay({ clock, compact = false }) {
       <div style={{
         display: 'flex', alignItems: 'center', gap: 10,
         fontFamily: "'Cinzel', serif", color: accent, fontSize: 11,
-        padding: '4px 12px', background: 'rgba(8,6,4,0.7)',
+        padding: '4px 14px 4px 8px', background: 'rgba(8,6,4,0.7)',
         border: `1px solid ${accent}33`, borderRadius: 20,
         letterSpacing: '0.06em',
       }}>
-        <span style={{ fontSize: 9, letterSpacing: '0.1em' }}>{isNight ? 'NIGHT' : 'DAY'}</span>
+        <CelestialOrbit clock={clock} size={28} />
         <span>{passInfo.name}</span>
         <span style={{ fontFamily: 'monospace', opacity: 0.85 }}>{getClockTime(live.pass, live.fragment)}</span>
+        <SunMoonCycleBar clock={clock} width={110} showBodyLabels={false} />
         <span style={{ opacity: 0.5 }}>·</span>
         <span>Turn {live.turn}, {cycleName}</span>
         <span style={{ opacity: 0.5 }}>·</span>
@@ -101,7 +178,7 @@ export function SoteriaClockDisplay({ clock, compact = false }) {
         <SunMoonCycleBar clock={clock} />
       </div>
       <div style={{ marginTop: 10, fontSize: 12, opacity: 0.8 }}>
-        Turn {live.turn} of {cycleName} (Cycle {live.greater_cycle}) — 48hr day
+        Turn {live.turn} of {cycleName} (Cycle {live.greater_cycle}) — 26hr day
       </div>
       <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>
         Anui {live.anui} {live.era === 'EU' ? 'E.U.' : 'E.D.'}
@@ -324,7 +401,7 @@ export default function SoteriaClockPanel({ campaignId }) {
       minWidth: 280,
     }}>
       <div style={{ fontSize: 10, color: 'rgba(201,185,145,0.5)', letterSpacing: '0.18em', marginBottom: 12 }}>
-        SOTERIA · WORLD CLOCK (48HR DAY)
+        SOTERIA · WORLD CLOCK (26HR DAY)
       </div>
 
       <SoteriaClockDisplay clock={clock} />
