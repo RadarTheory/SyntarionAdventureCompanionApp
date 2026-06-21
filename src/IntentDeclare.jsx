@@ -328,7 +328,7 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
           style={{ flex: 1, background: 'rgba(96,150,224,0.05)', border: '1px solid rgba(96,150,224,0.25)', borderRadius: 6, padding: compact ? '5px 8px' : '7px 10px', color: active ? COLORS.text : COLORS.dim, fontFamily: 'Georgia, serif', fontSize: compact ? 10 : 11, outline: 'none' }} />
         {dictation.supported && (
           <button type="button" onClick={dictation.toggle} disabled={!active || sending || dictation.transcribing}
-            title="Tap to talk — your voice is transcribed to text only, never saved as audio"
+            title="Tap to talk"
             style={{ background: dictation.listening ? 'rgba(224,90,90,0.15)' : dictation.transcribing ? 'rgba(200,168,74,0.12)' : 'transparent', border: `1px solid ${dictation.listening ? 'rgba(224,90,90,0.4)' : dictation.transcribing ? 'rgba(200,168,74,0.4)' : COLORS.border}`, borderRadius: 6, padding: '0 10px', cursor: dictation.transcribing ? 'default' : 'pointer', fontSize: 13, color: dictation.listening ? '#e05a5a' : dictation.transcribing ? '#e8c84a' : COLORS.dim }}>
             {dictation.listening ? '●' : dictation.transcribing ? '…' : '🎙'}
           </button>

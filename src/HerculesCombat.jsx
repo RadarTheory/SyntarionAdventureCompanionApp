@@ -178,7 +178,30 @@ function VitalsPanel({ row, onClose, campaignId }) {
 
 export default function HerculesCombat({ defaultCampaignId, darkMode = true, onPlaceToken, onRegisterAddCreature }) {
    const [campaignList, setCampaignList] = useState([]);
-  const creatureNames = useMemo(parseCreatureNames, []);
+  const [creatureNames, setCreatureNames] = useState([]);
+
+useEffect(() => {
+  let query = supabase.from('beasts').select('name').order('name', { ascending: true });
+  query = campaignId
+    ? query.or(`source.eq.global,campaign_id.eq.${campaignId}`)
+    : query.eq('source', 'global');
+
+  query.then(({ data, error }) => {
+    if (error) { console.error('[Hercules] Failed to load bestiary:', error); return; }
+    setCreatureNames((data || []).map(r => r.name).filter(Boolean));
+  });
+}, [campaignId]);
+
+useEffect(() => {
+  supabase
+    .from('bestiary')
+    .select('name')
+    .order('name', { ascending: true })
+    .then(({ data, error }) => {
+      if (error) { console.error('Failed to load bestiary:', error); return; }
+      setCreatureNames((data || []).map(r => r.name).filter(Boolean));
+    });
+}, []);
   const firstCampaignId = campaignList?.[0]?.id || '';
 
   useEffect(() => {
@@ -226,7 +249,6 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true, onP
   const dragOffset = useRef({ x: 0, y: 0 });
   const moved = useRef(false);
 
-  const [campaignId, setCampaignId] = useState(defaultCampaignId || firstCampaignId);
   const [session, setSession] = useState(null);
   const [events, setEvents] = useState([]);
   const [initiative, setInitiative] = useState([]);
