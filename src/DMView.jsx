@@ -718,9 +718,9 @@ export default function DMView({ user, session, onHome }) {
       .then(({ data }) => { if (data) setHeaderClock(data); });
 
     const ch = supabase.channel(`world_clock_dm_${activeCampaignTab}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'world_clock', filter: `campaign_id=eq.${activeCampaignTab}` },
-        ({ new: u }) => { if (u) setHeaderClock(u); })
-      .subscribe();
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'world_clock', filter: `campaign_id=eq.${activeCampaignTab}` },
+    ({ new: u }) => { console.log('[ClockHeader] realtime event:', u); if (u) setHeaderClock(u); })
+  .subscribe((status) => console.log('[ClockHeader] subscription status:', status));
 
     return () => supabase.removeChannel(ch);
   }, [activeCampaignTab]);
