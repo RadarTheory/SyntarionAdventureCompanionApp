@@ -537,7 +537,7 @@ export default function ItemCatalog() {
         value={search}
         onChange={e => setSearch(e.target.value)}
         placeholder="Search items, tags, types…"
-        style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '9px 12px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', boxSizing: 'border-box', outline: 'none' }}
+       style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '9px 12px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', boxSizing: 'border-box', outline: 'none', marginBottom: 16 }}
       />
 
       {!search && categories.length > 0 && (

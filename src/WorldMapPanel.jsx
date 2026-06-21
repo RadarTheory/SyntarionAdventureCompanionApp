@@ -273,7 +273,7 @@ const handleMapClick = useCallback((e) => {
         ref={mapRef}
         onWheel={e => { e.preventDefault(); setZoom(z => Math.min(4, Math.max(0.5, z - e.deltaY * 0.001))); }}
         onClick={handleMapClick}>
-        <div style={{ position: 'relative', width: `${zoom * 100}%`, minHeight: '100%' }}>
+        <div style={{ position: 'relative', width: '100%', transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
           <img
             src="/SoteriaMap.jpg"
             alt="Soteria World Map"
