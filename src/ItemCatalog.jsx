@@ -533,15 +533,12 @@ export default function ItemCatalog() {
         />
       )}
 
-      <div style={{ color: 'red', fontSize: 14, fontWeight: 'bold' }}>
-  DEBUG: itemsLoading={String(itemsLoading)} | items.length={items.length} | filtered.length={filtered.length}
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search items, tags, types…"
-          style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '9px 12px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', boxSizing: 'border-box', outline: 'none' }}
-        />
-      </div>
+      <input
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Search items, tags, types…"
+        style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '9px 12px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', boxSizing: 'border-box', outline: 'none' }}
+      />
 
       {!search && categories.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
