@@ -4,9 +4,9 @@ import { COLORS, CAMPAIGNS } from './constants';
 import { buildScribeContext } from './scribe-context';
 
 // ─── GEMINI CALL (via Supabase Edge Function relay — no key in client) ────────
-async function callGemini(system, messages, maxTokens = 1024) {
+async function callGemini(system, messages, maxTokens = 1024, image = null) {
   const { data, error } = await supabase.functions.invoke('scribe', {
-    body: { system, messages, max_tokens: maxTokens },
+    body: { system, messages, max_tokens: maxTokens, image },
   });
   if (error) throw new Error(error.message || 'The relay to the archives failed.');
   if (data?.error) throw new Error(data.error.message || JSON.stringify(data.error).slice(0, 200));
@@ -146,7 +146,7 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
         loadSessionLog(campaignId),
       ]);
 
-      const system = SCRIBE_SYSTEM(buildPlayerContext(char, combatLog, sessionLog), buildScribeContext(question));
+      const system = SCRIBE_SYSTEM(buildPlayerContext(char, combatLog, sessionLog), await buildScribeContext(question, 10000, campaignId));
       const geminiHistory = next.filter(m => m.role !== 'system').map(m => ({
         role: m.role === 'player' ? 'user' : 'assistant',
         content: m.content,
@@ -256,6 +256,20 @@ export function ScribeDMPanel({ onClose, embedded = false, activeCampaignId }) {
   const [activeTab, setActiveTab]   = useState('consult'); // 'consult' | 'pings'
   const [characters, setChars]      = useState([]);
   const [tokenInputs, setTokenInputs] = useState({});
+  const [pendingImage, setPendingImage] = useState(null); // { data, mimeType, previewUrl }
+  const fileInputRef = useRef(null);
+
+  const handleImagePick = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = String(reader.result).split(',')[1] || '';
+      setPendingImage({ data: base64, mimeType: file.type, previewUrl: URL.createObjectURL(file) });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
   const bottomRef                   = useRef(null);
   const lockRef                     = useRef(false);
   
@@ -310,8 +324,7 @@ const handleAsk = async () => {
         role: m.role === 'dm' ? 'user' : 'assistant',
         content: m.content,
       }));
-      const answer = await callGemini(DM_SCRIBE_SYSTEM(buildScribeContext(question, 12000) + (liveContext ? `\n\n${liveContext}` : '')), geminiHistory);
-      setMessages(p => [...p, { role: 'scribe', content: answer, time: new Date() }]);
+      const answer = await callGemini(DM_SCRIBE_SYSTEM((await buildScribeContext(question, 12000, activeCampaignId)) + (liveContext ? `\n\n${liveContext}` : '')), geminiHistory);
     } catch (err) {
       setMessages(p => [...p, { role: 'scribe', content: `The archives are silent. ${err?.message || 'Try again.'}`, time: new Date() }]);
     } finally {
@@ -371,7 +384,20 @@ const handleAsk = async () => {
             )}
             <div ref={bottomRef} />
           </div>
+          {pendingImage && (
+            <div style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 8, borderTop: `1px solid ${COLORS.border}` }}>
+              <img src={pendingImage.previewUrl} alt="attached" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4, border: `1px solid ${COLORS.deity}` }} />
+              <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', flex: 1 }}>Image attached</div>
+              <button onClick={() => setPendingImage(null)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '3px 7px', cursor: 'pointer', fontSize: 9, color: COLORS.dim }}>✕</button>
+            </div>
+          )}
           <div style={{ padding: '10px 12px', borderTop: `1px solid ${COLORS.border}`, display: 'flex', gap: 8, flexShrink: 0 }}>
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImagePick} style={{ display: 'none' }} />
+            <button onClick={() => fileInputRef.current?.click()} disabled={loading}
+              title="Attach image"
+              style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '0 10px', cursor: loading ? 'default' : 'pointer', fontSize: 13, color: COLORS.dim }}>
+              📎
+            </button>
             <input value={input} onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleAsk()}
               placeholder="Ask the Scribe…"

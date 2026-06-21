@@ -28,11 +28,30 @@ Deno.serve(async (req) => {
     }
 
     // ── Relay to Gemini ──
-    const { system, messages, max_tokens = 1024 } = await req.json();
+    const { system, messages, max_tokens = 1024, image } = await req.json();
     if (!system || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: { message: 'Bad request: system and messages required.' } }), {
         status: 400, headers: { ...CORS, 'Content-Type': 'application/json' },
       });
+    }
+
+    // If an image is attached, fold it into the last message as multimodal content
+    let finalMessages = messages;
+    if (image?.data && image?.mimeType) {
+      const lastIdx = messages.length - 1;
+      const lastMsg = messages[lastIdx];
+      if (lastMsg?.role === 'user') {
+        finalMessages = [
+          ...messages.slice(0, lastIdx),
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: typeof lastMsg.content === 'string' ? lastMsg.content : '' },
+              { type: 'image_url', image_url: { url: `data:${image.mimeType};base64,${image.data}` } },
+            ],
+          },
+        ];
+      }
     }
 
     const res = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
@@ -43,7 +62,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'gemini-2.5-flash',
-        messages: [{ role: 'system', content: system }, ...messages],
+        messages: [{ role: 'system', content: system }, ...finalMessages],
         max_tokens: Math.min(max_tokens, 2048),
         temperature: 0.82,
       }),
