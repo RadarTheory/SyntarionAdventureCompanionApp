@@ -3,6 +3,7 @@ import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { SOTERIA_BESTIARY } from './soteria-bestiary';
 import DMSpeakPanel from './DMSpeakPanel';
+import { advanceCampaignClockByCombatTurn } from './lib/soteriaClock';
 
 function getBestiaryText() {
   if (typeof SOTERIA_BESTIARY === 'string') return SOTERIA_BESTIARY;
@@ -350,6 +351,7 @@ export default function HerculesCombat({ defaultCampaignId, darkMode = true, onP
     const nextGlobalIndex = initiative.indexOf(nextCombatant);
 
     await supabase.from('hercules_sessions').update({ current_turn: nextGlobalIndex }).eq('id', sid);
+    advanceCampaignClockByCombatTurn(campaignId); // 12 Soterian seconds per combat round, fire-and-forget
 
     await supabase.from('hercules_events').insert({
       session_id: sid,
