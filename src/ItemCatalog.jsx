@@ -50,11 +50,9 @@ function GrantModal({ item, onClose }) {
   const CAMPAIGN_NAMES = { I: 'Veinrunner', II: 'Keys of Aerithos', III: 'Prints from Gamdon', IV: 'Veyline' };
 
   useEffect(() => {
-    // Load approved characters — name/campaign live inside the `data` jsonb blob
     supabase.from('characters').select('id, data, status, campaign_id').not('status', 'eq', 'rejected').then(({ data: rows }) => {
       if (rows) {
         const parsed = rows.map(row => {
-          // data is stored as a stringified JSON string
           let d = {};
           try { d = typeof row.data === 'string' ? JSON.parse(row.data) : (row.data || {}); } catch (_) {}
           return {
@@ -68,7 +66,6 @@ function GrantModal({ item, onClose }) {
         setChars(parsed);
       }
     });
-    // Load lootboxes
     supabase.from('lootboxes').select('*').eq('claimed', false).order('created_at', { ascending: false }).then(({ data }) => {
       if (data) setLootboxes(data);
     });
@@ -86,7 +83,6 @@ function GrantModal({ item, onClose }) {
       bonuses: {},
       weight: qty,
     });
-    // Also notify via message
     if (!error) {
       await supabase.from('messages').insert({
         type: 'dm',
@@ -121,7 +117,6 @@ function GrantModal({ item, onClose }) {
     setSaving(true);
     let boxId = selectedBox;
 
-    // Create new box if requested
     if (!boxId && newBoxName.trim()) {
       const { data: newBox, error: boxErr } = await supabase.from('lootboxes').insert({
         name: newBoxName.trim(),
@@ -163,7 +158,6 @@ function GrantModal({ item, onClose }) {
 
   return (
     <ModalShell item={item} onClose={onClose}>
-      {/* Mode picker */}
       {!mode && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
           <button onClick={() => setMode('player')}
@@ -183,7 +177,6 @@ function GrantModal({ item, onClose }) {
         </div>
       )}
 
-      {/* Grant to Player */}
       {mode === 'player' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 4 }}>
           <BackBtn onClick={() => setMode(null)} />
@@ -211,12 +204,10 @@ function GrantModal({ item, onClose }) {
         </div>
       )}
 
-      {/* Add to Lootbox */}
       {mode === 'lootbox' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 4 }}>
           <BackBtn onClick={() => setMode(null)} />
 
-          {/* Existing lootboxes */}
           {lootboxes.length > 0 && (
             <div>
               <div style={{ ...label8(), marginBottom: 8 }}>Existing Lootboxes</div>
@@ -235,7 +226,6 @@ function GrantModal({ item, onClose }) {
             </div>
           )}
 
-          {/* New lootbox */}
           <div>
             <div style={{ ...label8(), marginBottom: 8 }}>
               {lootboxes.length > 0 ? 'Or Create New Lootbox' : 'Create Lootbox'}
@@ -280,7 +270,6 @@ function ModalShell({ item, onClose, children }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.78)', zIndex: 400000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ background: '#120e0a', border: `1px solid ${COLORS.border}`, borderRadius: 14, width: '100%', maxWidth: 420, maxHeight: '88vh', overflowY: 'auto', padding: 24 }}>
-        {/* Item header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
           <div style={{ flex: 1, paddingRight: 12 }}>
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: COLORS.text, marginBottom: 4 }}>{item.name}</div>
@@ -329,32 +318,36 @@ function QtyNote({ qty, setQty, note, setNote }) {
 
 // ─── MAIN CATALOG ─────────────────────────────────────────────────────────────
 export default function ItemCatalog() {
-  const [search, setSearch]         = useState('');
+  const [search, setSearch]            = useState('');
   const [activeCategory, setActiveCat] = useState(null);
-  const [activeType, setActiveType] = useState(null);
-  const [grantItem, setGrantItem]   = useState(null); // item being granted
-  const [ITEMS, setItems] = useState([]);
+  const [activeType, setActiveType]    = useState(null);
+  const [grantItem, setGrantItem]      = useState(null);
+  const [items, setItems]              = useState([]);
   const [itemsLoading, setItemsLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     const loadAllItems = async () => {
       let all = [];
       let from = 0;
       const pageSize = 1000;
       while (true) {
         const { data, error } = await supabase
-          .from('items').select('*')
-          .order('category').order('name')
+          .from('items')
+          .select('*')
+          .order('category', { ascending: true })
+          .order('name', { ascending: true })
           .range(from, from + pageSize - 1);
         if (error) {
           console.error('Failed to load items catalog:', error);
           break;
         }
-        if (!data?.length) break;
+        if (!data || data.length === 0) break;
         all = all.concat(data);
         if (data.length < pageSize) break;
         from += pageSize;
       }
+      if (cancelled) return;
       setItems(all.map(row => ({
         name: row.name,
         category: row.category,
@@ -366,51 +359,34 @@ export default function ItemCatalog() {
       setItemsLoading(false);
     };
     loadAllItems();
+    return () => { cancelled = true; };
   }, []);
 
-  useEffect(() => {
-    supabase.from('items').select('*').order('name', { ascending: true })
-      .then(({ data, error }) => {
-        if (error) {
-          console.error('Failed to load items catalog:', error);
-          setItemsLoading(false);
-          return;
-        }
-        setItems((data || []).map(row => ({
-          name: row.name,
-          category: row.category,
-          type: row.type,
-          desc: row.description,
-          tags: row.tags || [],
-          meta: row.meta || '',
-        })));
-        setItemsLoading(false);
-      });
-  }, []);
-
-  const categories = useMemo(() => [...new Set(ITEMS.map(i => i.category))], []);
+  const categories = useMemo(() => [...new Set(items.map(i => i.category))].sort(), [items]);
   const types = useMemo(() => activeCategory
-    ? [...new Set(ITEMS.filter(i => i.category === activeCategory).map(i => i.type))]
-    : [], [activeCategory]);
+    ? [...new Set(items.filter(i => i.category === activeCategory).map(i => i.type))].sort()
+    : [], [activeCategory, items]);
 
-  const filtered = useMemo(() => ITEMS.filter(item => {
+  const filtered = useMemo(() => items.filter(item => {
     if (activeCategory && item.category !== activeCategory) return false;
     if (activeType && item.type !== activeType) return false;
     if (!search) return true;
     const q = search.toLowerCase();
-    return item.name.toLowerCase().includes(q)
-      || item.desc.toLowerCase().includes(q)
-      || item.type.toLowerCase().includes(q)
+    return item.name?.toLowerCase().includes(q)
+      || item.desc?.toLowerCase().includes(q)
+      || item.type?.toLowerCase().includes(q)
       || item.tags?.some(t => t.toLowerCase().includes(q));
-  }), [search, activeCategory, activeType]);
+  }), [items, search, activeCategory, activeType]);
 
   return (
     <div style={{ fontFamily: 'Georgia, serif' }}>
-      {/* Grant modal */}
       {grantItem && <GrantModal item={grantItem} onClose={() => setGrantItem(null)} />}
 
       <div style={{ marginBottom: 20 }}>
-        <div style={label8()}>Item Catalog · {itemsLoading ? '…' : `${ITEMS.length} entries`}</div>
+        <div style={{ color: 'red', fontSize: 14, fontWeight: 'bold' }}>
+          DEBUG: itemsLoading={String(itemsLoading)} | items.length={items.length} | filtered.length={filtered.length}
+        </div>
+        <div style={label8()}>Item Catalog · {itemsLoading ? 'Loading…' : `${items.length} entries`}</div>
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -419,7 +395,7 @@ export default function ItemCatalog() {
         />
       </div>
 
-      {!search && (
+      {!search && categories.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
           {categories.map(cat => {
             const col = CAT_COLOR[cat] || COLORS.muted;
@@ -448,7 +424,7 @@ export default function ItemCatalog() {
       )}
 
       <div style={{ fontSize: 9, color: COLORS.dim, marginBottom: 12 }}>
-        {filtered.length} item{filtered.length !== 1 ? 's' : ''}
+        {itemsLoading ? 'Loading items…' : `${filtered.length} item${filtered.length !== 1 ? 's' : ''}`}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -460,14 +436,12 @@ export default function ItemCatalog() {
               onMouseEnter={e => e.currentTarget.style.borderColor = `${col}55`}
               onMouseLeave={e => e.currentTarget.style.borderColor = COLORS.border}>
 
-              {/* Item header row */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: col, flexShrink: 0 }} />
                 <strong style={{ color: COLORS.text, fontSize: 12, flex: 1, minWidth: 0 }}>{item.name}</strong>
                 <span style={{ color: col, fontSize: 8 }}>{item.category}</span>
                 <span style={{ color: COLORS.dim, fontSize: 8 }}>{item.type}</span>
 
-                {/* Grant buttons — shown inline on hover via flex */}
                 <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
                   <button
                     onClick={() => setGrantItem(item)}
@@ -483,6 +457,11 @@ export default function ItemCatalog() {
             </div>
           );
         })}
+        {!itemsLoading && filtered.length === 0 && (
+          <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '20px 0' }}>
+            No items match.
+          </div>
+        )}
       </div>
     </div>
   );
