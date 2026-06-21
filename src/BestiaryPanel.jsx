@@ -1,121 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { COLORS } from './constants';
-import { SOTERIA_BESTIARY } from './soteria-bestiary';
 import supabase from './lib/supabase';
-
-// ─── PARSE RAW BESTIARY TEXT ──────────────────────────────────────────────────
-// Handles common formats in raw lore text:
-//   • CREATURE NAME — description...
-//   • CREATURE NAME: description...
-//   CREATURE NAME\ndescription...
-//   **CREATURE NAME** description...
-
-function parseBestiary() {
-  const raw = typeof SOTERIA_BESTIARY === 'string'
-    ? SOTERIA_BESTIARY
-    : Array.isArray(SOTERIA_BESTIARY)
-      ? SOTERIA_BESTIARY.join('\n')
-      : Object.values(SOTERIA_BESTIARY || {}).join('\n');
-
-  if (!raw) return [];
-
-  const entries = [];
-  const lines = raw.split('\n');
-  let current = null;
-  let descLines = [];
-
-  const flush = () => {
-    if (current) {
-      const fullDesc = descLines.join(' ').replace(/\s+/g, ' ').trim();
-      entries.push({ ...current, desc: fullDesc });
-    }
-    current = null;
-    descLines = [];
-  };
-
-  // Patterns that signal a new creature entry
-  const bulletPattern  = /^[-•●*]\s+([A-Z][A-Z0-9\s'\-\/\(\)]+?)(?:\s*[—–:]\s*(.*))?$/;
-  const headerPattern  = /^\*\*([A-Z][A-Z0-9\s'\-\/\(\)]+?)\*\*\s*[—–:]?\s*(.*)?$/;
-  const allCapsPattern = /^([A-Z][A-Z\s'\-\/\(\),]{3,50}?)(?:\s*[—–:]\s*(.*))?$/;
-
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-    if (!line) continue;
-
-    let matched = false;
-
-    // Try bullet pattern
-    const bulletMatch = line.match(bulletPattern);
-    if (bulletMatch) {
-      flush();
-      const name = bulletMatch[1].trim().replace(/['"`,;]+$/g, '');
-      const rest = bulletMatch[2]?.trim() || '';
-      if (name.length > 1 && name.length < 80) {
-        current = { name, category: inferCategory(name, rest) };
-        if (rest) descLines.push(rest);
-        matched = true;
-      }
-    }
-
-    // Try **bold** pattern
-    if (!matched) {
-      const headerMatch = line.match(headerPattern);
-      if (headerMatch) {
-        flush();
-        const name = headerMatch[1].trim();
-        const rest = headerMatch[2]?.trim() || '';
-        if (name.length > 1 && name.length < 80) {
-          current = { name, category: inferCategory(name, rest) };
-          if (rest) descLines.push(rest);
-          matched = true;
-        }
-      }
-    }
-
-    // Try ALL CAPS line (only if short enough to be a name, not a section header)
-    if (!matched && /^[A-Z\s'\-\/\(\),]{4,60}$/.test(line) && line.split(' ').length <= 8) {
-      const allCapsMatch = line.match(allCapsPattern);
-      if (allCapsMatch && current?.name !== allCapsMatch[1].trim()) {
-        flush();
-        const name = allCapsMatch[1].trim().replace(/['"`,;]+$/g, '');
-        const rest = allCapsMatch[2]?.trim() || '';
-        current = { name, category: inferCategory(name, rest) };
-        if (rest) descLines.push(rest);
-        matched = true;
-      }
-    }
-
-    // Otherwise it's description text for the current entry
-    if (!matched && current) {
-      descLines.push(line);
-    }
-  }
-
-  flush();
-
-  // Deduplicate by name
-  const seen = new Set();
-  return entries.filter(e => {
-    if (!e.name || e.name.length < 2 || seen.has(e.name)) return false;
-    seen.add(e.name);
-    return true;
-  }).sort((a, b) => a.name.localeCompare(b.name));
-}
-
-function inferCategory(name, desc) {
-  const combined = (name + ' ' + desc).toLowerCase();
-  if (/undead|wraith|lich|skeleton|ghost|revenant|shade|specter/.test(combined)) return 'Undead';
-  if (/beast|wolf|bear|cat|boar|hawk|serpent|viper|rat|spider|bat/.test(combined)) return 'Beast';
-  if (/demon|fiend|devil|infernal|hellborn/.test(combined)) return 'Fiend';
-  if (/dragon|wyrm|drake|wyvern/.test(combined)) return 'Dragon';
-  if (/construct|golem|automaton|machine|clockwork/.test(combined)) return 'Construct';
-  if (/elemental|fire|water|earth|air|storm/.test(combined)) return 'Elemental';
-  if (/fey|fairy|sprite|pixie|nymph/.test(combined)) return 'Fey';
-  if (/humanoid|human|elf|dwarf|orc|goblin|gnome|halfling|troll|ogre|giant/.test(combined)) return 'Humanoid';
-  if (/plant|fungus|myconid|treant|vine/.test(combined)) return 'Plant';
-  if (/aberration|mindflayer|beholder|aboleth|tentacle/.test(combined)) return 'Aberration';
-  return 'Creature';
-}
 
 const CATEGORY_COLORS = {
   Undead:      '#9b7fbd',
@@ -128,6 +13,8 @@ const CATEGORY_COLORS = {
   Humanoid:    '#e8d9a7',
   Plant:       '#88d8b0',
   Aberration:  '#c084fc',
+  Titan:       '#ff8fa3',
+  Troll:       '#b08968',
   Creature:    '#8a7d6e',
 };
 
@@ -142,10 +29,10 @@ function CreatureCard({ creature, isDM, campaignId, onAddedToCombat }) {
   const [added, setAdded]       = useState(false);
 
   const col      = CATEGORY_COLORS[creature.category] || COLORS.muted;
-  const shortDesc = creature.desc
-    ? creature.desc.split(/[.!?]/)[0].trim() + '.'
+  const shortDesc = creature.description
+    ? creature.description.split(/[.!?]/)[0].trim() + '.'
     : '';
-  const displayDesc = isDM ? creature.desc : shortDesc;
+  const displayDesc = isDM ? creature.description : shortDesc;
 
   const addToCombat = async (e) => {
     e.stopPropagation();
@@ -170,11 +57,11 @@ function CreatureCard({ creature, isDM, campaignId, onAddedToCombat }) {
     const roll     = Math.floor(Math.random() * 20) + 1;
     const color    = col;
 
-    // Add to VTT
+    // Add to VTT — beast_id links the token back to its bestiary row (for Dialogue, etc.)
     const { data: vttSession } = await supabase.from('vtt_sessions').select('*')
       .eq('campaign_id', String(campaignId)).maybeSingle();
     const existingTokens = Array.isArray(vttSession?.tokens) ? vttSession.tokens : [];
-    const newToken = { id: tokenId, token_id: tokenId, name: creature.name, label: creature.name.slice(0, 4).toUpperCase(), creatureName: creature.name, type: 'enemy', color, x: 50, y: 50 };
+    const newToken = { id: tokenId, token_id: tokenId, name: creature.name, label: creature.name.slice(0, 4).toUpperCase(), creatureName: creature.name, beast_id: creature.id, type: 'enemy', color, x: 50, y: 50 };
     if (vttSession?.id) {
       await supabase.from('vtt_sessions').update({ tokens: [...existingTokens, newToken], updated_at: new Date().toISOString() }).eq('id', vttSession.id);
     } else {
@@ -232,14 +119,46 @@ function CreatureCard({ creature, isDM, campaignId, onAddedToCombat }) {
 export default function BestiaryPanel({ isDM = false, campaignId, onClose, embedded = false }) {
   const [search, setSearch]         = useState('');
   const [activeCategory, setActiveCat] = useState('all');
+  const [creatures, setCreatures]   = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState(null);
 
-  const creatures  = useMemo(() => parseBestiary(), []);
-  const categories = useMemo(() => ['all', ...Array.from(new Set(creatures.map(c => c.category))).sort()], [creatures]);
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchBeasts() {
+      setLoading(true);
+      setError(null);
+
+      // Global bestiary entries (source = 'global') plus any campaign-specific beasts
+      let query = supabase.from('beasts').select('*').order('name', { ascending: true });
+      if (campaignId) {
+        query = query.or(`source.eq.global,campaign_id.eq.${campaignId}`);
+      } else {
+        query = query.eq('source', 'global');
+      }
+
+      const { data, error: fetchError } = await query;
+      if (cancelled) return;
+
+      if (fetchError) {
+        setError(fetchError.message);
+        setCreatures([]);
+      } else {
+        setCreatures(data || []);
+      }
+      setLoading(false);
+    }
+    fetchBeasts();
+    return () => { cancelled = true; };
+  }, [campaignId]);
+
+  const categories = useMemo(() => ['all', ...Array.from(new Set(creatures.map(c => c.category).filter(Boolean))).sort()], [creatures]);
 
   const filtered = useMemo(() => creatures.filter(c => {
     if (activeCategory !== 'all' && c.category !== activeCategory) return false;
     if (!search) return true;
-    return c.name.toLowerCase().includes(search.toLowerCase()) || c.desc?.toLowerCase().includes(search.toLowerCase());
+    const s = search.toLowerCase();
+    return c.name.toLowerCase().includes(s) || c.description?.toLowerCase().includes(s);
   }), [creatures, activeCategory, search]);
 
   const content = (
@@ -265,21 +184,22 @@ export default function BestiaryPanel({ isDM = false, campaignId, onClose, embed
 
       {/* Count */}
       <div style={{ padding: '6px 14px 0', fontSize: 8, color: COLORS.dim, fontFamily: 'Georgia, serif', flexShrink: 0 }}>
-        {filtered.length} {filtered.length === 1 ? 'creature' : 'creatures'}
-        {creatures.length === 0 && ' — bestiary data not found'}
+        {loading ? 'Loading…' : `${filtered.length} ${filtered.length === 1 ? 'creature' : 'creatures'}`}
+        {error && ` — error: ${error}`}
+        {!loading && !error && creatures.length === 0 && ' — bestiary table is empty'}
       </div>
 
       {/* List */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px 14px', display: 'flex', flexDirection: 'column', gap: 5 }}>
-        {creatures.length === 0 && (
+        {!loading && creatures.length === 0 && !error && (
           <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '30px 0' }}>
-            No creatures found in soteria-bestiary.js. The file may use an unrecognised format.
+            No creatures found in the beasts table. Run the migration to populate it.
           </div>
         )}
         {filtered.map(creature => (
-          <CreatureCard key={creature.name} creature={creature} isDM={isDM} campaignId={campaignId} />
+          <CreatureCard key={creature.id} creature={creature} isDM={isDM} campaignId={campaignId} />
         ))}
-        {filtered.length === 0 && creatures.length > 0 && (
+        {!loading && filtered.length === 0 && creatures.length > 0 && (
           <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '20px 0' }}>No creatures match.</div>
         )}
       </div>

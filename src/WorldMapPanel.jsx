@@ -92,7 +92,6 @@ export function WorldMapPanel({ campaignId, isDM = false, characters = [] }) {
 
   
 const handleMapClick = useCallback((e) => {
-  console.log('click fired', { isDM, movingParty, imgRef: imgRef.current });
   if (!isDM) return;
     const img = imgRef.current;
     if (!img) return;
@@ -100,11 +99,21 @@ const handleMapClick = useCallback((e) => {
     const x_pct = ((e.clientX - rect.left) / rect.width) * 100;
     const y_pct = ((e.clientY - rect.top) / rect.height) * 100;
     if (movingParty) return;
+
+    // If editing an existing pin, reposition it instead of creating a new one
+    if (editMode && selectedPin) {
+      supabase.from('locations').update({ x_pct, y_pct }).eq('id', selectedPin.id).then(() => {
+        showToast(`📍 ${selectedPin.name} repositioned.`);
+        loadAll();
+      });
+      return;
+    }
+
     setPendingPin({ x_pct, y_pct });
     setPinForm({ name: '', type: 'city', region: '', notes: '' });
     setSelectedPin(null);
     setEditMode(false);
-  }, [isDM, movingParty]);
+  }, [isDM, movingParty, editMode, selectedPin]);
 
   const handleMapMoveClick = useCallback((e) => {
     if (!isDM || !movingParty) return;
@@ -372,11 +381,13 @@ const handleMapClick = useCallback((e) => {
                   <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, color: COLORS.text }}>{selectedPin.name}</div>
                   <div style={{ fontSize: 8, color: COLORS.dim, marginTop: 2 }}>{PIN_TYPES[selectedPin.type]?.emoji} {selectedPin.type}{selectedPin.region ? ` · ${selectedPin.region}` : ''}</div>
                 </div>
-                <div style={{ display: 'flex', gap: 5 }}>
+                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '60%' }}>
                   <button onClick={() => { setEditMode(true); setPinForm({ name: selectedPin.name, type: selectedPin.type, region: selectedPin.region || '', notes: selectedPin.notes || '' }); }}
-                    style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: COLORS.dim }}>Edit</button>
+                    style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: COLORS.dim, whiteSpace: 'nowrap' }}>Edit</button>
+                  <button onClick={() => { setEditMode(true); setPinForm({ name: selectedPin.name, type: selectedPin.type, region: selectedPin.region || '', notes: selectedPin.notes || '' }); showToast('Click the map to reposition this pin.'); }}
+                    style={{ background: 'rgba(200,168,74,0.1)', border: '1px solid rgba(200,168,74,0.4)', borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: '#e8c84a', whiteSpace: 'nowrap' }}>↕ Move</button>
                   <button onClick={() => deletePin(selectedPin.id)}
-                    style={{ background: 'transparent', border: '1px solid rgba(224,90,90,0.4)', borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: '#e05a5a' }}>Delete</button>
+                    style={{ background: 'transparent', border: '1px solid rgba(224,90,90,0.4)', borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: '#e05a5a', whiteSpace: 'nowrap' }}>Delete</button>
                   <button onClick={() => setSelectedPin(null)}
                     style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 9, color: COLORS.dim }}>✕</button>
                 </div>

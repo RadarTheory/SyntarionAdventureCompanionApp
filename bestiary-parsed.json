@@ -1,0 +1,3173 @@
+[
+  {
+    "name": "ABYSSAL OGRE",
+    "description": "Underground. A towering sightless giant with translucent stone-cold skin; dwells in lightless depths, using immense pale limbs to crush intruders and drag them into crushing pressure.",
+    "biome": "THE OGRE EVOLUTION THEORY",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "ABYSSCROWN TUSK-WHALE",
+    "description": "A larger, more scarred deep-sea Crowntooth with teeth blackened by volcanic vent deposits.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "AEIRHYD",
+    "description": "Neutral Sea Dragon of Warman’s Lake.",
+    "biome": "GREAT DRAGONS",
+    "disposition": null,
+    "category": "Dragon"
+  },
+  {
+    "name": "AETHERIUM GOLEM",
+    "description": "Aether-aligned construct of white metal, crystal joints, and floating inner rings. Appears only partly present, with portions of its body phasing behind the world.",
+    "biome": "GOLEM FAMILY",
+    "disposition": null,
+    "category": "Construct"
+  },
+  {
+    "name": "ALAMIR HARE",
+    "description": "A long-eared plains hare prized for its speed and as a food source. Considered good luck to release one if caught alive.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "AMETHYSTWING PACKRAPTOR",
+    "description": "A Packraptor variant with violet wing-frills used for threat display and pack signaling. Hunts along cliff paths, scree slopes, and mineral-streaked terrain where its coloration blends with stone.",
+    "biome": "MOUNTAIN",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "ANOMALOCARIS",
+    "description": "A prehistoric aquatic apex predator featuring a segmented body, stalked eyes, and barbed grasping appendages used to snatch prey into its circular plate-lined mouth.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "ANUBITAPH",
+    "description": "A fierce bipedal jackal-like plains predator with long ears, lean muscle, and a hunter's cunning; feared for stalking the grasslands in disciplined packs. They use weapons like khopesh swords and long square shields.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "APOPHIS",
+    "description": "Devourer of Light; Titan Cyclops.",
+    "biome": "GREAT TITANS",
+    "disposition": null,
+    "category": "Titan"
+  },
+  {
+    "name": "ARID OGRE",
+    "description": "Desert. A towering suns-baked giant with cracked sandstone-like skin; can remain motionless for weeks amidst dunes, waiting to crush travelers who mistake its massive form for a weathered rock.",
+    "biome": "THE OGRE EVOLUTION THEORY",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "ASH SERPENT",
+    "description": "A heat-resistant serpent that inhabits volcanic rock fields. Ambushes prey by emerging from ash drifts. Its scales resist fire damage. Venom causes rapid internal inflammation.",
+    "biome": "VOLCANIC",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "ASHBEAR",
+    "description": "A broad-shouldered forest bear with ash-grey fur and a territorial temperament. Largely avoids settlements but increasingly displaced by Veinrunner expansion into old-growth timber regions.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Fiend"
+  },
+  {
+    "name": "ASHDUNE GRAVEBEAK",
+    "description": "A lean, pale desert strain of the great hammer-billed flightless predator; can go long periods without water by feeding on blood and organ meat.",
+    "biome": "DESERT",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "ASHEN REVENANT",
+    "description": "A rare and dangerous undead formed when a highly spiritually significant individual dies in proximity to a collapsed Veyline. Retains memory, intent, and growing intelligence. Unlike standard undead, an Ashen Revenant can form goals. It can make plans. It remembers who it was and has decided what it wants to do about what happened to it. High to Campaign-level threat. The Scribe recommends treating any confirmed Ashen Revenant sighting as a campaign-level event.",
+    "biome": "UNDEAD",
+    "disposition": null,
+    "category": "Undead"
+  },
+  {
+    "name": "AUROX",
+    "description": "A broad-horned feral humanoid of plain and grove, known for calm strength.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Humanoid"
+  },
+  {
+    "name": "AWAKENED JADE GARGOYLE",
+    "description": "A carved jade guardian given predatory animation through corrupted resonance or failed warding rites. Unlike ordinary gargoyles, it remembers the place it was made to protect and may continue enforcing commands long after their meaning has been lost.",
+    "biome": "UNDEAD",
+    "disposition": "HAUNTED UNDEAD",
+    "category": "Humanoid"
+  },
+  {
+    "name": "BARK SPIDER",
+    "description": "A palm-sized arachnid that blends perfectly into tree bark. Bite causes localized swelling and mild fever. Not dangerous to healthy adults.",
+    "biome": "WOODLAND",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "BASALT OGRE",
+    "description": "Volcanic. A towering obsidian-skinned titan forged from cooled volcanic rock; body as hard as mountain stone, exudes intense smoldering heat from glowing magma fissures in its joints.",
+    "biome": "THE OGRE EVOLUTION THEORY",
+    "disposition": null,
+    "category": "Titan"
+  },
+  {
+    "name": "BEBELITH",
+    "description": "A spider-like horror with cruel intelligence, hooked limbs, and a hunger for sanctified flesh. Most often found near desecrated shrines, abandoned temples, or places where protective rites failed. Covers its face with a set of grotesque hands; if it looks directly at a victim they are immediately stunned.",
+    "biome": "WOODLAND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "BEHIR",
+    "description": "A blue-scaled serpentine monstrosity with lightning breath.",
+    "biome": "UNDERGROUND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "BLACKRIDGE DREAD-CROC",
+    "description": "A monstrous crocodilian with jagged black dorsal ridges and a snout broader than a man is tall; becomes mud, log, shadow, and shoreline before lunging with violence that seems impossible for something so still.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "BLACKWOOD APEX-URUS",
+    "description": "A massive pursuit-predator bear of dense forest with dark greenish-grey fur and natural markings resembling broken script; moves through heavy timber with surprising quiet. Unlike ordinary bears, it runs prey down.",
+    "biome": "WOODLAND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "BLIGHTED",
+    "description": "Any race corrupted by Dybuk influence, Void contamination, Maelificar shadow, or Apostate resonance.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Fiend"
+  },
+  {
+    "name": "BLINDPLATE MAW",
+    "description": "A pale, eyeless armored cave fish guided by vibration; haunts flooded caverns and strikes at anything that disturbs the water.",
+    "biome": "UNDERGROUND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "BLUEWHORL SAWSPIRAL",
+    "description": "The open-water strain of Sawspiral; slate-blue, follows wounded whales and fishing fleets.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "BLUEWRITHE SERPENT-WHALE",
+    "description": "The common open-sea strain; its calls travel through hulls like distant thunder.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "BOGLURKER",
+    "description": "A submerged predator that stays perfectly still beneath the muck; uses vine-like feelers to ensnare the legs of those crossing the water.",
+    "biome": "MARSH / SWAMP",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "BONE CONSTRUCT",
+    "description": "Deliberately assembled undead created through Magister or Necromancer intervention. Require an active will to maintain animation. Medium threat alone; campaign-level threat in organized groups under intelligent command.",
+    "biome": "UNDEAD",
+    "disposition": null,
+    "category": "Undead"
+  },
+  {
+    "name": "BOUNTY CREW",
+    "description": "Licensed or unlicensed individuals hunting a specific target. Professional, focused. Medium threat.",
+    "biome": "FACTION THREAT GROUPS",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "BRAMBLEHORN TITAN-HOPPER",
+    "description": "A darker, shorter-limbed forest strain of Titan-Hopper; males grow small antler-like brow spurs used in mating clashes.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Titan"
+  },
+  {
+    "name": "BRAMBLEHOUND",
+    "description": "A disorienting woodland stalker that leads prey in endless looping trails, its shifting fur and misleading scent causing travelers to walk willingly into ambushes.",
+    "biome": "WOODLAND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "BRIARDREID",
+    "description": "A massive root-bound predator that drags prey into the deeper timber.",
+    "biome": "WOODLAND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "BRINDLE CATTLE",
+    "description": "A broad-framed semi-wild bovine of the grasslands, domesticated in most provinces but found feral along frontier roads. Their stampedes have derailed at least two Veinrunner freight loads in recorded history.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "BRINDLECALF",
+    "description": "A small sure-footed grazer of meadow and brush, known for its gentle nature.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "BRINECROWN TUSK-WHALE",
+    "description": "The surface-hunting strain; follows whale pods and fishing fleets, attacking where blood and noise gather.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "BRINEPLATE MAW",
+    "description": "A broad dark-blue ocean Ironplate Maw that patrols reefs and shipwrecks.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "BRINESICKLE SCYTHE-SHRIMP",
+    "description": "A blue-grey reef-channel Scythe-Shrimp that follows larger predators to feed on scraps.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "BUMBLEBRUIN",
+    "description": "A fuzzy bee-bear of meadow and grove, known for gathering nectar.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "BURDEN GOLEM",
+    "description": "Weight-aligned construct of lead, black granite, dense iron, and pressure-runes. The ground buckles under it even when it stands still, and enemies nearby feel their own bodies become heavier.",
+    "biome": "GOLEM FAMILY",
+    "disposition": null,
+    "category": "Construct"
+  },
+  {
+    "name": "CAIRNWOLF",
+    "description": "A mountain sentinel that lies motionless among stone piles and cairns, erupting into motion to trigger rockslides and crush isolated prey.",
+    "biome": "MOUNTAIN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "CANIVINE",
+    "description": "A woodland hound wreathed in creeping vines and thorned jaws, known for silent stalking and sudden vicious lunges. Can creep into cities.",
+    "biome": "WOODLAND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CANIVINE (URBAN)",
+    "description": "The same woodland canivine that has followed rail and trade roads into city margins. More cautious than its woodland counterpart. No less dangerous.",
+    "biome": "CITY / URBAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CANOPY APE",
+    "description": "A large, sociable primate of the upper jungle. Not aggressive unless young are threatened. Troops of thirty or more are common. Their alarm calls function as a reliable early warning system.",
+    "biome": "JUNGLE / RAINFOREST",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "CANOPY CONSTRICTOR",
+    "description": "A massive tree-dwelling serpent that drops onto prey from above. Non-venomous. Kills by constriction. Long enough to encircle a draft horse. Prefers large warm-blooded prey and has been known to target sleeping camp groups.",
+    "biome": "JUNGLE / RAINFOREST",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CANOPY RAVEN",
+    "description": "A large glossy-black bird of the upper forest. Highly intelligent, mimics voices with unnerving accuracy, and is believed by some Pa'morph Kra'ark to be a distant cousin. Considered a trickster omen.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "CANYON HAWK",
+    "description": "A large territorial raptor of the badlands. Attacks anything that enters its nesting zone without discrimination. Nests are almost impossible to spot from below. A serious hazard to solo travelers.",
+    "biome": "BADLANDS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CAP RAUK",
+    "description": "Fungal Forest. A mushroom-plumed fungal rauk that slips soundlessly through dim groves and cavern roots; often taken as an omen of damp rot and hidden growth.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "CARAGAR",
+    "description": "Chaotic Evil Fire Wyrm of Lilith’iel.",
+    "biome": "GREAT DRAGONS",
+    "disposition": null,
+    "category": "Dragon"
+  },
+  {
+    "name": "CARRION KITE",
+    "description": "A large bird of prey that feeds on carrion. Often seen circling above battlefields, waiting for its next meal.",
+    "biome": "CITY / URBAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CARRION WINGED KITE",
+    "description": "A larger variant of the Carrion Kite with broader wings, allowing it to soar higher and cover more ground in search of food. Often arrives at battlefields before standard Carrion Kites and departs last.",
+    "biome": "CITY / URBAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CARRION-SAIL CLOUD-VULTURE",
+    "description": "A vast gas-bladdered battlefield scavenger whose shadow over a road is considered a bad omen by soldiers; its presence in numbers means something has already died nearby or soon will.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CARRIONZELLE",
+    "description": "A wasteland-dwelling, carrion-feeding gazelle-like creature with ragged horns, blackened hooves, and a taste for battlefield remains. Skittish when alone, but dangerous in numbers.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "CAVE BEAR",
+    "description": "A massive bear adapted to mountain cave systems. Hibernates during cold seasons. Much larger than the ashbear. Encounters near cave entrances in early spring are extremely dangerous.",
+    "biome": "MOUNTAIN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CAVE FISH",
+    "description": "Blind, pale fish found in underground waterways. Primary food source in long underground expeditions. Nutritious and surprisingly easy to catch in still water.",
+    "biome": "UNDERGROUND",
+    "disposition": "SMALLER / GAME",
+    "category": "Elemental"
+  },
+  {
+    "name": "CAVE MOTH",
+    "description": "A large pale moth that navigates cavern systems by echolocation. Non-aggressive. Their wing dust causes mild irritation to eyes and airways but is not toxic.",
+    "biome": "CAVERNOUS",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Elemental"
+  },
+  {
+    "name": "CAVERN SPIDER",
+    "description": "A blind cave-adapted spider with a body the size of a large dog. Hunts by vibration. Webs are nearly invisible in darkness and strong enough to hold a struggling human.",
+    "biome": "CAVERNOUS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CAVERNOUS GHOSTCRAB",
+    "description": "A blind, pale ghostcrab that inhabits underground streams and flooded cavern shelves. Navigates by vibration and retreats into cracks too narrow for most predators to follow.",
+    "biome": "UNDERGROUND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Undead"
+  },
+  {
+    "name": "CEDAR OGRE",
+    "description": "Woodland. A towering bark-skinned giant wreathed in living cedar boughs; sentinel of the ancient woods, crushing those who threaten the sanctity of the grove.",
+    "biome": "THE OGRE EVOLUTION THEORY",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "CENTAUR",
+    "description": "A fierce plains hunter whose speed and pride make it dangerous to cross.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CERULEN",
+    "description": "Neutral Sea Dragon of the Azure Tides.",
+    "biome": "GREAT DRAGONS",
+    "disposition": null,
+    "category": "Dragon"
+  },
+  {
+    "name": "CHAINWAKE SERPENT-WHALE",
+    "description": "An island-channel Longwrithe that travels predictable routes; island pilots learn its passages the way farmers learn river floods.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CHRONOVORE",
+    "description": "A time-devouring hunter of the Chronison that consumes stolen years, alternate selves, and forbidden futures.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "CINDER GOLEM",
+    "description": "Fire-aligned construct of kiln-stone, iron ribs, and furnace-glass veins. Body smolders constantly, shedding ember flakes as it moves; damaged plates expose molten heat beneath the frame.",
+    "biome": "GOLEM FAMILY",
+    "disposition": null,
+    "category": "Construct"
+  },
+  {
+    "name": "CITY CROW",
+    "description": "The urban equivalent of the canopy raven. Highly intelligent, adaptable, and present in every major Soterian city. Known to steal small objects. Some individual city crows have been observed following specific people for days, apparently by choice.",
+    "biome": "CITY / URBAN",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "CLAWSTRUTH RAPTOR-STRUTHIO",
+    "description": "A feathered pursuit predator with a retractable killing claw; sprints in terrifying bursts, slashes, retreats, circles, and repeats until prey collapses. Packs can bring down riders and livestock.",
+    "biome": "SAVANNAH",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CLIFF ADDER",
+    "description": "A venomous mountain snake that basks on sun-facing rock faces. Camouflaged against stone. Venom causes rapid cardiac stress in small creatures.",
+    "biome": "MOUNTAIN",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "CLOUDSCYTHE MANTIS",
+    "description": "A high-altitude mantis predator with pale cloud-colored plating and long hooked forelimbs. Clings to cliff faces and mist-wrapped trees, striking from concealment before vanishing into fog.",
+    "biome": "MOUNTAIN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CLOUDWHALE",
+    "description": "A vast, gentle aerial creature that drifts at extreme altitude feeding on atmospheric particulates. Rarely seen clearly. Considered a blessing omen by most Soterian cultures. Their passing is accompanied by a low harmonic resonance that spiritually sensitive individuals can perceive as immense calm. - CLOUDRAY - A large, manta ray-like creature that glides through the sky on broad membranous wings. Feeds on airborne plankton and small birds. Non-aggressive and often seen in groups, their graceful flight is considered a symbol of freedom and tranquility. - FAE CLOUDWHALE - A smaller, more colorful variant of the Cloudwhale, adorned with iridescent patterns on its skin. Known for its playful nature and tendency to interact with other flying creatures, it is often seen as a symbol of joy and whimsy in Soterian folklore.",
+    "biome": "SKY",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Elemental"
+  },
+  {
+    "name": "COBALT RAUK",
+    "description": "Grassland. A blue-plumed plains rauk.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "COGDOG",
+    "description": "A grimforge industrial hound with exposed gears and pistons beneath patchy fur, patrolling rail yards and factories with a clicking, wheezing gait.",
+    "biome": "INDUSTRIAL / VEINRUNNER ERA",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Troll"
+  },
+  {
+    "name": "COMMON FISH",
+    "description": "Perch, carp, and river trout equivalents found in most Soterian waterways. Primary freshwater food source.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "SMALLER / GAME",
+    "category": "Elemental"
+  },
+  {
+    "name": "CORDYCEP HOUND",
+    "description": "A wolf-sized creature overtaken entirely by a parasitic fungal organism. The original animal is dead; the fungus animates the body with surprising tactical coordination. Attacks in silence. Produces spores on death that can begin the same process in living hosts over several days.",
+    "biome": "FUNGAL FOREST",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CRADLECRAG BOULDER-WOMBAT",
+    "description": "A mountain strain of Boulder-Wombat with thicker hide and stone-dusted shoulder plates; often mistaken for fallen boulders during fog.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "CRAG RAUK",
+    "description": "Cavernous. A sharp-beaked ash-colored rauk that dwells in lightless cavern hollows; navigates through densest stalactite forests by emitting a low-frequency hum that echoes off stone.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "CRAG-RUNE APEX-URUS",
+    "description": "A mountain strain of the great Runebear with dark brown or slate fur and heavier forelimbs for climbing broken slopes; notorious for appearing above travelers rather than behind them.",
+    "biome": "MOUNTAIN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CRAGSPOT SKY-NECK",
+    "description": "A colossal cliff-nesting pterosaur with a giraffe-long neck and mottled grey-rust hide; uses its reach to pluck prey from ledges and ruins without committing its full body to danger.",
+    "biome": "MOUNTAIN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CRAGWING RAZORGALE",
+    "description": "A lean mountain pterosaur specialized in knocking prey from ledges rather than carrying them away; nests in sheer cliff cracks and is nearly invisible against stone.",
+    "biome": "MOUNTAIN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CRIMSON RAUK",
+    "description": "Woodland/Highland. A scarlet-plumed highland rauk that rides the wind like an omen, known for its piercing cry and watchful circles above the forest trees.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "CROWNTOOTH TUSK-WHALE",
+    "description": "A predatory whale armed with massive crown-like ivory fangs in both jaws; actively hunts giant squid, lesser whales, sea serpents, and ships that resemble wounded beasts.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CRYOGRE",
+    "description": "Tundra. A massive frost-rimed titan whose skin is a patchwork of permafrost and jagged ice; can freeze the very air with its breath before shattering paralyzed prey with a single earth-shaking blow.",
+    "biome": "THE OGRE EVOLUTION THEORY",
+    "disposition": null,
+    "category": "Titan"
+  },
+  {
+    "name": "CRYPTID",
+    "description": "A skulking woodland creature known for unnatural cunning, sudden violence, and half-glimpsed shapes between the trees.",
+    "biome": "WOODLAND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "CULT ENFORCERS",
+    "description": "Armed operatives of any of Soteria's active cult structures (the Verdant Spiral, the Harrow-adjacent practitioners, the Stonecutter Clan, etc.). True believers are more dangerous than mercenaries. Medium-to-High threat.",
+    "biome": "FACTION THREAT GROUPS",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "DART FROG (SOTERIAN)",
+    "description": "A brilliantly colored small amphibian whose skin secretes a potent contact toxin. Collected by Brunar traders for poison applications. Handling without protection is strongly inadvisable.",
+    "biome": "JUNGLE / RAINFOREST",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "DEEP CRAWLER",
+    "description": "A multi-legged pale predator of the lightless underground. Hunts by vibration detection. Extremely sensitive to sound; loud noises cause disorientation. Produces a faint bioluminescent slime trail. Medium threat in confined tunnels.",
+    "biome": "UNDERGROUND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "DEEP WHALE",
+    "description": "A massive cetacean of the open ocean. Non-aggressive. Their resonance signatures are among the most stable natural phenomena in Soteria. Wyth scholars believe deep whales function as passive anchors for oceanic Veyline stability.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "DEEPPLATE ARMOR-CRAWLER",
+    "description": "A blind, pale-bellied cave strain of Platewyrme with dark-above, chalky-beneath plating; silent on stone and devastating in confined tunnels.",
+    "biome": "UNDERGROUND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Dragon"
+  },
+  {
+    "name": "DEPOT MOUSE",
+    "description": "A clean, surprisingly healthy rodent variant found exclusively in Veinrunner depot grain stores. Has developed immunity to most standard rodent deterrents. The depot workers have largely given up and named several of them.",
+    "biome": "INDUSTRIAL / VEINRUNNER ERA",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "DESERT GHOSTCRAB",
+    "description": "A sand-pale ghostcrab that burrows beneath dune crusts and dry salt flats. Emerges at night to scavenge insects, lizards, and carrion.",
+    "biome": "DESERT",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Undead"
+  },
+  {
+    "name": "DESERT LIZARD",
+    "description": "A common agile lizard of dry regions. Edible. Considered a survival food staple. Some species are mildly venomous.",
+    "biome": "DESERT",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "DESERT TORTOISE",
+    "description": "A slow-moving armored reptile of arid regions. Extremely long-lived. Some individuals are believed to carry resonance impressions from centuries past. Considered sacred in certain Ahnkir traditions. Harming one is considered deeply poor judgment.",
+    "biome": "DESERT",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "DIAMOND RAUK",
+    "description": "Arctic. A crystalline translucent-plumed rauk that refracts the light of the three suns into dazzling prisms; a brilliant yet cold omen above frozen wastes.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "DOCK BIRD",
+    "description": "Common large seabird of port districts. Aggressive around food but not genuinely dangerous. Their alarm calls have alerted more than one dockside guard to intruders.",
+    "biome": "CITY / URBAN",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "DRAEKUL",
+    "description": "A corrupted Drakazir bloodline driven by hoard-lust, bloodfire, ancient tyranny, and draconic supremacy.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Elemental"
+  },
+  {
+    "name": "DRAUGR",
+    "description": "A grave-bound undead or Rootwraught horror associated with burial sites, cold memory, and violent refusal to remain dead. Often found near old barrows, battlefield graves, frozen ruins, and places where the dead were not properly witnessed.",
+    "biome": "UNDEAD",
+    "disposition": null,
+    "category": "Undead"
+  },
+  {
+    "name": "DROWNED",
+    "description": "A specific Echoing undead type found near significant water features where drowning deaths have occurred in numbers. Semi-aquatic. Slower on land. Extremely dangerous in water. Resonance: Echoing.",
+    "biome": "UNDEAD",
+    "disposition": null,
+    "category": "Undead"
+  },
+  {
+    "name": "DRYT",
+    "description": "A shy woodland spirit that tends roots, streams, and wounded trees.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "DUERGAR",
+    "description": "A deep-forge Durinak counterlineage hardened by buried spite, cruel industry, and the black pressure of the underworld.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "DUNECLAW RAPTOR-STRUTHIO",
+    "description": "A pale-feathered desert pursuit predator that hunts at dawn and dusk when shadows make its sprint harder to read.",
+    "biome": "DESERT",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "DUNEFLASH SUNSAIL",
+    "description": "A desert strain of Sunsail Skink with orange, rust, and gold sail markings; buries itself under sand at night and emerges at dawn.",
+    "biome": "EXPANDED / MISCELLANEOUS",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "DUNEHEEL TITAN-HOPPER",
+    "description": "A pale-furred desert strain of Titan-Hopper with wide heat-shedding ears and an efficient stride capable of crossing salt flats that kill horses.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Titan"
+  },
+  {
+    "name": "DUNESTRIDE SKY-NECK",
+    "description": "A pale-hide narrow-winged desert pterosaur with a heat-shedding throat pouch; stalks dry washes and ancient roadways waiting for exhausted creatures to slow beneath its shadow.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "DUNEWOLF",
+    "description": "A desert pack hunter whose sand-colored fur and flattened silhouette make it nearly invisible until it erupts from dunes in a storm of teeth and dust.",
+    "biome": "DESERT",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "DUNSHRIKE",
+    "description": "A lean, long-legged plains grazer.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "DUSTMOUND BOULDER-WOMBAT",
+    "description": "A plains strain that digs wide, shallow tunnel networks; disliked by ranchers whose livestock break legs in old burrow roofs, but valued by farmers for soil-turning.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "DUSTRAT",
+    "description": "A small scrubland rodent with quick paws and sharp instincts; known for burrowing beneath dry earth.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "SMALLER / GAME",
+    "category": "Elemental"
+  },
+  {
+    "name": "DYBUK",
+    "description": "A shadow-born entity of shifting form that feeds on fear, grief, and despair; grows more real and dangerous wherever suffering lingers. Nature: Born from the Void (Tophet). No physical bodies; they require a host. Drawn to individuals in states of spiritual vulnerability: grief, humiliation, envy, failure, obsession, despair, broken oaths, abandoned faith, or lost Veyline alignment. On Nazros their feeding behavior is industrialized (Operation Trust). In Soteria, they operate individually or in small clusters. Conditions increasing manifestation risk: mass grief, betrayal, unresolved trauma, isolation, false Nullite exposure, collapsed faith structures, prolonged silence, abandoned settlements, and corrupted Veylines. Conditions reducing manifestation risk: genuine communal trust, active Sanctus practice, truthful witness, functioning Veylines, emotionally stable populations, and dawn-aligned ritual activity. Feeding: Dybuks feed on live despair — not death itself, but the sustained experience of loss while still alive. A Dybuk will often keep a host functional while harvesting suffering rather than simply killing them. Possession signs: Discoloration of veins, coldness of skin, eyes that reflect light incorrectly, uncharacteristic calm followed by sudden violence. Weaknesses: True spiritual alignment, Sanctus discipline, Caelyn pact-bonds, genuine Nullite, sunlight during Ba'el (Dawn pass). Strengths: Isolation, silence, false Nullite, broken oaths, grieving spaces. Threat Level: Medium solo / High when possessing a powerful or named NPC / Campaign-level when organized. Combat behavior: A Dybuk fights using the host's memories, abilities, and relationships — it will exploit all of them. It targets witnesses and allies first to isolate the party. Avoids direct confrontation with Divine-aligned characters. If the host body is destroyed, the Dybuk is expelled but not destroyed — it seeks a new host immediately. True destruction requires a Caelyn severing the Veyline connection, a Sanctus exorcism, or a binding ritual returning it to Tophet.",
+    "biome": "COSMIC / VOID / ASTRAL",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Fiend"
+  },
+  {
+    "name": "DYBUK-HOST (LATE STAGE)",
+    "description": "When a Dybuk has occupied a host long enough, the host body begins to physically change. Veins blacken visibly. Temperature drops measurably. The host's original personality is effectively consumed. The host cannot be saved through conventional means. Resonance: Void-Tainted. High threat.",
+    "biome": "UNDEAD",
+    "disposition": null,
+    "category": "Fiend"
+  },
+  {
+    "name": "ECHOING DEAD",
+    "description": "A rare form of undead in which the deceased's resonance impression is so strong that it persists as a semi-autonomous presence. Often found at sites of tremendous emotional significance — last stands, executions, places of profound betrayal. They remember who they were, and that memory makes them unpredictable. High threat. Resonance: Echoing.",
+    "biome": "UNDEAD",
+    "disposition": null,
+    "category": "Undead"
+  },
+  {
+    "name": "EMRYS",
+    "description": "Neutral Good Imperial Dragon of Verdelie’re.",
+    "biome": "GREAT DRAGONS",
+    "disposition": null,
+    "category": "Dragon"
+  },
+  {
+    "name": "FAECOLT",
+    "description": "A small enchanted horse of glade and grove, known for its speed and gentle temperament.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "FEN OGRE",
+    "description": "Marsh. A bloated water-logged giant that generates a thick sulfurous miasma from its skin, blinding players while it hunts by vibration.",
+    "biome": "THE OGRE EVOLUTION THEORY",
+    "disposition": null,
+    "category": "Elemental"
+  },
+  {
+    "name": "FERNPUP",
+    "description": "A soft-coated forest pup known for nesting in fernbeds and befriending lost travelers.",
+    "biome": "WOODLAND",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "FERRABORNE",
+    "description": "A hard-bodied Pa’morph opposite shaped by iron, invasive growth, and anti-natural adaptation rather than living animal harmony.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "FERRUGWORATH",
+    "description": "A rust-red gorilla creature that seeks out metal and leaves only corrosion behind. Increasingly seen near Veinrunner rail lines where exposed iron is abundant.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "FERRUGWORATH (RAIL VARIANT)",
+    "description": "The standard Ferrugworath adapted to follow the Veinrunner rail network, attracted by the concentration of exposed iron and steel. Rail variant specimens are larger and more aggressive than plains counterparts. The Veinrunner Authority has an open bounty.",
+    "biome": "INDUSTRIAL / VEINRUNNER ERA",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "FETCH DIREBEAK",
+    "description": "A druidic familiar summon shaped like a large predatory bird, able to appear as crow, raven, hawk, owl, kite, or vulture depending on the druid’s bond. Used for scouting, message-carrying, aerial harassment, and warning calls.",
+    "biome": "DRUIDIC FETCHES",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "FETCH DIREBOAR",
+    "description": "A druidic familiar summon shaped like a heavy tusked boar with dense shoulders and stubborn spirit-force. It charges through brush, breaks weak barricades, and defends its summoner with brutal direct aggression.",
+    "biome": "DRUIDIC FETCHES",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "FETCH DIREDRAKE",
+    "description": "A druidic familiar summon shaped like a small dire drake with rugged scales, clawed limbs, and a low predatory stance. Used for guarding, intimidation, and short-range combat, it fights with snapping jaws and sudden lunges.",
+    "biome": "DRUIDIC FETCHES",
+    "disposition": null,
+    "category": "Dragon"
+  },
+  {
+    "name": "FETCH DIRELIZARD",
+    "description": "A druidic familiar summon shaped like a rugged dire lizard with clawed feet, a thick tail, and alert reptilian senses. It clings to stone, darts through undergrowth, and fights with quick bites, tail sweeps, and stubborn survival instinct. Ogres are believed to be ancient adaptive megafauna shaped directly by environmental resonance pressure. Unlike ordinary creatures, Ogres exhibit terrain mimicry, environmental synchronization, abnormal durability, and ecosystem-level territorial behavior. Some scholars argue Ogres represent \"the same primordial organism repeatedly rewritten by different regions of Soteria.\" OGRE FAMILY — BIOME VARIANTS:",
+    "biome": "DRUIDIC FETCHES",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "FETCH DIREPARD",
+    "description": "A druidic familiar summon shaped like a large predatory cat, ranging from lynxlike to pantherlike depending on the summoner’s region. Silent, agile, and precise, it excels at stalking, ambush, climbing, and striking exposed targets.",
+    "biome": "DRUIDIC FETCHES",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "FETCH DIRERYU",
+    "description": "A druidic familiar summon shaped like a floating serpentine ryū, called from wind, mist, leaf-spirits, or old river resonance. Graceful and watchful, it scouts from above, coils through the air, and lashes at threats with a spectral bite or tail-strike.",
+    "biome": "DRUIDIC FETCHES",
+    "disposition": null,
+    "category": "Elemental"
+  },
+  {
+    "name": "FETCH DIRETOAD",
+    "description": "A druidic familiar summon shaped like an oversized swamp toad with slick hide, springing legs, and a wide gripping mouth. It leaps suddenly, clings to enemies, and can harry foes with croaks, slime, or minor toxic secretions.",
+    "biome": "DRUIDIC FETCHES",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "FETCH DIREWARG",
+    "description": "A druidic familiar summon shaped like a twisted grim-warg with a low body, heavy jaws, and cruel hunting instincts. More aggressive than the Direwolf Fetch, it excels at pursuit, fear tactics, and dragging enemies off balance.",
+    "biome": "DRUIDIC FETCHES",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "FETCH DIREWOLF",
+    "description": "A druidic familiar summon shaped like a larger-than-natural wolf with spirit-bright eyes and bristling fur. Loyal, fast, and tactically aware, it tracks enemies, guards camps, and helps bring down prey through coordinated bites.",
+    "biome": "DRUIDIC FETCHES",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "FIELD CROW",
+    "description": "Common black bird of open country. Highly adaptable, found near settlements, farms, and rail depots. Considered a pest in most agricultural provinces.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "FLAKE RAUK",
+    "description": "Tundra. A pale downy-feathered rauk that blends perfectly into falling snow; a silent omen of approaching frost or a guide for those lost in blizzard white.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "FOG-O-WAR",
+    "description": "A jellyfish-like cicada horror that gathers where fear, smoke, and unresolved violence linger. It manifests as a low crawling fog filled with half-seen limbs, muffled commands, and sudden grasping shapes.",
+    "biome": "BADLANDS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "FOREST ADDER",
+    "description": "A banded venomous snake of the undergrowth. Non-aggressive unless disturbed. Venom causes mild paralysis of the affected limb.",
+    "biome": "WOODLAND",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "FOREST GHOSTCRAB",
+    "description": "A moss-backed ghostcrab found in damp hollows, old wells, and rain-swollen root systems far from the sea. Scribes believe its ancestors followed underground waterways inland and never returned.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Undead"
+  },
+  {
+    "name": "FRESHWATER TURTLE",
+    "description": "Common large turtle of river banks and lake edges. Docile. Edible. Their shells are used in a variety of craft applications.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Elemental"
+  },
+  {
+    "name": "FROSTMANE SPIRALHORN",
+    "description": "A massive tundra-adapted beast with a huge spiral horn that bores into frozen ground and bears a crown of ice crystals after feeding; its charge twists rather than simply impales.",
+    "biome": "MOUNTAIN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "FROSTSHELL GLACIER-TURTLE",
+    "description": "A colossal ancient sea turtle carrying ice, pale barnacles, and frost algae across its shell; sleeping specimens are mistaken for small ice floes in cold seas.",
+    "biome": "ARCTIC",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "FROSTWRAITH",
+    "description": "A spectral ice-veined predator that manifests from killing cold; haunts frozen wastes with a chilling touch and silent predatory hunger for the warmth of the living. Related to but distinct from the Whispering Frostwraith of the Falorn Fjords, which is near-Titan scale.",
+    "biome": "TUNDRA",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Undead"
+  },
+  {
+    "name": "FURBACK EURYPTI",
+    "description": "A broad, many-legged subterranean predator with coarse fur along its plated back and grasping forelimbs adapted for tight tunnels. Waits half-buried in loose stone, then surges forward to seize prey and drag it into narrow cracks.",
+    "biome": "UNDERGROUND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GALE-RIB GOLEM",
+    "description": "Air-aligned construct of light wood, silver wire, sailcloth, and hollow bone. Much of its body is invisible pressure and compressed wind, making its strikes difficult to read.",
+    "biome": "GOLEM FAMILY",
+    "disposition": null,
+    "category": "Undead"
+  },
+  {
+    "name": "GARGOYLE",
+    "description": "A stone-winged city predator that lurks upon rooftops and spires; strikes intruders with sudden claws and brutal silence.",
+    "biome": "CITY / URBAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GASBLOOM CLOUD-VULTURE",
+    "description": "A vast floating scavenger with a gas-filled throat pouch that allows near-wingless drifting over battlefields; releases a rotten flammable belch when startled, strong enough to sicken horses.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GENIE",
+    "description": "A dangerous true wish-being whose bargains bend desire into debt, servitude, elemental punishment, or ruin.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Elemental"
+  },
+  {
+    "name": "GLACIAL GHOSTCRAB",
+    "description": "A translucent ice-shelled crab that nests in cracks beneath glaciers and frozen coastal shelves. Its body is nearly invisible against blue ice, and its claws can numb exposed flesh with prolonged contact.",
+    "biome": "ARCTIC",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Undead"
+  },
+  {
+    "name": "GLASS PHARAOH",
+    "description": "A Titan-Shed construct of fused desert glass and ancient bone that believes itself the ruler of all sand. It \"taxes\" travelers by extracting water and memories.",
+    "biome": "DESERT",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Titan"
+  },
+  {
+    "name": "GLASSWING STEELNEEDLE",
+    "description": "A translucent-winged coastal strain that nests near tide pools; feeds on seabirds, crabs, and stranded fish before turning on larger prey.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GLIMROOT",
+    "description": "A sentient glowing root-system that entangles intruders.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "GLOAMWING",
+    "description": "A large bat with wings that shimmer like the twilight sky. Nocturnal, feeds on insects and small mammals.",
+    "biome": "CITY / URBAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GLOOMWHORL SAWSPIRAL",
+    "description": "A dark, slow, nearly blind deep-sea Sawspiral with pale sensory pits; its tooth-whorl may glow faintly from deep-sea organisms caught between the blades.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GLOW WORM",
+    "description": "A small bioluminescent larva found in cave ceilings in large colonies. Their combined light is sufficient to navigate by. Harvested and used in small lantern capsules by underground workers.",
+    "biome": "UNDERGROUND",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "GLOWCAP",
+    "description": "A soft bioluminescent fungus-creature that gathers in damp groves and cavern roots.",
+    "biome": "FUNGAL FOREST",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "GLOWHORN PALEHIDE",
+    "description": "A subterranean drill-rhino strain with pale skin, poor eyesight, and a faintly bioluminescent horn; when the hornlight appears in a tunnel, the safest path is usually backward.",
+    "biome": "UNDERGROUND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GOBLIN",
+    "description": "Small cunning humanoids known for scavenging, ambush tactics, and crude ingenuity. Goblin tribes dwell in hidden woodland dens, abandoned ruins, tunnel systems, and scrap settlements near older trade roads. Though physically weak individually, they become dangerous in coordinated numbers.",
+    "biome": "SYLVAN GROVE",
+    "disposition": "SMALLER / GAME",
+    "category": "Humanoid"
+  },
+  {
+    "name": "GOLDGRASS GRAVEBEAK",
+    "description": "A towering flightless predator with a sledgehammer beak and a curved killing point; the classic man-killer strain of open savannah, often seen as a dark shape cutting through high grass before the head drops like a smith's hammer.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GOLDPLUME CLAWSTRUTH",
+    "description": "A feathered ostrich-like predator with a retractable killing claw on each foot; hunts in loose packs using dust clouds to confuse prey, fast enough to overtake a horse over short ground.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GOLDSTEP TITAN-HOPPER",
+    "description": "The most common strain of Titan-Hopper, featuring wheat-colored fur and strong migratory instincts. Its herds move like living weather across open country.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "SMALLER / GAME",
+    "category": "Titan"
+  },
+  {
+    "name": "GORJACK",
+    "description": "A brutal grassland hunter that bounds through thorn and reed, notorious for dragging down larger prey with hooked jaws.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GRAFTWRIGHT",
+    "description": "A predatory falsework creature that grafts itself into objects, rooms, and structures, taking the form of what victims expect to find before latching, swallowing, or absorbing them. Often mistaken for chests, doors, shrines, books, tools, wagons, or relics. Older specimens can become part of an entire room.",
+    "biome": "CITY / URBAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GRANULE PACKRAPTOR",
+    "description": "A dust-colored Packraptor with rough pebble-like scales along its spine and shoulders. Often rolls through loose soil to mask its scent before ambushing prey.",
+    "biome": "DESERT",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GRASSLAND ADDER",
+    "description": "A thick-bodied venomous snake that basks on sun-warmed stones and road surfaces. Responsible for more traveler injuries than any predator in the province records.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "GRAVEBEAK HAMMER-BIRD",
+    "description": "A towering flightless predator with a sledgehammer beak and a curved killing point; measures its target before the head drops like a smith's hammer. Nests are shallow ground-scrapes lined with bones, hide scraps, and bright stones.",
+    "biome": "EXPANDED / MISCELLANEOUS",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "GRAVEMASS GOLEM",
+    "description": "Earth-aligned construct of packed clay, stone, root, bone fragments, and buried metal. Moves like a walking hill torn from an old battlefield, reshaping terrain as it advances.",
+    "biome": "GOLEM FAMILY",
+    "disposition": null,
+    "category": "Construct"
+  },
+  {
+    "name": "GREATER DESERT SCORPION",
+    "description": "A man-sized scorpion of rocky desert terrain. Venom causes paralysis within minutes. Hunts at night. During the day they shelter beneath rock overhangs and in ruins; the same places travelers seek shade.",
+    "biome": "DESERT",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GREATER GRAFTWRIGHT",
+    "description": "A more powerful version of the Graftwright with stronger ability to integrate into and control its surroundings. Often found in more complex or elaborate structures.",
+    "biome": "CITY / URBAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GREATER JACK PACKRAPTOR",
+    "description": "A larger and more formidable Jack Packraptor variant with thicker hide, heavier jaws, and dominant pack behavior. Often serves as leader among smaller Jack packs.",
+    "biome": "PACKRAPTOR FAMILY",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "GREATER PACKRAPTOR",
+    "description": "A large alpha-class Packraptor capable of leading mixed packs across plains, scrublands, and badland edges. Heavier frame makes it less agile than smaller variants but far more dangerous once it closes distance. 16. WASTES (CHRONOLITHE & CHEMICAL)",
+    "biome": "BADLANDS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GREENMANE MAWLOAM",
+    "description": "A common woodland strain of Mawloam armored in wiry fur layered with moss, lichen, and burrs; elder specimens may be mistaken for hillocks until their heads lift from undergrowth.",
+    "biome": "WOODLAND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Undead"
+  },
+  {
+    "name": "GREY RAUK",
+    "description": "Badlands. A medium-sized mottled grey-feathered rauk with a heavy dust-coated beak; perches on barren rock within vast parched canyons.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "GREY WOLF (SOTERIAN)",
+    "description": "The common wolf of Soteria's forests and hills. Larger than expected, pack-coordinated, and known to avoid Dybuk-touched territory entirely. Hunters read wolf absence as a spiritual warning. Pack sizes range from four to sixteen.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Fiend"
+  },
+  {
+    "name": "GRID WRAITH",
+    "description": "A Glyphic resonance entity that has formed around a damaged or overloaded Grid conduit node. Manifests as visible electrical discharge with apparent will and targeting behavior. Attacks anything conducting electricity or resonance. Cannot be negotiated with. Disrupted by grounding and genuine Nullite. Resonance: Glyphic.",
+    "biome": "INDUSTRIAL / VEINRUNNER ERA",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Undead"
+  },
+  {
+    "name": "GRIMRITE BEETLE",
+    "description": "A large subterranean insect whose carapace has partially crystallized from generations of grimrite exposure. Mandibles can penetrate standard leather armor. Found in collapsed mine sections and near raw grimrite veins. Resonance: Grimrite-Saturated.",
+    "biome": "UNDERGROUND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GRIMRITE POACHERS",
+    "description": "Illegal grimrite extraction crews. Armed. Paranoid. Willing to use violence to protect their operation. Medium threat.",
+    "biome": "FACTION THREAT GROUPS",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "GRIMRITE WOLF",
+    "description": "A grey wolf pack that has inhabited a mine collapse zone long enough for grimrite saturation to partially crystallize their skeletal structure through their hides. Pack-hunting behavior is unchanged. Their bites can cause minor resonance contamination in open wounds. Resonance: Grimrite-Saturated. Found near the Corren Mountain Mines and the older Durinak extraction sites.",
+    "biome": "INDUSTRIAL / VEINRUNNER ERA",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GRINCOIL",
+    "description": "A brightly marked arboreal serpent with a pale clown-like face, crimson crown-scales, and a wide painted-looking mouth resembling a cruel grin. Coils around trunks and branches, swaying like a performer before striking. Venom causes disorientation, laughter-like spasms, vivid false colors, and eventual paralysis.",
+    "biome": "WOODLAND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GROTHMOGG",
+    "description": "A hulking Othrod war-brute shaped by conquest, hunger, tribal cruelty, and relentless battlefield dominance.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "GROVE PRISM-WING",
+    "description": "A green, gold, and blue forest strain of Prism-Wing whose song mimics woodland birds and running water, making it nearly impossible to locate by ear.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "GROVEKEEPER",
+    "description": "Sylvan Grove. A large, solemn forest bird regarded as a silent overseer of the deep groves, known for its piercing cry and uncanny awareness of disturbances within ancient woodland regions. Repeated Grovekeeper calls are a warning of imbalance, blight, or nearby predatory movement.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "GRYPHON",
+    "description": "A proud winged hunter of cliff and sky, known for keen sight and fierce territorial wrath.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GULLY OGRE",
+    "description": "Jungle. A moss-shrouded giant that lurks in deep ravines and jungle floor depressions, waiting for the Rhinallon to flush prey into its waiting reach.",
+    "biome": "THE OGRE EVOLUTION THEORY",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "GUST RAUK",
+    "description": "Sky. A slender silver-plumed rauk that rides volatile wind currents of the high sky; harbinger of approaching storms or sudden violent gales.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Elemental"
+  },
+  {
+    "name": "GWOWRATH",
+    "description": "A hulking grassland predator of brutal strength and bestial cunning, feared for savage charges, crushing limbs, and wild fury.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "GWYLLION",
+    "description": "A ragged crone appearing as an old woman who misleads travelers with echoing cries, yet may seek hearth and shelter when treated kindly.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Elemental"
+  },
+  {
+    "name": "HAEROBURROW",
+    "description": "A burrowing insectoid predator that tunnels beneath loose soil, rotten roots, or clothing. Can be mistaken for a small plant prickle. Its arrival is often heard before it is seen: a dry scraping beneath the skin. Causes infestations that can last for months before eradicated. Also found in industrial waste zones near processing facilities.",
+    "biome": "UNDERGROUND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "HARROW PRACTITIONERS",
+    "description": "Wielders of blood-adjacent or corruption-adjacent magic. Variable threat depending on training. Some are desperate individuals who made bad decisions. Others are deliberate architects of harm.",
+    "biome": "FACTION THREAT GROUPS",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "HEARTHWOOL SHAGGYSWINE",
+    "description": "Extremely thick white or cream wool, often kept in cold settlements as a living bedwarmer. Its wool sheds in heavy seasonal clumps and is woven into mitts, boot-liners, and infant blankets.",
+    "biome": "EXPANDED / MISCELLANEOUS",
+    "disposition": null,
+    "category": "Elemental"
+  },
+  {
+    "name": "HEIRESS NAGA",
+    "description": "A regal serpentine lure-predator with a humanlike upper body and a great constrictor's tail. Drapes itself across branches, ruined balconies, and river stones like nobility at rest, feigning weakness until prey approaches. Its voice carries a soft commanding resonance that makes victims feel honored before the coils tighten.",
+    "biome": "WOODLAND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "HETH",
+    "description": "Mount of Death; Titan Dracolith.",
+    "biome": "GREAT TITANS",
+    "disposition": null,
+    "category": "Titan"
+  },
+  {
+    "name": "HIDE OGRE",
+    "description": "Badlands. A lean hunched giant draped in a grisly patchwork of cured leathers and trophies; possesses supernatural ability to stitch itself into the environment, remaining invisible until it unfurls its heavy skin-bound club for a killing blow.",
+    "biome": "THE OGRE EVOLUTION THEORY",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "HIGHDRIFT CLOUD-VULTURE",
+    "description": "A high-altitude mountain Cloud-Vulture that rides thin air above glaciers and cliffs, waiting for avalanches, falls, or failed climbs.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "HIGHGLINT PRISM-WING",
+    "description": "A silver, violet, and pale rose mountain strain of Prism-Wing whose feathers shine brightest in thin mountain air and dawn frost.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "HOARFELL MAWLOAM",
+    "description": "A pale, frost-furred northern strain of Mawloam with blue-edged teeth from mineral staining; moves silently through snow and vanishes into blizzard banks. Villages warn children never to approach a snow mound with breath.",
+    "biome": "WOODLAND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "HOLLOW",
+    "description": "A Risen occupied by a minor Void fragment rather than a full Dybuk. More coordinated than standard Risen. Retains basic spatial awareness and primitive targeting. Does not feel pain. Eyes reflect light incorrectly. Resonance: Void-Tainted.",
+    "biome": "UNDEAD",
+    "disposition": null,
+    "category": "Undead"
+  },
+  {
+    "name": "HOLLOW GOLEM",
+    "description": "Void-aligned construct of black stone, dead glass, and negative space. Parts of its body appear missing, yet those absences strike with terrible force.",
+    "biome": "GOLEM FAMILY",
+    "disposition": null,
+    "category": "Undead"
+  },
+  {
+    "name": "HOLLOWBEAR",
+    "description": "An ashbear whose interior has been partially consumed by Draethic resonance from a collapsed Veyline. The cavity in its chest glows faintly in darkness. Attacks driven by pain rather than hunger. Resonance: Draethic.",
+    "biome": "WOODLAND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "HOLLOWJAW MARROWCRUNCHER",
+    "description": "A cave strain of Bone-Cruncher with dark fur, enlarged ears, and a damp echoing call; cave explorers fear its silence more than its cry.",
+    "biome": "UNDERGROUND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "HOMUNCULUS",
+    "description": "A small artificially created entity of uncertain origin, occasionally found operating independently in city environments. Intelligence varies widely. The Wyth have not reached consensus on whether they are creatures, constructs, or something else.",
+    "biome": "CITY / URBAN",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "HORNBILL RAUK",
+    "description": "Savannah. A broad-billed savannah rauk with dark plumage and a harsh cry; often seen as a fierce omen along roads, courts, and caravan trails.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "HUSH",
+    "description": "A radiant woodland spirit seen drifting through deep forest as a quiet guide for the lost, wounded, or worthy. It appears as a small winged humanoid made of soft golden-white light, its body half-formed and weightless, with mothlike or fae-like wings that shimmer like dusted glass. A Hush does not speak aloud; it beckons with gesture, warmth, and the faint pull of calm in the chest. Travelers who follow one often find safe paths, clean water, hidden clearings, or the way out of enchanted woods. To chase, trap, or shout at a Hush is considered ill fortune, for it vanishes from harsh intent and leaves only darkness behind.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Elemental"
+  },
+  {
+    "name": "HYR'DELEAUR",
+    "description": "A small reptilian creature that feeds on dark emotions rather than flesh or plants.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "ICE SEAL",
+    "description": "A large marine mammal of arctic coasts. Docile and curious. Primary food source for arctic communities. Their fat provides fuel, their hide provides waterproofing, and their presence indicates open water nearby.",
+    "biome": "ARCTIC",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Elemental"
+  },
+  {
+    "name": "ICEWRITHE SERPENT-WHALE",
+    "description": "A pale-scarred cold-water massive sea-serpent; surfaces among ice floes and is often mistaken for a moving ice ridge. When Icewrithes pass, smart captains stay ashore.",
+    "biome": "ARCTIC",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Elemental"
+  },
+  {
+    "name": "IFOR",
+    "description": "Lawful Evil Storm Dragon of Zallakan.",
+    "biome": "GREAT DRAGONS",
+    "disposition": null,
+    "category": "Dragon"
+  },
+  {
+    "name": "IJIRIKI",
+    "description": "A large moose-like beast with ornate branching antlers that resemble carved ivory and old rootwork. Generally peaceful, but territorial during rutting season; its antlers are prized in ceremonial carving and dangerous enough to break shields.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "IMP",
+    "description": "A small, sharp-featured creature with clever hands and a shrewd secretive nature; often drawn to hidden things and old bargains.",
+    "biome": "WOODLAND",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "IRON RAT",
+    "description": "A tunnel rat exposed to Grimrite runoff in city sewer systems. Larger than normal. Partially mineral-plated. Pack behavior. Resonance: Grimrite-Saturated.",
+    "biome": "CITY / URBAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "IRONPLATE MAW",
+    "description": "A heavily armored fish with bony skull plating and sharpened jawbone blades instead of teeth; rushes, bites, and rams through dock planks and boat hulls.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "IRONWOOD DEER",
+    "description": "A large stag of the deep forest whose antlers have a faint metallic sheen from grazing near grimrite-adjacent soil. Non-aggressive but capable of dangerous charges when cornered. Primary prey animal for woodland predators.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "ISLEBACK GLACIER-TURTLE",
+    "description": "A legendary Shellglacier Turtle large enough for seabirds to nest on its shell during long migrations.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "ITHACUHS",
+    "description": "A towering shaggy megafaunal beast resembling a fusion of mammoth and bear. Generally passive, but territorial males become violently aggressive during mating periods and drought migration.",
+    "biome": "TUNDRA",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "IVORY PACKRAPTOR",
+    "description": "A pale coldland Packraptor with ivory scales, low posture, and silent pack movement across snow and frozen scrub. Hunting strategy relies on patience, flanking, and driving prey into exhaustion.",
+    "biome": "TUNDRA",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "JACK PACKRAPTOR",
+    "description": "A small, agile pack predator known for coordinated attacks, short bounding leaps, hooked claws, and ferocious mandibles. Though individually manageable, a full pack can bring down prey many times its size through harassment, flanking, and relentless teamwork.",
+    "biome": "PACKRAPTOR FAMILY",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "JADE PACKRAPTOR",
+    "description": "A green-scaled Packraptor adapted to highland mountains, wet passes, and dense vegetation. Uses cover and angled terrain to break prey away from groups.",
+    "biome": "MOUNTAIN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "JADE RAUK",
+    "description": "Jungle/Rainforest. A green-plumed jungle rauk that glides between canopy shadows; seen as an omen where the rainforest stills beneath its passing.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "JEWEL-BACK SUNSAIL SKINK",
+    "description": "Brightly colored with emerald, violet, or red sail patterns. Island children consider spotting one before a voyage to be a sign of good luck.",
+    "biome": "EXPANDED / MISCELLANEOUS",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "JUNGLE RAT",
+    "description": "A large, adaptable rodent found throughout rainforest settlements and river camps. Disease vector. Responsible for several documented supply contamination incidents.",
+    "biome": "JUNGLE / RAINFOREST",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "KHAASTA",
+    "description": "Agile alligator-like reptilian predators with leathery hides; haunt mountainous regions using cunning and pack-hunting tactics to ambush prey along jagged cliffs.",
+    "biome": "MOUNTAIN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "KHELL SCHISMFORM",
+    "description": "A rare Khell expression created when one Khellnid receives conflicting caste signals, producing a divided body, fractured instincts, or unstable allegiance. They do not survive in the hive long as they are culled.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "KHELL UNSET",
+    "description": "A Khellnid that has failed to caste-set and remains in a dangerous transitional larval state, absorbing traits from its surroundings without becoming a stable branch.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "KHELL’XEN",
+    "description": "A nightmare hive-predator Khell caste born from darkness, corpse-hives, toxic chambers, and predatory hosts. Develops black carapaces, climbing limbs, corrosive blood, and a merciless infestation instinct.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "KHELLCHIN",
+    "description": "A crustacean-insectoid Khell labor caste shaped by salt flats, marsh protein, shell-matter, and industrial contamination. Often exploited as workers, refugees, or quarantine populations, but dangerous when cornered.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "KHELLHANAE",
+    "description": "A massive brute Khell caste formed through heavy host mass, blood-fed war pits, and dominance pressure. Known for immense strength, pack hierarchy, trophies, siege violence, and command through brutality.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "KHELLJTA",
+    "description": "A solitary apex-hunter Khell caste formed through predatory host matter and isolation rites. Known for stalking worthy prey, wearing kill-masks, collecting trophies, and treating the hunt as sacred law.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "KHELLNID",
+    "description": "The blind larval root-form of all Khellkind. Pale, hook-mouthed parasites that read host tissue, memory residue, mineral exposure, and environmental pressure before caste-setting into a mature Khell branch.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "KHELLOCH",
+    "description": "A colony-form Khell caste in which many Khellnid bodies mature into coordinated worm-masses capable of occupying armor shells, dead giants, stone hollows, or siege frames.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "KHELLSARII",
+    "description": "A tall honor-bound Khell warrior caste with backward skull crests, split jawplates, raptorlike legs, and a rigid culture of duel-law, scar-honor, and oath-bound martial houses.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "KHELLSKINI",
+    "description": "A four armed Khell salvage caste shaped by machine ruins, Grid residue, metallic nutrient exposure, and wreckfield survival. Known for scavenging, engineering, raiding, and weaponizing broken technology.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "KHELLYUUM",
+    "description": "A rare priestly Khell caste cultivated in sacred nutrient pools, relic chambers, and ritual wombs. Physically delicate but mentally dangerous, serving as prophets, theologians, manipulators, and brood-rulers.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "KILN MASTIFF",
+    "description": "A volcanic brute with smoldering hide and forge-glowing jaws that ignites its surroundings, hunting amid ash flows and leaving trails of blackened glass.",
+    "biome": "VOLCANIC",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "KRAG",
+    "description": "Small, agile, winged creatures with leathery hides that haunt mountainous heights; fierce berserker-like aggression in young males during mating season.",
+    "biome": "MOUNTAIN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "KRUG",
+    "description": "A warped Trink counterlineage of squat tool-users, trap-makers, and spiteful scavenger-crafters with a taste for ruin.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "KRULMAW",
+    "description": "A powerful feline ambusher of tallgrass and brush, known for speed and force.",
+    "biome": "WOODLAND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Humanoid"
+  },
+  {
+    "name": "LAMASUMERA",
+    "description": "A fearsome chimera of the open plains with a lion's body, horned majesty, and a predator's cunning; dreaded for sudden violence and impossible form.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "LARK",
+    "description": "A swift, keen-eyed songbird of field and grove, often trained to carry correspondence across great distances.",
+    "biome": "WOODLAND",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "LEAPER",
+    "description": "A smaller leaping frog with powerful hind legs, fly trap mouth, and a habit of attacking from brush, broken stone, or uneven ground. Usually dangerous in pairs or packs rather than alone.",
+    "biome": "WOODLAND",
+    "disposition": "SMALLER / GAME",
+    "category": "Elemental"
+  },
+  {
+    "name": "LIQUID GRAFTWRIGHT",
+    "description": "A rare and highly dangerous variant of the Graftwright that can take on a semi-liquid form, allowing it to infiltrate even the smallest cracks and crevices. Its attacks are more unpredictable and difficult to defend against.",
+    "biome": "CITY / URBAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "LITHOPHANT",
+    "description": "A massive stone-skinned grazer whose migrations shape trails and clearings.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "LLEWELL",
+    "description": "Chaotic Evil Fire Wyrm of Lilith’iel.",
+    "biome": "GREAT DRAGONS",
+    "disposition": null,
+    "category": "Dragon"
+  },
+  {
+    "name": "LONGSPOT SKY-NECK",
+    "description": "A colossal pterosaur with a giraffe-long neck that browses high leaves and swallows smaller animals whole when opportunity presents; strikes downward from ledges without fully committing its body to danger. Does not chew. Decides.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "LONGWRITHE SERPENT-WHALE",
+    "description": "A sixty-foot whale with serpentine motion; not interested in people, which is the only reason people still cross its waters. A surfacing Longwrithe can capsize small vessels without noticing.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "LYONOL",
+    "description": "A majestic six-legged feline predator with a mane of coarse quill-like fur that bristles with static energy; pounces with the weight of a lion and the shocking speed of a lightning strike.",
+    "biome": "BADLANDS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "LYRWISTAG",
+    "description": "A majestic forest stag with luminous glowing antlers; serves as a silent guardian of Sylvan Grove's deepest secrets.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "MAL’AKH",
+    "description": "A fallen Seraphan counterpart of false light, merciless judgment, and divine authority stripped of compassion.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "MANTICORE",
+    "description": "A proud leonine beast with barbed tail and keen cunning; often found as a fierce but honorable guardian of roads, courts, and caravans.",
+    "biome": "SAVANNAH",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "MARROWJAW BONE-CRUNCHER",
+    "description": "A night-roving scavenger-predator with jaws shaped like iron bolt-cutters; leaves almost no evidence after feeding. A battlefield visited by Marrowjaws may be mistaken for a clean burial ground until one notices the absence of bones.",
+    "biome": "UNDERGROUND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "MARSH CROCODILIAN",
+    "description": "A large armored ambush predator of swamp waterways. Patient, powerful, and capable of explosive speed over short distances. Rolls prey to disorient before dragging under.",
+    "biome": "MARSH / SWAMP",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "MARSH LEECH (GIANT)",
+    "description": "A forearm-length blood-feeding worm that attaches painlessly. Commonly encountered when wading through still water.",
+    "biome": "MARSH / SWAMP",
+    "disposition": "SMALLER / GAME",
+    "category": "Elemental"
+  },
+  {
+    "name": "MARSH TURTLE",
+    "description": "A large freshwater turtle of muddy banks and slow rivers. Docile unless cornered. Their shells are used in Matekwan ceremonial percussion.",
+    "biome": "MARSH / SWAMP",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Elemental"
+  },
+  {
+    "name": "MASSIF OGRE",
+    "description": "Mountain. A colossal crag-fleshed titan whose stone-like skin is indistinguishable from cliff faces; triggers devastating rockfalls before stepping out to crush intruders.",
+    "biome": "THE OGRE EVOLUTION THEORY",
+    "disposition": null,
+    "category": "Titan"
+  },
+  {
+    "name": "MAULWASP",
+    "description": "A colossal winged predator of ridge and wildwood, feared for venom and fury.",
+    "biome": "WOODLAND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "MAWLOAM",
+    "description": "See Woodland entry. // DIREFETCH - Direfetch Fae, Direfetch Fae are stored on the face of a Fetchcoin, which a Direwarden will use to summon them. They are small, winged, and often mischievous creatures that can be used for various purposes, such as scouting, delivering messages, or even minor combat assistance. -",
+    "biome": "EXPANDED / MISCELLANEOUS",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "MEREPLATE MAW",
+    "description": "A smaller but more aggressive lake Ironplate Maw with green-black armor that claims submerged ruins as territory.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "MERESICKLE SHRIMP",
+    "description": "A freshwater lake arthropod with broad greenish sickle-claws; a hazard to fishermen cleaning nets by hand in weedy still water.",
+    "biome": "UNDERGROUND",
+    "disposition": "SMALLER / GAME",
+    "category": "Elemental"
+  },
+  {
+    "name": "MINE RAUK",
+    "description": "Underground. A coal-black sleek-feathered rauk that navigates lightless veins of the earth; used by miners as a living indicator of oxygen levels and impending tunnel collapses.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Elemental"
+  },
+  {
+    "name": "MINOTAUR",
+    "description": "A hulking bull-headed hunter with immense strength, sharp instincts, and a territorial nature.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "MIRE OGRE",
+    "description": "Wastes/Marsh. A massive muck-encrusted giant with waterlogged mossy skin; lurks beneath the surface of the marsh, waiting to drag unsuspecting prey into the suffocating depths of the bog.",
+    "biome": "THE OGRE EVOLUTION THEORY",
+    "disposition": null,
+    "category": "Elemental"
+  },
+  {
+    "name": "MIRRORLAKE SERPENT-SWAN",
+    "description": "The most revered strain, found in clear mountain lakes with silver-appearing feathers at sunrise.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "MISTWOLF",
+    "description": "A marsh and river predator that dissolves into fog between attacks, rising from still water to drag victims under while they are still conscious.",
+    "biome": "MARSH / SWAMP",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "MOLOCHEAN OPERATIVES",
+    "description": "Agents of the Molochean Hand. Covert, patient. Some appear as allies until they are not. Medium-to-High threat. Campaign-level if the party has drawn the Hand's specific attention.",
+    "biome": "FACTION THREAT GROUPS",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "MOLT RAUK",
+    "description": "Volcanic. A heat-resistant soot-feathered rauk that thrives amidst volcanic vents; a grim omen when it circles low over areas where the earth is about to rupture and bleed magma.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Elemental"
+  },
+  {
+    "name": "MOLTEN GHOSTCRAB",
+    "description": "A heat-adapted ghostcrab with a black glass shell veined by dull orange glow. Skitters across cooled lava fields and volcanic shorelines, hiding beneath brittle crust before erupting upward.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Undead"
+  },
+  {
+    "name": "MOONMARROW GOLEM",
+    "description": "Lunar-aligned construct of moonstone, silver dust, ivory, and reflective lacquer. Its form subtly shifts with moonlight, becoming thin, ghostlike, or crowned with pale radiance.",
+    "biome": "GOLEM FAMILY",
+    "disposition": null,
+    "category": "Undead"
+  },
+  {
+    "name": "MOSQUITO HAWK",
+    "description": "A swift aerial predator with the body and talons of a hawk combined with membranous wings and a blood-draining proboscis. Hunts marshes, jungles, and humid lowlands in aggressive feeding swarms.",
+    "biome": "JUNGLE / RAINFOREST",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "MOSSBACK BOULDER-WOMBAT",
+    "description": "A squat, heavily built beast that carries green moss, mushrooms, and seedlings in its fur. Druids sometimes follow them to locate healthy old-growth soil.",
+    "biome": "EXPANDED / MISCELLANEOUS",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "MOSSLING",
+    "description": "A small moss-cloaked woodland creature that scurries through root and stone; known for shy curiosity, nimble root tendrils, and tending forgotten groves.",
+    "biome": "WOODLAND",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "MOTHWOLF",
+    "description": "A silent nocturnal predator with pale dusted fur, moth-like wing structures, and a soft powder-coated thorax. The scales shed from its wings interfere with low-level resonance perception and disorient prey in darkness. Hunts primarily at dusk and beneath dense canopy cover.",
+    "biome": "SYLVAN GROVE",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "MOUNTAIN GHOSTCRAB",
+    "description": "A strange high-altitude crab found in mineral springs, wet cave mouths, and mist-heavy cliffs. Its shell mimics stone and lichen, making it almost impossible to spot until it moves.",
+    "biome": "MOUNTAIN",
+    "disposition": "SMALLER / GAME",
+    "category": "Undead"
+  },
+  {
+    "name": "MOUNTAIN GOAT (SOTERIAN)",
+    "description": "A sure-footed high-altitude grazer capable of navigating terrain that defeats most other creatures. Domesticated variants are used as pack animals in Durinak mountain holds.",
+    "biome": "MOUNTAIN",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "MOUNTAIN HARE",
+    "description": "A white-furred hare of high-altitude terrain. Fast, agile, and a primary food source for mountain predators. Its coloring shifts with the season.",
+    "biome": "MOUNTAIN",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "MUDKING DREAD-CROC",
+    "description": "A river-bend Dread-Croc coated in silt, reeds, and leeches; dominates ferry crossings and vanishes in brown water.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "MUDRAK",
+    "description": "A slippery iridescent amphibian; hard to catch but the primary food source for the marsh's larger aggressive inhabitants.",
+    "biome": "MARSH / SWAMP",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "MURKHARTHOMEL",
+    "description": "A colossal deep-sea cephalobeast with crushing jaws, boned tentacles, and reef-like camouflage; feared for dragging ships into the abyss.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Aberration"
+  },
+  {
+    "name": "MYCID",
+    "description": "A sentient fungal creature of root and spore, known for quiet patience and a shared communal mind. NOTE: The Verdant Spiral cult (Campaign 3) mirrors Mycid communal mind behavior in its Sporebound corrupted citizens.",
+    "biome": "FUNGAL FOREST",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "NÐHÖRH",
+    "description": "The Cursed; Titan Leviathan.",
+    "biome": "GREAT TITANS",
+    "disposition": null,
+    "category": "Titan"
+  },
+  {
+    "name": "NEREIGILL",
+    "description": "A dark Nazari counterlineage tied to drowned trenches, black water, predatory currents, and abyssal hunger.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Elemental"
+  },
+  {
+    "name": "NETTLEKID",
+    "description": "A childlike woodland trickster that never seems to age, known for pranks and fleeting laughter in the trees.",
+    "biome": "WOODLAND",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "NIDH",
+    "description": "The Dreamweaver; Titan Basilisk.",
+    "biome": "GREAT TITANS",
+    "disposition": null,
+    "category": "Titan"
+  },
+  {
+    "name": "NOCRAT",
+    "description": "A nocturnal owl-rat of unusual size and cunning, known for chewing through packs, ration crates, leather straps, and exposed wiring. Swarms are a serious threat to sleeping camps and isolated rail outposts.",
+    "biome": "WOODLAND",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "NOCTARYNN",
+    "description": "A dark, astral-skinned bloodline found across many races and creatures. Noctaryn-born are often unable to speak, leaving them isolated, feared, and easily controlled by stronger factions. Their strength, silence, and violent conditioning have made them prized as hunters, assassins, and shock troops. The Othrod have used them most brutally, leading thousands of Noctaryn into battle against rival clans. //Khell lineages",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Troll"
+  },
+  {
+    "name": "NYX'RAXIS",
+    "description": "A colossal serpentine Void entity formed from living shadow and fractured resonance. Its body appears partially intangible, coiling through darkness like liquid smoke while crimson eyes burn within its shifting silhouette. Associated heavily with Khoneus worship and regions experiencing severe Veyline corruption.",
+    "biome": "COSMIC / VOID / ASTRAL",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Fiend"
+  },
+  {
+    "name": "OAKEN WOODSPIDER",
+    "description": "An arachnid with a wooden body and branch-like legs that blends into forests.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "OGRE",
+    "description": "A massive Terraxian counterform warped into brutal adaptive megafauna, using terrain, strength, and endurance to crush intruders.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "ONI",
+    "description": "A towering Helianth counterform marked by demonic appetite, horned brutality, and predatory delight in fear.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Fiend"
+  },
+  {
+    "name": "OPHIDIAN HAND",
+    "description": "A deeply unsettling serpent-bodied predator ending in two red humanoid palms fused at the wrist. At the center of the palms rests an eye that splits open into a feeding mouth when prey is seized. Believed connected to early Void contamination events or failed Darkweaving experiments.",
+    "biome": "SYLVAN GROVE",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Fiend"
+  },
+  {
+    "name": "ORC RAUK",
+    "description": "Wastes. A medium-sized sleek-feathered rauk with deep moss-green plumage that reflects the damp shadows of ancient forest.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "ORRILLACONDA",
+    "description": "A massive nightmare hybrid featuring the powerful upper torso of a silverback gorilla fused to the immense muscular coils of a titanoboa; can swing through canopy or constrict prey with terrifying speed. - ORILlACONDACHNID - a massive nightmare hybrid featuring the upper torso of a silverback gorilla with five additional arms spawning from it's spine on either side, making it eleven arms and the coil of a terrifying titanboa. The additional arms are covered in a chitinous exoskeleton and end in razor-sharp claws, allowing it to grapple multiple prey simultaneously while constricting with its powerful coils. It is an apex predator of the jungle, feared for its relentless hunting tactics and ability to take down large prey with ease.",
+    "biome": "JUNGLE / RAINFOREST",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Undead"
+  },
+  {
+    "name": "OSSYRENTH",
+    "description": "The Malevolent; Titan Minotaur.",
+    "biome": "GREAT TITANS",
+    "disposition": null,
+    "category": "Titan"
+  },
+  {
+    "name": "OTHRITAUR",
+    "description": "A towering twelve-foot-tall hybrid of a hellmount horse and an orc; muscular armored behemoth that charges through volcanic ash, designed for high-impact shock warfare.",
+    "biome": "VOLCANIC",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Humanoid"
+  },
+  {
+    "name": "OYAMMOTH",
+    "description": "A towering prairie elephant with sweeping tusks and thunderous gait.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Elemental"
+  },
+  {
+    "name": "PAINTED GRAVEBEAK",
+    "description": "A smaller island strain of the hammer-billed flightless predator with bright island plumage; more territorial than mainland strains, especially during nesting season.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "PANOPTES",
+    "description": "The All-Seeing Horror; Titan Beholder.",
+    "biome": "GREAT TITANS",
+    "disposition": null,
+    "category": "Titan"
+  },
+  {
+    "name": "PEAK RAUK",
+    "description": "Mountain. A high-altitude slate-plumed rauk that rides powerful thermals; viewed by climbers as a sentinel marking the safest passage through treacherous heights.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "PEARLHAVEN SERPENT-SWAN",
+    "description": "A pearl-white island strain whose nesting pair is considered a sign that waters are clean and fish will return.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Elemental"
+  },
+  {
+    "name": "PETALMAW",
+    "description": "A large deceptive floral predator whose open jaws resemble layered blossoms. Waits among dense flowers or root-choked groves, releasing a sweet scent before snapping shut on birds, small beasts, or careless hands.",
+    "biome": "WOODLAND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "PIXIE",
+    "description": "Small fey-like woodland entities with luminous wings and mischievous temperaments. While often playful and curious, Pixies possess a manipulative streak and delight in leading travelers astray through illusion, false lights, and altered paths. Their behavior ranges from harmless mockery to dangerous cruelty depending on mood and territory.",
+    "biome": "SYLVAN GROVE",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Fey"
+  },
+  {
+    "name": "PLAINS GIRAFFE (SOTERIAN)",
+    "description": "A towering long-necked grazer of open savannah. Non-aggressive. A kick from an adult is lethal. Herds of twelve to twenty common near watering sources.",
+    "biome": "SAVANNAH",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Elemental"
+  },
+  {
+    "name": "PLAINS HORSE (SOTERIAN)",
+    "description": "The common wild horse of Soteria's open country. Herd-living, fast, and difficult to approach without proper training. Domesticated variants are the primary mount across most of the continent. Feral herds are legally protected in Veridoran territory.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "PLAINS HOUND",
+    "description": "A lean, long-legged dog breed developed by Brunar traders for coursing prey across open ground. Loyal, fast, and poorly suited for cold weather.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "PLAINS VULTURE",
+    "description": "A large carrion bird that circles dying creatures and fresh battlefields. Non-aggressive unless feeding is interrupted. Their presence in numbers reliably indicates recent death within a half-mile radius.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "PLATEWYRME ARMOR-CRAWLER",
+    "description": "A long, many-legged arthropod covered in overlapping plates as hard as worked armor; reactive rather than aggressive, lashing out when disturbed during molting or torchlight exposure. Even dead segments can twitch for hours.",
+    "biome": "UNDERGROUND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Dragon"
+  },
+  {
+    "name": "POLAR STALKER",
+    "description": "A massive white-furred predator of the arctic ice flats. The largest natural land predator in Soteria outside the ogre family. Hunts alone. Extraordinarily patient; will follow prey for days before attacking.",
+    "biome": "ARCTIC",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Humanoid"
+  },
+  {
+    "name": "PRAIRIEHOLLOW",
+    "description": "Grassland. A grass-armored plains guardian that crushes intruders.",
+    "biome": "THE OGRE EVOLUTION THEORY",
+    "disposition": null,
+    "category": "Undead"
+  },
+  {
+    "name": "PRIDE LION (SOTERIAN)",
+    "description": "Larger than natural lions, with a resonance sensitivity that makes them instinctively avoid Dybuk-touched areas. Prides of eight to twelve. Apex predators of open savannah.",
+    "biome": "SAVANNAH",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Fiend"
+  },
+  {
+    "name": "PRISM-WING",
+    "description": "A small feathered saurian with layered feathers that shift color in sunlight; prized in noble aviaries across Soteria, a rare specimen can be worth more than a trained horse. When frightened, erupts into sudden color and sound to confuse predators.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "PROSOPON",
+    "description": "A child-sized masked humanoid horror whose face is never seen directly. Mimics gestures, voices, and expressions stolen from others, often appearing first as someone familiar before the mask's false emotion begins to crack. - PROSPON ACOLYTE - A smaller, more agile version of the Prosopon that serves as a scout and harasser for larger Prosopon. It can mimic voices and gestures but is less convincing than the main Prosopon, making it more likely to be detected before it strikes.",
+    "biome": "UNDEAD",
+    "disposition": "HAUNTED UNDEAD",
+    "category": "Humanoid"
+  },
+  {
+    "name": "PROVINCIAL GUARD",
+    "description": "The legal military authority of a given province or city-state. Heavily armed. Backed by infrastructure. High threat if fully mobilized against the party.",
+    "biome": "FACTION THREAT GROUPS",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "QUAGGA",
+    "description": "A subspecies of plains zebra with distinctive stripes on its front fading into solid chestnut; primary hardy grazer for the great predators of the grasslands.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "RAGWOLD",
+    "description": "A rag-wrapped doll-shaped horror that drags itself through abandoned homes, nurseries, and plague houses. It steals warmth from rooms before attacking, leaving victims stiff, silent, and wrapped in their own torn bedding.",
+    "biome": "UNDEAD",
+    "disposition": "HAUNTED UNDEAD",
+    "category": "Beast"
+  },
+  {
+    "name": "RAIL PIRATES",
+    "description": "Organized criminal groups that target Veinrunner freight. More sophisticated than road brigands — they have inside information and timing knowledge. Medium threat.",
+    "biome": "FACTION THREAT GROUPS",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "RAIL WRAITH",
+    "description": "A Draethic resonance entity that has formed along a section of collapsed or abandoned Veinrunner track where a significant death occurred. Causes disorientation, auditory hallucinations of train sounds, and increasing Dybuk vulnerability in those who linger. Resonance: Draethic.",
+    "biome": "INDUSTRIAL / VEINRUNNER ERA",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Undead"
+  },
+  {
+    "name": "RAVENEIR",
+    "description": "A towering raven-hawk humanoid with layered slate-black feathers, scaled talons, a hooked executioner’s beak, and crescent arm-blades. Raveneirs haunt ruined temples, tomb roads, and old stone gates, standing as silent wardens until trespassers cross too far.",
+    "biome": "UBIQUITOUS / CROSS-BIOME",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "RAZORGALE PTEROSAUR",
+    "description": "A lean blade-fast pterosaur with cartilage-reinforced wings that cut rough wind; hunts by rising high then folding into steep descents. When the sky goes briefly silent, look up.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Humanoid"
+  },
+  {
+    "name": "RAZORPACK WOLF",
+    "description": "A grimrite-saturated wolf whose bones have partially externalized through its hide as jagged mineral spurs. Hunts in packs of three to five. Resonance: Grimrite-Saturated. Found near old mine collapse sites.",
+    "biome": "INDUSTRIAL / VEINRUNNER ERA",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "RECLUSE WISKARI",
+    "description": "Soft blue-beige fur, bright orange markings, enormous black eyes, feather-like antennae between tall bat-like ears.",
+    "biome": "WOODLAND",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "REED HERON",
+    "description": "A tall wading bird of marsh and fen. Non-aggressive. Considered a good omen in Kul'Kal Rakhar territory where their presence indicates clean water nearby.",
+    "biome": "MARSH / SWAMP",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Elemental"
+  },
+  {
+    "name": "REED-SAIL SKINK",
+    "description": "Features blue-green markings and a narrow sail. It dives when threatened and can cling to submerged roots to hide.",
+    "biome": "EXPANDED / MISCELLANEOUS",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "REEDBACK SHAGGYSWINE",
+    "description": "An oily, water-resistant marsh strain of Shaggyswine that forages along riverbanks for shellfish, reeds, and buried eggs. Smells terrible when wet but nearly impossible to chill.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Elemental"
+  },
+  {
+    "name": "REEDCOIL SERPENT-SWAN",
+    "description": "A tan-and-green river strain less shy than lake variants; sometimes follows boats upstream.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "REEDNEEDLE WASP",
+    "description": "A green-black river strain of Steelneedle Wasp; fishermen string bells near docks to detect its wing-hum before it strikes.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "REEF GHOSTCRAB",
+    "description": "A semi-translucent coastal crab that flickers in and out of sight among tide pools, coral shelves, and wreckage-strewn shallows. Ambushes fish, seabirds, and careless hands with sudden snapping claws.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Undead"
+  },
+  {
+    "name": "REEF SHARK (SOTERIAN)",
+    "description": "A large, highly territorial shark of coastal reef systems. Attacks boats and swimmers in its territory. Pack behavior around blood or distress in water.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "REEFSHELL GLACIER-TURTLE",
+    "description": "A Shellglacier Turtle that grows coral gardens and bright anemones; fish shelter around it as though it were a moving reef.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "REEFWATCH SKY-NECK",
+    "description": "A brighter-mottled island Sky-Neck with broad sea-wind wings; nests on white cliffs and feeds on fish, seabirds, crabs, and anything small enough to vanish in one gulp.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "REEFWHEEL SAWSPIRAL",
+    "description": "A patterned short-bodied island Sawspiral that hunts reef shelves and wedges itself into coral gaps after prey.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "REVENANT",
+    "description": "A death-marked being retaining fragments of purpose, anger, memory, or unfinished obligation.",
+    "biome": "UNDEAD",
+    "disposition": null,
+    "category": "Undead"
+  },
+  {
+    "name": "RHIME OGRE",
+    "description": "Arctic. A hulking rime-crusted giant whose flesh is as hard as glacial ice; immense strength and ability to endure the most brutal sub-zero temperatures.",
+    "biome": "THE OGRE EVOLUTION THEORY",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "RHINALLON",
+    "description": "A six-limbed behemoth; four legs for sprinting and charging, two upper arms for grasping and forest-clearing.",
+    "biome": "JUNGLE / RAINFOREST",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "RHINDLE",
+    "description": "A small antlered woodland creature known for skittish movements and uncanny silence.",
+    "biome": "WOODLAND",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "RILIK",
+    "description": "A small cat-like creature known for good luck and fate.",
+    "biome": "WOODLAND",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "RIMEJAW MARROWCRUNCHER",
+    "description": "A thick-furred tundra Bone-Cruncher that caches frozen bones beneath snow and returns to the same buried carcass for months.",
+    "biome": "TUNDRA",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "RIMEWILD",
+    "description": "A pale grassland beast known for swift footing, sharp senses, and a cold wary nature.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "RIMEWING RAZORGALE",
+    "description": "A pale, narrow-bodied arctic pterosaur nearly invisible against winter skies; wing edges carry frost that glitters just before a dive.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "RISEN",
+    "description": "The most common undead. A body reanimated by proximity to a strong Echoing resonance source or Void contamination. No intelligence. No memory. Driven by a residual resonance impression. Found near battlefield sites, mass graves, abandoned settlements, and collapsed Veyline zones. Low-to-Medium threat individually. The problem is scale — they cluster. Resonance: Echoing.",
+    "biome": "UNDEAD",
+    "disposition": null,
+    "category": "Undead"
+  },
+  {
+    "name": "RIVER CRAB",
+    "description": "Common freshwater crustacean. Edible. Pinches. Found under river rocks and along muddy banks.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "SMALLER / GAME",
+    "category": "Elemental"
+  },
+  {
+    "name": "RIVER DOLPHIN",
+    "description": "An intelligent freshwater cetacean of Soteria's major river systems. Known to assist drowning travelers. Some Nazari communities maintain working relationships with river dolphin pods.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Elemental"
+  },
+  {
+    "name": "RIVER OTTER (SOTERIAN)",
+    "description": "Large, playful, and surprisingly territorial. Lutra'v Pa'morph consider them distant kin.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "RIVER PIKE (GIANT)",
+    "description": "An enormous freshwater predatory fish of deep river channels. Large specimens capable of capsizing small boats.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "RIVER SERPENT",
+    "description": "A massive non-venomous constrictor of slow-moving rivers and lake margins. Ambushes from underwater. Lengths of six to twelve feet are common. Campaign-level specimens approaching twenty feet have been reported.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "ROAD BRIGANDS",
+    "description": "Opportunistic criminals operating along trade roads and rail access routes. Lightly armed. Motivated by profit. Will negotiate if cornered and outmatched. Low-to-Medium threat.",
+    "biome": "FACTION THREAT GROUPS",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "ROCKPIP",
+    "description": "A small feathered burrower of the high passes with a hooked beak, digging claws, and dense alpine plumage. It hoards vast stores of dried vegetation in its tunnels and is regarded as a sign of good luck by Durinak miners.",
+    "biome": "MOUNTAIN",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "ROOF CAT",
+    "description": "A lean, semi-feral cat population that maintains itself on Ashendell's rooftops and warehouse districts. Feeds on tunnel rats and dock birds. Considered good luck by dock workers.",
+    "biome": "CITY / URBAN",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "ROOST ROC",
+    "description": "A colossal sky predator feared for its talons and massive beak.",
+    "biome": "WOODLAND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "ROOT ROC",
+    "description": "A large bird-like creature with roots for talons that uproots trees in search of prey.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "ROTA",
+    "description": "Lawful Good Cosmic Omni Dragon; the celestial Omni Dragon whose aurora-like wings span the heavens.",
+    "biome": "GREAT DRAGONS",
+    "disposition": null,
+    "category": "Dragon"
+  },
+  {
+    "name": "SABLE-SAND SPIRALHORN",
+    "description": "A desert drill-rhino with cracked sand-colored hide and a darkened polished horn; charges can collapse old sinkholes beneath itself and everything nearby.",
+    "biome": "DESERT",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "SAFFRONHIDE PACKRAPTOR",
+    "description": "A dry-country Packraptor variant with yellow-orange hide that blends into sunburnt grass and late-season plains. Hunts in loose packs using stillness and sudden bursts of speed.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "SALTJAW MARROWCRUNCHER",
+    "description": "A pale, lean, long-legged desert Bone-Cruncher that follows exhausted caravans and digs up shallow graves after sandstorms.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "SALTMAW DREAD-CROC",
+    "description": "A coastal saltwater Dread-Croc that patrols mangroves, reefs, and harbor mouths; feared more than sharks because it learns boat routes.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "SAND MOUSE",
+    "description": "A small nocturnal rodent of the desert floor. Extremely fast. Primary prey for desert predators. Known to carry water reserves in specialized internal pouches.",
+    "biome": "DESERT",
+    "disposition": "SMALLER / GAME",
+    "category": "Elemental"
+  },
+  {
+    "name": "SAND RAUK",
+    "description": "Desert. A desert-dwelling tawny-plumed rauk that glides over shifting dunes; a silent observer and omen of hidden oases or approaching sandstorms.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Elemental"
+  },
+  {
+    "name": "SAND WYRM",
+    "description": "A massive subterranean predator of deep desert. Detects vibration through sandy ground. Surfaces explosively to engulf prey whole. The Brunar trade routes account for known Sand Wyrm territories in their scheduling. High threat. Campaign-adjacent in large specimens. - DESERT SCORPION - a sand scorpion that is known most for the feathers that can be seen on its stinger tail.",
+    "biome": "DESERT",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Dragon"
+  },
+  {
+    "name": "SANDHIDE GREAT-LURK",
+    "description": "A twenty-foot desert monitor that buries itself beneath loose sand with only nostrils and eyes exposed; venom turns shallow bites into slow disasters.",
+    "biome": "DESERT",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "SAPPHIRESCALE PACKRAPTOR",
+    "description": "A subaquatic Packraptor variant with blue reflective scales that shimmer like moving water. Hunts near reeds, flooded trails, and shallow crossings where prey is slowed by unstable footing.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "SAVANNAH ZEBRA",
+    "description": "A striped herd grazer of open country. Skittish and fast. Primary prey for large savannah predators.",
+    "biome": "SAVANNAH",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "SAWSPIRAL SHARK",
+    "description": "A deep-sea shark with a circular whorl of serrated teeth in the lower jaw like a living saw; evolved to cut armored mollusks but known as a boat-killer that grinds along hulls until the sea comes aboard.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "SCALEBACK LIGER",
+    "description": "A powerful plains predator with leonine frame and scaled hide along its spine; feared for speed, strength, and relentless pursuit.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "SEA SERPENT",
+    "description": "A massive ocean-going serpentine predator. Surfaces rarely. Responsible for numerous ship disappearances in deep water. Distinguished from the Murkharthomel by its lack of tentacles and preference for open-water hunting.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "SEA TURTLE (GIANT)",
+    "description": "A vast, ancient sea turtle. Some specimens are old enough to have developed minor spirit-bound resonance. Considered sacred in coastal Nazari communities. Their shells occasionally serve as temporary islands for shipwrecked sailors.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "SERENWEN",
+    "description": "Lawful Good Glacial Dragon of Paravel.",
+    "biome": "GREAT DRAGONS",
+    "disposition": null,
+    "category": "Dragon"
+  },
+  {
+    "name": "SEWER HORROR",
+    "description": "A pale, eyeless predator adapted to the water systems beneath large Soterian cities. Hunts by sound and chemical sense. Capable of emerging through drain access points. The Ashendell City Authority officially denies their existence.",
+    "biome": "CITY / URBAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "SHADOWMOTE",
+    "description": "A small, shadowy creature that moves in the dark, known for its ability to blend into the background. Attempts to possess the minds of those it attacks.",
+    "biome": "CITY / URBAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "SHARDBACK WOLF",
+    "description": "A badlands and coastal predator with a hide studded in razor-sharp mineral shards that detach on impact, turning every charge into a spray of living shrapnel.",
+    "biome": "BADLANDS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "SHARDBOAR",
+    "description": "A boar with crystalline tusks that can shatter stone.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "SHELL GLACIER-TURTLE",
+    "description": "A sea turtle the size of a small house whose shell grows coral, barnacles, reef plants, or layered ice; a surfacing specimen can overturn fishing boats, a diving one can drag anchors and dock chains into the deep.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "SHORE CROCODILIAN",
+    "description": "A smaller coastal variant of the marsh crocodilian. Known to pursue prey onto dry land for short distances.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "SLEET CUR",
+    "description": "A tundra and arctic hunter whose ice-crusted coat and freezing breath blend into blizzards, wearing down prey with relentless cold and sleet before the final strike.",
+    "biome": "TUNDRA",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "SMILODON",
+    "description": "Saber-toothed apex predators of the tundra. Hooved, enormous, and relentless.",
+    "biome": "TUNDRA",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "SNOW HARE",
+    "description": "A white-furred hare of the tundra. Extremely fast. Primary prey for most tundra predators. Their burrow systems are used by travelers as emergency shelter in blizzards.",
+    "biome": "TUNDRA",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "SOVEREIGN MILITARY",
+    "description": "The armed forces of the Sovereign Kingdom. Professional soldiers with standardized equipment and organized command. High threat.",
+    "biome": "FACTION THREAT GROUPS",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "SPARK MOTH",
+    "description": "A small moth attracted to Grid discharge points and active electrical infrastructure. In large swarms near active Grid nodes their collective wing interference can disrupt sensitive instruments and telegraph equipment.",
+    "biome": "INDUSTRIAL / VEINRUNNER ERA",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "SPHINX",
+    "description": "A cunning lion-bodied guardian of sunslit ruins, known for riddles, patience, and sudden violence. Found wherever ancient ruins exist.",
+    "biome": "UBIQUITOUS / CROSS-BIOME",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "SPHYNX",
+    "description": "A cunning lion-bodied guardian of sunslit ruins, known for riddles, patience, and sudden violence.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "SPIRALHORN DRILL-RHINO",
+    "description": "A colossal grazing beast with a massive spiral horn used to bore into frozen ground, clay banks, root beds, and mineral deposits; charges twist and throw rather than simply impale. Prospectors follow old Spiralhorn trails hoping to find unearthed metals or crystal seams.",
+    "biome": "EXPANDED / MISCELLANEOUS",
+    "disposition": null,
+    "category": "Elemental"
+  },
+  {
+    "name": "SPORE BEETLE",
+    "description": "A slow-moving armored insect that releases defensive spore clouds when threatened. Not dangerous alone. In groups of ten or more the spore concentration causes disorientation and respiratory distress.",
+    "biome": "FUNGAL FOREST",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "SPOREFELL OGRE",
+    "description": "Fungal Forest. A hulking fungal brute that spreads choking spores and rot with every lumbering step.",
+    "biome": "THE OGRE EVOLUTION THEORY",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "SPOREWALKER",
+    "description": "A passive fungal biped that shuffles through spore-heavy groves tending older growth. Not intelligent in any recognizable way but responds to distress signals from the Mycid communal network.",
+    "biome": "FUNGAL FOREST",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "SPRITE",
+    "description": "A cruel lesser Fae that weaponizes beauty, tricks, stolen names, and tiny acts of malice into lasting harm.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Fey"
+  },
+  {
+    "name": "STALACTITE HORROR",
+    "description": "A predator that clings motionless to cave ceilings disguised as natural rock formations. Drops onto prey below. Its grip prevents normal escape once contact is made. Low threat individually, extremely dangerous in groups.",
+    "biome": "CAVERNOUS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "STEELNEEDLE WASP",
+    "description": "An eagle-sized ancient dragonfly with a metallic exoskeleton and a hardened proboscis capable of punching through leather and mail gaps; drawn to heat, blood, standing water, and bright movement. The whining hum is often worse than the strike.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Undead"
+  },
+  {
+    "name": "STEPPE OGRE",
+    "description": "Savannah. A suns-baked nomadic giant with incredible stamina; doesn't sprint but jogs tirelessly until prey collapses from exhaustion and heat.",
+    "biome": "THE OGRE EVOLUTION THEORY",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "STILLMERE DREAD-CROC",
+    "description": "A broader, darker lake Dread-Croc infamous for striking from beneath perfectly calm water in flooded ruins.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "STILLSTONE GOLEM",
+    "description": "Still-aligned construct of cold stone, frost-veined metal, and unmoving dust. The air around it becomes muted and slow, turning motion into effort.",
+    "biome": "GOLEM FAMILY",
+    "disposition": null,
+    "category": "Construct"
+  },
+  {
+    "name": "STONE EAGLE",
+    "description": "A large raptor of the high peaks with talons strong enough to grip sheer rock faces. Non-aggressive toward creatures it cannot carry. Their feathers are valuable trade items.",
+    "biome": "MOUNTAIN",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "STORMHAWK",
+    "description": "A large raptor that hunts during electrical storms, riding lightning-charged updrafts with unusual physical tolerance for electrical discharge. Attacks are preceded by the smell of ozone.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "STORMRIB RAZORGALE",
+    "description": "A dark-membrane tundra pterosaur that hunts before storms; its calls are often mistaken for wind tearing through rigging.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "SUMMIT WARG",
+    "description": "A massive high-peak titan whose howls echo like avalanches, driving prey off cliffs and narrow ledges with cold, calculating pack tactics.",
+    "biome": "MOUNTAIN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Titan"
+  },
+  {
+    "name": "SUMP CRAWLER",
+    "description": "A large pale predator that inhabits the drainage sumps beneath active grimrite processing facilities. Feeds on waste organic material and anything that falls in. Eyeless. Chemically sensitive. Extremely aggressive when its sump is disturbed.",
+    "biome": "INDUSTRIAL / VEINRUNNER ERA",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "SUNBLADDER CLOUD-VULTURE",
+    "description": "A pale-winged desert Cloud-Vulture that follows caravans, knowing drought will eventually choose someone.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "SUNSAIL SKINK",
+    "description": "A small desert and island reptile with a bright fan-shaped sail that flushes with color to signal temperature, stress, courtship, or warning; used by travelers as a living weather sign. A frightened Sunsail sheds musk that ruins clothes for days.",
+    "biome": "EXPANDED / MISCELLANEOUS",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "SUNSBACK ORANGUTAN",
+    "description": "A broad-shouldered grassland ape with suns-warmed fur and immense strength; known for wary intelligence and dominance over scrub and tallgrass.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "SUNWROUGHT GOLEM",
+    "description": "Solar-aligned construct of gold-bronze plates and sun-dial markings. Its core brightens in the presence of deception, corruption, or broken oaths.",
+    "biome": "GOLEM FAMILY",
+    "disposition": null,
+    "category": "Construct"
+  },
+  {
+    "name": "SWAMP RAUK",
+    "description": "Marsh/Swamp. A black-feathered marsh rauk that drifts low over still water and reedbeds; feared as a grim sign by those who know the fen.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Elemental"
+  },
+  {
+    "name": "SWAMP SNAKE",
+    "description": "A semi-aquatic constrictor of shallow fen water. Mildly venomous. Bites cause localized inflammation and minor disorientation.",
+    "biome": "MARSH / SWAMP",
+    "disposition": "SMALLER / GAME",
+    "category": "Elemental"
+  },
+  {
+    "name": "TALLSTRIDE TITAN-HOPPER",
+    "description": "A towering single-toed leaping grazer with the hind strength of a kangaroo and the long watchful face of a deer; when cornered, a kick can cave shields or launch a wolf across a ravine. Nomads follow herds as guides to clean water and stable ground.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Titan"
+  },
+  {
+    "name": "TAWNYROOT SHAGGYSWINE",
+    "description": "Possesses shorter tan wool and stronger legs, making it better suited for open country. Common among caravan farmers and agrarian communities.",
+    "biome": "EXPANDED / MISCELLANEOUS",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "THALORAK",
+    "description": "A towering crystalline giant whose body consists of immense multi-hued mineral formations threaded with natural resonance channels. Slow-moving and seemingly passive. Some cultures believe they are living geological memory-keepers of Soteria itself.",
+    "biome": "CRYSTALLINE / RESONANCE-AFFLICTED",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "THE ALDERMORE GIANT",
+    "description": "See Veldt Ogre entry. Distinguished from ordinary Veldt Ogres by scale and apparent age. Has not moved from its known territory in recorded history. The territory has changed around it three times.",
+    "biome": "NAMED / UNIQUE CREATURES",
+    "disposition": null,
+    "category": "Humanoid"
+  },
+  {
+    "name": "THE GREY ONE",
+    "description": "A smokey grey shoulder-up silhouette bearing the form of a classic bearded wizard beneath a vast old-world hat. His body is half-presence, half-vapor, dissolving into cold mist and pale runic fragments that drift through the air like broken geometry. His face is mostly hidden beneath shadow, beard, and brim, giving him the ancient gravity of a sage who has stepped beyond ordinary mortality. He fuses traditional wizardry with a cold, geometric, Witness-like ethereal presence: silent, architectural, distant, and unnaturally precise. Often encountered in dark cave biomes lit by ghostly fungi or faint subterranean glow, he appears less summoned than discovered, as though the cave itself has exposed a wound between realms. The Grey One's soul is now tied to FUBIN, a realm not yet understood. Whether FUBIN is an afterlife, prison, engine, dream-plane, or unfinished world remains unknown. Since the binding, he no longer exists entirely in one place; his body smokes, fractures, and reforms, while the symbols around him may be pieces of his soul leaking through from that strange realm. Threat Level: Unknown / Campaign-adjacent. Resonance: Echoing, Glyphic, Fubin-Bound.",
+    "biome": "UBIQUITOUS / CROSS-BIOME",
+    "disposition": null,
+    "category": "Undead"
+  },
+  {
+    "name": "THE MURKHARTHOMEL OF THE SUNKEN ROAD",
+    "description": "A specific Murkharthomel that has claimed the underwater channel between two major port cities as its territory. Named in Nazari shipping records as the primary cause of the Sunken Road being considered impassable. Campaign-level threat. Several expeditions have attempted to clear it. None have reported back definitively.",
+    "biome": "NAMED / UNIQUE CREATURES",
+    "disposition": null,
+    "category": "Elemental"
+  },
+  {
+    "name": "THE PATIENT ONE",
+    "description": "A Grimrite Wolf of extraordinary age and size whose pack has inhabited the Corren Mountain Mine collapse zone for generations. Has reached a state of crystalline calm. Does not rush. Does not waste movement. Has killed eleven documented expeditions and is believed to be waiting for something specific, though no scholar has survived long enough to determine what.",
+    "biome": "NAMED / UNIQUE CREATURES",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "THE WHISPERING FROSTWRAITH OF THE FALORN FJORDS",
+    "description": "A near-Titan scale Frostwraith that has inhabited the Falorn Fjords for longer than Ködan oral history extends. Does not hunt in the conventional sense — its presence simply makes the region lethal. Titan-adjacent threat. Do not deploy without full campaign context.",
+    "biome": "NAMED / UNIQUE CREATURES",
+    "disposition": null,
+    "category": "Undead"
+  },
+  {
+    "name": "THICKET MOUSE",
+    "description": "An unremarkable small rodent found throughout woodland Soteria. Mentioned because players ask about them constantly and they are genuinely everywhere.",
+    "biome": "WOODLAND",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "THISTLEWING",
+    "description": "A woodland rabbit with winged ears and a penchant for gliding short distances between trees. Often seen flitting between branches.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "THORN FOX",
+    "description": "A lean rust-colored fox with barbed guard hairs along its spine. Hunts small game and occasionally pilfers from camp supplies. Clever enough to unlatch poorly secured packs.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Elemental"
+  },
+  {
+    "name": "THORNBACK BEETLE",
+    "description": "A sturdy heat-tempered insect with a heavily armored spiked shell; can launch razor-sharp thorns like projectiles to impale predators at distance.",
+    "biome": "VOLCANIC",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "THORNNEEDLE WASP",
+    "description": "A bronze and bark-colored forest strain of Steelneedle Wasp that perches on trunks and darts through gaps in dense trees with impossible precision.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "THREADBOUND GOLEM",
+    "description": "Loom-aligned construct woven from bone needles, brass spindles, knotted cord, hair, silk, and fate-scripted thread. It binds, pulls, and repositions enemies as if combat itself were a pattern to be corrected.",
+    "biome": "GOLEM FAMILY",
+    "disposition": null,
+    "category": "Construct"
+  },
+  {
+    "name": "TIDAL WRAITH",
+    "description": "A semi-translucent aquatic predator of coastal tidal zones. Feeds on the distress resonance of drowning victims. Encourages panic rather than attacking directly. Resonance: Void-Tainted.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Undead"
+  },
+  {
+    "name": "TIDEGLASS GOLEM",
+    "description": "Water-aligned construct made from blue-green glass, river stones, coral, and suspended water. Its body bends and reforms like a current, allowing it to absorb blows and force enemies into drowning grips.",
+    "biome": "GOLEM FAMILY",
+    "disposition": null,
+    "category": "Construct"
+  },
+  {
+    "name": "TIDEGLASS PRISM-WING",
+    "description": "A pearl, teal, and coral island strain of Prism-Wing; favored as court gifts but becomes melancholy if kept away from sea wind.",
+    "biome": "SKY",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "TIDEHIDE GREAT-LURK",
+    "description": "A darker, stronger-swimming island monitor that raids nests, beaches, and fishing camps with patient precision; more tolerant of saltwater than inland strains.",
+    "biome": "SUBAQUATIC / OCEAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "TIDEHOOK SCYTHE-SHRIMP",
+    "description": "A red-brown-black mottled Scythe-Shrimp from tide pools and volcanic lagoons; nearly invisible against wet stone.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "TIGER-FLY",
+    "description": "A vibrant insect with tiger-like stripes and razor-sharp mandibles; hunts in swarms capable of stripping a wounded creature to the bone in minutes.",
+    "biome": "JUNGLE / RAINFOREST",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "TOYTAKER",
+    "description": "A small predatory horror associated with missing children, broken toys, and rooms that should not be locked from the inside. Imitates play sounds to lure victims closer before striking from cupboards, crawlspaces, or beneath beds.",
+    "biome": "UNDEAD",
+    "disposition": "HAUNTED UNDEAD",
+    "category": "Beast"
+  },
+  {
+    "name": "TRACKBIRD",
+    "description": "A small bird that has built its ecological niche around the Veinrunner rail network. Nests in signal towers and beneath platform overhangs. Feeds on insects disturbed by train passage. Their sudden absence from a rail station is considered a bad omen by experienced conductors.",
+    "biome": "INDUSTRIAL / VEINRUNNER ERA",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "TRIDENT TAILED LYNX",
+    "description": "A silver-furred lynx that can turn nearly invisible in shadow; its large tail splits into three.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "TROLL OF AETHER",
+    "description": "A pale radiant troll marked by faint star-like scars, luminous veins, and an unsettling nearness to spirit places. It appears near shrines, high ruins, old sanctums, and thin places where the mortal world brushes the divine. Its wounds close in flashes of white-gold light, though profane iron, Nullite, and broken rites can interrupt its restoration.",
+    "biome": "TROLLS",
+    "disposition": null,
+    "category": "Troll"
+  },
+  {
+    "name": "TROLL OF AIR",
+    "description": "A gaunt, long-limbed troll with hollow bones, wind-torn skin, and a chest that bellows like a storm vent. It hunts cliffs, high bridges, broken towers, and mountain passes, using sudden gusts and thunderous roars to unbalance prey. Its regeneration weakens in sealed spaces where the air is still and heavy.",
+    "biome": "TROLLS",
+    "disposition": null,
+    "category": "Undead"
+  },
+  {
+    "name": "TROLL OF EARTH",
+    "description": "A broad stone-backed troll with soil-packed hide, root-tangled limbs, and mineral plates across its shoulders. It sleeps half-buried in hillsides, cairns, old roads, and battlefields, rising when footsteps disturb the ground above it. Its regeneration is slow but extremely difficult to stop, knitting flesh with clay, root, and buried bone.",
+    "biome": "TROLLS",
+    "disposition": null,
+    "category": "Troll"
+  },
+  {
+    "name": "TROLL OF FIRE",
+    "description": "A heat-scarred troll with coal-dark hide, ember-lit wounds, and a furnace glow deep in its throat. It haunts burned forests, forgefields, volcanic roads, and ruined battle camps, feeding on charred meat, hot metal, and anything foolish enough to approach its lair. Its regeneration is aggressive, but cold water, smothering ash, and deprivation of air can slow the healing.",
+    "biome": "TROLLS",
+    "disposition": null,
+    "category": "Troll"
+  },
+  {
+    "name": "TROLL OF LOOM",
+    "description": "A strange troll threaded with cordlike growths, scar-patterns, and webbed strands of pale connective tissue. It is drawn to crossroads, old family holdings, oath-sites, and places where many lives have become entangled. Its regeneration follows patterns; if one wound is repeated exactly, the second cut may reopen the first.",
+    "biome": "TROLLS",
+    "disposition": null,
+    "category": "Troll"
+  },
+  {
+    "name": "TROLL OF LUNAR",
+    "description": "A moon-pale troll with reflective eyes, tide-marked skin, and a habit of appearing where dreams, sleep, and hidden paths overlap. It hunts at night along shorelines, silver marshes, old roads, and ruins touched by moonlight. Its body heals strongest under the moon, but becomes sluggish beneath harsh noon sun.",
+    "biome": "TROLLS",
+    "disposition": null,
+    "category": "Troll"
+  },
+  {
+    "name": "TROLL OF SOLAR",
+    "description": "A golden-eyed troll with cracked sunburned hide, bright scars, and a roar that sounds like stone splitting under heat. It favors open plains, temple roads, dry mesas, and exposed ruins where daylight gives it strength. Its regeneration is fastest in direct sun, but it weakens in deep shade, sealed caves, or prolonged darkness.",
+    "biome": "TROLLS",
+    "disposition": null,
+    "category": "Troll"
+  },
+  {
+    "name": "TROLL OF SPARK",
+    "description": "A restless twitching troll with bright nerves visible under the skin, snapping teeth, and sudden bursts of violent speed. It haunts workshops, storm-struck trees, ruined laboratories, and places where invention or wild life-force has gone wrong. Its regeneration is erratic, sometimes healing instantly and sometimes mutating the wound into something worse.",
+    "biome": "TROLLS",
+    "disposition": null,
+    "category": "Troll"
+  },
+  {
+    "name": "TROLL OF STILL",
+    "description": "A deathly quiet troll with waxen skin, slow breath, and glassy eyes that rarely blink. It waits motionless in frozen ponds, sealed crypts, silent ruins, and abandoned halls, sometimes mistaken for a statue or corpse until prey comes close. Its regeneration is slow but preserves it through starvation, cold, and wounds that should have ended it long ago.",
+    "biome": "TROLLS",
+    "disposition": null,
+    "category": "Troll"
+  },
+  {
+    "name": "TROLL OF VOID",
+    "description": "A black-skinned troll whose outline seems to drink lamplight and silence nearby sound. It haunts abandoned wells, collapsed underroads, dead caverns, and places where fires refuse to stay lit. Its regeneration is unnatural and partial, with missing flesh returning as cold shadow before becoming meat again.",
+    "biome": "TROLLS",
+    "disposition": null,
+    "category": "Troll"
+  },
+  {
+    "name": "TROLL OF WATER",
+    "description": "A slick blue-gray troll adapted to rivers, marshes, flood tunnels, and cold underground lakes. It waits beneath bridges, reeds, and black water, dragging prey under rather than killing quickly. Its flesh closes like wet clay, and old specimens are said to remember every voice they have drowned.",
+    "biome": "TROLLS",
+    "disposition": null,
+    "category": "Troll"
+  },
+  {
+    "name": "TROLL OF WEIGHT",
+    "description": "A massive low-slung troll with dense bones, sagging stone-thick flesh, and footsteps that make loose rock tremble. It dwells in deep valleys, pressure caverns, collapsed forts, and places burdened by old oaths or heavy grief. Its presence makes armor feel heavier and running feel harder, while its own body resists being moved, lifted, or knocked aside.",
+    "biome": "TROLLS",
+    "disposition": null,
+    "category": "Troll"
+  },
+  {
+    "name": "TUNDRA OX",
+    "description": "A massive shaggy-coated bovine of the frozen north. Domesticated by Terraxian and Ködan communities as a draft animal and food source. Their wool is among the warmest natural fiber available in Soteria.",
+    "biome": "TUNDRA",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "TUNDRA WOLF",
+    "description": "Larger than the woodland grey wolf, adapted to extreme cold, with pale grey-white coats. Packs of up to twenty. Extremely coordinated hunters. Known to follow Smilodon kills.",
+    "biome": "TUNDRA",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "TUNNEL MOLE",
+    "description": "A large burrowing creature used by Durinak engineering teams to locate soft soil pockets before drilling. Blind, docile, and extremely difficult to startle. Considered good luck in mining culture.",
+    "biome": "UNDERGROUND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "TUNNEL RAT",
+    "description": "Aggressive, large, disease-carrying rodent of city sewer and cellar systems. Found everywhere. Considered the most common hazard in Ashendell's lower districts.",
+    "biome": "CITY / URBAN",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "TWILLWISP",
+    "description": "A small luminous woodland creature that drifts through brush and branch like a living lantern.",
+    "biome": "WOODLAND",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "TYPHON",
+    "description": "The Destroyer; Titan Demon.",
+    "biome": "GREAT TITANS",
+    "disposition": null,
+    "category": "Titan"
+  },
+  {
+    "name": "UNICORN",
+    "description": "A rare horned creature of untouched glades, tied to calm and purity.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "VALVE-WHALE",
+    "description": "A massive gas-filled cephalopod that drifts through chemical clouds, filtering toxins and occasionally providing \"islands\" of buoyant safety for weary travelers.",
+    "biome": "BADLANDS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "VEINSPINNER",
+    "description": "A mechanized arachnid that weaves intricate webs of glowing threads. Formidable in combat, using its mechanical limbs to strike with precision and power.",
+    "biome": "CITY / URBAN",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "VEK'AR",
+    "description": "A small humanoid figure with glowing eyes found in the Altum (Heaven planes).",
+    "biome": "COSMIC / VOID / ASTRAL",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Humanoid"
+  },
+  {
+    "name": "VELDT OGRE / THE ALDERMORE GIANT",
+    "description": "Grassland/Plains. A massive monolithic titan with weathered stone-like skin cracked by the relentless glare of the three suns; a jagged sentinel over scorched open country.",
+    "biome": "THE OGRE EVOLUTION THEORY",
+    "disposition": null,
+    "category": "Titan"
+  },
+  {
+    "name": "VENOMHIDE GREAT-LURK",
+    "description": "A twenty-foot monitor lizard with venom that turns shallow bites into slow disasters; strikes once, withdraws, and follows wounded prey until venom, infection, and exhaustion do the work. \"The ground is listening\" means a Great-Lurk is nearby.",
+    "biome": "SAVANNAH",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "VESSEL",
+    "description": "A Dybuk-Host in late stage who has been in that state long enough to develop independent goals beyond simple feeding. The original host was someone significant enough that their memory and the Dybuk's hunger have merged into something new. Can pass as human in dim light. Campaign-level threat.",
+    "biome": "NAMED / UNIQUE CREATURES",
+    "disposition": null,
+    "category": "Fiend"
+  },
+  {
+    "name": "VESUVIAN PACKRAPTOR",
+    "description": "A heat-hardened Packraptor variant with dark basalt scales and ember-colored throat markings. Its packs drive prey toward unstable ground, ash clouds, and choking smoke.",
+    "biome": "VOLCANIC",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "VOID RAUK",
+    "description": "Cosmic/Void. A gaunt shadow-slicked rauk with pitch-black plumage that absorbs all light; a soul-chilling omen that circles over those marked for consumption by the Void.",
+    "biome": "THE RAUK THEORY",
+    "disposition": null,
+    "category": "Fiend"
+  },
+  {
+    "name": "VOLTAIC GOLEM",
+    "description": "Spark-aligned construct of copper, iron, glass coils, magnetized plates, and storm-captured lightning. Its movements are sharp, twitching, and violently sudden.",
+    "biome": "GOLEM FAMILY",
+    "disposition": null,
+    "category": "Construct"
+  },
+  {
+    "name": "VORLANTHAR",
+    "description": "A massive beetle-like predator protected by a heavily armored carapace and crushing mandibles capable of splintering timber and bone alike. Drawn toward vibration; erupts violently from beneath loose earth when disturbed.",
+    "biome": "GRASSLAND / PLAINS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "VYRLYPH",
+    "description": "A twisted Tel’ari offshoot whose elegant form has become unstable, backward, and wrong beneath corrupted resonance.",
+    "biome": "HUMANOID THREAT LINEAGES",
+    "disposition": null,
+    "category": "Beast"
+  },
+  {
+    "name": "WASTE HYENA",
+    "description": "A lean, heavily built scavenger adapted to chemical waste zones. Immune to most contact toxins. Hunts in packs and has been known to follow industrial work crews waiting for accidents.",
+    "biome": "BADLANDS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "WASTELAND GAROON",
+    "description": "A heavy-backed scavenger-beast adapted to chemical flats and ruined scrublands. Its cracked hide resists toxins, and it follows the scent of carrion, leaking machinery, and wounded travelers across long distances.",
+    "biome": "BADLANDS",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "WATER STRIDER",
+    "description": "A large aquatic insect that walks on the surface tension of still water. Completely harmless. Their sudden departure from a water surface indicates something large moving beneath.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "SMALLER / GAME",
+    "category": "Elemental"
+  },
+  {
+    "name": "WENDIGO",
+    "description": "A gaunt antlered predator of woods, driven by endless hunger and savage cunning.",
+    "biome": "WOODLAND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "WHIPSICKLE SCYTHE-SHRIMP",
+    "description": "A three-foot ancient arthropod with two spiked whip-like appendages; a single one is dangerous to swimmers, a feeding cluster is a butcher's storm in the water.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Elemental"
+  },
+  {
+    "name": "WHITE-RUNE APEX-URUS",
+    "description": "A pale tundra strain of the great Runebear with black claws and a roar that carries for miles over snow; stalks caribou, mammoth-calves, and unwary sled teams.",
+    "biome": "TUNDRA",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "WHITECOIL SERPENT-SWAN",
+    "description": "A long-necked aquatic reptile clothed in pale feathering along the neck and upper body; peaceful and graceful but strikes with its neck like a whip when nesting. Its presence is considered fortunate in lakeside cultures.",
+    "biome": "RIVER / COASTAL / FRESHWATER",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "WHYLL",
+    "description": "A beautiful woodland lure that sings travelers off the path to be devoured.",
+    "biome": "WOODLAND",
+    "disposition": "AGGRESSIVE / PREDATORY",
+    "category": "Beast"
+  },
+  {
+    "name": "WOODHOLLOW",
+    "description": "Forest. A bark-armored forest guardian that crushes intruders in sacred groves.",
+    "biome": "THE OGRE EVOLUTION THEORY",
+    "disposition": null,
+    "category": "Undead"
+  },
+  {
+    "name": "WOOLSNOUT SHAGGYSWINE",
+    "description": "A stout, wool-covered domestic beast with a soft trunk-like snout for rooting through soil and snow; bonds strongly to households, remembers voices and locked cupboards, and screams loud enough to wake a hamlet when threatened. Common among northern herders and traveling families.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  },
+  {
+    "name": "WRAILL LEAPER",
+    "description": "A cursed frog-like bramble beast that hops through the undergrowth, its croaking calls echoing in the darkness.",
+    "biome": "WOODLAND",
+    "disposition": "SMALLER / GAME",
+    "category": "Beast"
+  },
+  {
+    "name": "WRETCH",
+    "description": "A gaunt, hairless city creature that subsists on refuse and waste heat from industrial districts. Not intelligent. Not aggressive unless cornered. Their presence in large concentrations indicates significant food waste or organic decay below a structure.",
+    "biome": "CITY / URBAN",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Elemental"
+  },
+  {
+    "name": "WUID",
+    "description": "A tiny feral woodland creature known for sudden speed, sharp instincts, and mischievous cruelty.",
+    "biome": "WOODLAND",
+    "disposition": "DOCILE / FRIENDLY",
+    "category": "Beast"
+  }
+]
