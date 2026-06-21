@@ -740,13 +740,6 @@ export default function NPCPanel({ campaignId, sessionId }) {
             <button style={S.closeBtn} onClick={()=>{setSelected(null);setEditingName(false);}}>✕</button>
           </div>
 
-          <div style={{marginBottom:12}}>
-            <PortraitUpload
-              currentUrl={selectedNpc.portrait_url}
-              onUploaded={(url) => updateNpcField(selectedNpc.id, 'portrait_url', url)}
-            />
-          </div>
-
           <div style={{ marginBottom: 12 }}>
             <PortraitUpload
               currentUrl={selectedNpc.portrait_url}
