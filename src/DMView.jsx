@@ -677,7 +677,7 @@ export default function DMView({ user, session, onHome }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingChar, setEditingChar] = useState(null);
-  const [activeCampaignTab, setActiveCampaignTab] = useState(null);
+  const [activeCampaignTab, setActiveCampaignTab] = useState(() => localStorage.getItem('dm_active_campaign') || null);
   const [dbCampaigns, setDbCampaigns] = useState([]);  
   const [campaignSubTab, setCampaignSubTab] = useState('log');
   const [activeSession, setActiveSession] = useState(null);
@@ -1007,7 +1007,7 @@ useEffect(() => {
           <div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
               {dbCampaigns.map(c => (
-                <div key={c.id} onClick={() => setActiveCampaignTab(c.id)} style={{ flex: 1, background: activeCampaignTab === c.id ? COLORS.surface : 'transparent', border: `1px solid ${activeCampaignTab === c.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '8px 4px', cursor: 'pointer', textAlign: 'center' }}>
+                <div key={c.id} onClick={() => { setActiveCampaignTab(c.id); localStorage.setItem('dm_active_campaign', c.id); }} style={{ flex: 1, background: activeCampaignTab === c.id ? COLORS.surface : 'transparent', border: `1px solid ${activeCampaignTab === c.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '8px 4px', cursor: 'pointer', textAlign: 'center' }}>
                   <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: activeCampaignTab === c.id ? COLORS.text : COLORS.dim }}>{c.subtitle}</div>
                 </div>
               ))}
@@ -1258,12 +1258,12 @@ useEffect(() => {
         </DraggablePanel>
       )}
       {showClock && (
-          <DraggablePanel defaultX={120} defaultY={80} onClose={() => setShowClock(false)} title="SOTERIA · World Clock" width={320} accentColor="rgba(201,185,145,0.3)">
-            <div style={{ padding: 14 }}>
-              <SoteriaClockPanel campaignId={activeCampaignTab} />
-            </div>
-          </DraggablePanel>
-        )}
+    <DraggablePanel defaultX={120} defaultY={80} onClose={() => setShowClock(false)} title="SOTERIA · World Clock" width={320} accentColor="rgba(201,185,145,0.3)">
+      <div style={{ padding: 14 }}>
+        <SoteriaClockPanel key={activeCampaignTab} campaignId={activeCampaignTab} />
+      </div>
+    </DraggablePanel>
+  )}
       <FloatToolbar buttons={[
         {
           id: 'astragal',

@@ -172,7 +172,7 @@ export function SoteriaClockDisplay({ clock, compact = false }) {
         {passInfo.name} <span style={{ fontFamily: 'monospace', fontSize: 16, opacity: 0.8 }}>{getClockTime(live.pass, live.fragment)}</span>
       </div>
       <div style={{ fontSize: 12, opacity: 0.75, marginTop: 2 }}>
-        {passInfo.label}  ·  Fragment {live.fragment}/119
+        {passInfo.label}  ·  Fragment {Math.floor(live.fragment)}/119
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
         <SunMoonCycleBar clock={clock} />
@@ -345,8 +345,8 @@ const save = async (patch) => {
     setEditing(true);
   };
 
-  const applyEdit = () => {
-    save({
+  const applyEdit = async () => {
+    await save({
       era: draft.era,
       anui: parseInt(draft.anui) || clock.anui,
       greater_cycle: Math.min(13, Math.max(1, parseInt(draft.greater_cycle) || 1)),
