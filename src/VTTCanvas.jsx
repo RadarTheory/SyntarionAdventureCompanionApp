@@ -208,6 +208,7 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensCh
   const [newTokenLabel, setNewTokenLabel]     = useState('');
   const [newTokenColor, setNewTokenColor]     = useState(TOKEN_COLORS[0]);
   const [selectedTokenId, setSelectedTokenId] = useState(null);
+  const [hoveredToken, setHoveredToken] = useState(null); // { name, clientX, clientY }
   const [showTokenForm, setShowTokenForm]     = useState(false);
   const [pendingClick, setPendingClick]       = useState(null);
   const [mapSearch, setMapSearch]             = useState('');
@@ -337,6 +338,7 @@ useEffect(() => {
           color: tokenData.color,
           characterId: tokenData.characterId || null,
           creatureName: tokenData.creatureName || null,
+          fullName: tokenData.fullName || tokenData.creatureName || tokenData.label || null,
           race: tokenData.race || null,
           x,
           y,
@@ -551,6 +553,18 @@ useEffect(() => {
     const t = transformRef.current;
     setBrushPreview({ sx: px, sy: py, sr: brushRadius * t.scale });
 
+    if (!e.touches) {
+      const canvas = canvasRef.current;
+      let closest = null; let closestDist = 22 / t.scale;
+      tokens.forEach(tok => {
+        const dx = (tok.x - pos.x) * canvas.width;
+        const dy = (tok.y - pos.y) * canvas.height;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < closestDist) { closest = tok; closestDist = d; }
+      });
+      setHoveredToken(closest ? { name: closest.fullName || closest.creatureName || closest.label || '?', clientX, clientY } : null);
+    }
+
     if (paintingRef.current && (tool === 'fog-reveal' || tool === 'fog-hide')) {
       const canvas = canvasRef.current;
       const r = brushRadius / (canvas.width * t.scale);
@@ -560,7 +574,7 @@ useEffect(() => {
     if (tool === 'token-move' && selectedTokenId && (e.buttons === 1 || e.touches)) {
       setTokens(prev => prev.map(t => t.id === selectedTokenId ? { ...t, x: pos.x, y: pos.y } : t));
     }
-  }, [tool, brushRadius, feather, selectedTokenId]);
+  }, [tool, brushRadius, feather, selectedTokenId, tokens]);
 
   const handlePointerUp = useCallback(() => {
     paintingRef.current = false;
@@ -570,6 +584,7 @@ useEffect(() => {
 
   const handlePointerLeave = useCallback(() => {
     setBrushPreview(null);
+    setHoveredToken(null);
   }, []);
 
   useEffect(() => {
@@ -665,6 +680,12 @@ useEffect(() => {
             onTouchStart={handlePointerDown} onTouchMove={handlePointerMove} onTouchEnd={handlePointerUp} />
         )}
       </div>
+
+      {hoveredToken && (
+        <div style={{ position: 'fixed', left: hoveredToken.clientX, top: hoveredToken.clientY - 32, transform: 'translateX(-50%)', background: 'rgba(8,6,4,0.95)', border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '3px 8px', fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.text, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 500 }}>
+          {hoveredToken.name}
+        </div>
+      )}
 
       {showTokenForm && (
         <div style={{ background: COLORS.surface, border: `1px solid #c8a84a44`, borderRadius: 8, padding: '14px 16px' }}>

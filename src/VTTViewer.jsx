@@ -5,6 +5,30 @@ import { COLORS } from './constants';
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 8;
 
+const raceIconCache = {};
+function getRaceIcon(race) {
+  if (!race) return null;
+  const key = race.toLowerCase().replace(/[^a-z]/g, '');
+  if (raceIconCache[key] === undefined) {
+    raceIconCache[key] = null;
+    const img = new Image();
+    img.onload = () => {
+      const off = document.createElement('canvas');
+      off.width = img.width; off.height = img.height;
+      const octx = off.getContext('2d');
+      octx.drawImage(img, 0, 0);
+      const imgData = octx.getImageData(0, 0, off.width, off.height);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) { d[i] = 255; d[i + 1] = 255; d[i + 2] = 255; }
+      octx.putImageData(imgData, 0, 0);
+      raceIconCache[key] = off;
+    };
+    img.onerror = () => { raceIconCache[key] = false; };
+    img.src = `/RaceIcons/${key}.png`;
+  }
+  return raceIconCache[key] || null;
+}
+
 function getMapRect(canvas, mapImg) {
   const W = canvas.width, H = canvas.height;
   const imgRatio = mapImg.width / mapImg.height;
@@ -13,6 +37,19 @@ function getMapRect(canvas, mapImg) {
   if (imgRatio > canvasRatio) { drawW = W; drawH = W / imgRatio; }
   else { drawH = H; drawW = H * imgRatio; }
   return { x: (W - drawW) / 2, y: (H - drawH) / 2, w: drawW, h: drawH };
+}
+
+function isTokenFogged(tok, fogZones) {
+  const hideZones = fogZones.filter(z => z.type === 'hide');
+  const revealZones = fogZones.filter(z => z.type === 'reveal');
+  const inZone = (zone) => {
+    const dx = tok.x - zone.x;
+    const dy = tok.y - zone.y;
+    return Math.sqrt(dx * dx + dy * dy) <= zone.r;
+  };
+  if (hideZones.some(inZone)) return true;
+  if (revealZones.length > 0 && !revealZones.some(inZone)) return true;
+  return false;
 }
 
 function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves, draggingToken, dragPos, userCharId }) {
@@ -90,8 +127,11 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
   }
 
   // Tokens
-  tokens.forEach(tok => {
+   tokens.forEach(tok => {
     const isOwn = String(tok.characterId) === String(userCharId);
+    // Players never see fogged tokens — except their own, which they can always see.
+    if (!isOwn && isTokenFogged(tok, fogZones)) return;
+
     const hasPending = isOwn && myMoves.length > 0;
     const isDragging = draggingToken && tok.id === draggingToken.id;
     if (isDragging) return;
@@ -109,9 +149,15 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
     ctx.lineWidth = isOwn ? 2.5 : 2;
     ctx.stroke();
     ctx.globalAlpha = hasPending ? 0.5 : 1;
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 9px sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
+    const icon = tok.race ? getRaceIcon(tok.race) : null;
+    if (icon) {
+      const iconSize = r * 1.3;
+      ctx.drawImage(icon, tx - iconSize / 2, ty - iconSize / 2, iconSize, iconSize);
+    } else {
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 9px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
+    }
     ctx.restore();
   });
 
@@ -184,6 +230,7 @@ export default function VTTViewer({ campaignId, userChar }) {
   const [draggingToken, setDraggingToken] = useState(null);
   const [dragPos, setDragPos]             = useState(null);
   const [vttSession, setVttSession]       = useState(null);
+  const [hoveredToken, setHoveredToken]   = useState(null); // { name, clientX, clientY }
 
   const transformRef    = useRef(transform);
   const tokensRef       = useRef(tokens);
@@ -372,16 +419,20 @@ export default function VTTViewer({ campaignId, userChar }) {
       setDragPos(pos);
       return;
     }
-    if (!panRef.current.panning) return;
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const scaleRatio = canvas.width / rect.width;
-    const dx = (clientX - panRef.current.lastX) * scaleRatio;
-    const dy = (clientY - panRef.current.lastY) * scaleRatio;
-    panRef.current.lastX = clientX;
-    panRef.current.lastY = clientY;
-    setTransform(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
-  }, [clientToMapCoords]);
+    if (panRef.current.panning) {
+      const canvas = canvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+      const scaleRatio = canvas.width / rect.width;
+      const dx = (clientX - panRef.current.lastX) * scaleRatio;
+      const dy = (clientY - panRef.current.lastY) * scaleRatio;
+      panRef.current.lastX = clientX;
+      panRef.current.lastY = clientY;
+      setTransform(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
+      return;
+    }
+    const hit = hitTestToken(clientX, clientY);
+    setHoveredToken(hit ? { name: hit.fullName || hit.creatureName || hit.label || '?', clientX, clientY } : null);
+  }, [clientToMapCoords, hitTestToken]);
 
   const handleMouseUp = useCallback(() => {
     if (dragRef.current.dragging && dragRef.current.moved && dragRef.current._lastDragPos) {
@@ -391,6 +442,7 @@ export default function VTTViewer({ campaignId, userChar }) {
     dragRef.current = { dragging: false, token: null, startX: 0, startY: 0, moved: false, _lastDragPos: null };
     setDraggingToken(null);
     setDragPos(null);
+    setHoveredToken(null);
     panRef.current.panning = false;
   }, [clientToMapCoords]);
 
@@ -533,6 +585,12 @@ export default function VTTViewer({ campaignId, userChar }) {
             onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} />
         )}
       </div>
+
+      {hoveredToken && (
+        <div style={{ position: 'fixed', left: hoveredToken.clientX, top: hoveredToken.clientY - 32, transform: 'translateX(-50%)', background: 'rgba(8,6,4,0.95)', border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '3px 8px', fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.text, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 500 }}>
+          {hoveredToken.name}
+        </div>
+      )}
 
       {fullscreen && mapLoaded && (
         <div onClick={() => setFullscreen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 500, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
