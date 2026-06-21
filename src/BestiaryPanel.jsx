@@ -81,12 +81,12 @@ function CreatureCard({ creature, isDM, campaignId, onAddedToCombat }) {
   };
 
   return (
-    <div style={{ border: `1px solid ${expanded ? col + '44' : COLORS.border}`, borderRadius: 8, overflow: 'hidden', transition: 'border-color 0.15s' }}>
+    <div style={{ border: `1px solid ${expanded ? col + '44' : COLORS.border}`, borderRadius: 8, overflow: 'hidden', transition: 'border-color 0.15s', flexShrink: 0 }}>
       {/* Header row */}
       <button onClick={() => setExpanded(o => !o)}
         style={{ width: '100%', background: expanded ? `${col}0d` : COLORS.card, border: 'none', padding: '10px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left' }}>
         <div style={{ width: 7, height: 7, borderRadius: '50%', background: col, flexShrink: 0 }} />
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.text, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{creature.name}</div>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.text, flex: 1, overflow: 'hidden' }}>{creature.name}</div>
         <div style={{ fontSize: 7, color: col, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', flexShrink: 0 }}>{creature.category}</div>
         <div style={{ color: COLORS.dim, fontSize: 9, transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>▾</div>
       </button>
@@ -116,41 +116,82 @@ function CreatureCard({ creature, isDM, campaignId, onAddedToCombat }) {
 // MAIN EXPORT — isDM controls what's visible and whether Add to Combat shows
 // ═════════════════════════════════════════════════════════════════════════════
 
+const EMPTY_FORM = { name: '', description: '', biome: '', disposition: '', category: 'Beast', voice_profile: '' };
+
+const CATEGORY_OPTIONS = ['Beast', 'Undead', 'Fiend', 'Dragon', 'Construct', 'Elemental', 'Fey', 'Humanoid', 'Plant', 'Aberration', 'Titan', 'Troll', 'Creature'];
+const DISPOSITION_OPTIONS = ['', 'DOCILE / FRIENDLY', 'AGGRESSIVE / PREDATORY', 'SMALLER / GAME', 'HAUNTED UNDEAD'];
+
 export default function BestiaryPanel({ isDM = false, campaignId, onClose, embedded = false }) {
   const [search, setSearch]         = useState('');
   const [activeCategory, setActiveCat] = useState('all');
   const [creatures, setCreatures]   = useState([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
+  const [showForm, setShowForm]     = useState(false);
+  const [form, setForm]             = useState(EMPTY_FORM);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+
+  const fetchBeasts = async () => {
+    setLoading(true);
+    setError(null);
+
+    // Global bestiary entries (source = 'global') plus any campaign-specific beasts
+    let query = supabase.from('beasts').select('*').order('name', { ascending: true });
+    if (campaignId) {
+      query = query.or(`source.eq.global,campaign_id.eq.${campaignId}`);
+    } else {
+      query = query.eq('source', 'global');
+    }
+
+    const { data, error: fetchError } = await query;
+
+    if (fetchError) {
+      setError(fetchError.message);
+      setCreatures([]);
+    } else {
+      setCreatures(data || []);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
     let cancelled = false;
-    async function fetchBeasts() {
-      setLoading(true);
-      setError(null);
-
-      // Global bestiary entries (source = 'global') plus any campaign-specific beasts
-      let query = supabase.from('beasts').select('*').order('name', { ascending: true });
-      if (campaignId) {
-        query = query.or(`source.eq.global,campaign_id.eq.${campaignId}`);
-      } else {
-        query = query.eq('source', 'global');
-      }
-
-      const { data, error: fetchError } = await query;
+    (async () => {
+      await fetchBeasts();
       if (cancelled) return;
-
-      if (fetchError) {
-        setError(fetchError.message);
-        setCreatures([]);
-      } else {
-        setCreatures(data || []);
-      }
-      setLoading(false);
-    }
-    fetchBeasts();
+    })();
     return () => { cancelled = true; };
   }, [campaignId]);
+
+  const submitNewBeast = async (e) => {
+    e.preventDefault();
+    if (!form.name.trim() || submitting) return;
+    setSubmitting(true);
+    setSubmitError(null);
+
+    const { error: insertError } = await supabase.from('beasts').insert({
+      name: form.name.trim().toUpperCase(),
+      description: form.description.trim() || null,
+      biome: form.biome.trim() || null,
+      disposition: form.disposition || null,
+      category: form.category,
+      voice_profile: form.voice_profile.trim() || null,
+      campaign_id: campaignId ? String(campaignId) : null,
+      source: 'campaign',
+    });
+
+    if (insertError) {
+      setSubmitError(insertError.message);
+      setSubmitting(false);
+      return;
+    }
+
+    setSubmitting(false);
+    setForm(EMPTY_FORM);
+    setShowForm(false);
+    await fetchBeasts();
+  };
 
   const categories = useMemo(() => ['all', ...Array.from(new Set(creatures.map(c => c.category).filter(Boolean))).sort()], [creatures]);
 
@@ -165,9 +206,53 @@ export default function BestiaryPanel({ isDM = false, campaignId, onClose, embed
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       {/* Search + filter */}
       <div style={{ padding: '10px 14px', borderBottom: `1px solid ${COLORS.border}`, flexShrink: 0 }}>
-        <input value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Search creatures…"
-          style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none', boxSizing: 'border-box', marginBottom: 8 }} />
+        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Search creatures…"
+            style={{ flex: 1, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none', boxSizing: 'border-box' }} />
+          {isDM && (
+            <button onClick={() => { setShowForm(s => !s); setSubmitError(null); }}
+              style={{ background: showForm ? `${COLORS.muted}22` : 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '0 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: COLORS.text, letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
+              {showForm ? '✕ Cancel' : '+ New Beast'}
+            </button>
+          )}
+        </div>
+
+        {showForm && (
+          <form onSubmit={submitNewBeast} style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10, padding: 10, border: `1px solid ${COLORS.border}`, borderRadius: 8, background: 'rgba(0,0,0,0.18)' }}>
+            <input required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              placeholder="Name *"
+              style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 9px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
+            <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+              placeholder="Description"
+              rows={3}
+              style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 9px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none', resize: 'vertical' }} />
+            <div style={{ display: 'flex', gap: 6 }}>
+              <input value={form.biome} onChange={e => setForm(f => ({ ...f, biome: e.target.value }))}
+                placeholder="Biome (e.g. WOODLAND)"
+                style={{ flex: 1, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 9px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
+              <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 9px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }}>
+                {CATEGORY_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <select value={form.disposition} onChange={e => setForm(f => ({ ...f, disposition: e.target.value }))}
+              style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 9px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }}>
+              <option value="">No disposition</option>
+              {DISPOSITION_OPTIONS.filter(Boolean).map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+            <textarea value={form.voice_profile} onChange={e => setForm(f => ({ ...f, voice_profile: e.target.value }))}
+              placeholder="Voice profile (tone, vocabulary, verbal tics — used by Scribe for dialogue)"
+              rows={2}
+              style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 9px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none', resize: 'vertical' }} />
+            {submitError && <div style={{ fontSize: 10, color: COLORS.magic || '#e05a5a', fontFamily: 'Georgia, serif' }}>{submitError}</div>}
+            <button type="submit" disabled={submitting || !form.name.trim()}
+              style={{ background: `${COLORS.muted}22`, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 12px', cursor: submitting ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: COLORS.text, letterSpacing: '0.1em' }}>
+              {submitting ? 'Saving…' : 'Save Beast'}
+            </button>
+          </form>
+        )}
+
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
           {categories.map(cat => {
             const col = cat === 'all' ? COLORS.muted : (CATEGORY_COLORS[cat] || COLORS.muted);
