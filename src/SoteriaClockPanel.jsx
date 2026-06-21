@@ -255,7 +255,8 @@ export default function SoteriaClockPanel({ campaignId }) {
       } else if (!activeSession && clock.session_anchor_at) {
         const live = getLiveClock(clock);
         const frozen = { ...live, session_anchor_at: null, updated_at: new Date().toISOString() };
-        await supabase.from('world_clock').update(frozen).eq('id', clock.id);
+        const { id, campaign_id, created_at, ...safeFrozen } = frozen;
+        await supabase.from('world_clock').update(safeFrozen).eq('id', clock.id);
         setClock(frozen);
         logClockEvent('The session ends. World time holds still until the table returns.');
       }
@@ -274,12 +275,23 @@ export default function SoteriaClockPanel({ campaignId }) {
     return () => clearInterval(id);
   }, [clock?.session_anchor_at]);
 
-  const save = async (patch) => {
+const save = async (patch) => {
     if (!clock) return;
     setSaving(true);
     const updated = { ...clock, ...patch, updated_at: new Date().toISOString() };
-    await supabase.from('world_clock').update(updated).eq('id', clock.id);
-    setClock(updated);
+    const { id, campaign_id, created_at, ...safePayload } = updated;
+    const { data, error } = await supabase
+      .from('world_clock')
+      .update(safePayload)
+      .eq('id', clock.id)
+      .select()
+      .single();
+    if (error) {
+      console.error('[WorldClock] save failed:', error);
+      setSaving(false);
+      return;
+    }
+    setClock(data);
     setSaving(false);
   };
 
