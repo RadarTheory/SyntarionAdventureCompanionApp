@@ -28,7 +28,9 @@ function getRaceIcon(race, onReady) {
       const imgData = octx.getImageData(0, 0, off.width, off.height);
       const d = imgData.data;
       for (let i = 0; i < d.length; i += 4) {
-        d[i] = 255; d[i + 1] = 255; d[i + 2] = 255; // force white, keep alpha
+        const luminance = (d[i] + d[i + 1] + d[i + 2]) / 3;
+        d[i] = 255; d[i + 1] = 255; d[i + 2] = 255;
+        d[i + 3] = 255 - luminance; // dark linework becomes opaque white, light background becomes transparent
       }
       octx.putImageData(imgData, 0, 0);
       raceIconCache[key] = off;
@@ -297,7 +299,16 @@ useEffect(() => {
 };
 
   const removeToken = (token) => {
-    setTokens(prev => prev.filter(t => t.id !== token.id));
+    setTokens(prev => {
+      const next = prev.filter(t => t.id !== token.id);
+      if (vttSession?.id) {
+        supabase.from('vtt_sessions')
+          .update({ tokens: next, updated_at: new Date().toISOString() })
+          .eq('id', vttSession.id)
+          .then(({ error }) => { if (error) console.error('Failed to persist token removal:', error); });
+      }
+      return next;
+    });
   };
 
   useEffect(() => { transformRef.current = transform; }, [transform]);
@@ -333,7 +344,7 @@ useEffect(() => {
         const x = tokenData.type === 'player' ? 0.5 : scatter();
         const y = tokenData.type === 'player' ? 0.5 : scatter();
 
-        return [...filtered, {
+        const next = [...filtered, {
           id: uid(),
           type: tokenData.type || 'enemy',
           label: tokenData.label,
@@ -345,9 +356,20 @@ useEffect(() => {
           x,
           y,
         }];
+
+        // Persist immediately — without this, any realtime vtt_sessions
+        // change elsewhere overwrites this token with stale saved data.
+        if (vttSession?.id) {
+          supabase.from('vtt_sessions')
+            .update({ tokens: next, updated_at: new Date().toISOString() })
+            .eq('id', vttSession.id)
+            .then(({ error }) => { if (error) console.error('Failed to persist placed token:', error); });
+        }
+
+        return next;
       });
     });
-  }, [onRegisterPlaceToken]);
+  }, [onRegisterPlaceToken, vttSession]);
 
   // Listen for NPCs pushed from the NPC Tracker — lands at map center, DM drags into place
   useEffect(() => {

@@ -19,7 +19,11 @@ function getRaceIcon(race, onReady) {
       octx.drawImage(img, 0, 0);
       const imgData = octx.getImageData(0, 0, off.width, off.height);
       const d = imgData.data;
-      for (let i = 0; i < d.length; i += 4) { d[i] = 255; d[i + 1] = 255; d[i + 2] = 255; }
+      for (let i = 0; i < d.length; i += 4) {
+        const luminance = (d[i] + d[i + 1] + d[i + 2]) / 3;
+        d[i] = 255; d[i + 1] = 255; d[i + 2] = 255;
+        d[i + 3] = 255 - luminance;
+      }
       octx.putImageData(imgData, 0, 0);
       raceIconCache[key] = off;
       onReady?.();

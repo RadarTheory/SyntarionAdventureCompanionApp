@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import supabase from './lib/supabase';
 import { logSessionEvent, getCheckedInCharacterIds } from './lib/sessionEvents';
 import { ALL_CLASSES } from './constants';
+import PortraitUpload from './PortraitUpload';
 
 const RACE_OPTIONS = {
   Addamar: ['Veridoran', 'Brunar', 'Matekwan'],
@@ -737,6 +738,20 @@ export default function NPCPanel({ campaignId, sessionId }) {
               </span>
             )}
             <button style={S.closeBtn} onClick={()=>{setSelected(null);setEditingName(false);}}>✕</button>
+          </div>
+
+          <div style={{marginBottom:12}}>
+            <PortraitUpload
+              currentUrl={selectedNpc.portrait_url}
+              onUploaded={(url) => updateNpcField(selectedNpc.id, 'portrait_url', url)}
+            />
+          </div>
+
+          <div style={{ marginBottom: 12 }}>
+            <PortraitUpload
+              currentUrl={selectedNpc.portrait_url}
+              onUploaded={(url) => updateNpcField(selectedNpc.id, 'portrait_url', url)}
+            />
           </div>
 
           {confirmingName && (
