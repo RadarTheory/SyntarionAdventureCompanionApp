@@ -713,9 +713,13 @@ export default function DMView({ user, session, onHome }) {
    // Live world clock for the header, scoped to the active campaign tab
 useEffect(() => {
     if (!activeCampaignTab) { setHeaderClock(null); return; }
+    console.log('[ClockHeader] activeCampaignTab:', activeCampaignTab, typeof activeCampaignTab);
 
     supabase.from('world_clock').select('*').eq('campaign_id', String(activeCampaignTab)).maybeSingle()
-      .then(({ data }) => { if (data) setHeaderClock(data); });
+      .then(({ data, error }) => {
+        console.log('[ClockHeader] fetch result:', data, error);
+        if (data) setHeaderClock(data);
+      });
 
     const ch = supabase.channel(`world_clock_dm_${activeCampaignTab}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'world_clock', filter: `campaign_id=eq.${String(activeCampaignTab)}` },
