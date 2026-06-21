@@ -82,7 +82,7 @@ function isTokenFogged(tok, fogZones) {
   return false;
 }
 
-function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, transform, isDM }) {
+function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId, onIconReady }) {
   if (!canvas || !mapImg) return;
   const ctx = canvas.getContext('2d');
   const W = canvas.width;
@@ -144,9 +144,10 @@ fogZones.forEach(zone => {
     const fogged = isTokenFogged(tok, fogZones);
     if (fogged && !isDM) return; // players never see fogged tokens at all
 
+    const isHovered = hoveredTokenId && tok.id === hoveredTokenId;
     const tx = mapRect.x + tok.x * mapRect.w;
 const ty = mapRect.y + tok.y * mapRect.h;
-const r = 14;
+const r = isHovered ? 22 : 14;
     ctx.save();
     if (fogged) ctx.globalAlpha = 0.4; // DM sees fogged tokens dimmed, as a reminder
 
@@ -154,17 +155,17 @@ const r = 14;
     else { ctx.beginPath(); ctx.arc(tx, ty, r, 0, Math.PI * 2); }
     ctx.fillStyle = tok.color || '#4a9edd';
     ctx.fill();
-    ctx.strokeStyle = fogged ? '#e8c84a' : '#fff'; ctx.lineWidth = 2;
+    ctx.strokeStyle = isHovered ? '#e8c84a' : (fogged ? '#e8c84a' : '#fff'); ctx.lineWidth = isHovered ? 3 : 2;
     if (fogged) ctx.setLineDash([3, 2]);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    const icon = tok.race ? getRaceIcon(tok.race, () => {}) : null;
+    const icon = tok.race ? getRaceIcon(tok.race, onIconReady) : null;
     if (icon) {
       const iconSize = r * 1.3;
       ctx.drawImage(icon, tx - iconSize / 2, ty - iconSize / 2, iconSize, iconSize);
     } else {
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 9px sans-serif';
+      ctx.fillStyle = '#fff'; ctx.font = `bold ${isHovered ? 12 : 9}px sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
     }
@@ -208,7 +209,8 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensCh
   const [newTokenLabel, setNewTokenLabel]     = useState('');
   const [newTokenColor, setNewTokenColor]     = useState(TOKEN_COLORS[0]);
   const [selectedTokenId, setSelectedTokenId] = useState(null);
-  const [hoveredToken, setHoveredToken] = useState(null); // { name, clientX, clientY }
+ const [hoveredToken, setHoveredToken] = useState(null); // { id, name, clientX, clientY }
+  const [iconTick, setIconTick] = useState(0);
   const [showTokenForm, setShowTokenForm]     = useState(false);
   const [pendingClick, setPendingClick]       = useState(null);
   const [mapSearch, setMapSearch]             = useState('');
@@ -360,9 +362,11 @@ useEffect(() => {
           id: tokenKey,
           type: 'npc',
           label: (npc.name || 'NPC').slice(0, 6),
+          fullName: npc.name || null,
           color: '#c8a860',
           npc_id: npc.id,
           creatureName: npc.name,
+          race: npc.race || null,
           x: 0.5,
           y: 0.5,
         }];
@@ -429,10 +433,10 @@ useEffect(() => {
     img.src = `/Maps/${encodeURIComponent(mapFilename)}`;
   }, [mapFilename]);
 
- useEffect(() => {
+useEffect(() => {
     if (!mapLoaded) return;
-    drawCanvas({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, brushPreview, tool, transform, isDM });
-  }, [fogZones, tokens, brushPreview, mapLoaded, tool, transform, isDM]);
+    drawCanvas({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId: hoveredToken?.id || null, onIconReady: () => setIconTick(t => t + 1) });
+  }, [fogZones, tokens, brushPreview, mapLoaded, tool, transform, isDM, hoveredToken, iconTick]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -562,7 +566,7 @@ useEffect(() => {
         const d = Math.sqrt(dx * dx + dy * dy);
         if (d < closestDist) { closest = tok; closestDist = d; }
       });
-      setHoveredToken(closest ? { name: closest.fullName || closest.creatureName || closest.label || '?', clientX, clientY } : null);
+      setHoveredToken(closest ? { id: closest.id, name: closest.fullName || closest.creatureName || closest.label || '?', clientX, clientY } : null);
     }
 
     if (paintingRef.current && (tool === 'fog-reveal' || tool === 'fog-hide')) {

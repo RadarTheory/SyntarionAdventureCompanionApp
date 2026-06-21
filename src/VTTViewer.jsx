@@ -6,7 +6,7 @@ const MIN_SCALE = 0.5;
 const MAX_SCALE = 8;
 
 const raceIconCache = {};
-function getRaceIcon(race) {
+function getRaceIcon(race, onReady) {
   if (!race) return null;
   const key = race.toLowerCase().replace(/[^a-z]/g, '');
   if (raceIconCache[key] === undefined) {
@@ -22,6 +22,7 @@ function getRaceIcon(race) {
       for (let i = 0; i < d.length; i += 4) { d[i] = 255; d[i + 1] = 255; d[i + 2] = 255; }
       octx.putImageData(imgData, 0, 0);
       raceIconCache[key] = off;
+      onReady?.();
     };
     img.onerror = () => { raceIconCache[key] = false; };
     img.src = `/RaceIcons/${key}.png`;
@@ -52,7 +53,7 @@ function isTokenFogged(tok, fogZones) {
   return false;
 }
 
-function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves, draggingToken, dragPos, userCharId }) {
+function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves, draggingToken, dragPos, userCharId, hoveredTokenId }) {
   if (!canvas || !mapImg) return;
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
@@ -126,8 +127,8 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
     ctx.restore();
   }
 
-  // Tokens
-   tokens.forEach(tok => {
+ // Tokens
+  tokens.forEach(tok => {
     const isOwn = String(tok.characterId) === String(userCharId);
     // Players never see fogged tokens — except their own, which they can always see.
     if (!isOwn && isTokenFogged(tok, fogZones)) return;
@@ -136,25 +137,26 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
     const isDragging = draggingToken && tok.id === draggingToken.id;
     if (isDragging) return;
 
+    const isHovered = hoveredTokenId && tok.id === hoveredTokenId;
     const tx = mapRect.x + tok.x * mapRect.w;
     const ty = mapRect.y + tok.y * mapRect.h;
-    const r = 14;
+    const r = isHovered ? 22 : 14;
     ctx.save();
     ctx.globalAlpha = hasPending ? 0.4 : 1;
     if (tok.type === 'player') { ctx.beginPath(); ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4); }
     else { ctx.beginPath(); ctx.arc(tx, ty, r, 0, Math.PI * 2); }
     ctx.fillStyle = tok.color || '#e85d4a';
     ctx.fill();
-    ctx.strokeStyle = isOwn ? '#79f5a7' : '#fff';
-    ctx.lineWidth = isOwn ? 2.5 : 2;
+    ctx.strokeStyle = isHovered ? '#e8c84a' : (isOwn ? '#79f5a7' : '#fff');
+    ctx.lineWidth = isHovered ? 3 : (isOwn ? 2.5 : 2);
     ctx.stroke();
     ctx.globalAlpha = hasPending ? 0.5 : 1;
-    const icon = tok.race ? getRaceIcon(tok.race) : null;
+    const icon = tok.race ? getRaceIcon(tok.race, () => setIconTick(t => t + 1)) : null;
     if (icon) {
       const iconSize = r * 1.3;
       ctx.drawImage(icon, tx - iconSize / 2, ty - iconSize / 2, iconSize, iconSize);
     } else {
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 9px sans-serif';
+      ctx.fillStyle = '#fff'; ctx.font = `bold ${isHovered ? 12 : 9}px sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
     }
@@ -230,7 +232,8 @@ export default function VTTViewer({ campaignId, userChar }) {
   const [draggingToken, setDraggingToken] = useState(null);
   const [dragPos, setDragPos]             = useState(null);
   const [vttSession, setVttSession]       = useState(null);
-  const [hoveredToken, setHoveredToken]   = useState(null); // { name, clientX, clientY }
+ const [hoveredToken, setHoveredToken]   = useState(null); // { id, name, clientX, clientY }
+  const [iconTick, setIconTick] = useState(0);
 
   const transformRef    = useRef(transform);
   const tokensRef       = useRef(tokens);
@@ -274,10 +277,10 @@ export default function VTTViewer({ campaignId, userChar }) {
     img.src = `/Maps/${encodeURIComponent(mapFilename)}`;
   }, [mapFilename]);
 
-  useEffect(() => {
+useEffect(() => {
     if (!mapLoaded) return;
-    drawViewer({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, transform, pendingMoves, draggingToken, dragPos, userCharId });
-  }, [fogZones, tokens, mapLoaded, transform, pendingMoves, draggingToken, dragPos, userCharId]);
+    drawViewer({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, transform, pendingMoves, draggingToken, dragPos, userCharId, hoveredTokenId: hoveredToken?.id || null });
+  }, [fogZones, tokens, mapLoaded, transform, pendingMoves, draggingToken, dragPos, userCharId, hoveredToken, iconTick]);
 
   // Wheel zoom
   const handleWheel = useCallback((e) => {
@@ -431,7 +434,7 @@ export default function VTTViewer({ campaignId, userChar }) {
       return;
     }
     const hit = hitTestToken(clientX, clientY);
-    setHoveredToken(hit ? { name: hit.fullName || hit.creatureName || hit.label || '?', clientX, clientY } : null);
+    setHoveredToken(hit ? { id: hit.id, name: hit.fullName || hit.creatureName || hit.label || '?', clientX, clientY } : null);
   }, [clientToMapCoords, hitTestToken]);
 
   const handleMouseUp = useCallback(() => {

@@ -1,6 +1,24 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import supabase from './lib/supabase';
 import { logSessionEvent, getCheckedInCharacterIds } from './lib/sessionEvents';
+import { ALL_CLASSES } from './constants';
+
+const RACE_OPTIONS = {
+  Addamar: ['Veridoran', 'Brunar', 'Matekwan'],
+  "Dúrinak": ['Grimrock', 'Yewhammer', 'Graniteheart'],
+  "Tel'ari": ["Wood Tel'ari", "Dark Tel'ari (Drow)", "Sea Tel'ari (Nereid)"],
+  Othrod: ["Kul'kal Rakhar", 'Grothmogg', 'Telrok', 'Jotunnar'],
+  Terraxian: [],
+  Fynlor: [],
+  Trink: [],
+  "Pa'morph": ['Major', 'Minor', 'Aeon', 'Astral'],
+  Fae: [],
+  Djinn: ['Efreet (Fire)', 'Marid (Water)', 'Djinni (Air)', 'Dao (Earth)'],
+  Helianth: [],
+  Seraphan: [],
+  Drakazir: ['Gold', 'Red', 'Blue', 'Green', 'Black', 'White'],
+  Nazari: [],
+};
 
 const SOTERIA_NPC_CONTEXT = `You are The Scribe, an archival intelligence in Soteria (178 Era of Unity). Generate NPC details for a TTRPG. Be specific, in-world, and creative. Soteria has two axes: Magicka (soul/spirit/mind/body/will/whim/affect/dream) and Ingenium (tech/craft). Respond ONLY with valid JSON, no markdown, no explanation.`;
 
@@ -259,7 +277,7 @@ const S = {
   suggestDismiss:{background:'none',border:'none',color:'rgba(200,130,130,0.5)',cursor:'pointer',fontSize:13,lineHeight:1,padding:'2px 4px'},
 };
 
-const EMPTY_FORM = {name:'',role:'',status:'Active',category:'Uncategorized',group_name:'',faction:'',notes:'',city_id:'unassigned',alignment:'neutral',vitals_max:16,vitals_current:16,stamina_max:16,stamina_current:16,resolve_max:16,resolve_current:16,stats:{soul:8,spirit:8,mind:8,body:8,will:8,whim:8,affect:8,dream:8},conditions:[],tags:[],selected_nodes:[],selected_abilities:{},loot_items:[]};
+const EMPTY_FORM = {name:'',role:'',race:'',race_variant:'',cid:'',status:'Active',category:'Uncategorized',group_name:'',faction:'',notes:'',city_id:'unassigned',alignment:'neutral',vitals_max:16,vitals_current:16,stamina_max:16,stamina_current:16,resolve_max:16,resolve_current:16,stats:{soul:8,spirit:8,mind:8,body:8,will:8,whim:8,affect:8,dream:8},conditions:[],tags:[],selected_nodes:[],selected_abilities:{},loot_items:[]};
 
 function NPCModal({ cities, groups, onSave, onClose }) {
   const [tab, setTab] = useState('identity');
@@ -369,7 +387,8 @@ function NPCModal({ cities, groups, onSave, onClose }) {
     const abilities = Object.entries(form.selected_abilities).flatMap(([nodeKey,abs])=>abs.map(a=>({node:nodeKey,ability:a})));
     const keptLoot = form.loot_items.filter(i=>i._keep);
     const {data,error} = await supabase.from('npcs').insert({
-      id:`npc_${newId()}`,city_id:form.city_id,name:form.name.trim(),role:form.role,status:form.status,
+      id:`npc_${newId()}`,city_id:form.city_id,name:form.name.trim(),role:form.role,
+      race:form.race||null,race_variant:form.race_variant||null,cid:form.cid||null,status:form.status,
       category:form.category||'Uncategorized',group_name:form.group_name||'',faction:form.faction,notes:form.notes,
       conditions:form.conditions,tags:form.tags,alignment:form.alignment,
       vitals_max:form.vitals_max,vitals_current:form.vitals_current,
@@ -414,6 +433,13 @@ function NPCModal({ cities, groups, onSave, onClose }) {
             <div style={{display:'flex',gap:8}}>
               <div style={{...S.field,flex:2}}><label style={S.label}>Role / Title</label><input style={S.fieldInput} value={form.role} onChange={e=>set('role',e.target.value)} placeholder="Role or title…"/></div>
               <div style={{...S.field,flex:1}}><label style={S.label}>Status</label><select style={S.fieldSelect} value={form.status} onChange={e=>set('status',e.target.value)}>{STATUS_OPTIONS.map(s=><option key={s} value={s} style={{background:'#0e0c09'}}>{s}</option>)}</select></div>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <div style={{...S.field,flex:1}}><label style={S.label}>Race</label><select style={S.fieldSelect} value={form.race} onChange={e=>set('race',e.target.value)||set('race_variant','')}><option value="" style={{background:'#0e0c09'}}>— Select race —</option>{Object.keys(RACE_OPTIONS).map(r=><option key={r} value={r} style={{background:'#0e0c09'}}>{r}</option>)}</select></div>
+              {RACE_OPTIONS[form.race]?.length > 0 && (
+                <div style={{...S.field,flex:1}}><label style={S.label}>Variant</label><select style={S.fieldSelect} value={form.race_variant} onChange={e=>set('race_variant',e.target.value)}><option value="" style={{background:'#0e0c09'}}>— None —</option>{RACE_OPTIONS[form.race].map(v=><option key={v} value={v} style={{background:'#0e0c09'}}>{v}</option>)}</select></div>
+              )}
+              <div style={{...S.field,flex:1}}><label style={S.label}>Class</label><select style={S.fieldSelect} value={form.cid} onChange={e=>set('cid',e.target.value)}><option value="" style={{background:'#0e0c09'}}>— Select class —</option>{ALL_CLASSES?.map(c=><option key={c.id} value={c.id} style={{background:'#0e0c09'}}>{c.name}</option>)}</select></div>
             </div>
             <div style={{display:'flex',gap:8}}>
               <div style={{...S.field,flex:1}}><label style={S.label}>City</label><select style={S.fieldSelect} value={form.city_id} onChange={e=>set('city_id',e.target.value)}><option value="unassigned" style={{background:'#0e0c09'}}>Unassigned</option>{cities.map(c=><option key={c.id} value={c.id} style={{background:'#0e0c09'}}>{c.name}{c.region?` — ${c.region}`:''}</option>)}</select></div>
@@ -560,6 +586,9 @@ export default function NPCPanel({ campaignId, sessionId }) {
   const [condPicker,setCondPicker]=useState(null);
   const [condSearch,setCondSearch]=useState('');
   const [metToast,setMetToast]=useState(null);
+  const [editingName,setEditingName]=useState(false);
+  const [nameDraft,setNameDraft]=useState('');
+  const [confirmingName,setConfirmingName]=useState(false);
 
   const loadAll=useCallback(async()=>{
     setLoading(true);
@@ -592,7 +621,7 @@ export default function NPCPanel({ campaignId, sessionId }) {
     <div style={{display:'flex',alignItems:'center',gap:4,flexShrink:0}}>
       <button onClick={e=>{e.stopPropagation();markMet(npc,cityName);}} style={{background:'rgba(184,137,42,0.12)',border:'1px solid rgba(184,137,42,0.3)',borderRadius:3,color:'#e8c040',cursor:'pointer',padding:'2px 6px',fontSize:9}}>⬡</button>
       <button onClick={e=>{e.stopPropagation();window.dispatchEvent(new CustomEvent('hercules:add_npc',{detail:{id:npc.id,name:npc.name,role:npc.role||'',conditions:npc.conditions||[],cityName}}));}} style={{background:'rgba(60,120,200,0.12)',border:'1px solid rgba(60,120,200,0.3)',borderRadius:3,color:'#80a0e0',cursor:'pointer',padding:'2px 6px',fontSize:9}}>⚔</button>
-      <button onClick={e=>{e.stopPropagation();window.dispatchEvent(new CustomEvent('vtt:add_npc_token',{detail:{id:npc.id,name:npc.name}}));}} title="Add to map" style={{background:'rgba(96,200,150,0.12)',border:'1px solid rgba(96,200,150,0.3)',borderRadius:3,color:'#60c896',cursor:'pointer',padding:'2px 6px',fontSize:9}}>⛶</button>
+      <button onClick={e=>{e.stopPropagation();window.dispatchEvent(new CustomEvent('vtt:add_npc_token',{detail:{id:npc.id,name:npc.name,race:npc.race||null}}));}} title="Add to map" style={{background:'rgba(96,200,150,0.12)',border:'1px solid rgba(96,200,150,0.3)',borderRadius:3,color:'#60c896',cursor:'pointer',padding:'2px 6px',fontSize:9}}>⛶</button>
       <div style={{...S.npcStatus,color:sc(npc.status)}}>{npc.status}</div>
     </div>
   );
@@ -659,10 +688,10 @@ export default function NPCPanel({ campaignId, sessionId }) {
                                     <span style={S.groupChevron}>{isGrpColl?'▶':'▼'}</span><span style={S.groupName}>📁 {grpName}</span><span style={S.groupCount}>{grpNpcs.length}</span>
                                     <button style={{...S.quickBtn,fontSize:9,padding:'1px 5px',marginLeft:4}} onClick={e=>{e.stopPropagation();setShowModal(true);}}>+</button>
                                   </div>
-                                  {!isGrpColl&&grpNpcs.map(npc=>{const isActive=selected===npc.id;return(<div key={npc.id} style={{...S.npcRowIndented,background:isActive?'rgba(184,137,42,0.09)':undefined}} onClick={()=>setSelected(isActive?null:npc.id)}><div style={{...S.npcDot,background:sc(npc.status)}}/><div style={S.npcMain}><div style={S.npcName}>{npc.name}</div>{npc.role&&<div style={S.npcRole}>{npc.role}</div>}{npc.faction&&<div style={{color:'rgba(184,137,42,0.55)',fontSize:10}}>{npc.faction}</div>}</div><NpcButtons npc={npc} cityName={city.name}/></div>);})}
+                                  {!isGrpColl&&grpNpcs.map(npc=>{const isActive=selected===npc.id;const npcCls=ALL_CLASSES?.find(c=>c.id===npc.cid);const raceLine=[npc.race?[npc.race,npc.race_variant].filter(Boolean).join(' · '):null,npcCls?.name].filter(Boolean).join(' · ');return(<div key={npc.id} style={{...S.npcRowIndented,background:isActive?'rgba(184,137,42,0.09)':undefined}} onClick={()=>setSelected(isActive?null:npc.id)}><div style={{...S.npcDot,background:sc(npc.status)}}/><div style={S.npcMain}><div style={S.npcName}>{npc.name}</div>{raceLine&&<div style={{color:'rgba(180,160,110,0.55)',fontSize:10,fontStyle:'italic'}}>{raceLine}</div>}{npc.role&&<div style={S.npcRole}>{npc.role}</div>}{npc.faction&&<div style={{color:'rgba(184,137,42,0.55)',fontSize:10}}>{npc.faction}</div>}</div><NpcButtons npc={npc} cityName={city.name}/></div>);})}
                                   </div>);
                                 })}
-                                {ungrouped.map(npc=>{const isActive=selected===npc.id;return(<div key={npc.id} style={{...S.npcRow,background:isActive?'rgba(184,137,42,0.09)':undefined}} onClick={()=>setSelected(isActive?null:npc.id)}><div style={{...S.npcDot,background:sc(npc.status)}}/><div style={S.npcMain}><div style={S.npcName}>{npc.name}</div>{npc.role&&<div style={S.npcRole}>{npc.role}</div>}{npc.faction&&<div style={{color:'rgba(184,137,42,0.55)',fontSize:10}}>{npc.faction}</div>}</div><NpcButtons npc={npc} cityName={city.name}/></div>);})}
+                                {ungrouped.map(npc=>{const isActive=selected===npc.id;const npcCls=ALL_CLASSES?.find(c=>c.id===npc.cid);const raceLine=[npc.race?[npc.race,npc.race_variant].filter(Boolean).join(' · '):null,npcCls?.name].filter(Boolean).join(' · ');return(<div key={npc.id} style={{...S.npcRow,background:isActive?'rgba(184,137,42,0.09)':undefined}} onClick={()=>setSelected(isActive?null:npc.id)}><div style={{...S.npcDot,background:sc(npc.status)}}/><div style={S.npcMain}><div style={S.npcName}>{npc.name}</div>{raceLine&&<div style={{color:'rgba(180,160,110,0.55)',fontSize:10,fontStyle:'italic'}}>{raceLine}</div>}{npc.role&&<div style={S.npcRole}>{npc.role}</div>}{npc.faction&&<div style={{color:'rgba(184,137,42,0.55)',fontSize:10}}>{npc.faction}</div>}</div><NpcButtons npc={npc} cityName={city.name}/></div>);})}
                                 <div style={{padding:'3px 18px 4px'}}><button style={{...S.btnGrey,fontSize:9,padding:'2px 7px'}} onClick={()=>setShowGroupModal(true)}>+ Add Group</button></div>
                               </>
                             )}
@@ -691,9 +720,40 @@ export default function NPCPanel({ campaignId, sessionId }) {
       {condPicker&&(<div style={{position:'fixed',zIndex:999999,width:210,background:'#0a0805',border:'1px solid rgba(184,137,42,0.3)',borderRadius:8,boxShadow:'0 16px 48px rgba(0,0,0,0.8)',overflow:'hidden',top:Math.min((condPicker.anchorRect?.bottom||200)+4,window.innerHeight-280),left:Math.min((condPicker.anchorRect?.left||100),window.innerWidth-220)}} onMouseDown={e=>e.stopPropagation()}><input autoFocus value={condSearch} onChange={e=>setCondSearch(e.target.value)} placeholder="Search conditions…" style={{width:'100%',boxSizing:'border-box',background:'rgba(255,255,255,0.06)',border:'none',borderBottom:'1px solid rgba(184,137,42,0.15)',color:'#c8b890',padding:'7px 10px',fontFamily:'inherit',fontSize:11,outline:'none'}}/><div style={{maxHeight:220,overflowY:'auto',padding:'4px 0'}}>{CONDITIONS.filter(c=>!condSearch||c.toLowerCase().includes(condSearch.toLowerCase())).map(cond=>{const cur=condPicker.entityType==='player'?(players.find(p=>p.id===condPicker.entityId)?.conditions||[]):(npcs.find(n=>n.id===condPicker.entityId)?.conditions||[]);const active=cur.includes(cond);const color=condColor(cond);return(<button key={cond} onClick={()=>{if(condPicker.entityType==='player')togglePlayerCondition(condPicker.entityId,cond);else toggleNpcCondition(condPicker.entityId,cond);}} style={{display:'flex',alignItems:'center',gap:7,width:'100%',textAlign:'left',border:'none',background:active?'rgba(184,137,42,0.1)':'transparent',padding:'5px 10px',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:10,color:active?'#e8c040':'rgba(200,180,130,0.6)'}}><div style={{width:7,height:7,borderRadius:'50%',background:active?color:'rgba(184,137,42,0.2)',border:`1px solid ${color}55`,flexShrink:0}}/>{cond}{active&&<span style={{marginLeft:'auto',fontSize:9,color,opacity:0.7}}>✓</span>}</button>);})}</div><button onClick={()=>{setCondPicker(null);setCondSearch('');}} style={{width:'100%',background:'rgba(255,255,255,0.04)',border:'none',borderTop:'1px solid rgba(184,137,42,0.1)',color:'rgba(200,180,130,0.4)',padding:'5px',cursor:'pointer',fontSize:10}}>Close</button></div>)}
       {condPicker&&<div style={{position:'fixed',inset:0,zIndex:999998}} onClick={()=>{setCondPicker(null);setCondSearch('');}}/>}
 
-      {selectedNpc&&selectedCity&&(
+     {selectedNpc&&selectedCity&&(
         <div style={S.drawer}>
-          <div style={S.drawerTitle}><span>{selectedNpc.name}</span><button style={S.closeBtn} onClick={()=>setSelected(null)}>✕</button></div>
+          <div style={S.drawerTitle}>
+            {editingName ? (
+              <div style={{display:'flex',alignItems:'center',gap:6,flex:1}}>
+                <input autoFocus value={nameDraft} onChange={e=>setNameDraft(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')setConfirmingName(true);if(e.key==='Escape'){setEditingName(false);}}}
+                  style={{flex:1,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(184,137,42,0.4)',borderRadius:4,color:'#e8d0a0',padding:'4px 8px',fontFamily:"'Cinzel',serif",fontSize:13,outline:'none'}}/>
+                <button onClick={()=>setConfirmingName(true)} disabled={!nameDraft.trim()} style={{background:'rgba(96,200,150,0.15)',border:'1px solid rgba(96,200,150,0.4)',borderRadius:4,padding:'4px 8px',cursor:nameDraft.trim()?'pointer':'default',color:'#60c896',fontSize:10}}>✓</button>
+                <button onClick={()=>setEditingName(false)} style={{background:'transparent',border:'1px solid rgba(255,255,255,0.15)',borderRadius:4,padding:'4px 8px',cursor:'pointer',color:'rgba(200,180,130,0.5)',fontSize:10}}>✕</button>
+              </div>
+            ) : (
+              <span style={{display:'flex',alignItems:'center',gap:8}}>
+                {selectedNpc.name}
+                <button onClick={()=>{setNameDraft(selectedNpc.name);setEditingName(true);}} title="Edit name" style={{background:'transparent',border:'none',cursor:'pointer',color:'rgba(184,137,42,0.6)',fontSize:11,padding:0}}>✎</button>
+              </span>
+            )}
+            <button style={S.closeBtn} onClick={()=>{setSelected(null);setEditingName(false);}}>✕</button>
+          </div>
+
+          {confirmingName && (
+            <div onClick={()=>setConfirmingName(false)} style={{position:'fixed',inset:0,zIndex:999999,background:'rgba(0,0,0,0.7)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <div onClick={e=>e.stopPropagation()} style={{background:'#0e0c09',border:'1px solid rgba(184,137,42,0.4)',borderRadius:10,padding:'22px 26px',maxWidth:340,boxShadow:'0 20px 60px rgba(0,0,0,0.7)'}}>
+                <div style={{fontFamily:"'Cinzel',serif",fontSize:12,color:'#e8c040',marginBottom:8}}>Confirm Name Change</div>
+                <div style={{fontSize:11,color:'rgba(200,180,130,0.6)',fontFamily:'Georgia,serif',fontStyle:'italic',marginBottom:18,lineHeight:1.5}}>
+                  Rename "{selectedNpc.name}" to "{nameDraft.trim()}"? This updates the permanent record in archives — the offical census and source of truth for who exists in this world.
+                </div>
+                <div style={{display:'flex',gap:8}}>
+                  <button onClick={async()=>{await updateNpcField(selectedNpc.id,'name',nameDraft.trim());setEditingName(false);setConfirmingName(false);}}
+                    style={{flex:1,background:'rgba(96,200,150,0.15)',border:'1px solid rgba(96,200,150,0.45)',borderRadius:6,padding:'9px',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:10,color:'#60c896',fontWeight:700}}>✓ Confirm</button>
+                  <button onClick={()=>setConfirmingName(false)} style={{background:'transparent',border:'1px solid rgba(255,255,255,0.15)',borderRadius:6,padding:'9px 14px',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:10,color:'rgba(200,180,130,0.5)'}}>Cancel</button>
+                </div>
+              </div>
+            </div>
+          )}
           {[['vitals','Vitals','#e05a5a'],['stamina','Stamina','#e08a5a'],['resolve','Resolve','#79f5a7']].map(([key,label,color])=>{
             const cur=selectedNpc[`${key}_current`]??16;const max=selectedNpc[`${key}_max`]??16;
             return(<div key={key} style={{marginBottom:8}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:3}}><div style={{fontFamily:"'Cinzel',serif",fontSize:9,color,letterSpacing:'0.1em'}}>{label}</div><div style={{display:'flex',alignItems:'center',gap:4}}><button onClick={()=>updateNpcField(selectedNpc.id,`${key}_current`,Math.max(0,cur-1))} style={{width:18,height:18,borderRadius:3,background:'rgba(224,90,90,0.15)',border:'1px solid rgba(224,90,90,0.4)',color:'#e05a5a',cursor:'pointer',fontSize:12,display:'flex',alignItems:'center',justifyContent:'center'}}>−</button><span style={{fontFamily:"'Cinzel',serif",fontSize:12,color,fontWeight:700,minWidth:24,textAlign:'center'}}>{cur}</span><span style={{color:'rgba(200,180,130,0.3)',fontSize:10}}>/</span><span style={{fontFamily:"'Cinzel',serif",fontSize:10,color:'rgba(200,180,130,0.5)'}}>{max}</span><button onClick={()=>updateNpcField(selectedNpc.id,`${key}_current`,Math.min(max,cur+1))} style={{width:18,height:18,borderRadius:3,background:'rgba(121,245,167,0.1)',border:'1px solid rgba(121,245,167,0.35)',color:'#79f5a7',cursor:'pointer',fontSize:12,display:'flex',alignItems:'center',justifyContent:'center'}}>+</button></div></div><div style={{height:3,background:`${color}22`,borderRadius:2,overflow:'hidden'}}><div style={{height:'100%',width:`${Math.max(0,Math.min(100,(cur/Math.max(1,max))*100))}%`,background:color,borderRadius:2,transition:'width 0.2s'}}/></div></div>);
@@ -701,6 +761,13 @@ export default function NPCPanel({ campaignId, sessionId }) {
           <div style={{display:'flex',gap:8,marginBottom:8}}>
             <div style={{...S.field,flex:2}}><label style={S.label}>Role / Title</label><input style={S.fieldInput} value={selectedNpc.role||''} onChange={e=>updateNpcField(selectedNpc.id,'role',e.target.value)}/></div>
             <div style={{...S.field,flex:1}}><label style={S.label}>Status</label><select style={S.fieldSelect} value={selectedNpc.status||'Active'} onChange={e=>updateNpcField(selectedNpc.id,'status',e.target.value)}>{STATUS_OPTIONS.map(s=><option key={s} value={s} style={{background:'#0e0c09'}}>{s}</option>)}</select></div>
+          </div>
+          <div style={{display:'flex',gap:8,marginBottom:8}}>
+            <div style={{...S.field,flex:1}}><label style={S.label}>Race</label><select style={S.fieldSelect} value={selectedNpc.race||''} onChange={e=>{updateNpcField(selectedNpc.id,'race',e.target.value);updateNpcField(selectedNpc.id,'race_variant','');}}><option value="" style={{background:'#0e0c09'}}>—</option>{Object.keys(RACE_OPTIONS).map(r=><option key={r} value={r} style={{background:'#0e0c09'}}>{r}</option>)}</select></div>
+            {RACE_OPTIONS[selectedNpc.race]?.length > 0 && (
+              <div style={{...S.field,flex:1}}><label style={S.label}>Variant</label><select style={S.fieldSelect} value={selectedNpc.race_variant||''} onChange={e=>updateNpcField(selectedNpc.id,'race_variant',e.target.value)}><option value="" style={{background:'#0e0c09'}}>—</option>{RACE_OPTIONS[selectedNpc.race].map(v=><option key={v} value={v} style={{background:'#0e0c09'}}>{v}</option>)}</select></div>
+            )}
+            <div style={{...S.field,flex:1}}><label style={S.label}>Class</label><select style={S.fieldSelect} value={selectedNpc.cid||''} onChange={e=>updateNpcField(selectedNpc.id,'cid',e.target.value)}><option value="" style={{background:'#0e0c09'}}>—</option>{ALL_CLASSES?.map(c=><option key={c.id} value={c.id} style={{background:'#0e0c09'}}>{c.name}</option>)}</select></div>
           </div>
           <div style={{display:'flex',gap:8}}>
             <div style={{...S.field,flex:1}}><label style={S.label}>Category</label><select style={S.fieldSelect} value={selectedNpc.category||'Uncategorized'} onChange={e=>updateNpcField(selectedNpc.id,'category',e.target.value)}>{CATEGORY_OPTIONS.map(c=><option key={c} value={c} style={{background:'#0e0c09'}}>{c}</option>)}</select></div>
@@ -715,6 +782,7 @@ export default function NPCPanel({ campaignId, sessionId }) {
             <div style={{fontSize:10,color:'rgba(200,180,130,0.25)',fontStyle:'italic',flex:1}}>{selectedCity.name}{selectedCity.region?` · ${selectedCity.region}`:''}</div>
             <button onClick={()=>markMet(selectedNpc,selectedCity.name)} style={{background:'rgba(184,137,42,0.15)',border:'1px solid rgba(184,137,42,0.35)',borderRadius:3,color:'#e8c040',cursor:'pointer',padding:'3px 8px',fontSize:10,fontFamily:"'Cinzel',serif"}}>⬡ Met</button>
             <button onClick={()=>window.dispatchEvent(new CustomEvent('hercules:add_npc',{detail:{id:selectedNpc.id,name:selectedNpc.name,role:selectedNpc.role||'',conditions:selectedNpc.conditions||[],cityName:selectedCity.name}}))} style={{background:'rgba(60,120,200,0.15)',border:'1px solid rgba(60,120,200,0.35)',borderRadius:3,color:'#80a0e0',cursor:'pointer',padding:'3px 8px',fontSize:10,fontFamily:"'Cinzel',serif"}}>⚔ Combat</button>
+            <button onClick={()=>window.dispatchEvent(new CustomEvent('vtt:add_npc_token',{detail:{id:selectedNpc.id,name:selectedNpc.name}}))} style={{background:'rgba(96,200,150,0.15)',border:'1px solid rgba(96,200,150,0.35)',borderRadius:3,color:'#60c896',cursor:'pointer',padding:'3px 8px',fontSize:10,fontFamily:"'Cinzel',serif"}}>⛶ Map</button>
           </div>
         </div>
       )}

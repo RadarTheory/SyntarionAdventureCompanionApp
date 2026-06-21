@@ -3,6 +3,7 @@ import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
 import { COLORS, CAMPAIGNS, ALL_CLASSES, ALL_STATS, getRaceDisplay } from './constants';
 import ItemCatalog from './ItemCatalog';
+import { RACES } from './constants';
 import { SOTERIA_LORE } from './soteria-lore';
 import { SOTERIA_MECHANICS } from './soteria-mechanics';
 import { SOTERIA_BESTIARY } from './soteria-bestiary';
@@ -323,6 +324,47 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
           <div style={{ ...label8(), marginBottom: 8 }}>Campaign</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {campaigns.map(c => <div key={c.id}onClick={() => set('campaign', data.campaign === c.id ? null : c.id)} style={{ background: data.campaign === c.id ? COLORS.magicBg : 'transparent', border: `1px solid ${data.campaign === c.id ? COLORS.magic : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontSize: 10, color: data.campaign === c.id ? COLORS.magicText : COLORS.muted, fontFamily: "'Cinzel', serif", letterSpacing: '0.06em' }}>{c.subtitle}</div>)}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ ...label8(), marginBottom: 6 }}>Race</div>
+            <select value={data.race || ''} onChange={e => { set('race', e.target.value); set('rv', ''); }}
+              style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none' }}>
+              <option value="" style={{ background: '#13100d' }}>— Select race —</option>
+              {RACES.map(r => <option key={r.id} value={r.id} style={{ background: '#13100d' }}>{r.name}</option>)}
+            </select>
+          </div>
+          {(() => {
+            const raceDef = RACES.find(r => r.id === data.race);
+            if (!raceDef?.variants?.length) return null;
+            return (
+              <div style={{ flex: 1 }}>
+                <div style={{ ...label8(), marginBottom: 6 }}>Variant</div>
+                <select value={data.rv || ''} onChange={e => set('rv', e.target.value)}
+                  style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none' }}>
+                  <option value="" style={{ background: '#13100d' }}>— None —</option>
+                  {raceDef.variants.map(v => <option key={v} value={v} style={{ background: '#13100d' }}>{v}</option>)}
+                </select>
+              </div>
+            );
+          })()}
+        </div>
+
+        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ ...label8(), marginBottom: 6 }}>Class</div>
+            <select value={data.cid || ''} onChange={e => set('cid', e.target.value)}
+              style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none' }}>
+              <option value="" style={{ background: '#13100d' }}>— Select class —</option>
+              {ALL_CLASSES?.map(c => <option key={c.id} value={c.id} style={{ background: '#13100d' }}>{c.name}</option>)}
+            </select>
+          </div>
+          <div style={{ width: 120 }}>
+            <div style={{ ...label8(), marginBottom: 6 }}>Morality</div>
+            <input type="number" value={data.morality ?? 0} onChange={e => set('morality', parseInt(e.target.value) || 0)}
+              style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }} />
           </div>
         </div>
         {[['Name', 'name'], ['Backstory', 'backstory'], ['Notes', 'notes']].map(([lbl, key]) => (
@@ -1129,6 +1171,7 @@ useEffect(() => {
           if (vttPlaceTokenRef.current) {
             vttPlaceTokenRef.current({
               label: (char.name || 'PC').slice(0, 3),
+              fullName: char.name || null,
               color: '#4a9edd',
               type: 'player',
               characterId: char.id,
