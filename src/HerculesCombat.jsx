@@ -178,6 +178,7 @@ function VitalsPanel({ row, onClose, campaignId }) {
 
 export default function HerculesCombat({ defaultCampaignId, darkMode = true, onPlaceToken, onRegisterAddCreature }) {
    const [campaignList, setCampaignList] = useState([]);
+   const [campaignId, setCampaignId] = useState(defaultCampaignId || '');
   const [creatureNames, setCreatureNames] = useState([]);
 
 useEffect(() => {
@@ -190,7 +191,7 @@ useEffect(() => {
     if (error) { console.error('[Hercules] Failed to load bestiary:', error); return; }
     setCreatureNames((data || []).map(r => r.name).filter(Boolean));
   });
-}, [campaignId]);
+}, []);
 
 useEffect(() => {
   supabase
@@ -262,15 +263,11 @@ useEffect(() => {
 
   const activeSessionId = session?.id || null;
   const activeSessionIdRef = useRef(null);
-  const campaignIdRef = useRef(campaignId || null);
+  const campaignIdRef = useRef(null);
 
   useEffect(() => {
     activeSessionIdRef.current = session?.id || null;
   }, [session?.id]);
-
-  useEffect(() => {
-    campaignIdRef.current = campaignId || null;
-  }, [campaignId]);
 
   useEffect(() => {
     localStorage.setItem('herculesButtonPos', JSON.stringify(buttonPos));

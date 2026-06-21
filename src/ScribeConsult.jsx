@@ -114,7 +114,8 @@ export function ScribeConsult({ char, onUpdateChar }) {
     setMessages(nextMessages);
 
     try {
-      const systemPrompt = `${SOTERIA_CONTEXT}\n\nWORLD KNOWLEDGE (relevant excerpts):\n${buildScribeContext(userMsg)}\n\n${buildCharacterContext(char)}\n\nThis response costs the adventurer 1 AP. Make the answer useful, specific, and worthy of the cost.`.trim();
+      const worldContext = await buildScribeContext(userMsg, 10000, char?.campaign || char?.campaign_id || null);
+      const systemPrompt = `${SOTERIA_CONTEXT}\n\nWORLD KNOWLEDGE (relevant excerpts):\n${worldContext}\n\n${buildCharacterContext(char)}\n\nThis response costs the adventurer 1 AP. Make the answer useful, specific, and worthy of the cost.`.trim();
       const geminiHistory = nextMessages.map(m => ({ role: m.role === 'player' ? 'user' : 'assistant', content: m.content }));
       const answer = await callGemini(systemPrompt, geminiHistory);
 
