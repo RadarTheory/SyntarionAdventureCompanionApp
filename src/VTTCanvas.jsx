@@ -26,19 +26,6 @@ function getPortraitImage(url, onReady) {
   return portraitCache[url] || null;
 }
 
-const portraitCache = {};
-function getPortraitImage(url, onReady) {
-  if (!url) return null;
-  if (portraitCache[url] === undefined) {
-    portraitCache[url] = null;
-    const img = new Image();
-    img.onload = () => { portraitCache[url] = img; onReady?.(); };
-    img.onerror = () => { portraitCache[url] = false; };
-    img.src = url;
-  }
-  return portraitCache[url] || null;
-}
-
 const raceIconCache = {};
 function getRaceIcon(race, onReady) {
   if (!race) return null;
