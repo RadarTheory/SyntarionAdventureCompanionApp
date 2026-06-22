@@ -9,12 +9,14 @@ export function useActiveGameSession(campaignId) {
   useEffect(() => {
     if (!campaignId) { setSessionId(null); return; }
     const cid = String(campaignId);
+    const uid = `ags_${cid}_${Math.random().toString(36).slice(2, 7)}`;
+
     supabase.from('sessions').select('id')
       .eq('campaign_id', cid).eq('status', 'active')
       .order('created_at', { ascending: false }).limit(1).maybeSingle()
       .then(({ data }) => setSessionId(data?.id || null));
 
-    const ch = supabase.channel(`active_game_session_${cid}`)
+    const ch = supabase.channel(uid)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' },
         ({ new: row }) => {
           if (row && String(row.campaign_id) === cid && row.status === 'active') {
@@ -27,7 +29,6 @@ export function useActiveGameSession(campaignId) {
 
   return sessionId;
 }
-
 // Live proximity zones for a session: { zoneName: [{ entity_type, entity_id, entity_name }] }
 export function useProximity(sessionId) {
   const [rows, setRows] = useState([]);
@@ -37,7 +38,8 @@ export function useProximity(sessionId) {
     supabase.from('session_proximity').select('*').eq('session_id', sessionId)
       .then(({ data }) => setRows(data || []));
 
-    const ch = supabase.channel(`proximity_${sessionId}`)
+    const uid = `prox_${sessionId}_${Math.random().toString(36).slice(2, 7)}`;
+    const ch = supabase.channel(uid)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'session_proximity' },
         ({ new: row, old: oldRow }) => {
           const sid = row?.session_id || oldRow?.session_id;

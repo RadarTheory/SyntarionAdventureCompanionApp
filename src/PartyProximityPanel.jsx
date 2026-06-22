@@ -16,10 +16,11 @@ export default function PartyProximityPanel({ campaignId, isDM = false, char = n
   const [newZoneName, setNewZoneName] = useState('');
 
   useEffect(() => {
-    if (!sessionId) { setCheckedIn([]); return; }
-    supabase.from('session_checkins').select('*').eq('session_id', sessionId)
+    if (!campaignId) { setCheckedIn([]); return; }
+    supabase.from('session_checkins').select('*')
+      .eq('campaign_id', String(campaignId))
       .then(({ data }) => setCheckedIn(data || []));
-  }, [sessionId]);
+  }, [campaignId]);
 
   useEffect(() => {
     if (!isDM || !campaignId) return;
