@@ -13,6 +13,32 @@ function uid() { return Math.random().toString(36).slice(2, 9); }
 // ─── Race icon silhouette cache ────────────────────────────────────────────
 // Loads each race icon once, strips its original colors, and forces it to a
 // white silhouette (alpha preserved) so it reads against any token color.
+const portraitCache = {};
+function getPortraitImage(url, onReady) {
+  if (!url) return null;
+  if (portraitCache[url] === undefined) {
+    portraitCache[url] = null;
+    const img = new Image();
+    img.onload = () => { portraitCache[url] = img; onReady?.(); };
+    img.onerror = () => { portraitCache[url] = false; };
+    img.src = url;
+  }
+  return portraitCache[url] || null;
+}
+
+const portraitCache = {};
+function getPortraitImage(url, onReady) {
+  if (!url) return null;
+  if (portraitCache[url] === undefined) {
+    portraitCache[url] = null;
+    const img = new Image();
+    img.onload = () => { portraitCache[url] = img; onReady?.(); };
+    img.onerror = () => { portraitCache[url] = false; };
+    img.src = url;
+  }
+  return portraitCache[url] || null;
+}
+
 const raceIconCache = {};
 function getRaceIcon(race, onReady) {
   if (!race) return null;
@@ -162,8 +188,19 @@ const r = isHovered ? 22 : 14;
     ctx.stroke();
     ctx.setLineDash([]);
 
-    const icon = tok.race ? getRaceIcon(tok.race, onIconReady) : null;
-    if (icon) {
+    const portrait = tok.portrait_url ? getPortraitImage(tok.portrait_url, onIconReady) : null;
+    const icon = !portrait && tok.race ? getRaceIcon(tok.race, onIconReady) : null;
+    if (portrait) {
+      // Clip portrait to token shape before drawing
+      ctx.save();
+      if (tok.type === 'player') {
+        ctx.beginPath(); ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4); ctx.clip();
+      } else {
+        ctx.beginPath(); ctx.arc(tx, ty, r, 0, Math.PI * 2); ctx.clip();
+      }
+      ctx.drawImage(portrait, tx - r, ty - r, r * 2, r * 2);
+      ctx.restore();
+    } else if (icon) {
       const iconSize = r * 1.3;
       ctx.drawImage(icon, tx - iconSize / 2, ty - iconSize / 2, iconSize, iconSize);
     } else {
@@ -353,6 +390,7 @@ useEffect(() => {
           creatureName: tokenData.creatureName || null,
           fullName: tokenData.fullName || tokenData.creatureName || tokenData.label || null,
           race: tokenData.race || null,
+          portrait_url: tokenData.portrait_url || null,
           x,
           y,
         }];
@@ -588,7 +626,7 @@ useEffect(() => {
         const d = Math.sqrt(dx * dx + dy * dy);
         if (d < closestDist) { closest = tok; closestDist = d; }
       });
-      setHoveredToken(closest ? { id: closest.id, name: closest.fullName || closest.creatureName || closest.label || '?', clientX, clientY } : null);
+      setHoveredToken(closest ? { id: closest.id, name: closest.fullName || closest.creatureName || closest.label || '?', portrait_url: closest.portrait_url || null, race: closest.race || null, clientX, clientY } : null);
     }
 
     if (paintingRef.current && (tool === 'fog-reveal' || tool === 'fog-hide')) {
@@ -708,8 +746,15 @@ useEffect(() => {
       </div>
 
       {hoveredToken && (
-        <div style={{ position: 'fixed', left: hoveredToken.clientX, top: hoveredToken.clientY - 32, transform: 'translateX(-50%)', background: 'rgba(8,6,4,0.95)', border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '3px 8px', fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.text, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 500 }}>
-          {hoveredToken.name}
+        <div style={{ position: 'fixed', left: hoveredToken.clientX, top: hoveredToken.clientY - 160, transform: 'translateX(-50%)', background: 'rgba(8,6,4,0.82)', backdropFilter: 'blur(10px)', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 10, padding: 10, pointerEvents: 'none', zIndex: 500, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: 110, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+          {hoveredToken.portrait_url ? (
+            <div style={{ width: 72, height: 96, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(200,168,74,0.4)', flexShrink: 0 }}>
+              <img src={hoveredToken.portrait_url} alt={hoveredToken.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+            </div>
+          ) : (
+            <div style={{ width: 72, height: 96, borderRadius: 6, background: 'rgba(200,168,74,0.08)', border: '1px solid rgba(200,168,74,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: 'rgba(200,168,74,0.3)' }}>⚔</div>
+          )}
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color: '#e8d9a7', letterSpacing: '0.08em', textAlign: 'center', lineHeight: 1.4 }}>{hoveredToken.name}</div>
         </div>
       )}
 

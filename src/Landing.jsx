@@ -137,21 +137,21 @@ function SyntarionLogo({ size = 320, darkMode = false }) {
             opacity: 0.6,
             lineHeight: 1,
           }}>
-            ADVENTURE COMPANION
+            ADVENTURE MODULE COMPANION
           </div>
           <div style={{ width: size * 0.12, height: '0.5px', background: ink, opacity: 0.3 }} />
         </div>
         <div id="syn-era" style={{
           fontFamily: "'Cinzel', serif",
-          fontSize: size * 0.026,
-          fontWeight: 400,
-          letterSpacing: '0.28em',
+          fontSize: size * 0.038,
+          fontWeight: 700,
+          letterSpacing: '0.22em',
           color: ink,
-          opacity: 0.28,
-          marginTop: size * 0.03,
+          opacity: 0.65,
+          marginTop: size * 0.04,
           lineHeight: 1,
         }}>
-          SOTERIA · 178 E.U.
+          ARE YOU READY?
         </div>
       </div>
     </>
@@ -442,16 +442,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
           <div style={{ width: 4, height: 4, background: ink, transform: 'rotate(45deg)', opacity: 0.25 }} />
           <div style={{ width: 40, height: '0.5px', background: `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.18)` }} />
         </div>
-        <p style={{
-          fontFamily: 'Georgia, serif', fontStyle: 'italic',
-          fontSize: isMobile ? 13 : 15,
-          color: ink, opacity: 0.55, letterSpacing: '0.03em',
-          margin: 0, lineHeight: 1.75,
-        }}>
-          The Doctrine of Being calls you.<br />
-          Do you dare answer?
-        </p>
-      </div>
+        </div>
 
       {/* Buttons */}
       <div style={{
