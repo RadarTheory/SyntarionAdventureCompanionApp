@@ -20,6 +20,7 @@ import { WorldMapPanel } from './WorldMapPanel';
 import { SoteriaClockDisplay } from './SoteriaClockPanel';
 import SessionCheckin from './SessionCheckin';
 import IntentDeclare from "./IntentDeclare";
+import PartyProximityPanel from './PartyProximityPanel';
 import PortraitUpload from "./PortraitUpload";
 
 function label8() {
@@ -1833,6 +1834,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign, onUpdateChar 
   const [lobbyOpen, setLobbyOpen] = useState(false);
   const [authUser, setAuthUser] = useState(null);
   const [showIntent, setShowIntent] = useState(false);
+  const [showProximity, setShowProximity] = useState(false);
 
 useEffect(() => {
   supabase.auth.getUser().then(({ data }) => setAuthUser(data?.user || null));
@@ -2163,6 +2165,12 @@ useEffect(() => {
           onClick: () => setShowIntent(o => !o),
           children: <img src="/intentDeclareIcon.png" alt="Intent" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
+        {
+          id: 'proximity',
+          title: 'Party — Who\'s Nearby',
+          onClick: () => setShowProximity(o => !o),
+          children: <img src="/party.png" alt="Party" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+        },
                    { id: 'bazaar', title: 'Bazaar — Trade & Loot', onClick: () => setShowBazaar(o => !o),
         children: <img src="/Bazaaricon.png" alt="Bazaar" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
       { id: 'questor', title: 'Questor — Quest Board', onClick: () => setShowQuestor(o => !o),
@@ -2248,6 +2256,12 @@ useEffect(() => {
       {showIntent && (
           <IntentDeclare campaignId={campaign.id} char={userChar} compact />
         )}
+
+      {showProximity && (
+        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowProximity(false)} title="PARTY · Who's Nearby" width={340} accentColor="rgba(121,245,167,0.35)">
+          <PartyProximityPanel campaignId={String(campaign.id)} isDM={false} char={userChar} />
+        </DraggablePanel>
+      )}
 
       {/* Header */}
       <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', flexShrink: 0, gap: 12 }}>

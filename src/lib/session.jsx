@@ -15,8 +15,12 @@ export function useActiveGameSession(campaignId) {
       .then(({ data }) => setSessionId(data?.id || null));
 
     const ch = supabase.channel(`active_game_session_${cid}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions', filter: `campaign_id=eq.${cid}` },
-        ({ new: row }) => { if (row?.status === 'active') setSessionId(row.id); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' },
+        ({ new: row }) => {
+          if (row && String(row.campaign_id) === cid && row.status === 'active') {
+            setSessionId(row.id);
+          }
+        })
       .subscribe();
     return () => supabase.removeChannel(ch);
   }, [campaignId]);
@@ -34,10 +38,13 @@ export function useProximity(sessionId) {
       .then(({ data }) => setRows(data || []));
 
     const ch = supabase.channel(`proximity_${sessionId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_proximity', filter: `session_id=eq.${sessionId}` },
-        () => {
-          supabase.from('session_proximity').select('*').eq('session_id', sessionId)
-            .then(({ data }) => setRows(data || []));
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_proximity' },
+        ({ new: row, old: oldRow }) => {
+          const sid = row?.session_id || oldRow?.session_id;
+          if (String(sid) === String(sessionId)) {
+            supabase.from('session_proximity').select('*').eq('session_id', sessionId)
+              .then(({ data }) => setRows(data || []));
+          }
         })
       .subscribe();
     return () => supabase.removeChannel(ch);
