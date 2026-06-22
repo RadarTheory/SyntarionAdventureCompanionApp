@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { getOrCreateConversation, postDialogueLine } from './lib/dialogue';
-import { useActiveGameSession, useProximity, entitiesNearCharacter } from './lib/session';
+import { useActiveGameSession, useProximity, entitiesNearCharacter } from "./lib/session";
 
 function useDraggable(initial = { x: 24, y: 24 }) {
   const [pos, setPos] = useState(initial);
