@@ -20,6 +20,7 @@ import { WorldMapPanel } from './WorldMapPanel';
 import { SoteriaClockDisplay } from './SoteriaClockPanel';
 import SessionCheckin from './SessionCheckin';
 import IntentDeclare from "./IntentDeclare";
+import PortraitUpload from "./PortraitUpload";
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -772,26 +773,95 @@ function ScalesPanel({ char, effectiveStats }) {
   );
 }
 
+// Converts a black-on-white icon PNG into a white silhouette with real transparency
+// (luminance -> alpha), returned as a data URL usable directly in <img src>.
+const silhouetteCache = {};
+function useSilhouette(url) {
+  const [dataUrl, setDataUrl] = useState(silhouetteCache[url] || null);
+  useEffect(() => {
+    if (!url) return;
+    if (silhouetteCache[url]) { setDataUrl(silhouetteCache[url]); return; }
+    let cancelled = false;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width; canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const luminance = (d[i] + d[i + 1] + d[i + 2]) / 3;
+        d[i] = 255; d[i + 1] = 255; d[i + 2] = 255;
+        d[i + 3] = 255 - luminance;
+      }
+      ctx.putImageData(imgData, 0, 0);
+      const out = canvas.toDataURL('image/png');
+      silhouetteCache[url] = out;
+      if (!cancelled) setDataUrl(out);
+    };
+    img.onerror = () => { if (!cancelled) setDataUrl(null); };
+    img.src = url;
+    return () => { cancelled = true; };
+  }, [url]);
+  return dataUrl;
+}
+
 // ─── FULL CHARACTER SHEET (inline, dark) ──────────────────────────────────────
-function CharacterSheetInline({ char, effectiveStats }) {
+function CharacterSheetInline({ char, effectiveStats, onUpdateChar }) {
   const cls = ALL_CLASSES?.find(c => c.id === char.cid);
+  const raceIconSrc = char.race ? `/RaceIcons/${char.race.toLowerCase().replace(/[^a-z]/g, '')}.png` : null;
+  const classIconSrc = cls ? `/ClassIcons/${cls.id}.png` : null;
+  const raceIconUrl = useSilhouette(raceIconSrc);
+  const classIconUrl = useSilhouette(classIconSrc);
+
+  const PACK_META_KEY = `syntarion_pack_meta_${char?.id}`;
+  const [coin, setCoin] = useState('');
+  useEffect(() => {
+    try {
+      const m = JSON.parse(localStorage.getItem(PACK_META_KEY) || '{}');
+      if (m.coin !== undefined) setCoin(m.coin);
+    } catch (_) { }
+  }, [char?.id]);
+
+  const [playerNotes, setPlayerNotes] = useState(char.playerNotes || '');
+  const notesTimer = useRef(null);
+  const handleNotesChange = (val) => {
+    setPlayerNotes(val);
+    clearTimeout(notesTimer.current);
+    notesTimer.current = setTimeout(async () => {
+      const { id, status, campaign_id, user_id, ...blob } = char || {};
+      await supabase.from('characters').update({ data: { ...blob, playerNotes: val } }).eq('id', char.id);
+      onUpdateChar?.({ ...char, playerNotes: val });
+    }, 600);
+  };
 
   return (
     <div>
       {/* Identity header */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 20, fontWeight: 700, color: COLORS.text, marginBottom: 4 }}>
-          {char.name || 'Unnamed'}
+      <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+          {raceIconUrl && (
+            <div title={getRaceDisplay(char.race, char.rv, char.pmV)} style={{ width: 48, height: 48, borderRadius: 8, border: '1px solid #c8a84a', background: 'rgba(200,168,74,0.35)', padding: 8, boxSizing: 'border-box', cursor: 'help' }}>
+              <img src={raceIconUrl} alt={char.race} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </div>
+          )}
+          {classIconUrl && (
+            <div title={cls.name} style={{ width: 48, height: 48, borderRadius: 8, border: '1px solid #c8a84a', background: 'rgba(200,168,74,0.35)', padding: 8, boxSizing: 'border-box', cursor: 'help' }}>
+              <img src={classIconUrl} alt={cls.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </div>
+          )}
         </div>
-        <div style={{ fontSize: 12, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 8 }}>
-          {getRaceDisplay(char.race, char.rv, char.pmV)}{cls ? ` · ${cls.name}` : ''}
-          {char.belief ? ` · ${char.belief}` : ''}
-        </div>
-        {char.background && (
-          <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', lineHeight: 1.6 }}>
-            {char.background}
+        <div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 20, fontWeight: 700, color: COLORS.text, marginBottom: 4 }}>
+            {char.name || 'Unnamed'}
           </div>
-        )}
+          <div style={{ fontSize: 12, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 8 }}>
+            {getRaceDisplay(char.race, char.rv, char.pmV)}{cls ? ` · ${cls.name}` : ''}
+            {char.belief ? ` · ${char.belief}` : ''}
+          </div>
+        </div>
       </div>
 
       {/* Magic axis stats */}
@@ -807,7 +877,7 @@ function CharacterSheetInline({ char, effectiveStats }) {
 
       {/* Tech axis stats */}
       <div style={{ ...label8(), marginBottom: 10, color: COLORS.techText }}>Tech Axis</div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20 }}>
         {TECH_STATS.map(s => {
           const base = char.stats?.[s.key] || 8;
           const item = effectiveStats._itemBonuses?.[s.key] || 0;
@@ -815,6 +885,30 @@ function CharacterSheetInline({ char, effectiveStats }) {
           return <StatBar key={s.key} stat={s} baseVal={base} itemBonus={item} conditionBonus={cond} />;
         })}
       </div>
+
+      {/* AP & Money */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+        <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px' }}>
+          <div style={{ ...label8(), marginBottom: 6 }}>Ability Points</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, fontWeight: 800, color: COLORS.magic }}>{char.apCurrent ?? 0}</div>
+          <div style={{ fontSize: 8, color: COLORS.dim }}>of {char.apTotal ?? 0} total</div>
+        </div>
+        <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px' }}>
+          <div style={{ ...label8(), marginBottom: 6 }}>Coin</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, fontWeight: 800, color: '#e8c84a' }}>{coin || '—'}</div>
+          <div style={{ fontSize: 8, color: COLORS.dim }}>edit in Inventory · Pack</div>
+        </div>
+      </div>
+
+      {/* Player Notes */}
+      <div style={{ ...label8(), marginBottom: 8 }}>Notes</div>
+      <textarea
+        value={playerNotes}
+        onChange={e => handleNotesChange(e.target.value)}
+        placeholder="Personal notes, reminders, goals…"
+        rows={4}
+        style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
+      />
     </div>
   );
 }
@@ -1877,7 +1971,17 @@ useEffect(() => {
   return userChar
     ? <>
         <SessionCheckin char={userChar} user={authUser} campaignId={String(campaign.id)} />
-        <CharacterSheetInline char={userChar} effectiveStats={effectiveStats} />
+        <div style={{ marginBottom: 16 }}>
+          <PortraitUpload
+            currentUrl={userChar.portrait_url}
+            onUploaded={async (url) => {
+              const { id, status, campaign_id, user_id, ...blob } = userChar || {};
+              await supabase.from('characters').update({ data: { ...blob, portrait_url: url } }).eq('id', userChar.id);
+              onUpdateChar?.({ ...userChar, portrait_url: url });
+            }}
+          />
+        </div>
+        <CharacterSheetInline char={userChar} effectiveStats={effectiveStats} onUpdateChar={onUpdateChar} />
       </>
     : <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12 }}>No character loaded.</div>;
       case 'Scales':

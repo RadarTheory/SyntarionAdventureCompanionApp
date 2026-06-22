@@ -730,6 +730,7 @@ export default function DMView({ user, session, onHome }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showArchive, setShowArchive] = useState(false);
   const [toast, setToast] = useState(null);
+  const [convoToast, setConvoToast] = useState(null);
   const [sessionTimerLabel, setSessionTimerLabel] = useState(null);
   const [castorPendingCount, setCastorPendingCount] = useState(0);
   const [showCastor, setShowCastor] = useState(false);
@@ -778,6 +779,41 @@ useEffect(() => {
 
   const activeSessionRef = useRef(activeSession);
   useEffect(() => { activeSessionRef.current = activeSession; }, [activeSession]);
+
+  // CONVERSATION-OPENED SUBSCRIPTION — toast + commit to log
+  useEffect(() => {
+    const channel = supabase.channel('dm-dialogue-conversations')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'dialogue_conversations' }, async (payload) => {
+        const convo = payload.new;
+        if (!convo) return;
+
+        setConvoToast({
+          entityName: convo.entity_name || 'Someone',
+          entityType: convo.entity_type,
+          campaignId: convo.campaign_id,
+        });
+        setTimeout(() => setConvoToast(null), 6000);
+
+        await supabase.from('dm_memory').insert({
+          campaign_id: String(convo.campaign_id),
+          category: 'note',
+          content: `[CONVERSATION OPENED] with ${convo.entity_name || 'Unknown'} (${convo.entity_type})`,
+        });
+
+        const { data: hsession } = await supabase.from('hercules_sessions').select('id')
+          .eq('campaign_id', String(convo.campaign_id)).eq('status', 'active')
+          .order('created_at', { ascending: false }).limit(1).maybeSingle();
+        if (hsession?.id) {
+          await supabase.from('hercules_events').insert({
+            session_id: hsession.id, type: 'dialogue',
+            actor_name: 'System', actor_id: null,
+            description: `A conversation opened with ${convo.entity_name || 'Unknown'}.`,
+          });
+        }
+      })
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, []);
 
   // 1. LOBBY CHECK-IN SUBSCRIPTION
   useEffect(() => {
@@ -1186,6 +1222,14 @@ useEffect(() => {
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, fontWeight: 700, color: COLORS.magic, marginBottom: 4, letterSpacing: '0.08em' }}>✦ New Message</div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, marginBottom: 4 }}>{toast.name}</div>
           <div style={{ fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.textSub, fontStyle: 'italic', lineHeight: 1.4 }}>{toast.content?.substring(0, 80)}{toast.content?.length > 80 ? '…' : ''}</div>
+        </div>
+      )}
+
+      {convoToast && (
+        <div style={{ position: 'fixed', bottom: toast ? 140 : 24, left: 24, zIndex: 300, background: '#13100d', border: '1px solid rgba(96,150,224,0.4)', borderRadius: 10, padding: '14px 18px', maxWidth: 280, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', animation: 'slideIn 0.2s ease' }}>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, fontWeight: 700, color: '#7da8e0', marginBottom: 4, letterSpacing: '0.08em' }}>💬 Conversation Opened</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, marginBottom: 8 }}>{convoToast.entityName} <span style={{ color: COLORS.dim, fontWeight: 400 }}>({convoToast.entityType})</span></div>
+          <button onClick={() => { setShowSpeak(true); setConvoToast(null); }} style={{ background: 'rgba(96,150,224,0.12)', border: '1px solid rgba(96,150,224,0.4)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7da8e0' }}>Open Dialogue</button>
         </div>
       )}
 

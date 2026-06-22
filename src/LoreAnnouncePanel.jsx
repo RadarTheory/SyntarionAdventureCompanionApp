@@ -15,6 +15,9 @@ export default function LoreAnnouncePanel({ campaignId, embedded }) {
   const [done, setDone] = useState(false);
   const [activeSession, setActiveSession] = useState(null);
   const [error, setError] = useState(null);
+  const [recentIntents, setRecentIntents] = useState([]);
+  const [selectedIntent, setSelectedIntent] = useState(null);
+  const [respondedIntentIds, setRespondedIntentIds] = useState(new Set());
 
   useEffect(() => {
     // Load approved characters for this campaign
@@ -41,6 +44,28 @@ export default function LoreAnnouncePanel({ campaignId, embedded }) {
   .limit(1)
   .maybeSingle()
   .then(({ data }) => setActiveSession(data || null));
+  }, [campaignId]);
+
+  useEffect(() => {
+    if (!campaignId) return;
+    supabase.from('dm_memory').select('*')
+      .eq('campaign_id', String(campaignId))
+      .eq('category', 'intent')
+      .order('created_at', { ascending: false })
+      .limit(20)
+      .then(({ data }) => setRecentIntents(data || []));
+
+    supabase.from('dm_memory').select('content')
+      .eq('campaign_id', String(campaignId))
+      .eq('category', 'lore')
+      .then(({ data }) => {
+        const ids = new Set();
+        (data || []).forEach(row => {
+          const match = row.content?.match(/\[REPLY TO INTENT (\S+)\]/);
+          if (match) ids.add(match[1]);
+        });
+        setRespondedIntentIds(ids);
+      });
   }, [campaignId]);
 
   const toggleChar = (id) => {
@@ -103,12 +128,14 @@ export default function LoreAnnouncePanel({ campaignId, embedded }) {
     });
     const entryTitle = title.trim() || `Lore Event · ${sessionDate}`;
 
+    const replyTag = selectedIntent ? `[REPLY TO INTENT ${selectedIntent.id}] ` : '';
+
     try {
       // 1. Save to DM Memory
       await supabase.from('dm_memory').insert({
         campaign_id: String(campaignId),
         category: 'lore',
-        content: `[LORE ANNOUNCEMENT] ${entryTitle}: ${text.trim()}`,
+        content: `${replyTag}[LORE ANNOUNCEMENT] ${entryTitle}: ${text.trim()}`,
       });
 
       // 2. Push to each selected character's Grimoire
@@ -146,13 +173,17 @@ export default function LoreAnnouncePanel({ campaignId, embedded }) {
         })
       ));
 
+      if (selectedIntent) {
+        setRespondedIntentIds(prev => new Set(prev).add(String(selectedIntent.id)));
+      }
+
       setDone(true);
       setTimeout(() => {
         setDone(false);
         setText('');
         setTitle('');
+        setSelectedIntent(null);
       }, 3000);
-
     } catch (err) {
       setError(err.message);
     } finally {
@@ -183,6 +214,41 @@ export default function LoreAnnouncePanel({ campaignId, embedded }) {
           {activeSession ? 'Active Session — Ready to Announce' : 'No Active Session — Start a session to announce'}
         </div>
       </div>
+
+      {/* Recent intents */}
+      {recentIntents.length > 0 && (
+        <div>
+          <div style={{ ...label8(), marginBottom: 8 }}>Recent Declared Intent</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 200, overflowY: 'auto' }}>
+            {recentIntents.map(m => {
+              const isSelected = selectedIntent?.id === m.id;
+              const isResponded = respondedIntentIds.has(String(m.id));
+              return (
+                <button key={m.id} type="button"
+                  onClick={() => setSelectedIntent(isSelected ? null : m)}
+                  style={{
+                    textAlign: 'left', cursor: 'pointer',
+                    background: isSelected ? 'rgba(200,168,74,0.16)' : 'rgba(200,168,74,0.05)',
+                    border: `1px solid ${isSelected ? 'rgba(200,168,74,0.6)' : 'rgba(200,168,74,0.2)'}`,
+                    borderRadius: 6, padding: '7px 10px',
+                  }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ fontSize: 11, color: COLORS.text, fontFamily: 'Georgia, serif', lineHeight: 1.4 }}>{m.content.replace('[INTENT] ', '')}</div>
+                    {isResponded && <div style={{ fontSize: 7, color: '#79f5a7', fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', textTransform: 'uppercase', flexShrink: 0 }}>✓ Replied</div>}
+                  </div>
+                  <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", marginTop: 3 }}>{new Date(m.created_at).toLocaleString()}</div>
+                </button>
+              );
+            })}
+          </div>
+          {selectedIntent && (
+            <div style={{ marginTop: 8, fontSize: 9, color: '#e8c84a', fontFamily: 'Georgia, serif', fontStyle: 'italic', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Replying to: {selectedIntent.content.replace('[INTENT] ', '').slice(0, 60)}{selectedIntent.content.length > 60 ? '…' : ''}</span>
+              <button type="button" onClick={() => setSelectedIntent(null)} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 11 }}>✕</button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Title */}
       <div>

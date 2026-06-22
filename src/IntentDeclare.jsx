@@ -234,8 +234,8 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
   const canSend = active && !sending && (hasSpeech || (hasIntent && !hasSpeech));
 
   // Plain intent only — no speech involved (same as the original Declare Intent flow)
-  const logPlainIntent = async () => {
-    const text = intentText.trim();
+  const logPlainIntent = async (fromSpeech = false) => {
+    const text = fromSpeech ? speechText.trim() : intentText.trim();
     await supabase.from('grimoire_entries').insert({
       character_id: actorId, campaign_id: String(campaignId),
       type: 'event', title: 'Intent Declared',
@@ -259,7 +259,7 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
   };
 
   // Speech, optionally carrying an intent (e.g. deception) the DM alone can see
-  const logSpeech = async () => {
+ const logSpeech = async () => {
     const target = entities.find(e => String(e.id) === String(targetId));
     if (!target) return;
 
@@ -275,6 +275,28 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
       trueIntent: hasIntent ? intentText.trim() : null,
       flaggedForRoll: hasIntent,
     });
+
+    const text = speechText.trim();
+    await supabase.from('grimoire_entries').insert({
+      character_id: actorId, campaign_id: String(campaignId),
+      type: 'event', title: 'Spoke to ' + target.name,
+      body: `${actorName} said to ${target.name}: "${text}"`,
+    });
+    await supabase.from('dm_memory').insert({
+      campaign_id: String(campaignId), category: 'speech',
+      content: `[SPEECH→${target.name}] ${actorName}: "${text}"`,
+    });
+
+    const { data: hsession } = await supabase.from('hercules_sessions').select('id')
+      .eq('campaign_id', String(campaignId)).eq('status', 'active')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (hsession?.id) {
+      await supabase.from('hercules_events').insert({
+        session_id: hsession.id, type: 'speech',
+        actor_name: actorName, actor_id: actorId,
+        description: `${actorName} says to ${target.name}: "${text}"`,
+      });
+    }
   };
 
   // Spoken aloud — no specific target, just said into the scene
@@ -310,8 +332,14 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
       await logSpeech();
     } else if (hasSpeech) {
       await logAloud();
-    } else if (hasIntent) {
+    }
+
+    // Every action carries an intent into the log — explicit if typed,
+    // otherwise the speech itself stands as the declared intent.
+    if (hasIntent) {
       await logPlainIntent();
+    } else if (hasSpeech) {
+      await logPlainIntent(true);
     }
 
     setSpeechText('');
