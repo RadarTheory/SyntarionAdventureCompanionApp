@@ -290,13 +290,14 @@ function ScribePanel({ onClose }) {
 
 // ─── CHARACTER EDITOR ─────────────────────────────────────────────────────────
 function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
-  const [data, setData] = useState({ ...char });
+  const [data, setData] = useState({ portrait_url: char.portrait_url || char.data?.portrait_url || null, ...char });
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState('');
 
   const handleSave = async (newStatus) => {
     setSaving(true);
-    await supabase.from('characters').update({ data: { ...data }, status: newStatus || data.status, campaign_id: data.campaign || null }).eq('id', char.id);
+    const { id, status, campaign_id, user_id, ...blob } = data;
+    await supabase.from('characters').update({ data: { ...blob, portrait_url: data.portrait_url || null }, status: newStatus || data.status, campaign_id: data.campaign || null }).eq('id', char.id);
     if (note && (newStatus === 'rejected' || newStatus === 'approved')) {
       await supabase.from('messages').insert({ character_id: char.id, campaign_id: data.campaign, type: 'dm_reply', content: note, sender_name: 'The Architect', is_dm: true });
     }
@@ -1237,6 +1238,7 @@ useEffect(() => {
               type: 'player',
               characterId: char.id,
               race: char.race || null,
+              portrait_url: char.portrait_url || char.data?.portrait_url || null,
             });
           }
         }}
