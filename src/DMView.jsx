@@ -1229,8 +1229,10 @@ useEffect(() => {
         onOpenCharacter={(char) => setEditingChar(char)}
         onMessage={(session) => setActiveSession(session)}
         showVTT={activeTab === 'VTT'}
-        onPlaceOnVTT={(char) => {
+        onPlaceOnVTT={async (char) => {
           if (vttPlaceTokenRef.current) {
+            const { data: fresh } = await supabase.from('characters').select('data').eq('id', char.id).maybeSingle();
+            const portraitUrl = fresh?.data?.portrait_url || char.portrait_url || null;
             vttPlaceTokenRef.current({
               label: (char.name || 'PC').slice(0, 3),
               fullName: char.name || null,
@@ -1238,7 +1240,7 @@ useEffect(() => {
               type: 'player',
               characterId: char.id,
               race: char.race || null,
-              portrait_url: char.portrait_url || char.data?.portrait_url || null,
+              portrait_url: portraitUrl,
             });
           }
         }}
