@@ -317,7 +317,12 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
         <div style={{ marginBottom: 20 }}>
           <PortraitUpload
             currentUrl={data.portrait_url}
-            onUploaded={(url) => set('portrait_url', url)}
+            onUploaded={async (url) => {
+              set('portrait_url', url);
+              await supabase.from('characters').update({
+                data: { ...data, portrait_url: url }
+              }).eq('id', char.id);
+            }}
           />
         </div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
