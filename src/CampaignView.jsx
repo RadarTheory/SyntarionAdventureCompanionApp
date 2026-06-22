@@ -2180,6 +2180,8 @@ useEffect(() => {
           children: <img src="/Grimoireicon.png" alt="Grimoire" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
         { id: 'lark', title: 'Lark — Send a Letter', onClick: () => setShowLark(o => !o),
           children: <img src="/Larkicon.png" alt="Lark" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
+        { id: 'proximity', title: "Party — Who's Nearby", onClick: () => setShowProximity(o => !o),
+          children: <img src="/party.png" alt="Party" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
       ]} />
             {showGrimoire && (
         <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowGrimoire(false)} title="GRIMOIRE · Adventure Journal" width={400} accentColor="rgba(121,245,167,0.35)">
