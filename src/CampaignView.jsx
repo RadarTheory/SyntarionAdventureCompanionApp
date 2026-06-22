@@ -1746,12 +1746,12 @@ function SessionLogTab({ campaignId }) {
           ...(lore || []).map(l => ({
             ...l,
             _kind: 'lore',
-            title: l.content.startsWith('[LORE ANNOUNCEMENT]')
-              ? l.content.replace('[LORE ANNOUNCEMENT] ', '').split(':')[0]
+            title: l.content.includes('[LORE ANNOUNCEMENT]')
+              ? l.content.replace(/\[REPLY TO INTENT [^\]]+\]\s*/g, '').replace('[LORE ANNOUNCEMENT] ', '').split(':')[0]
               : 'Lore Event',
-            body: l.content.startsWith('[LORE ANNOUNCEMENT]')
-              ? l.content.split(':').slice(1).join(':').trim()
-              : l.content,
+            body: l.content.startsWith('[LORE ANNOUNCEMENT]') || l.content.includes('[LORE ANNOUNCEMENT]')
+              ? l.content.replace(/\[REPLY TO INTENT [^\]]+\]\s*/g, '').replace('[LORE ANNOUNCEMENT]', '').split(':').slice(1).join(':').trim()
+              : l.content.replace(/\[REPLY TO INTENT [^\]]+\]\s*/g, ''),
           })),
         ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         setEntries(combined);
