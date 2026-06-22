@@ -28,6 +28,11 @@ export default function PlayersPanel({ onOpenCharacter, onMessage, showVTT, onPl
     return () => supabase.removeChannel(channel);
   }, []);
 
+  // Re-fetch when panel expands so portrait_url is always fresh
+  useEffect(() => {
+    if (!collapsed) fetchAll();
+  }, [collapsed]);
+
   const userList = users.map(u => ({ ...u, chars: characters.filter(c => c.user_id === u.id) }));
   const unclaimed = characters.filter(c => !c.user_id);
 
