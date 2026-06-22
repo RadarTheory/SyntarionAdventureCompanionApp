@@ -25,6 +25,7 @@ import { BazaarDMPanel } from './BazaarPanel';
 import { QuestorDMPanel } from './QuestorPanel';
 import SoteriaClockPanel, { SoteriaClockDisplay } from './SoteriaClockPanel';
 import LoreAnnouncePanel from './LoreAnnouncePanel';
+import PartyProximityPanel from './PartyProximityPanel';
 import MapPanel from './MapPanel';
 import DMSpeakPanel from './DMSpeakPanel';
 import PortraitUpload from './PortraitUpload';
@@ -758,6 +759,7 @@ export default function DMView({ user, session, onHome }) {
   const [showLore, setShowLore] = useState(false);
   const [headerClock, setHeaderClock] = useState(null);
   const [showSpeak, setShowSpeak] = useState(false);
+  const [showProximity, setShowProximity] = useState(false);
   const [activeGameSessionId, setActiveGameSessionId] = useState(null);
 
   useEffect(() => {
@@ -1279,7 +1281,15 @@ useEffect(() => {
 
         {showSpeak && (
           <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowSpeak(false)} title="💬 DIALOGUE · Speak as Soteria" width={420} accentColor="rgba(96,150,224,0.4)">
-            <DMSpeakPanel campaignId={activeCampaignTab} sessionId={activeSession?.session_id || null} embedded />
+            <DMSpeakPanel campaignId={activeCampaignTab} sessionId={activeGameSessionId} embedded />
+          </DraggablePanel>
+        )}
+
+        {showProximity && (
+          <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowProximity(false)} title="PARTY · Proximity & Check-In" width={420} accentColor="rgba(121,245,167,0.35)">
+            <div style={{ overflowY: 'auto', height: '100%' }}>
+              <PartyProximityPanel campaignId={activeCampaignTab} isDM={true} />
+            </div>
           </DraggablePanel>
         )}
 
@@ -1467,6 +1477,12 @@ useEffect(() => {
           title: 'Dialogue — Speak as NPC or Beast',
           onClick: () => setShowSpeak(o => !o),
           children: <img src="/speakicon.png" alt="Speak" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+        },
+        {
+          id: 'proximity',
+          title: 'Party — Proximity & Check-In',
+          onClick: () => setShowProximity(o => !o),
+          children: <img src="/party.png" alt="Party" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
       ]} />
     </div>
