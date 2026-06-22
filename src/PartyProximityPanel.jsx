@@ -16,11 +16,9 @@ export default function PartyProximityPanel({ campaignId, isDM = false, char = n
   const [newZoneName, setNewZoneName] = useState('');
 
   useEffect(() => {
-    if (!campaignId) { setCheckedIn([]); return; }
     supabase.from('session_checkins').select('*')
-      .eq('campaign_id', String(campaignId))
       .then(({ data }) => setCheckedIn(data || []));
-  }, [campaignId]);
+  }, []);
 
   useEffect(() => {
     if (!isDM || !campaignId) return;
