@@ -187,7 +187,7 @@ export default function PortraitUpload({ currentUrl, onUploaded, size = 96 }) {
       }}>
         {!currentUrl && (uploading ? 'Uploading…' : '+ Portrait')}
       </div>
-      <input ref={fileRef} type="file" accept="image/*" onChange={handlePick} style={{ display: 'none' }} />
+     <input ref={fileRef} type="file" accept=".png,.jpg,.jpeg,.webp,.gif,.avif,image/*" onChange={handlePick} style={{ display: 'none' }} />
       {currentUrl && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <button onClick={() => fileRef.current?.click()} disabled={uploading}
