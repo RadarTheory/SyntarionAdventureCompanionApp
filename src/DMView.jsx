@@ -27,6 +27,7 @@ import SoteriaClockPanel, { SoteriaClockDisplay } from './SoteriaClockPanel';
 import LoreAnnouncePanel from './LoreAnnouncePanel';
 import MapPanel from './MapPanel';
 import DMSpeakPanel from './DMSpeakPanel';
+import PortraitUpload from './PortraitUpload';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -310,6 +311,12 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 16, fontWeight: 700, color: COLORS.text }}>{char.name}</div>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 16 }}>✕</button>
+        </div>
+        <div style={{ marginBottom: 20 }}>
+          <PortraitUpload
+            currentUrl={data.portrait_url}
+            onUploaded={(url) => set('portrait_url', url)}
+          />
         </div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
           <button onClick={() => handleSave('approved')} style={{ flex: 1, background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText, fontFamily: "'Cinzel', serif", fontWeight: 700 }}>✓ Approve</button>
@@ -751,6 +758,22 @@ export default function DMView({ user, session, onHome }) {
   const [showLore, setShowLore] = useState(false);
   const [headerClock, setHeaderClock] = useState(null);
   const [showSpeak, setShowSpeak] = useState(false);
+  const [activeGameSessionId, setActiveGameSessionId] = useState(null);
+
+  useEffect(() => {
+    if (!activeCampaignTab) { setActiveGameSessionId(null); return; }
+    const cid = String(activeCampaignTab);
+    supabase.from('sessions').select('id')
+      .eq('campaign_id', cid).eq('status', 'active')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle()
+      .then(({ data }) => setActiveGameSessionId(data?.id || null));
+
+    const ch = supabase.channel(`active_game_session_${cid}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions', filter: `campaign_id=eq.${cid}` },
+        ({ new: row }) => { if (row?.status === 'active') setActiveGameSessionId(row.id); })
+      .subscribe();
+    return () => supabase.removeChannel(ch);
+  }, [activeCampaignTab]);
   
   
    // Live world clock for the header, scoped to the active campaign tab
@@ -1243,7 +1266,7 @@ useEffect(() => {
           <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowNPC(false)}
             title="NPC TRACKER · People of Soteria" width={480} accentColor="rgba(200,168,74,0.4)">
             <div style={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
-             <NPCPanel campaignId={activeCampaignTab} sessionId={activeSession?.session_id || null} />
+             <NPCPanel campaignId={activeCampaignTab} sessionId={activeGameSessionId} />
             </div>
           </DraggablePanel>
         )}

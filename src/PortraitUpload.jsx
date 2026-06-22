@@ -143,12 +143,27 @@ export default function PortraitUpload({ currentUrl, onUploaded, size = 96 }) {
   const fileRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [pendingFile, setPendingFile] = useState(null);
+  const [fetchingCurrent, setFetchingCurrent] = useState(false);
 
   const handlePick = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setPendingFile(file);
     e.target.value = '';
+  };
+
+  const handleEditCurrent = async () => {
+    if (!currentUrl || fetchingCurrent) return;
+    setFetchingCurrent(true);
+    try {
+      const res = await fetch(currentUrl);
+      const blob = await res.blob();
+      const file = new File([blob], 'current-portrait.jpg', { type: blob.type || 'image/jpeg' });
+      setPendingFile(file);
+    } catch (err) {
+      console.error('Failed to load current portrait for editing:', err);
+    }
+    setFetchingCurrent(false);
   };
 
   const handleCropConfirm = async (blob) => {
@@ -174,10 +189,16 @@ export default function PortraitUpload({ currentUrl, onUploaded, size = 96 }) {
       </div>
       <input ref={fileRef} type="file" accept="image/*" onChange={handlePick} style={{ display: 'none' }} />
       {currentUrl && (
-        <button onClick={() => fileRef.current?.click()} disabled={uploading}
-          style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontSize: 9, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>
-          {uploading ? 'Uploading…' : 'Replace'}
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <button onClick={() => fileRef.current?.click()} disabled={uploading}
+            style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontSize: 9, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>
+            {uploading ? 'Uploading…' : 'Replace'}
+          </button>
+          <button onClick={handleEditCurrent} disabled={uploading || fetchingCurrent}
+            style={{ background: 'rgba(200,168,74,0.08)', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontSize: 9, color: '#e8c84a', fontFamily: "'Cinzel', serif" }}>
+            {fetchingCurrent ? 'Loading…' : '✎ Adjust'}
+          </button>
+        </div>
       )}
 
       {pendingFile && (

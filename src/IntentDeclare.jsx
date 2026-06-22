@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { getOrCreateConversation, postDialogueLine } from './lib/dialogue';
+import { useActiveGameSession, useProximity, entitiesNearCharacter } from './lib/session';
 
 function useDraggable(initial = { x: 24, y: 24 }) {
   const [pos, setPos] = useState(initial);
@@ -141,6 +142,8 @@ function useDictation(onResult) {
 }
 
 export default function IntentDeclare({ campaignId, char, compact = false, embedded = false }) {
+  const proxSessionId = useActiveGameSession(campaignId);
+  const { rows: proxRows } = useProximity(proxSessionId);
   const [speechText, setSpeechText] = useState('');
   const [intentText, setIntentText] = useState('');
   const [sessionId, setSessionId] = useState(null);
@@ -211,7 +214,8 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
           });
       }
 
-      const merged = [...inSceneEntities, ...metEntities, ...nearbyEntities];
+      const proximityEntities = entitiesNearCharacter(proxRows, actorIdForLookup);
+      const merged = [...proximityEntities, ...inSceneEntities, ...metEntities, ...nearbyEntities];
       const seen = new Set();
       const deduped = merged.filter(e => {
         const key = `${e.type}-${e.id}`;
