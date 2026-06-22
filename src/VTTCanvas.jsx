@@ -13,20 +13,15 @@ function uid() { return Math.random().toString(36).slice(2, 9); }
 // ─── Race icon silhouette cache ────────────────────────────────────────────
 // Loads each race icon once, strips its original colors, and forces it to a
 // white silhouette (alpha preserved) so it reads against any token color.
-const portraitCache = {};
-function getPortraitImage(url, onReady) {
-  if (!url) return null;
-  if (portraitCache[url] === undefined) {
-    portraitCache[url] = null;
-    const img = new Image();
-    img.onload = () => { portraitCache[url] = img; onReady?.(); };
-    img.onerror = () => { portraitCache[url] = false; };
-    img.src = url;
-  }
-  return portraitCache[url] || null;
-}
-
-const raceIconCache = {};
+const icon = tok.race ? getRaceIcon(tok.race, onIconReady) : null;
+    if (icon) {
+      const iconSize = r * 1.3;
+      ctx.drawImage(icon, tx - iconSize / 2, ty - iconSize / 2, iconSize, iconSize);
+    } else {
+      ctx.fillStyle = '#fff'; ctx.font = `bold ${isHovered ? 12 : 9}px sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
+    }
 function getRaceIcon(race, onReady) {
   if (!race) return null;
   const key = race.toLowerCase().replace(/[^a-z]/g, '');
