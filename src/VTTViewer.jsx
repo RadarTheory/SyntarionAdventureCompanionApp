@@ -438,7 +438,7 @@ useEffect(() => {
       return;
     }
     const hit = hitTestToken(clientX, clientY);
-    setHoveredToken(hit ? { id: hit.id, name: hit.fullName || hit.creatureName || hit.label || '?', clientX, clientY } : null);
+    setHoveredToken(hit ? { id: hit.id, name: hit.fullName || hit.creatureName || hit.label || '?', portrait_url: hit.portrait_url || null, clientX, clientY } : null);
   }, [clientToMapCoords, hitTestToken]);
 
   const handleMouseUp = useCallback(() => {
@@ -594,8 +594,15 @@ useEffect(() => {
       </div>
 
       {hoveredToken && (
-        <div style={{ position: 'fixed', left: hoveredToken.clientX, top: hoveredToken.clientY - 32, transform: 'translateX(-50%)', background: 'rgba(8,6,4,0.95)', border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '3px 8px', fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.text, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 500 }}>
-          {hoveredToken.name}
+        <div style={{ position: 'fixed', left: hoveredToken.clientX, top: hoveredToken.clientY - 160, transform: 'translateX(-50%)', background: 'rgba(8,6,4,0.82)', backdropFilter: 'blur(10px)', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 10, padding: 10, pointerEvents: 'none', zIndex: 500, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: 110, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+          {hoveredToken.portrait_url ? (
+            <div style={{ width: 72, height: 96, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(200,168,74,0.4)', flexShrink: 0 }}>
+              <img src={hoveredToken.portrait_url} alt={hoveredToken.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+            </div>
+          ) : (
+            <div style={{ width: 72, height: 96, borderRadius: 6, background: 'rgba(200,168,74,0.08)', border: '1px solid rgba(200,168,74,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: 'rgba(200,168,74,0.3)' }}>⚔</div>
+          )}
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color: '#e8d9a7', letterSpacing: '0.08em', textAlign: 'center', lineHeight: 1.4 }}>{hoveredToken.name}</div>
         </div>
       )}
 
