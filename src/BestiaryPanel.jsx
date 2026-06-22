@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { COLORS } from './constants';
 import supabase from './lib/supabase';
+import PortraitUpload from './PortraitUpload';
 
 const CATEGORY_COLORS = {
   Undead:      '#9b7fbd',
@@ -23,7 +24,7 @@ function label8() {
 }
 
 // ─── CREATURE CARD ────────────────────────────────────────────────────────────
-function CreatureCard({ creature, isDM, campaignId, onAddedToCombat }) {
+function CreatureCard({ creature, isDM, campaignId, onAddedToCombat, onPortraitUploaded }) {
   const [expanded, setExpanded] = useState(false);
   const [adding, setAdding]     = useState(false);
   const [added, setAdded]       = useState(false);
@@ -94,12 +95,28 @@ function CreatureCard({ creature, isDM, campaignId, onAddedToCombat }) {
       {/* Expanded body */}
       {expanded && (
         <div style={{ padding: '10px 12px', borderTop: `1px solid ${col}22`, background: 'rgba(0,0,0,0.18)' }}>
+          {isDM && (
+            <div style={{ marginBottom: 10 }}>
+              <PortraitUpload
+                currentUrl={creature.portrait_url}
+                size={64}
+                onUploaded={async (url) => {
+                  await supabase.from('beasts').update({ portrait_url: url }).eq('id', creature.id);
+                  onPortraitUploaded?.();
+                }}
+              />
+            </div>
+          )}
+          {!isDM && creature.portrait_url && (
+            <div style={{ width: 64, height: 85, borderRadius: 6, overflow: 'hidden', border: `1px solid ${col}44`, marginBottom: 10 }}>
+              <img src={creature.portrait_url} alt={creature.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+            </div>
+          )}
           {displayDesc ? (
             <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', lineHeight: 1.6, marginBottom: isDM ? 12 : 0 }}>{displayDesc}</div>
           ) : (
             <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No description available.</div>
           )}
-
           {isDM && (
             <button onClick={addToCombat} disabled={adding}
               style={{ background: added ? COLORS.magicBg : `${col}14`, border: `1px solid ${added ? COLORS.magic : col + '55'}`, borderRadius: 6, padding: '6px 12px', cursor: adding ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: added ? COLORS.magicText : col, fontWeight: 700, letterSpacing: '0.1em', transition: 'all 0.15s' }}>
@@ -282,7 +299,7 @@ export default function BestiaryPanel({ isDM = false, campaignId, onClose, embed
           </div>
         )}
         {filtered.map(creature => (
-          <CreatureCard key={creature.id} creature={creature} isDM={isDM} campaignId={campaignId} />
+          <CreatureCard key={creature.id} creature={creature} isDM={isDM} campaignId={campaignId} onPortraitUploaded={fetchBeasts} />
         ))}
         {!loading && filtered.length === 0 && creatures.length > 0 && (
           <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '20px 0' }}>No creatures match.</div>
