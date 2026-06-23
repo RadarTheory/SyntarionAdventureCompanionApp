@@ -16,9 +16,17 @@ export default function PartyProximityPanel({ campaignId, isDM = false, char = n
   const [newZoneName, setNewZoneName] = useState('');
 
   useEffect(() => {
+    if (!sessionId) return;
     supabase.from('session_checkins').select('*')
-      .then(({ data }) => setCheckedIn(data || []));
-  }, []);
+      .eq('session_id', sessionId)
+      .then(({ data }) => {
+        if (!data) return;
+        const deduped = Array.from(
+          new Map(data.map(p => [p.character_id, p])).values()
+        );
+        setCheckedIn(deduped);
+      });
+  }, [sessionId]);
 
   useEffect(() => {
     if (!isDM || !campaignId) return;
@@ -27,7 +35,8 @@ export default function PartyProximityPanel({ campaignId, isDM = false, char = n
       .then(({ data }) => setBeasts(data || []));
   }, [isDM, campaignId]);
 
-  const zoneNames = Object.keys(zones).length > 0 ? Object.keys(zones) : ['Default'];
+  const [extraZones, setExtraZones] = useState([]);
+  const zoneNames = [...new Set(['Session', ...(Object.keys(zones).length > 0 ? Object.keys(zones) : []), ...extraZones])];
 
   const assign = async (zoneName, entityType, entityId, entityName) => {
     if (!sessionId) return;
@@ -46,7 +55,7 @@ export default function PartyProximityPanel({ campaignId, isDM = false, char = n
 
   const addZone = () => {
     if (!newZoneName.trim()) return;
-    zoneNames.push(newZoneName.trim());
+    setExtraZones(prev => [...prev, newZoneName.trim()]);
     setNewZoneName('');
   };
 
