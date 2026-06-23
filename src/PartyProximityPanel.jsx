@@ -103,7 +103,7 @@ export default function PartyProximityPanel({ campaignId, isDM = false, char = n
             {(zones[zoneName] || []).map(r => (
               <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 4, background: r.entity_type === 'player' ? 'rgba(96,150,224,0.12)' : 'rgba(200,168,74,0.12)', border: `1px solid ${r.entity_type === 'player' ? 'rgba(96,150,224,0.4)' : 'rgba(200,168,74,0.4)'}`, borderRadius: 12, padding: '3px 8px' }}>
                 <span style={{ fontSize: 10, fontFamily: 'Georgia, serif', color: COLORS.text }}>{r.entity_name}</span>
-                <button onClick={() => remove(r)} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 10 }}>✕</button>
+                <button onClick={e => { e.stopPropagation(); remove(r); }} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 10, padding: '0 2px' }}>✕</button>
               </div>
             ))}
           </div>
