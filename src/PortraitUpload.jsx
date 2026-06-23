@@ -169,8 +169,12 @@ export default function PortraitUpload({ currentUrl, onUploaded, size = 96 }) {
   const handleCropConfirm = async (blob) => {
     setPendingFile(null);
     setUploading(true);
-    const path = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.jpg`;
-    const { error } = await supabase.storage.from('portraits').upload(path, blob, { upsert: false, contentType: 'image/jpeg' });
+    const ext = pendingFile?.name?.split('.').pop() || 'jpg';
+    const baseName = pendingFile?.name
+      ? pendingFile.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_\-]/g, '_')
+      : `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const path = `${baseName}.${ext}`;
+    const { error } = await supabase.storage.from('portraits').upload(path, blob, { upsert: true, contentType: `image/${ext === 'png' ? 'png' : 'jpeg'}` });
     if (error) { console.error('Portrait upload failed:', error); setUploading(false); return; }
     const { data } = supabase.storage.from('portraits').getPublicUrl(path);
     onUploaded(data.publicUrl);
