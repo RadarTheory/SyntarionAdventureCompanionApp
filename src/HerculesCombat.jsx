@@ -3,7 +3,7 @@ import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { SOTERIA_BESTIARY } from './soteria-bestiary';
 import DMSpeakPanel from './DMSpeakPanel';
-import { advanceCampaignClockByCombatTurn } from './lib/soteriaClock';
+import { advanceCampaignClockByCombatTurn } from "../lib/soteriaClock";
 
 function getBestiaryText() {
   if (typeof SOTERIA_BESTIARY === 'string') return SOTERIA_BESTIARY;
