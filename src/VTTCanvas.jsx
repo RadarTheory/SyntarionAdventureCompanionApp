@@ -193,7 +193,7 @@ const r = isHovered ? 22 : 14;
 //                             can sync player tokens into the initiative board
 //   onRegisterPlaceToken(fn) — registers a callback DMView calls to place tokens
 //                              from HERCULES (enemies) or PlayersPanel (PCs)
-export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensChange, checkedInPlayers, isDM = false }) {
+export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlaceToken, onTokensChange, checkedInPlayers, isDM = false }) {
   const canvasRef    = useRef(null);
   const mapImgRef    = useRef(null);
   const paintingRef  = useRef(false);
@@ -217,6 +217,9 @@ export default function VTTCanvas({ campaignId, onRegisterPlaceToken, onTokensCh
   const [showTokenForm, setShowTokenForm]     = useState(false);
   const [pendingClick, setPendingClick]       = useState(null);
   const [mapSearch, setMapSearch]             = useState('');
+  const [pinnedCampaignId, setPinnedCampaignId] = useState(() => localStorage.getItem('vtt_pinned_campaign') || campaignId);
+  const [showCampaignPicker, setShowCampaignPicker] = useState(false);
+  const activeCampaignId = pinnedCampaignId || campaignId;
   const [showCommitPicker, setShowCommitPicker] = useState(false);
   const [feather, setFeather]                 = useState(0.3);
   const [dbCampaigns, setDbCampaigns] = useState([]);
@@ -643,6 +646,12 @@ useEffect(() => {
   const revealAll = () => setFogZones([{ id: uid(), type: 'reveal', x: 0.5, y: 0.5, r: 1.5 }]);
   const resetView = () => setTransform({ scale: 1, x: 0, y: 0 });
 
+  const pinCampaign = (id) => {
+    setPinnedCampaignId(id);
+    localStorage.setItem('vtt_pinned_campaign', id);
+    setShowCampaignPicker(false);
+  };
+
   const syncMapFromCampaign = async () => {
     const { data } = await supabase.from('campaigns').select('map_url').eq('id', campaignId).single();
     if (data?.map_url) { await supabase.from('vtt_sessions').update({ map_filename: data.map_url }).eq('id', vttSession.id); setMapFilename(data.map_url); }
@@ -681,7 +690,23 @@ useEffect(() => {
         <button onClick={revealAll} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>Reveal All</button>
         <button onClick={clearFog}  style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>Reset Fog</button>
         <button onClick={resetView} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>⊡ Reset View</button>
-        <button onClick={syncMapFromCampaign} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↺ Sync Map</button>
+        {isDM && (
+          <div style={{ position: 'relative' }}>
+            <button onClick={() => setShowCampaignPicker(p => !p)} style={{ background: 'rgba(200,168,74,0.08)', border: `1px solid rgba(200,168,74,0.3)`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#c8a84a' }}>
+              ⚑ {dbCampaigns.find(c => String(c.id) === String(activeCampaignId))?.subtitle || 'Set Campaign'}
+            </button>
+            {showCampaignPicker && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 4, background: '#1a1714', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 8, padding: 8, zIndex: 200, minWidth: 180, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {dbCampaigns.map(c => (
+                  <button key={c.id} onClick={() => pinCampaign(c.id)} style={{ background: String(c.id) === String(activeCampaignId) ? 'rgba(200,168,74,0.15)' : 'transparent', border: `1px solid ${String(c.id) === String(activeCampaignId) ? 'rgba(200,168,74,0.4)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: String(c.id) === String(activeCampaignId) ? '#e8c84a' : '#a09070', textAlign: 'left' }}>
+                    {c.subtitle || c.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        <button onClick={syncMapFromCampaign}style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↺ Sync Map</button>
         {mapFilename && <button onClick={() => { setMapFilename(null); setMapLoaded(false); setFogZones([]); setTokens([]); }} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↩ Change Map</button>}
         {mapLoaded && <div style={{ ...label8, color: COLORS.dim }}>Ctrl+drag to pan · Zoom: {Math.round(transform.scale * 100)}%</div>}
         <button onClick={() => setShowCommitPicker(true)} disabled={saving || !mapFilename} style={{ marginLeft: 'auto', background: mapFilename ? 'rgba(200,168,74,0.15)' : 'transparent', border: `1px solid ${mapFilename ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 16px', cursor: mapFilename ? 'pointer' : 'default', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: mapFilename ? '#e8c84a' : COLORS.dim, fontWeight: 700, opacity: saving ? 0.6 : 1 }}>

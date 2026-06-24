@@ -479,7 +479,7 @@ useEffect(() => {
       setDragPos({ x: hitTok.x, y: hitTok.y });
       return;
     }
-    panRef.current = { panning: true, lastX: clientX, lastY: clientY };
+    panRef.current = { panning: true, lastX: clientX, lastY: clientY, startX: clientX, startY: clientY, tapped: false };
   }, [hitTestPendingX, hitTestToken, userCharId]);
 
   const handleTouchMove = useCallback((e) => {
@@ -524,9 +524,26 @@ useEffect(() => {
     }
   }, [clientToMapCoords]);
 
-  const handleTouchEnd = useCallback(() => {
+  const handleTouchEnd = useCallback((e) => {
     if (dragRef.current.dragging && dragRef.current.moved && dragRef.current._lastDragPos) {
       addWaypoint(dragRef.current._lastDragPos.x, dragRef.current._lastDragPos.y);
+    }
+    // Tap detection — show portrait card on token tap
+    if (panRef.current.panning && !dragRef.current.dragging) {
+      const touch = e?.changedTouches?.[0];
+      if (touch) {
+        const dx = touch.clientX - panRef.current.startX;
+        const dy = touch.clientY - panRef.current.startY;
+        if (Math.sqrt(dx * dx + dy * dy) < 8) {
+          // It was a tap, not a pan
+          const hitTok = hitTestToken(touch.clientX, touch.clientY);
+          if (hitTok) {
+            setHoveredToken(prev => prev?.id === hitTok.id ? null : { id: hitTok.id, name: hitTok.fullName || hitTok.creatureName || hitTok.label || '?', portrait_url: hitTok.portrait_url || null, clientX: touch.clientX, clientY: touch.clientY });
+          } else {
+            setHoveredToken(null);
+          }
+        }
+      }
     }
     dragRef.current = { dragging: false, token: null, startX: 0, startY: 0, moved: false, _lastDragPos: null };
     setDraggingToken(null);
@@ -589,7 +606,7 @@ useEffect(() => {
         ) : (
           <canvas ref={canvasRef} width={900} height={600} style={{ width: '100%', height: 'auto', display: 'block', touchAction: 'none' }}
             onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
-            onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} />
+            onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={(e) => handleTouchEnd(e)} />
         )}
       </div>
 

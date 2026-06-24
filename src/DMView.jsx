@@ -977,7 +977,7 @@ useEffect(() => {
       case 'Maps': return <MapPanel />;
       case 'VTT':
         return <VTTCanvas
-          campaignId={activeCampaignTab}
+          campaignId={activeCampaignTab || null}
           onRegisterPlaceToken={fn => { vttPlaceTokenRef.current = fn; }}
           checkedInPlayers={uniqueCheckins}
           isDM={true}
