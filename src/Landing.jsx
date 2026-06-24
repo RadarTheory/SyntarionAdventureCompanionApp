@@ -324,8 +324,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
     />
   );
 
-  if (appView === 'roster') return <Roster userId={user?.id} campaignChars={campaignChars} onHome={() => { localStorage.setItem('syn_view', 'character-select'); setAppView('character-select'); }} />;
-
+  if (appView === 'roster') return <Roster user={user} userChar={selectedChar} onHome={() => { localStorage.setItem('syn_view', 'character-select'); setAppView('character-select'); }} />;
   if (appView === 'wizard') return (
     <Wizard onComplete={goHome} onHome={goHome} />
   );
