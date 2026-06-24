@@ -412,7 +412,7 @@ useEffect(() => {
       setDragPos({ x: hitTok.x, y: hitTok.y });
       return;
     }
-    panRef.current = { panning: true, lastX: clientX, lastY: clientY };
+    panRef.current = { panning: true, lastX: clientX, lastY: clientY, startX: clientX, startY: clientY, tapped: false };
   }, [hitTestPendingX, hitTestToken, userCharId]);
 
   const handleMouseMove = useCallback((e) => {
@@ -545,6 +545,23 @@ useEffect(() => {
         }
       }
     }
+    // Tap detection — show portrait card on token tap
+    if (panRef.current.panning && !dragRef.current.dragging) {
+      const touch = e?.changedTouches?.[0];
+      if (touch) {
+        const dx = touch.clientX - panRef.current.startX;
+        const dy = touch.clientY - panRef.current.startY;
+        if (Math.sqrt(dx * dx + dy * dy) < 8) {
+          // It was a tap, not a pan
+          const hitTok = hitTestToken(touch.clientX, touch.clientY);
+          if (hitTok) {
+            setHoveredToken(prev => prev?.id === hitTok.id ? null : { id: hitTok.id, name: hitTok.fullName || hitTok.creatureName || hitTok.label || '?', portrait_url: hitTok.portrait_url || null, clientX: touch.clientX, clientY: touch.clientY });
+          } else {
+            setHoveredToken(null);
+          }
+        }
+      }
+    }
     dragRef.current = { dragging: false, token: null, startX: 0, startY: 0, moved: false, _lastDragPos: null };
     setDraggingToken(null);
     setDragPos(null);
@@ -567,7 +584,7 @@ useEffect(() => {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" }}>
           Live Map · {Math.round(transform.scale * 100)}% · Scroll/pinch to zoom · Drag to pan
@@ -600,7 +617,7 @@ useEffect(() => {
         </div>
       )}
 
-      <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: `1px solid ${COLORS.border}`, background: '#0d0b09', cursor: draggingToken ? 'grabbing' : 'grab' }}>
+      <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: `1px solid ${COLORS.border}`, background: '#0d0b09', cursor: draggingToken ? 'grabbing' : 'grab', flex: 1, minHeight: 300 }}>
         {!mapLoaded ? (
           <div style={{ padding: '60px 20px', textAlign: 'center', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: COLORS.dim, fontSize: 12 }}>Loading map…</div>
         ) : (
@@ -637,3 +654,5 @@ useEffect(() => {
     </div>
   );
 }
+
+

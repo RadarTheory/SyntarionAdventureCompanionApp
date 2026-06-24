@@ -197,7 +197,7 @@ function DraggablePanel({ defaultX, defaultY, onClose, title, width, accentColor
         <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8d9a7', letterSpacing: '0.12em' }}>⠿ {title}</div>
         <button onClick={onClose} style={{ background: 'transparent', border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 4, padding: '3px 7px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
       </div>
-      <div style={{ flex: 1, overflowY: 'auto' }}>{children}</div>
+      <div style={{ flex: 1, overflowY: activeTab === 'Map' ? 'hidden' : 'auto' }}>{children}</div>
     </div>
   );
 }
@@ -2322,8 +2322,8 @@ useEffect(() => {
         
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto' }}>
-        <div style={{ padding: isMobile ? '20px 16px' : '28px 32px', maxWidth: 680, width: '100%', margin: '0 auto' }}>
+      <div style={{ flex: 1, overflowY: activeTab === 'Map' ? 'hidden' : 'auto' }}>
+        <div style={{ padding: activeTab === 'Map' ? 0 : (isMobile ? '20px 16px' : '28px 32px'), maxWidth: activeTab === 'Map' ? '100%' : 680, width: '100%', margin: '0 auto', height: activeTab === 'Map' ? '100%' : 'auto' }}>
           {false && !isAssigned && userChar && (
             <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '16px 20px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Assign your character to this campaign</div>
@@ -2348,3 +2348,4 @@ export default function CampaignView({ campaignChars = [], onHome, onAssign, onU
   }
   return <CampaignList onSelect={setSelectedCampaign} userChar={campaignChars[0] || null} onHome={onHome} />;
 }
+
