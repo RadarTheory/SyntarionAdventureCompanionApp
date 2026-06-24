@@ -319,9 +319,12 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
       savedChars={savedChars}
       onSelect={(char) => { setSelectedChar(char); localStorage.setItem('syn_view', 'sheet'); localStorage.setItem('syn_char', JSON.stringify(char)); setAppView('sheet'); }}
       onCreate={() => setAppView('wizard')}
+      onClaim={() => { localStorage.setItem('syn_view', 'roster'); setAppView('roster'); }}
       onHome={goHome}
     />
   );
+
+  if (appView === 'roster') return <Roster userId={user?.id} campaignChars={campaignChars} onHome={() => { localStorage.setItem('syn_view', 'character-select'); setAppView('character-select'); }} />;
 
   if (appView === 'wizard') return (
     <Wizard onComplete={goHome} onHome={goHome} />

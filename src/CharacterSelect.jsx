@@ -110,8 +110,29 @@ export default function CharacterSelect({ savedChars = [], onSelect, onCreate, o
               />
             ))}
 
-            {/* Create new — secondary, at the bottom */}
-            <div style={{ marginTop: 8 }}>
+            {/* Claim or Create — secondary, at the bottom */}
+            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button onClick={onClaim} style={{
+                width: '100%',
+                background: 'transparent',
+                border: '1px solid rgba(26,23,20,0.18)',
+                borderRadius: 4,
+                padding: isMobile ? '13px 20px' : '14px 24px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                transition: 'all 0.18s ease',
+              }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(26,23,20,0.04)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 11 : 12, fontWeight: 700, letterSpacing: '0.22em', color: '#1a1714', marginBottom: 2 }}>CLAIM AN ADVENTURER</div>
+                  <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 10, color: 'rgba(26,23,20,0.4)' }}>Join an existing character in the world</div>
+                </div>
+                <div style={{ fontSize: 14, color: 'rgba(26,23,20,0.22)' }}>→</div>
+              </button>
               <button onClick={onCreate} style={{
                 width: '100%',
                 background: 'transparent',
