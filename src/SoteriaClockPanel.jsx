@@ -3,7 +3,7 @@ import supabase from './lib/supabase';
 import {
   PASSES, getCycleName, getPassInfo, advanceFragments, getLiveClock, getClockTime,
   TRAVEL_METHODS, FRAGMENTS_PER_TURN, GREATER_CYCLES_EU, GREATER_CYCLES_ED,
-} from './lib/soteriaClock';
+} from "../lib/soteriaClock";
 
 // ─── ORBITAL CELESTIAL DISPLAY ─────────────────────────────────────────────────
 // The Major Sun sits fixed at center by day; orbiting bodies (Green/White Suns,
