@@ -57,7 +57,7 @@ function isTokenFogged(tok, fogZones) {
   return false;
 }
 
-function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves, draggingToken, dragPos, userCharId, hoveredTokenId }) {
+function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves, draggingToken, dragPos, userCharId, hoveredTokenId, onIconReady }) {
   if (!canvas || !mapImg) return;
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
@@ -155,7 +155,7 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
     ctx.lineWidth = isHovered ? 3 : (isOwn ? 2.5 : 2);
     ctx.stroke();
     ctx.globalAlpha = hasPending ? 0.5 : 1;
-    const icon = tok.race ? getRaceIcon(tok.race, () => setIconTick(t => t + 1)) : null;
+    const icon = tok.race ? getRaceIcon(tok.race, onIconReady) : null;
     if (icon) {
       const iconSize = r * 1.3;
       ctx.drawImage(icon, tx - iconSize / 2, ty - iconSize / 2, iconSize, iconSize);
@@ -163,6 +163,18 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
       ctx.fillStyle = '#fff'; ctx.font = `bold ${isHovered ? 12 : 9}px sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
+    }
+    if (tok.status === 'dead') {
+      const deathIcon = getRaceIcon('death', onIconReady);
+      if (deathIcon) {
+        ctx.globalAlpha = 0.85;
+        ctx.drawImage(deathIcon, tx - r, ty - r, r * 2, r * 2);
+      } else {
+        ctx.fillStyle = 'rgba(224,90,90,0.9)';
+        ctx.font = `bold ${r}px sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('☠', tx, ty);
+      }
     }
     ctx.restore();
   });
@@ -284,7 +296,7 @@ export default function VTTViewer({ campaignId, userChar }) {
 
 useEffect(() => {
     if (!mapLoaded) return;
-    drawViewer({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, transform, pendingMoves, draggingToken, dragPos, userCharId, hoveredTokenId: hoveredToken?.id || null });
+    drawViewer({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, transform, pendingMoves, draggingToken, dragPos, userCharId, hoveredTokenId: hoveredToken?.id || null, onIconReady: () => setIconTick(t => t + 1) });
   }, [fogZones, tokens, mapLoaded, transform, pendingMoves, draggingToken, dragPos, userCharId, hoveredToken, iconTick]);
 
   // Wheel zoom
@@ -644,7 +656,7 @@ useEffect(() => {
       {fullscreen && mapLoaded && (
         <div onClick={() => setFullscreen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 500, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <canvas
-            ref={node => { if (node) drawViewer({ canvas: node, mapImg: mapImgRef.current, fogZones, tokens, transform, pendingMoves, draggingToken: null, dragPos: null, userCharId }); }}
+            ref={node => { if (node) drawViewer({ canvas: node, mapImg: mapImgRef.current, fogZones, tokens, transform, pendingMoves, draggingToken: null, dragPos: null, userCharId, onIconReady: () => setIconTick(t => t + 1) }); }}
             width={900} height={600}
             style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 80px)', borderRadius: 8 }}
             onClick={e => e.stopPropagation()}

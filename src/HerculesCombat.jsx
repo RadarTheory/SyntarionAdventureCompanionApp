@@ -784,6 +784,12 @@ useEffect(() => {
 
     const existingTokens = Array.isArray(vttSession?.tokens) ? vttSession.tokens : [];
 
+    const { data: beastData } = await supabase
+      .from('beasts')
+      .select('race')
+      .ilike('name', creatureName)
+      .maybeSingle();
+
     const newToken = {
       id: tokenId,
       token_id: tokenId,
@@ -792,6 +798,7 @@ useEffect(() => {
       creatureName,
       type: 'enemy',
       color: creatureColor(creatureName),
+      race: beastData?.race || null,
       x: 50,
       y: 50,
     };
