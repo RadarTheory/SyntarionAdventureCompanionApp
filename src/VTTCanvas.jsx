@@ -303,14 +303,14 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   }, []);
 
   useEffect(() => {
-    supabase.from('beasts').select('name, race').order('name', { ascending: true })
-      .then(({ data }) => { if (data) setBestiary(data); });
+    supabase.from('beasts').select('name, race').order('name', { ascending: true }).limit(300)
+      .then(({ data, error }) => { if (error) console.error('Bestiary load:', error); if (data) setBestiary(data); });
   }, []);
 
   useEffect(() => {
     if (!campaignId) return;
-    supabase.from('npcs').select('id, name, race').eq('campaign_id', campaignId).order('name', { ascending: true })
-      .then(({ data }) => { if (data) setNpcList(data); });
+    supabase.from('npcs').select('id, name, race').eq('campaign_id', String(campaignId)).order('name', { ascending: true })
+      .then(({ data, error }) => { if (error) console.error('NPC load:', error); if (data) setNpcList(data); });
   }, [campaignId]);
 
   const conjureTokenToMap = async token => {
@@ -720,22 +720,36 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <div style={{ display: 'flex', gap: 6 }}>
               {['bestiary', 'npcs'].map(tab => (
-                <button key={tab} onClick={() => { setEnemyPickerTab(tab); setEnemySearch(''); }} style={{ background: enemyPickerTab === tab ? 'rgba(200,168,74,0.15)' : 'transparent', border: `1px solid ${enemyPickerTab === tab ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 5, padding: '4px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: enemyPickerTab === tab ? '#e8c84a' : COLORS.dim }}>
+                <button key={tab} onClick={() => {
+                  setEnemyPickerTab(tab); setEnemySearch('');
+                  if (tab === 'bestiary') supabase.from('beasts').select('name, race').order('name', { ascending: true }).limit(80).then(({ data }) => { if (data) setBestiary(data); });
+                  else supabase.from('npcs').select('id, name, race').eq('campaign_id', String(campaignId)).order('name', { ascending: true }).limit(80).then(({ data }) => { if (data) setNpcList(data); });
+                }} style={{ background: enemyPickerTab === tab ? 'rgba(200,168,74,0.15)' : 'transparent', border: `1px solid ${enemyPickerTab === tab ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 5, padding: '4px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: enemyPickerTab === tab ? '#e8c84a' : COLORS.dim }}>
                   {tab === 'bestiary' ? '⚔ Bestiary' : '👤 NPCs'}
                 </button>
               ))}
             </div>
             <button onClick={() => { setShowEnemyPicker(false); setPendingClick(null); }} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 9, color: COLORS.dim }}>✕</button>
           </div>
-          <input autoFocus value={enemySearch} onChange={e => setEnemySearch(e.target.value)} placeholder={enemyPickerTab === 'bestiary' ? 'Search creatures…' : 'Search NPCs…'} style={{ width: '100%', boxSizing: 'border-box', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none', marginBottom: 8 }} />
+          <input autoFocus value={enemySearch} onChange={e => {
+            const q = e.target.value;
+            setEnemySearch(q);
+            if (enemyPickerTab === 'bestiary') {
+              const query = supabase.from('beasts').select('name, race').order('name', { ascending: true }).limit(80);
+              (q.trim() ? query.ilike('name', `%${q}%`) : query).then(({ data }) => { if (data) setBestiary(data); });
+            } else {
+              const query = supabase.from('npcs').select('id, name, race').eq('campaign_id', String(campaignId)).order('name', { ascending: true }).limit(80);
+              (q.trim() ? query.ilike('name', `%${q}%`) : query).then(({ data }) => { if (data) setNpcList(data); });
+            }
+          }} placeholder={enemyPickerTab === 'bestiary' ? 'Search creatures…' : 'Search NPCs…'} style={{ width: '100%', boxSizing: 'border-box', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none', marginBottom: 8 }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
             {enemyPickerTab === 'bestiary'
-              ? bestiary.filter(b => b.name.toLowerCase().includes(enemySearch.toLowerCase())).map(b => (
+              ? bestiary.map(b => (
                   <button key={b.name} onClick={() => placeEnemyFromPicker(b.name, b.race, null)} style={{ textAlign: 'left', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '7px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.06em', color: COLORS.text }}>
                     + {b.name}
                   </button>
                 ))
-              : npcList.filter(n => n.name.toLowerCase().includes(enemySearch.toLowerCase())).map(n => (
+              : npcList.map(n => (
                   <button key={n.id} onClick={() => placeEnemyFromPicker(n.name, n.race, '#c8a860')} style={{ textAlign: 'left', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '7px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.06em', color: '#c8a860' }}>
                     + {n.name}
                   </button>
