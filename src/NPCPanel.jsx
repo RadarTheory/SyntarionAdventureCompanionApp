@@ -867,6 +867,49 @@ Set inCatalog to false if you invented it.`;
                 console.error('Scribe loot failed:', e);
               }
 
+              // Fallback: parse notes for item mentions + role-based defaults
+              if (!scribeItems.length) {
+                const notes = (selectedNpc.notes||'').toLowerCase();
+                const role = (selectedNpc.role||'').toLowerCase();
+                const fallbackItems = [];
+
+                // Parse notes for common item keywords
+                const noteKeywords = [
+                  { match: /flay knife|filleting knife|fishing knife/, name: 'Flay Knife', category: 'Weapons', description: 'A well-worn knife for gutting and filleting fish.', rarity: 'Common' },
+                  { match: /vonyalore set ring|vonyalore ring/, name: 'Vonyalore Set Ring', category: 'Accessories', description: 'A silver ring with a Vonyalore stone set in the middle.', rarity: 'Uncommon' },
+                  { match: /silver ring/, name: 'Silver Ring', category: 'Accessories', description: 'A plain silver ring. Common, honest, unenchanted.', rarity: 'Common' },
+                  { match: /copper ring/, name: 'Coin Purse', category: 'Accessories', description: 'A simple copper ring worn daily.', rarity: 'Common' },
+                  { match: /fishing rod|rod/, name: 'Fishing Rod', category: 'Gear', description: 'A worn but reliable rod.', rarity: 'Common' },
+                  { match: /fishing net|net/, name: 'Fishing Net', category: 'Gear', description: 'Coarse woven net, river-stained.', rarity: 'Common' },
+                  { match: /bait|bait pouch/, name: 'Bait Pouch', category: 'Consumables', description: 'Smells terrible. Works well.', rarity: 'Common' },
+                  { match: /lantern/, name: 'Lantern', category: 'Gear', description: 'Oil lantern, half full.', rarity: 'Common' },
+                  { match: /rope/, name: 'Rope Coil', category: 'Gear', description: 'Fifty feet of sturdy rope.', rarity: 'Common' },
+                  { match: /coin|purse/, name: 'Coin Purse', category: 'Accessories', description: 'A small leather purse with modest coin.', rarity: 'Common' },
+                  { match: /dagger|knife/, name: 'Flay Knife', category: 'Weapons', description: 'A short blade, well-maintained.', rarity: 'Common' },
+                  { match: /ledger|book|journal/, name: 'Merchant Ledger', category: 'Gear', description: 'A worn ledger of records.', rarity: 'Common' },
+                ];
+
+                for (const kw of noteKeywords) {
+                  if (kw.match.test(notes)) fallbackItems.push({ ...kw, _isNew: true, id: `new_${Math.random().toString(36).slice(2,7)}` });
+                }
+
+                // Role-based defaults if notes had nothing
+                if (!fallbackItems.length) {
+                  if (role.match(/fisher|fisherman/)) fallbackItems.push({ id:'fb1', name:'Fishing Rod', category:'Gear', description:'A worn but reliable rod.', rarity:'Common', _isNew:false },{ id:'fb2', name:'Bait Pouch', category:'Consumables', description:'Smells terrible. Works well.', rarity:'Common', _isNew:false });
+                  else if (role.match(/guard|soldier|militia/)) fallbackItems.push({ id:'fb1', name:'Guard Whistle', category:'Gear', description:'Tin whistle used to signal others.', rarity:'Common', _isNew:false });
+                  else if (role.match(/merchant|trader/)) fallbackItems.push({ id:'fb1', name:'Merchant Ledger', category:'Gear', description:'Records of trades and debts.', rarity:'Uncommon', _isNew:false });
+                  else if (role.match(/innkeep|tavern/)) fallbackItems.push({ id:'fb1', name:'Tavern Ledger', category:'Gear', description:'Names, debts, and secrets.', rarity:'Uncommon', _isNew:false });
+                  else fallbackItems.push({ id:'fb1', name:'Coin Purse', category:'Accessories', description:'A small leather purse.', rarity:'Common', _isNew:false });
+                }
+
+                // Match against catalog where possible
+                const { data: fbCatalog } = await supabase.from('items').select('id,name,category,description,rarity').limit(500);
+                scribeItems = fallbackItems.map(fi => {
+                  const match = (fbCatalog||[]).find(c => c.name.toLowerCase() === fi.name.toLowerCase());
+                  return match ? { ...match, _isNew: false } : fi;
+                });
+              }
+
               if (!scribeItems.length) return;
 
               const { data: fullCatalog } = await supabase.from('items').select('id,name,category,description,rarity').limit(500);
