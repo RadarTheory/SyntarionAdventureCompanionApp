@@ -222,6 +222,12 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   const activeCampaignId = pinnedCampaignId || campaignId;
   const [showCommitPicker, setShowCommitPicker] = useState(false);
   const [feather, setFeather]                 = useState(0.3);
+  const [localCampaigns, setLocalCampaigns]   = useState([]);
+
+  useEffect(() => {
+    supabase.from('campaigns').select('*').order('created_at', { ascending: true })
+      .then(({ data }) => { if (data) setLocalCampaigns(data); });
+  }, []);
 
   const conjureTokenToMap = async token => {
   if (!token?.id && !token?.token_id && !token?.name && !token?.label) return;
@@ -687,11 +693,11 @@ useEffect(() => {
         {isDM && (
           <div style={{ position: 'relative' }}>
             <button onClick={() => setShowCampaignPicker(p => !p)} style={{ background: 'rgba(200,168,74,0.08)', border: `1px solid rgba(200,168,74,0.3)`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#c8a84a' }}>
-              ⚑ {dbCampaigns.find(c => String(c.id) === String(activeCampaignId))?.subtitle || 'Set Campaign'}
+              ⚑ {localCampaigns.find(c => String(c.id) === String(activeCampaignId))?.subtitle || 'Set Campaign'}
             </button>
             {showCampaignPicker && (
               <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 4, background: '#1a1714', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 8, padding: 8, zIndex: 200, minWidth: 180, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {dbCampaigns.map(c => (
+                {localCampaigns.map(c => (
                   <button key={c.id} onClick={() => pinCampaign(c.id)} style={{ background: String(c.id) === String(activeCampaignId) ? 'rgba(200,168,74,0.15)' : 'transparent', border: `1px solid ${String(c.id) === String(activeCampaignId) ? 'rgba(200,168,74,0.4)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: String(c.id) === String(activeCampaignId) ? '#e8c84a' : '#a09070', textAlign: 'left' }}>
                     {c.subtitle || c.name}
                   </button>
@@ -817,7 +823,7 @@ useEffect(() => {
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8c84a', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>Commit to Campaign</div>
             <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>Choose which campaign this map and fog state applies to.</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {dbCampaigns.map(c => (
+              {localCampaigns.map(c => (
                 <button key={c.id} onClick={() => save(c.id)} style={{ textAlign: 'left', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '12px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = '#c8a84a88'; e.currentTarget.style.background = 'rgba(200,168,74,0.08)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.background = 'rgba(240,238,235,0.04)'; }}
