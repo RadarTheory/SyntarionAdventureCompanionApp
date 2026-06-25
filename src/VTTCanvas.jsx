@@ -10,16 +10,12 @@ const MAX_SCALE = 10;
 
 function uid() { return Math.random().toString(36).slice(2, 9); }
 
-// ─── Race icon silhouette cache ────────────────────────────────────────────
-// Loads each race icon once, strips its original colors, and forces it to a
-// white silhouette (alpha preserved) so it reads against any token color.
 const raceIconCache = {};
-
 function getRaceIcon(race, onReady) {
   if (!race) return null;
   const key = race.toLowerCase().replace(/[^a-z]/g, '');
   if (raceIconCache[key] === undefined) {
-    raceIconCache[key] = null; // mark as loading
+    raceIconCache[key] = null;
     const img = new Image();
     img.onload = () => {
       const off = document.createElement('canvas');
@@ -31,13 +27,13 @@ function getRaceIcon(race, onReady) {
       for (let i = 0; i < d.length; i += 4) {
         const luminance = (d[i] + d[i + 1] + d[i + 2]) / 3;
         d[i] = 255; d[i + 1] = 255; d[i + 2] = 255;
-        d[i + 3] = 255 - luminance; // dark linework becomes opaque white, light background becomes transparent
+        d[i + 3] = 255 - luminance;
       }
       octx.putImageData(imgData, 0, 0);
       raceIconCache[key] = off;
       onReady?.();
     };
-    img.onerror = () => { raceIconCache[key] = false; }; // mark as failed
+    img.onerror = () => { raceIconCache[key] = false; };
     img.src = `/RaceIcons/${key}.png`;
   }
   return raceIconCache[key] || null;
@@ -46,40 +42,22 @@ function getRaceIcon(race, onReady) {
 function getMapRect(canvas, mapImg) {
   const W = canvas.width;
   const H = canvas.height;
-
   const imgRatio = mapImg.width / mapImg.height;
   const canvasRatio = W / H;
-
-  let drawW;
-  let drawH;
-
-  if (imgRatio > canvasRatio) {
-    drawW = W;
-    drawH = W / imgRatio;
-  } else {
-    drawH = H;
-    drawW = H * imgRatio;
-  }
-
-  return {
-    x: (W - drawW) / 2,
-    y: (H - drawH) / 2,
-    w: drawW,
-    h: drawH,
-  };
+  let drawW, drawH;
+  if (imgRatio > canvasRatio) { drawW = W; drawH = W / imgRatio; }
+  else { drawH = H; drawW = H * imgRatio; }
+  return { x: (W - drawW) / 2, y: (H - drawH) / 2, w: drawW, h: drawH };
 }
+
 function isTokenFogged(tok, fogZones) {
-  // A point is hidden if any 'hide' zone covers it, OR if 'reveal' zones exist
-  // and none of them cover it (fog defaults to hidden until revealed).
   const hideZones = fogZones.filter(z => z.type === 'hide');
   const revealZones = fogZones.filter(z => z.type === 'reveal');
-
   const inZone = (zone) => {
     const dx = tok.x - zone.x;
     const dy = tok.y - zone.y;
     return Math.sqrt(dx * dx + dy * dy) <= zone.r;
   };
-
   if (hideZones.some(inZone)) return true;
   if (revealZones.length > 0 && !revealZones.some(inZone)) return true;
   return false;
@@ -90,104 +68,130 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   const ctx = canvas.getContext('2d');
   const W = canvas.width;
   const H = canvas.height;
+  const mapRect = getMapRect(canvas, mapImg);
 
   ctx.clearRect(0, 0, W, H);
+
+  // ── 1. Draw map (in transformed space) ──────────────────────────────────
   ctx.save();
   ctx.setTransform(transform.scale, 0, 0, transform.scale, transform.x, transform.y);
-  const mapRect = getMapRect(canvas, mapImg);
   ctx.drawImage(mapImg, mapRect.x, mapRect.y, mapRect.w, mapRect.h);
-
-  // Draw fog directly in map coordinate space so it scales correctly with zoom
-  const scaledW = W / transform.scale;
-  const scaledH = H / transform.scale;
-  const fogCanvas = document.createElement('canvas');
-  fogCanvas.width = scaledW; fogCanvas.height = scaledH;
-  const fogCtx = fogCanvas.getContext('2d');
-  // Offset to account for pan
-  const offX = transform.x / transform.scale;
-  const offY = transform.y / transform.scale;
-  fogCtx.fillStyle = 'rgba(10,8,6,0.85)';
-  fogCtx.fillRect(-offX, -offY, scaledW + Math.abs(offX), scaledH + Math.abs(offY));
-  fogCtx.globalCompositeOperation = 'destination-out';
-  fogZones.forEach(zone => {
-    if (zone.type === 'reveal') {
-      const cx = mapRect.x + zone.x * mapRect.w;
-      const cy = mapRect.y + zone.y * mapRect.h;
-      const r = zone.r * mapRect.w;
-      const feather = zone.feather ?? 0.18;
-      const grad = fogCtx.createRadialGradient(cx, cy, r * (1 - feather), cx, cy, r);
-      grad.addColorStop(0, 'rgba(0,0,0,1)');
-      grad.addColorStop(1, 'rgba(0,0,0,0)');
-      fogCtx.beginPath();
-      fogCtx.arc(cx, cy, r, 0, Math.PI * 2);
-      fogCtx.fillStyle = grad;
-      fogCtx.fill();
-    }
-  });
-  fogCtx.globalCompositeOperation = 'source-over';
-  fogZones.forEach(zone => {
-    if (zone.type === 'hide') {
-      const cx = mapRect.x + zone.x * mapRect.w;
-      const cy = mapRect.y + zone.y * mapRect.h;
-      const r = zone.r * mapRect.w;
-      const feather = zone.feather ?? 0.18;
-      if (feather > 0) {
-        const grad = fogCtx.createRadialGradient(cx, cy, r * (1 - feather), cx, cy, r);
-        grad.addColorStop(0, 'rgba(10,8,6,0.85)');
-        grad.addColorStop(1, 'rgba(10,8,6,0)');
-        fogCtx.beginPath();
-        fogCtx.arc(cx, cy, r, 0, Math.PI * 2);
-        fogCtx.fillStyle = grad;
-        fogCtx.fill();
-      } else {
-        fogCtx.beginPath();
-        fogCtx.arc(cx, cy, r, 0, Math.PI * 2);
-        fogCtx.fillStyle = 'rgba(10,8,6,0.85)';
-        fogCtx.fill();
-      }
-    }
-  });
-  ctx.drawImage(fogCanvas, -offX, -offY, scaledW, scaledH);
   ctx.restore();
+
+  // ── 2. Build fog on an offscreen canvas in unscaled pixel space ──────────
+  // Fog zone coordinates are normalized (0-1) relative to mapRect.
+  // We convert them to unscaled canvas pixels here, so they are
+  // zoom/pan invariant — the fog canvas is then drawn with the transform.
+  const fogCanvas = document.createElement('canvas');
+  fogCanvas.width = W;
+  fogCanvas.height = H;
+  const fog = fogCanvas.getContext('2d');
+
+  // Fill entirely black
+  fog.fillStyle = '#0a0806';
+  fog.fillRect(0, 0, W, H);
+
+  // Punch reveal holes using destination-out
+  fog.globalCompositeOperation = 'destination-out';
+  fogZones.forEach(zone => {
+    if (zone.type !== 'reveal') return;
+    const cx = mapRect.x + zone.x * mapRect.w;
+    const cy = mapRect.y + zone.y * mapRect.h;
+    const r  = zone.r * mapRect.w;
+    const feather = zone.feather ?? 0.18;
+    const inner = Math.max(0, r * (1 - feather));
+    const grad = fog.createRadialGradient(cx, cy, inner, cx, cy, r);
+    grad.addColorStop(0, 'rgba(0,0,0,1)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    fog.beginPath();
+    fog.arc(cx, cy, r, 0, Math.PI * 2);
+    fog.fillStyle = grad;
+    fog.fill();
+  });
+
+  // Paint hide zones back on top (source-over)
+  fog.globalCompositeOperation = 'source-over';
+  fogZones.forEach(zone => {
+    if (zone.type !== 'hide') return;
+    const cx = mapRect.x + zone.x * mapRect.w;
+    const cy = mapRect.y + zone.y * mapRect.h;
+    const r  = zone.r * mapRect.w;
+    const feather = zone.feather ?? 0.18;
+    if (feather > 0) {
+      const inner = Math.max(0, r * (1 - feather));
+      const grad = fog.createRadialGradient(cx, cy, inner, cx, cy, r);
+      grad.addColorStop(0, 'rgba(10,8,6,1)');
+      grad.addColorStop(1, 'rgba(10,8,6,0)');
+      fog.beginPath();
+      fog.arc(cx, cy, r, 0, Math.PI * 2);
+      fog.fillStyle = grad;
+      fog.fill();
+    } else {
+      fog.beginPath();
+      fog.arc(cx, cy, r, 0, Math.PI * 2);
+      fog.fillStyle = 'rgba(10,8,6,1)';
+      fog.fill();
+    }
+  });
+
+  // ── 3. Composite fog onto main canvas with the same transform ────────────
   ctx.save();
   ctx.setTransform(transform.scale, 0, 0, transform.scale, transform.x, transform.y);
+  ctx.drawImage(fogCanvas, 0, 0);
 
+  // ── 4. Draw tokens ───────────────────────────────────────────────────────
   tokens.forEach(tok => {
     const fogged = isTokenFogged(tok, fogZones);
-    const isPlayerToken = tok.type === 'player';
+
+    // Players never see fogged tokens
     if (fogged && !isDM) return;
-    if (fogged && !isDM) return; // players never see fogged tokens
-    if (isDM) {
-      const inHideZone = fogZones.some(z => z.type === 'hide' && (() => { const dx = tok.x - z.x, dy = tok.y - z.y; return Math.sqrt(dx*dx+dy*dy) <= z.r; })());
-      if (inHideZone) ctx.globalAlpha = 0.4; // DM sees actively hidden tokens dimmed
-      // tokens merely outside a reveal zone render at full alpha for DM — they're not hidden, just unlit
-    }
-    // DM always sees player tokens even in fog (dimmed), so they can move them
 
     const isHovered = hoveredTokenId && tok.id === hoveredTokenId;
     const tx = mapRect.x + tok.x * mapRect.w;
-const ty = mapRect.y + tok.y * mapRect.h;
-const r = isHovered ? 22 : 14;
+    const ty = mapRect.y + tok.y * mapRect.h;
+    const r  = isHovered ? 22 : 14;
+
     ctx.save();
-    
-    if (tok.type === 'player') { ctx.beginPath(); ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4); }
-    else { ctx.beginPath(); ctx.arc(tx, ty, r, 0, Math.PI * 2); }
+
+    // DM sees hide-zone tokens dimmed; tokens outside reveal zones render normally for DM
+    if (isDM && fogged) {
+      const inHideZone = fogZones.some(z => {
+        if (z.type !== 'hide') return false;
+        const dx = tok.x - z.x, dy = tok.y - z.y;
+        return Math.sqrt(dx * dx + dy * dy) <= z.r;
+      });
+      if (inHideZone) ctx.globalAlpha = 0.4;
+    }
+
+    // Shape
+    if (tok.type === 'player') {
+      ctx.beginPath(); ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4);
+    } else {
+      ctx.beginPath(); ctx.arc(tx, ty, r, 0, Math.PI * 2);
+    }
     ctx.fillStyle = tok.color || '#4a9edd';
     ctx.fill();
-    ctx.strokeStyle = isHovered ? '#e8c84a' : (fogged ? '#e8c84a' : '#fff'); ctx.lineWidth = isHovered ? 3 : 2;
+
+    // Border
+    ctx.strokeStyle = isHovered ? '#e8c84a' : (fogged ? '#e8c84a' : '#fff');
+    ctx.lineWidth = isHovered ? 3 : 2;
     if (fogged) ctx.setLineDash([3, 2]);
     ctx.stroke();
     ctx.setLineDash([]);
 
+    // Icon or label
     const icon = tok.race ? getRaceIcon(tok.race, onIconReady) : null;
     if (icon) {
       const iconSize = r * 1.3;
       ctx.drawImage(icon, tx - iconSize / 2, ty - iconSize / 2, iconSize, iconSize);
     } else {
-      ctx.fillStyle = '#fff'; ctx.font = `bold ${isHovered ? 12 : 9}px sans-serif`;
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold ${isHovered ? 12 : 9}px sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
     }
+
+    // Death overlay (enemies only)
     if (tok.status === 'dead' && !tok.characterId) {
       const deathIcon = getRaceIcon('death', onIconReady);
       if (deathIcon) {
@@ -201,34 +205,32 @@ const r = isHovered ? 22 : 14;
         ctx.fillText('☠', tx, ty);
       }
     }
+
     ctx.restore();
   });
 
   ctx.restore();
-  ctx.restore();
 
+  // ── 5. Brush preview (screen space, no transform) ────────────────────────
   if (brushPreview) {
     ctx.save();
     ctx.beginPath();
     ctx.arc(brushPreview.sx, brushPreview.sy, brushPreview.sr, 0, Math.PI * 2);
     ctx.strokeStyle = tool === 'fog-reveal' ? '#e8c84a88' : tool === 'fog-hide' ? '#4444ff88' : '#ffffff44';
-    ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]); ctx.stroke();
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.stroke();
     ctx.restore();
   }
 }
 
-// ─── VTTCanvas ────────────────────────────────────────────────────────────────
-// NEW PROPS:
-//   onTokensChange(tokens)  — called whenever the token list changes so HERCULES
-//                             can sync player tokens into the initiative board
-//   onRegisterPlaceToken(fn) — registers a callback DMView calls to place tokens
-//                              from HERCULES (enemies) or PlayersPanel (PCs)
 export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlaceToken, onTokensChange, checkedInPlayers, isDM = false }) {
   const canvasRef    = useRef(null);
   const mapImgRef    = useRef(null);
   const paintingRef  = useRef(false);
   const panRef       = useRef({ active: false, lastX: 0, lastY: 0 });
   const transformRef = useRef({ scale: 1, x: 0, y: 0 });
+
   const [transform, setTransform]             = useState({ scale: 1, x: 0, y: 0 });
   const [vttSession, setVttSession]           = useState(null);
   const [fogZones, setFogZones]               = useState([]);
@@ -242,16 +244,21 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   const [newTokenLabel, setNewTokenLabel]     = useState('');
   const [newTokenColor, setNewTokenColor]     = useState(TOKEN_COLORS[0]);
   const [selectedTokenId, setSelectedTokenId] = useState(null);
- const [hoveredToken, setHoveredToken] = useState(null); // { id, name, clientX, clientY }
-  const [iconTick, setIconTick] = useState(0);
+  const [hoveredToken, setHoveredToken]       = useState(null);
+  const [iconTick, setIconTick]               = useState(0);
   const [showTokenForm, setShowTokenForm]     = useState(false);
+  const [showEnemyPicker, setShowEnemyPicker] = useState(false);
+  const [enemyPickerTab, setEnemyPickerTab]   = useState('bestiary');
+  const [enemySearch, setEnemySearch]         = useState('');
+  const [bestiary, setBestiary]               = useState([]);
+  const [npcList, setNpcList]                 = useState([]);
   const [pendingClick, setPendingClick]       = useState(null);
   const [mapSearch, setMapSearch]             = useState('');
   const [pinnedCampaignId, setPinnedCampaignId] = useState(() => localStorage.getItem('vtt_pinned_campaign') || campaignId);
   const [showCampaignPicker, setShowCampaignPicker] = useState(false);
   const activeCampaignId = pinnedCampaignId || campaignId;
   const [showCommitPicker, setShowCommitPicker] = useState(false);
-  const [feather, setFeather]                 = useState(0.3);
+  const [feather, setFeather]                 = useState(0.18);
   const [localCampaigns, setLocalCampaigns]   = useState([]);
   const [portraitFullscreen, setPortraitFullscreen] = useState(null);
   const [pendingMoves, setPendingMoves]       = useState([]);
@@ -295,86 +302,46 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
       .then(({ data }) => { if (data) setLocalCampaigns(data); });
   }, []);
 
+  useEffect(() => {
+    supabase.from('beasts').select('name, race').order('name', { ascending: true })
+      .then(({ data }) => { if (data) setBestiary(data); });
+  }, []);
+
+  useEffect(() => {
+    if (!campaignId) return;
+    supabase.from('npcs').select('id, name, race').eq('campaign_id', campaignId).order('name', { ascending: true })
+      .then(({ data }) => { if (data) setNpcList(data); });
+  }, [campaignId]);
+
   const conjureTokenToMap = async token => {
-  if (!token?.id && !token?.token_id && !token?.name && !token?.label) return;
-  const sessionId = vttSession?.id;
-  if (!sessionId) {
-    console.error('No active VTT session to place token into');
-    return;
-  }
-
-  const tokenKey = String(
-    token.id ||
-    token.token_id ||
-    token.character_id ||
-    token.name ||
-    token.label
-  );
-
-  let found = false;
-  const updatedTokens = tokens.map(t => {
-    const currentKey = String(
-      t.id ||
-      t.token_id ||
-      t.character_id ||
-      t.name ||
-      t.label
-    );
-
-    if (currentKey !== tokenKey) return t;
-    found = true;
-
-    return {
-      ...t,
-      id: t.id || tokenKey,
-      token_id: t.token_id || tokenKey,
-      x: 0.5,
-      y: 0.5,
-      visible: true,
-      on_map: true,
-    };
-  });
-
-  const finalTokens = found ? updatedTokens : [
-    ...tokens,
-    {
-      id: tokenKey,
-      token_id: tokenKey,
-      type: token.type || 'enemy',
-      label: token.label || token.name || 'Token',
-      color: token.color || '#4a9edd',
+    if (!token?.id && !token?.token_id && !token?.name && !token?.label) return;
+    const sessionId = vttSession?.id;
+    if (!sessionId) { console.error('No active VTT session to place token into'); return; }
+    const tokenKey = String(token.id || token.token_id || token.character_id || token.name || token.label);
+    let found = false;
+    const updatedTokens = tokens.map(t => {
+      const currentKey = String(t.id || t.token_id || t.character_id || t.name || t.label);
+      if (currentKey !== tokenKey) return t;
+      found = true;
+      return { ...t, id: t.id || tokenKey, token_id: t.token_id || tokenKey, x: 0.5, y: 0.5, visible: true, on_map: true };
+    });
+    const finalTokens = found ? updatedTokens : [...tokens, {
+      id: tokenKey, token_id: tokenKey, type: token.type || 'enemy',
+      label: token.label || token.name || 'Token', color: token.color || '#4a9edd',
       characterId: token.characterId || token.character_id || null,
-      creatureName: token.creatureName || token.name || null,
-      race: token.race || null,
-      x: 0.5,
-      y: 0.5,
-      visible: true,
-      on_map: true,
-    },
-  ];
-
-  setTokens(finalTokens);
-
-  const { error } = await supabase
-    .from('vtt_sessions')
-    .update({
-      tokens: finalTokens,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', sessionId);
-
-  if (error) {
-    console.error('Failed to conjure token to map:', error);
-  }
-};
+      creatureName: token.creatureName || token.name || null, race: token.race || null,
+      x: 0.5, y: 0.5, visible: true, on_map: true,
+    }];
+    setTokens(finalTokens);
+    const { error } = await supabase.from('vtt_sessions').update({ tokens: finalTokens, updated_at: new Date().toISOString() }).eq('id', sessionId);
+    if (error) console.error('Failed to conjure token to map:', error);
+  };
 
   const removeToken = (token) => {
     setTokens(prev => {
       const next = prev.filter(t => t.id !== token.id);
       if (vttSession?.id) {
-        supabase.from('vtt_sessions')
-          .update({ tokens: next, updated_at: new Date().toISOString() })
-          .eq('id', vttSession.id)
+        supabase.from('vtt_sessions').update({ tokens: next, updated_at: new Date().toISOString() }).eq('id', vttSession.id)
           .then(({ error }) => { if (error) console.error('Failed to persist token removal:', error); });
       }
       return next;
@@ -382,96 +349,56 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   };
 
   useEffect(() => { transformRef.current = transform; }, [transform]);
-
-  // Notify HERCULES whenever tokens change
-  useEffect(() => {
-    onTokensChange?.(tokens);
-  }, [tokens, onTokensChange]);
+  useEffect(() => { onTokensChange?.(tokens); }, [tokens, onTokensChange]);
 
   useEffect(() => {
     if (!campaignId) return;
     loadSession();
-    const sub = supabase
-      .channel(`vtt-${campaignId}`)
+    const sub = supabase.channel(`vtt-${campaignId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'vtt_sessions', filter: `campaign_id=eq.${campaignId}` }, () => loadSession())
       .subscribe();
     return () => supabase.removeChannel(sub);
   }, [campaignId]);
 
-  // Register the place-token callback — handles both player PCs and HERCULES enemies.
-  // Enemies land at a slightly randomised position around center so stacking is avoided.
   useEffect(() => {
     if (!onRegisterPlaceToken) return;
     onRegisterPlaceToken((tokenData) => {
       setTokens(prev => {
-        // Deduplicate by characterId for PCs, by creatureName for enemies
-        const filtered = tokenData.characterId
-          ? prev.filter(t => t.characterId !== tokenData.characterId)
-          : prev; // enemies can have multiples
-
-        // Scatter enemies around center so two of the same type don't overlap
-        const scatter = () => 0.38 + Math.random() * 0.24; // 0.38–0.62
+        const filtered = tokenData.characterId ? prev.filter(t => t.characterId !== tokenData.characterId) : prev;
+        const scatter = () => 0.38 + Math.random() * 0.24;
         const x = tokenData.type === 'player' ? 0.5 : scatter();
         const y = tokenData.type === 'player' ? 0.5 : scatter();
-
         const next = [...filtered, {
-          id: uid(),
-          type: tokenData.type || 'enemy',
-          label: tokenData.label,
-          color: tokenData.color,
-          characterId: tokenData.characterId || null,
-          creatureName: tokenData.creatureName || null,
+          id: uid(), type: tokenData.type || 'enemy', label: tokenData.label, color: tokenData.color,
+          characterId: tokenData.characterId || null, creatureName: tokenData.creatureName || null,
           fullName: tokenData.fullName || tokenData.creatureName || tokenData.label || null,
-          race: tokenData.race || null,
-          portrait_url: tokenData.portrait_url || null,
-          x,
-          y,
+          race: tokenData.race || null, portrait_url: tokenData.portrait_url || null, x, y,
         }];
-
-        // Persist immediately — without this, any realtime vtt_sessions
-        // change elsewhere overwrites this token with stale saved data.
         if (vttSession?.id) {
-          supabase.from('vtt_sessions')
-            .update({ tokens: next, updated_at: new Date().toISOString() })
-            .eq('id', vttSession.id)
+          supabase.from('vtt_sessions').update({ tokens: next, updated_at: new Date().toISOString() }).eq('id', vttSession.id)
             .then(({ error }) => { if (error) console.error('Failed to persist placed token:', error); });
         }
-
         return next;
       });
     });
   }, [onRegisterPlaceToken, vttSession]);
 
-  // Listen for NPCs pushed from the NPC Tracker — lands at map center, DM drags into place
   useEffect(() => {
     const handler = async (e) => {
       const npc = e.detail;
       if (!npc?.id) return;
       const tokenKey = `npc_${npc.id}`;
-
       setTokens(prev => {
-        if (prev.some(t => t.id === tokenKey)) return prev; // already on map
+        if (prev.some(t => t.id === tokenKey)) return prev;
         const next = [...prev, {
-          id: tokenKey,
-          type: 'npc',
-          label: (npc.name || 'NPC').slice(0, 6),
-          fullName: npc.name || null,
-          color: '#c8a860',
-          npc_id: npc.id,
-          creatureName: npc.name,
-          race: npc.race || null,
-          x: 0.5,
-          y: 0.5,
+          id: tokenKey, type: 'npc', label: (npc.name || 'NPC').slice(0, 6),
+          fullName: npc.name || null, color: '#c8a860', npc_id: npc.id,
+          creatureName: npc.name, race: npc.race || null, x: 0.5, y: 0.5,
         }];
-
-        // Persist immediately so it's visible without waiting for Commit
         if (vttSession?.id) {
-          supabase.from('vtt_sessions')
-            .update({ tokens: next, updated_at: new Date().toISOString() })
-            .eq('id', vttSession.id)
+          supabase.from('vtt_sessions').update({ tokens: next, updated_at: new Date().toISOString() }).eq('id', vttSession.id)
             .then(({ error }) => { if (error) console.error('Failed to add NPC token:', error); });
         }
-
         return next;
       });
     };
@@ -526,7 +453,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
     img.src = `/Maps/${encodeURIComponent(mapFilename)}`;
   }, [mapFilename]);
 
-useEffect(() => {
+  useEffect(() => {
     if (!mapLoaded) return;
     drawCanvas({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId: hoveredToken?.id || null, onIconReady: () => setIconTick(t => t + 1) });
   }, [fogZones, tokens, brushPreview, mapLoaded, tool, transform, isDM, hoveredToken, iconTick]);
@@ -555,16 +482,10 @@ useEffect(() => {
     const rect = canvas.getBoundingClientRect();
     const t = transformRef.current;
     const scaleRatio = canvas.width / rect.width;
-
     const canvasX = ((clientX - rect.left) * scaleRatio - t.x) / t.scale;
     const canvasY = ((clientY - rect.top) * scaleRatio - t.y) / t.scale;
-
     const mapRect = getMapRect(canvas, mapImgRef.current);
-
-    return {
-      x: (canvasX - mapRect.x) / mapRect.w,
-      y: (canvasY - mapRect.y) / mapRect.h,
-    };
+    return { x: (canvasX - mapRect.x) / mapRect.w, y: (canvasY - mapRect.y) / mapRect.h };
   };
 
   const screenToCanvasPx = (clientX, clientY) => {
@@ -580,32 +501,17 @@ useEffect(() => {
     e.preventDefault();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-    if (e.ctrlKey && (e.button === 0 || e.buttons === 1)) {
-      panRef.current = {
-        active: true,
-        lastX: clientX,
-        lastY: clientY,
-      };
-      return;
-    }
-
-    if (tool === 'pan' || e.button === 1) {
-      panRef.current = { active: true, lastX: clientX, lastY: clientY };
-      return;
-    }
-
+    if (e.ctrlKey && (e.button === 0 || e.buttons === 1)) { panRef.current = { active: true, lastX: clientX, lastY: clientY }; return; }
+    if (tool === 'pan' || e.button === 1) { panRef.current = { active: true, lastX: clientX, lastY: clientY }; return; }
     const pos = screenToMap(clientX, clientY);
-
     if (tool === 'fog-reveal' || tool === 'fog-hide') {
       paintingRef.current = true;
       const canvas = canvasRef.current;
       const t = transformRef.current;
       const r = brushRadius / (canvas.width * t.scale);
-      const zone = { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r, feather };
-      setFogZones(prev => [...prev, zone]);
+      setFogZones(prev => [...prev, { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r, feather }]);
     }
-    if (tool === 'token-enemy') { setPendingClick(pos); setShowTokenForm(true); }
+    if (tool === 'token-enemy') { setPendingClick(pos); setShowEnemyPicker(true); setEnemySearch(''); }
     if (tool === 'erase-token') {
       const canvas = canvasRef.current;
       setTokens(prev => prev.filter(t => {
@@ -632,24 +538,20 @@ useEffect(() => {
     e.preventDefault();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
     if (panRef.current.active) {
       const canvas = canvasRef.current;
       const rect = canvas.getBoundingClientRect();
       const scaleRatio = canvas.width / rect.width;
       const dx = (clientX - panRef.current.lastX) * scaleRatio;
       const dy = (clientY - panRef.current.lastY) * scaleRatio;
-      panRef.current.lastX = clientX;
-      panRef.current.lastY = clientY;
+      panRef.current.lastX = clientX; panRef.current.lastY = clientY;
       setTransform(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
       return;
     }
-
     const pos = screenToMap(clientX, clientY);
     const { px, py } = screenToCanvasPx(clientX, clientY);
     const t = transformRef.current;
     setBrushPreview({ sx: px, sy: py, sr: brushRadius * t.scale });
-
     if (!e.touches) {
       const canvas = canvasRef.current;
       let closest = null; let closestDist = 22 / t.scale;
@@ -662,46 +564,39 @@ useEffect(() => {
       const closestVisible = closest && (isDM || !isTokenFogged(closest, fogZones)) ? closest : null;
       setHoveredToken(closestVisible ? { id: closestVisible.id, name: closestVisible.fullName || closestVisible.creatureName || closestVisible.label || '?', portrait_url: closestVisible.portrait_url || null, race: closestVisible.race || null, clientX, clientY } : null);
     }
-
     if (paintingRef.current && (tool === 'fog-reveal' || tool === 'fog-hide')) {
       const canvas = canvasRef.current;
       const r = brushRadius / (canvas.width * t.scale);
-      const zone = { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r, feather };
-      setFogZones(prev => [...prev, zone]);
+      setFogZones(prev => [...prev, { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r, feather }]);
     }
     if (tool === 'token-move' && selectedTokenId && (e.buttons === 1 || e.touches)) {
       setTokens(prev => prev.map(t => t.id === selectedTokenId ? { ...t, x: pos.x, y: pos.y } : t));
     }
-  }, [tool, brushRadius, feather, selectedTokenId, tokens]);
+  }, [tool, brushRadius, feather, selectedTokenId, tokens, isDM, fogZones]);
 
-  const handlePointerUp = useCallback(() => {
-    paintingRef.current = false;
-    panRef.current.active = false;
-    setSelectedTokenId(null);
-  }, []);
-
-  const handlePointerLeave = useCallback(() => {
-    setBrushPreview(null);
-    setHoveredToken(null);
-  }, []);
+  const handlePointerUp = useCallback(() => { paintingRef.current = false; panRef.current.active = false; setSelectedTokenId(null); }, []);
+  const handlePointerLeave = useCallback(() => { setBrushPreview(null); setHoveredToken(null); }, []);
 
   useEffect(() => {
-    const handleWindowMove = (e) => {
-      if (!panRef.current.active && !paintingRef.current) return;
-      handlePointerMove(e);
-    };
-    const handleWindowUp = () => {
-      handlePointerUp();
-    };
-
+    const handleWindowMove = (e) => { if (!panRef.current.active && !paintingRef.current) return; handlePointerMove(e); };
+    const handleWindowUp = () => { handlePointerUp(); };
     window.addEventListener('mousemove', handleWindowMove);
     window.addEventListener('mouseup', handleWindowUp);
-
-    return () => {
-      window.removeEventListener('mousemove', handleWindowMove);
-      window.removeEventListener('mouseup', handleWindowUp);
-    };
+    return () => { window.removeEventListener('mousemove', handleWindowMove); window.removeEventListener('mouseup', handleWindowUp); };
   }, [handlePointerMove, handlePointerUp]);
+
+  const placeEnemyFromPicker = (name, race, color) => {
+    if (!pendingClick) return;
+    const tokenColor = color || TOKEN_COLORS[Math.floor(Math.random() * TOKEN_COLORS.length)];
+    setTokens(prev => [...prev, {
+      id: uid(), type: 'enemy',
+      label: name.slice(0, 4).toUpperCase(),
+      fullName: name, creatureName: name,
+      color: tokenColor, race: race || null,
+      x: pendingClick.x, y: pendingClick.y,
+    }]);
+    setShowEnemyPicker(false); setPendingClick(null); setEnemySearch('');
+  };
 
   const addEnemyToken = () => {
     if (!pendingClick || !newTokenLabel.trim()) return;
@@ -712,12 +607,7 @@ useEffect(() => {
   const clearFog = () => setFogZones([]);
   const revealAll = () => setFogZones([{ id: uid(), type: 'reveal', x: 0.5, y: 0.5, r: 1.5 }]);
   const resetView = () => setTransform({ scale: 1, x: 0, y: 0 });
-
-  const pinCampaign = (id) => {
-    setPinnedCampaignId(id);
-    localStorage.setItem('vtt_pinned_campaign', id);
-    setShowCampaignPicker(false);
-  };
+  const pinCampaign = (id) => { setPinnedCampaignId(id); localStorage.setItem('vtt_pinned_campaign', id); setShowCampaignPicker(false); };
 
   const syncMapFromCampaign = async () => {
     const { data } = await supabase.from('campaigns').select('map_url').eq('id', campaignId).single();
@@ -748,7 +638,7 @@ useEffect(() => {
         ))}
         <div style={{ width: 1, height: 20, background: COLORS.border, margin: '0 4px' }} />
         <div style={{ ...label8, marginRight: 4 }}>Feather</div>
-        {[0, 0.3, 0.6, 1].map((f, i) => (
+        {[0, 0.18, 0.4, 0.7].map((f, i) => (
           <button key={f} onClick={() => setFeather(f)} style={{ background: feather === f ? 'rgba(200,168,74,0.15)' : COLORS.card, border: `1px solid ${feather === f ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: feather === f ? '#e8c84a' : COLORS.text }}>
             {['None', 'Light', 'Med', 'Full'][i]}
           </button>
@@ -773,7 +663,7 @@ useEffect(() => {
             )}
           </div>
         )}
-        <button onClick={syncMapFromCampaign}style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↺ Sync Map</button>
+        <button onClick={syncMapFromCampaign} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↺ Sync Map</button>
         {mapFilename && <button onClick={() => { setMapFilename(null); setMapLoaded(false); setFogZones([]); setTokens([]); }} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↩ Change Map</button>}
         {mapLoaded && <div style={{ ...label8, color: COLORS.dim }}>Ctrl+drag to pan · Zoom: {Math.round(transform.scale * 100)}%</div>}
         <button onClick={() => setShowCommitPicker(true)} disabled={saving || !mapFilename} style={{ marginLeft: 'auto', background: mapFilename ? 'rgba(200,168,74,0.15)' : 'transparent', border: `1px solid ${mapFilename ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 16px', cursor: mapFilename ? 'pointer' : 'default', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: mapFilename ? '#e8c84a' : COLORS.dim, fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
@@ -825,16 +715,32 @@ useEffect(() => {
         </div>
       )}
 
-      {showTokenForm && (
-        <div style={{ background: COLORS.surface, border: `1px solid #c8a84a44`, borderRadius: 8, padding: '14px 16px' }}>
-          <div style={{ ...label8, marginBottom: 10 }}>New Enemy Token</div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <input autoFocus value={newTokenLabel} onChange={e => setNewTokenLabel(e.target.value)} onKeyDown={e => e.key === 'Enter' && addEnemyToken()} placeholder="Label (e.g. Orc, G1)…" maxLength={6} style={{ flex: 1, minWidth: 120, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none' }} />
-            <div style={{ display: 'flex', gap: 4 }}>
-              {TOKEN_COLORS.map(c => <div key={c} onClick={() => setNewTokenColor(c)} style={{ width: 20, height: 20, borderRadius: '50%', background: c, border: `2px solid ${newTokenColor === c ? '#fff' : 'transparent'}`, cursor: 'pointer' }} />)}
+      {showEnemyPicker && (
+        <div style={{ background: COLORS.surface, border: '1px solid rgba(200,168,74,0.3)', borderRadius: 8, padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {['bestiary', 'npcs'].map(tab => (
+                <button key={tab} onClick={() => { setEnemyPickerTab(tab); setEnemySearch(''); }} style={{ background: enemyPickerTab === tab ? 'rgba(200,168,74,0.15)' : 'transparent', border: `1px solid ${enemyPickerTab === tab ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 5, padding: '4px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: enemyPickerTab === tab ? '#e8c84a' : COLORS.dim }}>
+                  {tab === 'bestiary' ? '⚔ Bestiary' : '👤 NPCs'}
+                </button>
+              ))}
             </div>
-            <button onClick={addEnemyToken} style={{ background: 'rgba(200,168,74,0.15)', border: `1px solid #c8a84a`, borderRadius: 6, padding: '7px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.1em', color: '#e8c84a', fontWeight: 700 }}>Place</button>
-            <button onClick={() => { setShowTokenForm(false); setPendingClick(null); }} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.dim }}>Cancel</button>
+            <button onClick={() => { setShowEnemyPicker(false); setPendingClick(null); }} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 9, color: COLORS.dim }}>✕</button>
+          </div>
+          <input autoFocus value={enemySearch} onChange={e => setEnemySearch(e.target.value)} placeholder={enemyPickerTab === 'bestiary' ? 'Search creatures…' : 'Search NPCs…'} style={{ width: '100%', boxSizing: 'border-box', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none', marginBottom: 8 }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
+            {enemyPickerTab === 'bestiary'
+              ? bestiary.filter(b => b.name.toLowerCase().includes(enemySearch.toLowerCase())).map(b => (
+                  <button key={b.name} onClick={() => placeEnemyFromPicker(b.name, b.race, null)} style={{ textAlign: 'left', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '7px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.06em', color: COLORS.text }}>
+                    + {b.name}
+                  </button>
+                ))
+              : npcList.filter(n => n.name.toLowerCase().includes(enemySearch.toLowerCase())).map(n => (
+                  <button key={n.id} onClick={() => placeEnemyFromPicker(n.name, n.race, '#c8a860')} style={{ textAlign: 'left', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '7px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.06em', color: '#c8a860' }}>
+                    + {n.name}
+                  </button>
+                ))
+            }
           </div>
         </div>
       )}
@@ -844,51 +750,11 @@ useEffect(() => {
           <div style={{ ...label8, marginBottom: 8 }}>Tokens on map — {tokens.length}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {tokens.map(token => (
-              <button
-                key={token.id}
-                type="button"
-                onClick={() => conjureTokenToMap(token)}
-                title="Conjure token to map"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  background: COLORS.card,
-                  border: `1px solid ${COLORS.border}`,
-                  borderRadius: 6,
-                  padding: '5px 8px',
-                  cursor: 'pointer',
-                  color: COLORS.text,
-                  fontFamily: "'Cinzel', serif",
-                  fontSize: 9,
-                }}
-              >
-                <span
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    background: token.color || '#e85d4a',
-                    display: 'inline-block',
-                  }}
-                />
-
+              <button key={token.id} type="button" onClick={() => conjureTokenToMap(token)} title="Conjure token to map"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '5px 8px', cursor: 'pointer', color: COLORS.text, fontFamily: "'Cinzel', serif", fontSize: 9 }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: token.color || '#e85d4a', display: 'inline-block' }} />
                 {token.label || token.name || 'TOKEN'}
-
-                <span
-                  onClick={event => {
-                    event.stopPropagation();
-                    removeToken(token);
-                  }}
-                  title="Remove token"
-                  style={{
-                    color: COLORS.dim,
-                    marginLeft: 4,
-                    cursor: 'pointer',
-                  }}
-                >
-                  ×
-                </span>
+                <span onClick={event => { event.stopPropagation(); removeToken(token); }} title="Remove token" style={{ color: COLORS.dim, marginLeft: 4, cursor: 'pointer' }}>×</span>
               </button>
             ))}
           </div>
@@ -917,8 +783,7 @@ useEffect(() => {
               {localCampaigns.map(c => (
                 <button key={c.id} onClick={() => save(c.id)} style={{ textAlign: 'left', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '12px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = '#c8a84a88'; e.currentTarget.style.background = 'rgba(200,168,74,0.08)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.background = 'rgba(240,238,235,0.04)'; }}
-                >
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.background = 'rgba(240,238,235,0.04)'; }}>
                   <div style={{ fontSize: 8, color: COLORS.dim, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4, fontFamily: "'Cinzel', serif" }}>{c.type || 'Campaign'}</div>
                   {c.subtitle || c.name}
                 </button>
