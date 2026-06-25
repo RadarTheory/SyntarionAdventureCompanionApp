@@ -8,7 +8,10 @@ async function callGemini(system, messages, maxTokens = 1024, image = null) {
   const { data, error } = await supabase.functions.invoke('scribe', {
     body: { system, messages, max_tokens: maxTokens, image },
   });
-  if (error) throw new Error(error.message || 'The relay to the archives failed.');
+  if (error) {
+    const msg = data?.error?.message || error.message || 'The relay to the archives failed.';
+    throw new Error(msg);
+  }
   if (data?.error) throw new Error(data.error.message || JSON.stringify(data.error).slice(0, 200));
   const text = data?.choices?.[0]?.message?.content;
   if (!text) throw new Error('No response from Gemini.');
