@@ -2057,7 +2057,7 @@ useEffect(() => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text }}>
+    <div style={{ minHeight: '100vh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text, position: 'relative' }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap'); * { box-sizing: border-box; } body { margin: 0; }`}</style>
 
       <FloatToolbar buttons={[
@@ -2266,17 +2266,24 @@ useEffect(() => {
       )}
 
       {/* Header */}
-      <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', flexShrink: 0, gap: 12 }}>
-        <button onClick={onBack} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.muted, padding: 0, justifySelf: 'start' }}>← Campaigns</button>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 10 : 12, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.text }}>{campaign.subtitle}</div>
-          <div style={{ fontSize: 8, color: timer ? COLORS.magic : COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: timer ? 700 : 400 }}>
-            {timer ? `⏱ ${timer}` : (FULL_TITLES[campaign.id] || campaign.name)}
+      <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '10px 14px' : '14px 24px', display: 'flex', flexDirection: 'column', flexShrink: 0, gap: isMobile ? 8 : 0 }}>
+        {/* Row 1: back button + campaign title */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 8 }}>
+          <button onClick={onBack} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.muted, padding: 0, justifySelf: 'start' }}>← Campaigns</button>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 10 : 12, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.text }}>{campaign.subtitle}</div>
+            <div style={{ fontSize: 8, color: timer ? COLORS.magic : COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: timer ? 700 : 400 }}>
+              {timer ? `⏱ ${timer}` : (FULL_TITLES[campaign.id] || campaign.name)}
+            </div>
           </div>
+          <div style={{ justifySelf: 'end' }} />
         </div>
-       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifySelf: 'end' }}>
-  {clockState && <SoteriaClockDisplay clock={clockState} compact />}
- </div>
+        {/* Row 2: clock centered below on mobile, inline right on desktop */}
+        {clockState && (
+          isMobile
+            ? <div style={{ display: 'flex', justifyContent: 'center' }}><SoteriaClockDisplay clock={clockState} compact /></div>
+            : <div style={{ position: 'absolute', right: 24, top: 14 }}><SoteriaClockDisplay clock={clockState} compact /></div>
+        )}
       </div>
 
       {/* Lobby banner */}

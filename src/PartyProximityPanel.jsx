@@ -19,12 +19,33 @@ export default function PartyProximityPanel({ campaignId, isDM = false, char = n
     if (!sessionId) return;
     supabase.from('session_checkins').select('*')
       .eq('session_id', sessionId)
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         if (!data) return;
         const deduped = Array.from(
           new Map(data.map(p => [p.character_id, p])).values()
         );
         setCheckedIn(deduped);
+
+        // Auto-assign checked-in players to Session zone if not already assigned
+        const { data: existing } = await supabase.from('session_proximity')
+          .select('entity_id')
+          .eq('session_id', sessionId)
+          .eq('entity_type', 'player');
+        const assignedIds = new Set((existing || []).map(r => String(r.entity_id)));
+
+        const unassigned = deduped.filter(c => !assignedIds.has(String(c.character_id)));
+        if (unassigned.length > 0) {
+          await supabase.from('session_proximity').insert(
+            unassigned.map(c => ({
+              session_id: sessionId,
+              campaign_id: String(campaignId),
+              zone_name: 'Session',
+              entity_type: 'player',
+              entity_id: String(c.character_id),
+              entity_name: c.character_name || 'Player',
+            }))
+          );
+        }
       });
   }, [sessionId]);
 

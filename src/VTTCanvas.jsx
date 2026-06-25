@@ -222,7 +222,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   const activeCampaignId = pinnedCampaignId || campaignId;
   const [showCommitPicker, setShowCommitPicker] = useState(false);
   const [feather, setFeather]                 = useState(0.3);
-  const [dbCampaigns, setDbCampaigns] = useState([]);
+
 
 useEffect(() => {
   supabase.from('campaigns').select('*').order('created_at', { ascending: true })

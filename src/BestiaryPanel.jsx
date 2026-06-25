@@ -62,7 +62,7 @@ function CreatureCard({ creature, isDM, campaignId, onAddedToCombat, onPortraitU
     const { data: vttSession } = await supabase.from('vtt_sessions').select('*')
       .eq('campaign_id', String(campaignId)).maybeSingle();
     const existingTokens = Array.isArray(vttSession?.tokens) ? vttSession.tokens : [];
-    const newToken = { id: tokenId, token_id: tokenId, name: creature.name, label: creature.name.slice(0, 4).toUpperCase(), creatureName: creature.name, beast_id: creature.id, type: 'enemy', color, x: 50, y: 50 };
+    const newToken = { id: tokenId, token_id: tokenId, name: creature.name, label: creature.name.slice(0, 4).toUpperCase(), creatureName: creature.name, beast_id: creature.id, type: 'enemy', color, portrait_url: creature.portrait_url || null, x: 50, y: 50 };
     if (vttSession?.id) {
       await supabase.from('vtt_sessions').update({ tokens: [...existingTokens, newToken], updated_at: new Date().toISOString() }).eq('id', vttSession.id);
     } else {
