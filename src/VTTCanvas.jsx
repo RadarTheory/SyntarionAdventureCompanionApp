@@ -823,7 +823,7 @@ useEffect(() => {
                   onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.background = 'rgba(240,238,235,0.04)'; }}
                 >
                   <div style={{ fontSize: 8, color: COLORS.dim, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4, fontFamily: "'Cinzel', serif" }}>{c.type || 'Campaign'}</div>
-                  {c.subtitle}
+                  {c.subtitle || c.name}
                 </button>
               ))}
             </div>
