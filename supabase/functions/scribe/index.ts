@@ -54,19 +54,26 @@ Deno.serve(async (req) => {
       }
     }
 
-    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get('GEMINI_API_KEY')}`,
-      },
-      body: JSON.stringify({
-        model: 'gemini-2.5-flash',
-        messages: [{ role: 'system', content: system }, ...finalMessages],
-        max_tokens: Math.min(max_tokens, 2048),
-        temperature: 0.82,
-      }),
-    });
+    const attemptCall = async (model: string) => {
+      return await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('GEMINI_API_KEY')}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'system', content: system }, ...finalMessages],
+          max_tokens: Math.min(max_tokens, 2048),
+          temperature: 0.82,
+        }),
+      });
+    };
+
+    let res = await attemptCall('gemini-2.5-flash');
+    if (res.status === 429) {
+      res = await attemptCall('gemini-1.5-flash');
+    }
 
     const data = await res.json();
     return new Response(JSON.stringify(data), {
