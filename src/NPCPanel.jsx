@@ -255,7 +255,7 @@ const S = {
   npcName:{fontWeight:600,color:'#ddd0b0',fontSize:13,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'},
   npcRole:{color:'rgba(200,180,130,0.5)',fontSize:11,fontStyle:'italic'},
   npcStatus:{fontSize:10,fontFamily:"'Cinzel',serif",letterSpacing:'0.05em',flexShrink:0},
-  drawer:{position:'fixed',bottom:40,left:108,width:478,border:'1px solid rgba(184,137,42,0.35)',borderRadius:'0 0 12px 12px',background:'rgba(8,6,4,0.98)',backdropFilter:'blur(8px)',padding:'10px 12px',maxHeight:'50vh',overflowY:'auto',zIndex:300002,boxShadow:'0 8px 40px rgba(0,0,0,0.8)'},
+  drawer:{position:'relative',width:'100%',border:'1px solid rgba(184,137,42,0.35)',borderRadius:8,background:'rgba(8,6,4,0.98)',padding:'10px 12px',overflowY:'auto',boxShadow:'0 8px 40px rgba(0,0,0,0.8)'},
   drawerTitle:{fontFamily:"'Cinzel',serif",fontSize:13,color:'#e8c040',letterSpacing:'0.1em',marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'},
   closeBtn:{background:'none',border:'none',color:'rgba(200,180,130,0.4)',cursor:'pointer',fontSize:14,lineHeight:1,padding:0},
   field:{marginBottom:7},
