@@ -815,7 +815,7 @@ export default function NPCPanel({ campaignId, sessionId }) {
             <button onClick={async () => {
               // Fetch catalog for Scribe context
               const { data: catalog } = await supabase.from('items').select('name,category,rarity').limit(300);
-              const catalogNames = (catalog||[]).map(i => i.name).join(', ');
+              const catalogNames = (catalog||[]).map(i => i.name.replace(/'/g,"'")).join(', ');
 
               const wealthTier = (() => {
                 const r = (selectedNpc.role||'').toLowerCase();
