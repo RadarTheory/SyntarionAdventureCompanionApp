@@ -538,7 +538,14 @@ useEffect(() => {
       if (Math.sqrt(dx * dx + dy * dy) < 8 && !dragRef.current.moved) {
         const hitTok = hitTestToken(touch.clientX, touch.clientY);
         if (hitTok) {
-          setHoveredToken(prev => prev?.id === hitTok.id ? null : { id: hitTok.id, name: hitTok.fullName || hitTok.creatureName || hitTok.label || '?', portrait_url: hitTok.portrait_url || null, clientX: touch.clientX, clientY: touch.clientY });
+          setHoveredToken(prev => {
+            if (prev?.id === hitTok.id && hitTok.portrait_url) {
+              setPortraitFullscreen({ name: hitTok.fullName || hitTok.creatureName || hitTok.label || '?', portrait_url: hitTok.portrait_url });
+              return prev;
+            }
+            if (prev?.id === hitTok.id) return null;
+            return { id: hitTok.id, name: hitTok.fullName || hitTok.creatureName || hitTok.label || '?', portrait_url: hitTok.portrait_url || null, clientX: touch.clientX, clientY: touch.clientY };
+          });
         } else {
           setHoveredToken(null);
         }
