@@ -164,7 +164,7 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
     }
-    if (tok.status === 'dead') {
+    if (tok.status === 'dead' && tok.type !== 'player' && !tok.characterId) {
       const deathIcon = getRaceIcon('death', onIconReady);
       if (deathIcon) {
         ctx.globalAlpha = 0.85;
@@ -451,8 +451,10 @@ useEffect(() => {
       return;
     }
     const hit = hitTestToken(clientX, clientY);
-    if (hit) {
+    if (hit && !isTokenFogged(hit, fogZones)) {
       setHoveredToken({ id: hit.id, name: hit.fullName || hit.creatureName || hit.label || '?', portrait_url: hit.portrait_url || null, clientX, clientY });
+    } else if (!hit) {
+      setHoveredToken(null);
     }
     // Don't clear hoveredToken on mousemove — let the hover card stay so user can click the portrait
   }, [clientToMapCoords, hitTestToken]);
@@ -551,7 +553,7 @@ useEffect(() => {
       const dy = touch.clientY - panRef.current.startY;
       if (Math.sqrt(dx * dx + dy * dy) < 8 && !dragRef.current.moved) {
         const hitTok = hitTestToken(touch.clientX, touch.clientY);
-        if (hitTok) {
+        if (hitTok && !isTokenFogged(hitTok, fogZones)) {
           setHoveredToken(prev => {
             if (prev?.id === hitTok.id && hitTok.portrait_url) {
               setPortraitFullscreen({ name: hitTok.fullName || hitTok.creatureName || hitTok.label || '?', portrait_url: hitTok.portrait_url });
