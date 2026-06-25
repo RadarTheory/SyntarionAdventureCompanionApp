@@ -294,6 +294,12 @@ function NPCModal({ cities, groups, onSave, onClose }) {
 
   const generateIdentity = () => {
     const r = (form.role||'').toLowerCase();
+    // Auto-pick race and variant
+    const races = Object.keys(RACE_OPTIONS);
+    const pickedRace = races[Math.floor(Math.random()*races.length)];
+    const variants = RACE_OPTIONS[pickedRace];
+    const pickedVariant = variants.length > 0 ? variants[Math.floor(Math.random()*variants.length)] : '';
+    setForm(f => ({...f, race: pickedRace, race_variant: pickedVariant}));
     const ALIGNMENTS = ['neutral','magic','tech','neutral','neutral','magic','tech','chaos','order','shadow','light'];
     const PERSONALITIES = [
       'Speaks in measured tones, never more than necessary. Harbors a debt that shapes every decision.',
