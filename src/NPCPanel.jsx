@@ -833,7 +833,7 @@ export default function NPCPanel({ campaignId, sessionId }) {
               await updateNpcField(selectedNpc.id,'loot_generated',true);
             }} style={{...S.genBtn,marginBottom:4}}>⚄ Generate Loot</button>
           </div>
-          {selectedNpc.loot_generated&&<div style={{marginTop:2,padding:'6px 10px',background:'rgba(184,137,42,0.06)',border:'1px solid rgba(184,137,42,0.2)',borderRadius:5,fontSize:10,color:'rgba(200,180,130,0.5)',fontFamily:"'Cinzel',serif"}}>⬡ Loot staged in Solomon as "{selectedNpc.name}'s Loot"</div>}
+         {selectedNpc.loot_generated&&<div style={{marginTop:2,padding:'6px 10px',background:'rgba(184,137,42,0.06)',border:'1px solid rgba(184,137,42,0.2)',borderRadius:5,fontSize:10,color:'rgba(200,180,130,0.5)',fontFamily:"'Cinzel',serif"}}>⬡ Loot staged in Solomon as "{selectedNpc.name}'s Loot"</div>}
           <div style={{display:'flex',gap:6,alignItems:'center',marginTop:8}}>
             <div style={{fontSize:10,color:'rgba(200,180,130,0.25)',fontStyle:'italic',flex:1}}>{selectedCity.name}{selectedCity.region?` · ${selectedCity.region}`:''}</div>
             <button onClick={()=>markMet(selectedNpc,selectedCity.name)} style={{background:'rgba(184,137,42,0.15)',border:'1px solid rgba(184,137,42,0.35)',borderRadius:3,color:'#e8c040',cursor:'pointer',padding:'3px 8px',fontSize:10,fontFamily:"'Cinzel',serif"}}>⬡ Met</button>
