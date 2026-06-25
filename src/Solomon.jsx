@@ -97,7 +97,7 @@ export default function Solomon({ campaignId, onClose }) {
   }, [campaignId, load, loadPresence, loadPendingClaims]);
 
   const loadItems = async (boxId) => {
-    if (boxItems[boxId]) return;
+    if (boxItems[boxId] && boxItems[boxId].length > 0) return;
     const { data } = await supabase
       .from('lootbox_items')
       .select('*')
@@ -111,6 +111,12 @@ export default function Solomon({ campaignId, onClose }) {
     setExpanded(boxId);
     loadItems(boxId);
   };
+
+  useEffect(() => {
+    if (expanded && !boxItems[expanded]) {
+      loadItems(expanded);
+    }
+  }, [boxItems, expanded]);
 
   const revealBox = async (box) => {
     setSaving(box.id);
