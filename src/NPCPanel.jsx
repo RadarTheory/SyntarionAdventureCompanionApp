@@ -255,7 +255,7 @@ const S = {
   npcName:{fontWeight:600,color:'#ddd0b0',fontSize:13,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'},
   npcRole:{color:'rgba(200,180,130,0.5)',fontSize:11,fontStyle:'italic'},
   npcStatus:{fontSize:10,fontFamily:"'Cinzel',serif",letterSpacing:'0.05em',flexShrink:0},
-  drawer:{position:'fixed',bottom:40,left:108,width:478,border:'1px solid rgba(184,137,42,0.35)',borderRadius:'0 0 12px 12px',background:'rgba(8,6,4,0.98)',backdropFilter:'blur(8px)',padding:'10px 12px',maxHeight:'50vh',overflowY:'auto',zIndex:200001,boxShadow:'0 8px 40px rgba(0,0,0,0.8)'},
+  drawer:{position:'fixed',bottom:40,left:108,width:478,border:'1px solid rgba(184,137,42,0.35)',borderRadius:'0 0 12px 12px',background:'rgba(8,6,4,0.98)',backdropFilter:'blur(8px)',padding:'10px 12px',maxHeight:'50vh',overflowY:'auto',zIndex:300002,boxShadow:'0 8px 40px rgba(0,0,0,0.8)'},
   drawerTitle:{fontFamily:"'Cinzel',serif",fontSize:13,color:'#e8c040',letterSpacing:'0.1em',marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'},
   closeBtn:{background:'none',border:'none',color:'rgba(200,180,130,0.4)',cursor:'pointer',fontSize:14,lineHeight:1,padding:0},
   field:{marginBottom:7},
@@ -842,7 +842,7 @@ export default function NPCPanel({ campaignId, sessionId }) {
               await updateNpcField(selectedNpc.id,'loot_generated',true);
             }} style={{...S.genBtn,marginBottom:4}}>⚄ {selectedNpc.loot_generated ? 'Regenerate Loot' : 'Generate Loot'}</button>
           </div>
-         {selectedNpc.loot_generated&&<div style={{marginTop:2,padding:'6px 10px',background:'rgba(184,137,42,0.06)',border:'1px solid rgba(184,137,42,0.2)',borderRadius:5,fontSize:10,color:'rgba(200,180,130,0.5)',fontFamily:"'Cinzel',serif"}}>⬡ Loot staged in Solomon as "{selectedNpc.name}'s Loot"</div>}
+         {selectedNpc.loot_generated&&<div style={{marginTop:2,padding:'6px 10px',background:'rgba(184,137,42,0.06)',border:'1px solid rgba(184,137,42,0.2)',borderRadius:5,fontSize:10,color:'rgba(200,180,130,0.5)',fontFamily:"'Cinzel',serif"}}>⬡ Inventory generated — passes to Solomon on death</div>}
           <div style={{display:'flex',gap:6,alignItems:'center',marginTop:8}}>
             <div style={{fontSize:10,color:'rgba(200,180,130,0.25)',fontStyle:'italic',flex:1}}>{selectedCity.name}{selectedCity.region?` · ${selectedCity.region}`:''}</div>
             <button onClick={()=>markMet(selectedNpc,selectedCity.name)} style={{background:'rgba(184,137,42,0.15)',border:'1px solid rgba(184,137,42,0.35)',borderRadius:3,color:'#e8c040',cursor:'pointer',padding:'3px 8px',fontSize:10,fontFamily:"'Cinzel',serif"}}>⬡ Met</button>
