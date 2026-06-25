@@ -247,7 +247,14 @@ useEffect(() => {
   const [hovered, setHovered] = useState(false);
   const [open, setOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState('scribe');
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 700;
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 700);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 700);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const dragOffset = useRef({ x: 0, y: 0 });
   const moved = useRef(false);
@@ -1316,13 +1323,17 @@ const denyEvent = async event => {
               startWindowDrag(e);
             }}
             style={{
-              padding: '14px 18px',
+              padding: isMobile ? '10px 12px' : '14px 18px',
               borderBottom: '1px solid rgba(200,168,74,0.25)',
               display: 'flex',
               alignItems: 'center',
-              gap: 12,
+              gap: isMobile ? 6 : 12,
+              flexWrap: isMobile ? 'wrap' : 'nowrap',
               cursor: isWindowDragging ? 'grabbing' : 'grab',
               userSelect: 'none',
+              boxSizing: 'border-box',
+              width: '100%',
+              overflow: 'hidden',
             }}
           >
               <div
@@ -1376,49 +1387,48 @@ const denyEvent = async event => {
               ))}
             </select>
 
-            {!session ? (
+            {!isMobile && !session && (
               <button type="button" onClick={startCombat} disabled={saving || !campaignId} style={goldButton()}>
                 Start Combat
               </button>
-            ) : (
+            )}
+            {!isMobile && session && (
               <button type="button" onClick={endCombat} disabled={saving} style={redButton()}>
                 End Combat
               </button>
             )}
-
-            {session && (
-              <button
-                type="button"
-                onClick={rollBoardTokens}
-                disabled={saving}
-                style={goldButton()}
-              >
+            {!isMobile && session && (
+              <button type="button" onClick={rollBoardTokens} disabled={saving} style={goldButton()}>
                 Roll Board Tokens
               </button>
             )}
-            {session && initiative.length > 0 && (
+            {!isMobile && session && initiative.length > 0 && (
               <button type="button" onClick={nextTurn} disabled={saving} style={{ ...goldButton(), background: 'rgba(200,168,74,0.28)', border: '1px solid rgba(200,168,74,0.8)', fontWeight: 700 }}>
                 Next Turn ▶
               </button>
             )}
-            {session && (
-              <button
-                type="button"
-                onClick={resolveArchitectsEdict}
-                disabled={!hasInitiativeTies || saving}
-                title="Resolve tied initiative rolls"
-                style={{
-                  ...goldButton(),
-                  opacity: !hasInitiativeTies || saving ? 0.45 : 1,
-                  cursor: !hasInitiativeTies || saving ? 'default' : 'pointer',
-                }}
-              >
+            {!isMobile && session && (
+              <button type="button" onClick={resolveArchitectsEdict} disabled={!hasInitiativeTies || saving} title="Resolve tied initiative rolls" style={{ ...goldButton(), opacity: !hasInitiativeTies || saving ? 0.45 : 1, cursor: !hasInitiativeTies || saving ? 'default' : 'pointer' }}>
                 Architect's Edict
               </button>
             )}
-
+            {isMobile && session && (
+              <button type="button" onClick={nextTurn} disabled={saving || initiative.length === 0} style={{ ...goldButton(), background: 'rgba(200,168,74,0.28)', border: '1px solid rgba(200,168,74,0.8)', fontWeight: 700, fontSize: 11 }}>
+                Next ▶
+              </button>
+            )}
+            {isMobile && !session && (
+              <button type="button" onClick={startCombat} disabled={saving || !campaignId} style={{ ...goldButton(), fontSize: 11 }}>
+                Start
+              </button>
+            )}
+            {isMobile && session && (
+              <button type="button" onClick={endCombat} disabled={saving} style={{ ...redButton(), fontSize: 11 }}>
+                End
+              </button>
+            )}
             <button type="button" onClick={() => setOpen(false)} style={plainButton()}>
-              Close
+              {isMobile ? '✕' : 'Close'}
             </button>
           </div>
 
@@ -1427,7 +1437,7 @@ const denyEvent = async event => {
             style={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1, overflow: 'hidden' }}
           >
             {isMobile && (
-              <div style={{ display: 'flex', borderBottom: '1px solid rgba(200,168,74,0.25)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', borderBottom: '1px solid rgba(200,168,74,0.25)', flexShrink: 0, width: '100%', overflow: 'hidden' }}>
                 {[['initiative','Initiative'],['scribe','Scribe'],['bestiary','Bestiary']].map(([tab, label]) => (
                   <button key={tab} type="button" onClick={() => setMobileTab(tab)} style={{
                     flex: 1, padding: '10px 4px',
@@ -1445,6 +1455,9 @@ const denyEvent = async event => {
               gridTemplateColumns: isMobile ? undefined : '270px 1fr 320px',
               gap: 12, padding: 12, minHeight: 0, flex: 1,
               overflow: isMobile ? 'auto' : 'hidden',
+              boxSizing: 'border-box',
+              width: '100%',
+              maxWidth: '100vw',
             }}>
             <div className="hercules-panel initiative-panel" style={{ ...panelStyle(), display: isMobile && mobileTab !== 'initiative' ? 'none' : 'flex', ...(isMobile ? { minHeight: 'calc(100dvh - 140px)' } : {}) }}>
               <SectionTitle>Initiative</SectionTitle>
@@ -1503,7 +1516,7 @@ const denyEvent = async event => {
 </div>
             </div>
 
-            <div className="hercules-panel combat-log-panel" style={{ ...panelStyle(), display: isMobile && mobileTab !== 'scribe' ? 'none' : 'flex', ...(isMobile ? { minHeight: 'calc(100dvh - 140px)' } : {}) }}>
+            <div className="hercules-panel combat-log-panel" style={{ ...panelStyle(), display: isMobile && mobileTab !== 'scribe' ? 'none' : 'flex', ...(isMobile ? { minHeight: 'calc(100dvh - 140px)', maxWidth: '100%', overflowX: 'hidden' } : {}) }}>
               <SectionTitle>Scribe Rulings</SectionTitle>
 
               <div
