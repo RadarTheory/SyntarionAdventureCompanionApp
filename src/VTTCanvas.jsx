@@ -95,7 +95,8 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   ctx.save();
   ctx.setTransform(transform.scale, 0, 0, transform.scale, transform.x, transform.y);
   const mapRect = getMapRect(canvas, mapImg);
-ctx.drawImage(mapImg, mapRect.x, mapRect.y, mapRect.w, mapRect.h);
+  ctx.drawImage(mapImg, mapRect.x, mapRect.y, mapRect.w, mapRect.h);
+  ctx.restore();
 
   const fogCanvas = document.createElement('canvas');
   fogCanvas.width = W; fogCanvas.height = H;
@@ -108,7 +109,7 @@ ctx.drawImage(mapImg, mapRect.x, mapRect.y, mapRect.w, mapRect.h);
       const cx = mapRect.x + zone.x * mapRect.w;
 const cy = mapRect.y + zone.y * mapRect.h;
 const r = zone.r * mapRect.w;
-      const feather = zone.feather ?? 0;
+      const feather = zone.feather ?? 0.18;
       const grad = fogCtx.createRadialGradient(cx, cy, r * (1 - feather), cx, cy, r);
       grad.addColorStop(0, 'rgba(0,0,0,1)');
       grad.addColorStop(1, 'rgba(0,0,0,0)');
@@ -141,9 +142,12 @@ fogZones.forEach(zone => {
     }
   }
 });
+  ctx.restore();
   ctx.drawImage(fogCanvas, 0, 0);
+  ctx.save();
+  ctx.setTransform(transform.scale, 0, 0, transform.scale, transform.x, transform.y);
 
- tokens.forEach(tok => {
+  tokens.forEach(tok => {
     const fogged = isTokenFogged(tok, fogZones);
     const isPlayerToken = tok.type === 'player';
     if (fogged && !isDM) return;
@@ -195,6 +199,7 @@ const r = isHovered ? 22 : 14;
     ctx.restore();
   });
 
+  ctx.restore();
   ctx.restore();
 
   if (brushPreview) {
