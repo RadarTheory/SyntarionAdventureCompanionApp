@@ -768,7 +768,31 @@ export default function NPCPanel({ campaignId, sessionId }) {
           })}
           <div style={{display:'flex',gap:8,marginBottom:8}}>
             <div style={{...S.field,flex:2}}><label style={S.label}>Role / Title</label><input style={S.fieldInput} value={selectedNpc.role||''} onChange={e=>updateNpcField(selectedNpc.id,'role',e.target.value)}/></div>
-            <div style={{...S.field,flex:1}}><label style={S.label}>Status</label><select style={S.fieldSelect} value={selectedNpc.status||'Active'} onChange={e=>updateNpcField(selectedNpc.id,'status',e.target.value)}>{STATUS_OPTIONS.map(s=><option key={s} value={s} style={{background:'#0e0c09'}}>{s}</option>)}</select></div>
+           <div style={{...S.field,flex:1}}><label style={S.label}>Status</label><select style={S.fieldSelect} value={selectedNpc.status||'Active'} onChange={async e=>{
+              const newStatus = e.target.value;
+              await updateNpcField(selectedNpc.id,'status',newStatus);
+              if (newStatus === 'Deceased') {
+                const { data: invItems } = await supabase.from('npc_inventory').select('*').eq('npc_id', selectedNpc.id);
+                if (invItems?.length > 0) {
+                  const { data: box } = await supabase.from('lootboxes').insert({
+                    name: `${selectedNpc.name}'s Remains`,
+                    campaign_id: campaignId || null,
+                    revealed: false, claimed: false,
+                  }).select().single();
+                  if (box) {
+                    await supabase.from('lootbox_items').insert(invItems.map(i => ({
+                      lootbox_id: box.id, item_name: i.name,
+                      item_category: i.category || 'Misc',
+                      item_desc: i.description || '', qty: i.quantity || 1,
+                    })));
+                    await supabase.from('dm_memory').insert({
+                      campaign_id: String(campaignId), category: 'lore',
+                      content: `[DEATH LOOT] ${selectedNpc.name} has fallen. Their belongings (${invItems.length} item${invItems.length !== 1 ? 's' : ''}) are staged in Solomon as "${selectedNpc.name}'s Remains". Do not stack with existing active lootboxes.`,
+                    });
+                  }
+                }
+              }
+            }}>{STATUS_OPTIONS.map(s=><option key={s} value={s} style={{background:'#0e0c09'}}>{s}</option>)}</select></div>
           </div>
           <div style={{display:'flex',gap:8,marginBottom:8}}>
             <div style={{...S.field,flex:1}}><label style={S.label}>Race</label><select style={S.fieldSelect} value={selectedNpc.race||''} onChange={e=>{updateNpcField(selectedNpc.id,'race',e.target.value);updateNpcField(selectedNpc.id,'race_variant','');}}><option value="" style={{background:'#0e0c09'}}>—</option>{Object.keys(RACE_OPTIONS).map(r=><option key={r} value={r} style={{background:'#0e0c09'}}>{r}</option>)}</select></div>
@@ -785,7 +809,33 @@ export default function NPCPanel({ campaignId, sessionId }) {
           <div style={S.field}><label style={S.label}>Notes</label><textarea style={S.fieldTextarea} value={selectedNpc.notes||''} onChange={e=>updateNpcField(selectedNpc.id,'notes',e.target.value)} placeholder="DM notes, relationships, plot hooks…"/></div>
           {selectedNpc.abilities?.length>0&&(<div style={S.field}><label style={S.label}>Abilities</label><div style={{display:'flex',flexWrap:'wrap',gap:4}}>{selectedNpc.abilities.map((ab,i)=><div key={i} style={{background:'rgba(184,137,42,0.1)',border:'1px solid rgba(184,137,42,0.3)',borderRadius:4,padding:'2px 8px',fontFamily:'Georgia,serif',fontSize:10,color:'#c8b890'}}>{ab.ability}</div>)}</div></div>)}
           <div style={S.field}><label style={S.label}>Conditions</label><div style={{display:'flex',flexWrap:'wrap',gap:3}}>{(selectedNpc.conditions||[]).map(c=>(<div key={c} onClick={()=>toggleNpcCondition(selectedNpc.id,c)} style={{display:'inline-flex',alignItems:'center',gap:3,background:`${condColor(c)}18`,border:`1px solid ${condColor(c)}55`,borderRadius:20,padding:'2px 7px',fontFamily:"'Cinzel',serif",fontSize:9,color:condColor(c),cursor:'pointer'}}><div style={{width:5,height:5,borderRadius:'50%',background:condColor(c)}}/>{c} <span style={{opacity:0.6,marginLeft:2}}>✕</span></div>))}<button onClick={e=>setCondPicker({entityId:selectedNpc.id,entityType:'npc',anchorRect:e.currentTarget.getBoundingClientRect()})} style={{display:'inline-flex',alignItems:'center',background:'rgba(184,137,42,0.08)',border:'1px solid rgba(184,137,42,0.25)',borderRadius:20,padding:'2px 7px',fontFamily:"'Cinzel',serif",fontSize:9,color:'#e8c040',cursor:'pointer'}}>+ Add</button></div></div>
-          {selectedNpc.loot_generated&&<div style={{marginTop:6,padding:'6px 10px',background:'rgba(184,137,42,0.06)',border:'1px solid rgba(184,137,42,0.2)',borderRadius:5,fontSize:10,color:'rgba(200,180,130,0.5)',fontFamily:"'Cinzel',serif"}}>⬡ Loot in Bazaar as "{selectedNpc.name}'s Loot"</div>}
+          <div style={{marginTop:8}}>
+            <button onClick={async () => {
+              const nodeRows = (selectedNpc.abilities||[]).map(a => a.node?.split('|')[0]).filter(Boolean);
+              const cats = [...new Set(nodeRows.flatMap(r => (LOOT_WEIGHTS[r]||'Gear,Weapons,Accessories,Consumables').split(',')))];
+              if (!cats.length) cats.push('Gear','Weapons','Accessories','Consumables');
+              const items = [];
+              for (const cat of cats.slice(0,3)) {
+                const {data} = await supabase.from('items').select('id,name,category,description,rarity').eq('category',cat.trim()).limit(100);
+                if (data?.length) items.push(...data.sort(()=>Math.random()-0.5).slice(0,Math.floor(Math.random()*2)+1));
+              }
+              const {data:bonus} = await supabase.from('items').select('id,name,category,description,rarity').limit(500);
+              if (bonus) items.push(...bonus.sort(()=>Math.random()-0.5).slice(0,2));
+              if (!items.length) return;
+              const {data:box} = await supabase.from('lootboxes').insert({
+                name:`${selectedNpc.name}'s Loot`, campaign_id: campaignId || null,
+                revealed:false, claimed:false,
+              }).select().single();
+              if (box) {
+                await supabase.from('lootbox_items').insert(items.map(i=>({
+                  lootbox_id:box.id, item_name:i.name,
+                  item_category:i.category, item_desc:i.description||'', qty:1,
+                })));
+                await updateNpcField(selectedNpc.id,'loot_generated',true);
+              }
+            }} style={{...S.genBtn,marginBottom:4}}>⚄ Generate Loot</button>
+          </div>
+          {selectedNpc.loot_generated&&<div style={{marginTop:2,padding:'6px 10px',background:'rgba(184,137,42,0.06)',border:'1px solid rgba(184,137,42,0.2)',borderRadius:5,fontSize:10,color:'rgba(200,180,130,0.5)',fontFamily:"'Cinzel',serif"}}>⬡ Loot staged in Solomon as "{selectedNpc.name}'s Loot"</div>}
           <div style={{display:'flex',gap:6,alignItems:'center',marginTop:8}}>
             <div style={{fontSize:10,color:'rgba(200,180,130,0.25)',fontStyle:'italic',flex:1}}>{selectedCity.name}{selectedCity.region?` · ${selectedCity.region}`:''}</div>
             <button onClick={()=>markMet(selectedNpc,selectedCity.name)} style={{background:'rgba(184,137,42,0.15)',border:'1px solid rgba(184,137,42,0.35)',borderRadius:3,color:'#e8c040',cursor:'pointer',padding:'3px 8px',fontSize:10,fontFamily:"'Cinzel',serif"}}>⬡ Met</button>
