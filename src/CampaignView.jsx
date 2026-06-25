@@ -2277,8 +2277,8 @@ useEffect(() => {
           <div style={{ justifySelf: 'end' }} />
         </div>
         {/* Row 2: clock centered below on mobile, inline right on desktop */}
-        {clockState && (
-          <div style={{ display: 'flex', justifyContent: 'center', overflowX: 'auto' }}>
+        {clockState && isMobile && (
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
             <SoteriaClockDisplay clock={clockState} compact />
           </div>
         )}
