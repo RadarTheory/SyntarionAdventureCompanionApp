@@ -145,14 +145,16 @@ fogZones.forEach(zone => {
 
  tokens.forEach(tok => {
     const fogged = isTokenFogged(tok, fogZones);
-    if (fogged && !isDM) return; // players never see fogged tokens at all
+    const isPlayerToken = tok.type === 'player';
+    if (fogged && !isDM) return;
+    if (fogged && isDM && !isPlayerToken) return; // NPC/enemy tokens hidden in fog even for DM
 
     const isHovered = hoveredTokenId && tok.id === hoveredTokenId;
     const tx = mapRect.x + tok.x * mapRect.w;
 const ty = mapRect.y + tok.y * mapRect.h;
 const r = isHovered ? 22 : 14;
     ctx.save();
-    if (fogged) ctx.globalAlpha = 0.4; // DM sees fogged tokens dimmed, as a reminder
+    if (fogged && isPlayerToken) ctx.globalAlpha = 0.4; // DM sees fogged player tokens dimmed
 
     if (tok.type === 'player') { ctx.beginPath(); ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4); }
     else { ctx.beginPath(); ctx.arc(tx, ty, r, 0, Math.PI * 2); }
