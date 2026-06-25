@@ -118,10 +118,26 @@ function CreatureCard({ creature, isDM, campaignId, onAddedToCombat, onPortraitU
             <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No description available.</div>
           )}
           {isDM && (
-            <button onClick={addToCombat} disabled={adding}
-              style={{ background: added ? COLORS.magicBg : `${col}14`, border: `1px solid ${added ? COLORS.magic : col + '55'}`, borderRadius: 6, padding: '6px 12px', cursor: adding ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: added ? COLORS.magicText : col, fontWeight: 700, letterSpacing: '0.1em', transition: 'all 0.15s' }}>
-              {adding ? 'Adding…' : added ? '✓ Added to Combat' : '⚔ Add to Combat'}
-            </button>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button onClick={addToCombat} disabled={adding}
+                style={{ background: added ? COLORS.magicBg : `${col}14`, border: `1px solid ${added ? COLORS.magic : col + '55'}`, borderRadius: 6, padding: '6px 12px', cursor: adding ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: added ? COLORS.magicText : col, fontWeight: 700, letterSpacing: '0.1em', transition: 'all 0.15s' }}>
+                {adding ? 'Adding…' : added ? '✓ Added to Combat' : '⚔ Add to Combat'}
+              </button>
+              <button onClick={async e => {
+                e.stopPropagation();
+                const {data:items} = await supabase.from('items').select('id,name,category,description,rarity').limit(500);
+                if (!items?.length) return;
+                const picked = items.sort(()=>Math.random()-0.5).slice(0, Math.floor(Math.random()*4)+2);
+                await supabase.from('npc_inventory').delete().eq('npc_id', String(creature.id));
+                await supabase.from('npc_inventory').insert(picked.map(i => ({
+                  npc_id: String(creature.id),
+                  item_name: i.name,
+                  item_category: i.category,
+                })));
+              }} style={{ background: `${col}14`, border: `1px solid ${col}55`, borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: col, fontWeight: 700, letterSpacing: '0.1em' }}>
+                ⚄ Generate Loot
+              </button>
+            </div>
           )}
         </div>
       )}

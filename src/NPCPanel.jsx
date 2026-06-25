@@ -781,9 +781,11 @@ export default function NPCPanel({ campaignId, sessionId }) {
                   }).select().single();
                   if (box) {
                     await supabase.from('lootbox_items').insert(invItems.map(i => ({
-                      lootbox_id: box.id, item_name: i.name,
-                      item_category: i.category || 'Misc',
-                      item_desc: i.description || '', qty: i.quantity || 1,
+                      lootbox_id: box.id,
+                      item_name: i.item_name,
+                      item_category: i.item_category || 'Misc',
+                      item_desc: '',
+                      qty: 1,
                     })));
                     await supabase.from('dm_memory').insert({
                       campaign_id: String(campaignId), category: 'lore',
@@ -824,12 +826,9 @@ export default function NPCPanel({ campaignId, sessionId }) {
               if (!items.length) return;
               await supabase.from('npc_inventory').delete().eq('npc_id', selectedNpc.id);
               await supabase.from('npc_inventory').insert(items.map(i => ({
-                npc_id: selectedNpc.id,
-                name: i.name,
-                category: i.category,
-                description: i.description || '',
-                quantity: 1,
-                rarity: i.rarity || null,
+                npc_id: String(selectedNpc.id),
+                item_name: i.name,
+                item_category: i.category,
               })));
               await updateNpcField(selectedNpc.id,'loot_generated',true);
             }} style={{...S.genBtn,marginBottom:4}}>⚄ Generate Loot</button>
