@@ -70,12 +70,18 @@ Deno.serve(async (req) => {
       });
     };
 
-    let res = await attemptCall('gemini-2.5-flash');
+    let res = await attemptCall('gemini-1.5-flash');
     if (res.status === 429) {
-      res = await attemptCall('gemini-1.5-flash');
+      res = await attemptCall('gemini-1.5-pro');
     }
 
     const data = await res.json();
+    if (!res.ok) {
+      const reason = data?.error?.message || data?.message || `Status ${res.status}`;
+      return new Response(JSON.stringify({ error: { message: `The Scribe is unavailable: ${reason}` } }), {
+        status: res.status, headers: { ...CORS, 'Content-Type': 'application/json' },
+      });
+    }
     return new Response(JSON.stringify(data), {
       status: res.status, headers: { ...CORS, 'Content-Type': 'application/json' },
     });
