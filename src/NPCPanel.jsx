@@ -813,33 +813,72 @@ export default function NPCPanel({ campaignId, sessionId }) {
           <div style={S.field}><label style={S.label}>Conditions</label><div style={{display:'flex',flexWrap:'wrap',gap:3}}>{(selectedNpc.conditions||[]).map(c=>(<div key={c} onClick={()=>toggleNpcCondition(selectedNpc.id,c)} style={{display:'inline-flex',alignItems:'center',gap:3,background:`${condColor(c)}18`,border:`1px solid ${condColor(c)}55`,borderRadius:20,padding:'2px 7px',fontFamily:"'Cinzel',serif",fontSize:9,color:condColor(c),cursor:'pointer'}}><div style={{width:5,height:5,borderRadius:'50%',background:condColor(c)}}/>{c} <span style={{opacity:0.6,marginLeft:2}}>✕</span></div>))}<button onClick={e=>setCondPicker({entityId:selectedNpc.id,entityType:'npc',anchorRect:e.currentTarget.getBoundingClientRect()})} style={{display:'inline-flex',alignItems:'center',background:'rgba(184,137,42,0.08)',border:'1px solid rgba(184,137,42,0.25)',borderRadius:20,padding:'2px 7px',fontFamily:"'Cinzel',serif",fontSize:9,color:'#e8c040',cursor:'pointer'}}>+ Add</button></div></div>
           <div style={{marginTop:8}}>
             <button onClick={async () => {
-              const nodeRows = (selectedNpc.abilities||[]).map(a => a.node?.split('|')[0]).filter(Boolean);
-              const cats = [...new Set(nodeRows.flatMap(r => (LOOT_WEIGHTS[r]||'').split(',')).filter(Boolean))];
-              if (!cats.length) {
-                const role = (selectedNpc.role||'').toLowerCase();
-                if (role.match(/fisher|farmer|laborer|peasant|servant|innkeep|tavern/)) cats.push('Consumables','Gear');
-                else if (role.match(/guard|soldier|militia|knight|warrior/)) cats.push('Weapons','Armor');
-                else if (role.match(/merchant|trader|vendor/)) cats.push('Consumables','Accessories','Gear');
-                else if (role.match(/mage|wizard|scholar|scribe/)) cats.push('Magic Items','Spellcasting Items');
-                else if (role.match(/thief|rogue|assassin/)) cats.push('Weapons','Accessories');
-                else cats.push('Consumables','Gear');
+              // Fetch catalog for Scribe context
+              const { data: catalog } = await supabase.from('items').select('name,category,rarity').limit(300);
+              const catalogNames = (catalog||[]).map(i => `${i.name} (${i.category})`).join(', ');
+
+              const wealthTier = (() => {
+                const r = (selectedNpc.role||'').toLowerCase();
+                if (r.match(/serf|slave|beggar|vagrant|destitute/)) return 'destitute';
+                if (r.match(/fisher|fisherman|farmer|laborer|peasant|servant|stablehand/)) return 'poor';
+                if (r.match(/guard|soldier|innkeep|tavern|blacksmith|craftsman|merchant|trader/)) return 'common';
+                if (r.match(/knight|captain|noble|lord|scholar|wizard|mage/)) return 'wealthy';
+                if (r.match(/baron|duke|archmage|high priest|viceroy|tycoon/)) return 'rich';
+                return 'common';
+              })();
+
+              const countRange = { destitute:'0-1', poor:'1-3', common:'2-5', wealthy:'4-7', rich:'6-10' }[wealthTier];
+
+              const scribePrompt = `You are a TTRPG loot generator for Soteria (178 Era of Unity).
+
+NPC: ${selectedNpc.name}
+Role: ${selectedNpc.role || 'Unknown'}
+Faction: ${selectedNpc.faction || 'None'}
+Alignment: ${selectedNpc.alignment || 'neutral'}
+Wealth Tier: ${wealthTier}
+Notes: ${selectedNpc.notes || 'None'}
+Conditions: ${(selectedNpc.conditions||[]).join(', ') || 'None'}
+
+Generate between ${countRange} items this NPC realistically carries. Prefer items from this catalog: ${catalogNames}.
+
+If an item fits but is not in the catalog, invent one appropriate to Soteria with a name, category (Gear/Weapons/Armor/Consumables/Accessories/Magic Items/Artifacts), description (1 sentence), and rarity (Common/Uncommon/Rare).
+
+For destitute/poor NPCs: mostly nothing, maybe 1-2 mundane items.
+For wealthy/rich NPCs: mix of practical and valuable items.
+
+Respond ONLY with a valid JSON array, no markdown:
+[{"name":"Item Name","category":"Category","description":"Description","rarity":"Common","inCatalog":true}]
+
+Set inCatalog to false if you invented it.`;
+
+              let scribeItems = [];
+              try {
+                const { data: scribeData } = await supabase.functions.invoke('scribe', {
+                  body: { system: 'You are a TTRPG loot generator. Respond only with valid JSON arrays, no markdown.', messages: [{ role: 'user', content: scribePrompt }], max_tokens: 800 }
+                });
+                const text = scribeData?.choices?.[0]?.message?.content || '';
+                const clean = text.replace(/```json|```/g, '').trim();
+                scribeItems = JSON.parse(clean);
+              } catch(e) {
+                console.error('Scribe loot failed:', e);
               }
-              const items = [];
-              for (const cat of cats.slice(0,3)) {
-                const {data} = await supabase.from('items').select('id,name,category,description,rarity').eq('category',cat.trim()).limit(100);
-                if (data?.length) items.push(...data.sort(()=>Math.random()-0.5).slice(0,Math.floor(Math.random()*2)+1));
-              }
-              if (!items.length) {
-                const {data:fallback} = await supabase.from('items').select('id,name,category,description,rarity').limit(200);
-                if (fallback?.length) items.push(...fallback.sort(()=>Math.random()-0.5).slice(0,4));
-              }
-              if (!items.length) return;
+
+              if (!scribeItems.length) return;
+
+              const { data: fullCatalog } = await supabase.from('items').select('id,name,category,description,rarity').limit(500);
+              const items = scribeItems.map(si => {
+                const match = (fullCatalog||[]).find(c => c.name.toLowerCase() === si.name.toLowerCase());
+                if (match) return { ...match, _isNew: false };
+                return { id: `new_${Math.random().toString(36).slice(2,7)}`, name: si.name, category: si.category, description: si.description, rarity: si.rarity || 'Common', _isNew: true };
+              });
+
               await supabase.from('npc_inventory').delete().eq('npc_id', selectedNpc.id);
               await supabase.from('npc_inventory').insert(items.map(i => ({
                 npc_id: String(selectedNpc.id),
                 item_name: i.name,
                 item_category: i.category,
               })));
+
               const { data: existingBoxes } = await supabase.from('lootboxes')
                 .select('id').eq('claimed', false)
                 .ilike('name', `${selectedNpc.name}'%`);
@@ -848,7 +887,8 @@ export default function NPCPanel({ campaignId, sessionId }) {
                   await supabase.from('lootbox_items').delete().eq('lootbox_id', box.id);
                   await supabase.from('lootbox_items').insert(items.map(i => ({
                     lootbox_id: box.id, item_name: i.name,
-                    item_category: i.category, item_desc: '', qty: 1,
+                    item_category: i.category, item_desc: i.description || '',
+                    qty: 1, is_new_item: i._isNew || false, item_rarity: i.rarity || 'Common',
                   })));
                 }
               }
