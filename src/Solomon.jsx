@@ -295,6 +295,10 @@ export default function Solomon({ campaignId, onClose }) {
                   expanded={expanded === box.id}
                   onToggle={() => toggleExpand(box.id)}
                   presence={presence}
+                  onDeleteItem={async (itemId) => {
+                    await supabase.from('lootbox_items').delete().eq('id', itemId);
+                    setBoxItems(prev => ({ ...prev, [box.id]: prev[box.id].filter(i => i.id !== itemId) }));
+                  }}
                   action={
                     <button
                       onClick={() => revealBox(box)}
@@ -367,7 +371,7 @@ export default function Solomon({ campaignId, onClose }) {
   );
 }
 
-function BoxRow({ box, items, expanded, onToggle, presence, revealMode, action }) {
+function BoxRow({ box, items, expanded, onToggle, presence, revealMode, action, onDeleteItem }) {
   const modeLabel = revealMode === 'multi'
     ? `Multi-player · ${presence.length} present`
     : revealMode === 'single'
@@ -435,6 +439,9 @@ function BoxRow({ box, items, expanded, onToggle, presence, revealMode, action }
                     {item.qty > 1 && <div style={{ fontSize: 8, color: '#e8c84a', fontFamily: "'Cinzel', serif" }}>×{item.qty}</div>}
                     {item.claim_status === 'approved' && <div style={{ fontSize: 7, color: '#79f5a7', fontFamily: "'Cinzel', serif" }}>CLAIMED</div>}
                     {item.claim_status === 'pending' && <div style={{ fontSize: 7, color: '#e8a84a', fontFamily: "'Cinzel', serif" }}>PENDING</div>}
+                    {onDeleteItem && !box.revealed && !box.claimed && (
+                      <button onClick={() => onDeleteItem(item.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#e05a5a', fontSize: 11, padding: '0 4px' }}>✕</button>
+                    )}
                   </div>
                 </div>
               ))}

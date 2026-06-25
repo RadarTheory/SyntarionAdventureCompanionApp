@@ -814,15 +814,24 @@ export default function NPCPanel({ campaignId, sessionId }) {
           <div style={{marginTop:8}}>
             <button onClick={async () => {
               const nodeRows = (selectedNpc.abilities||[]).map(a => a.node?.split('|')[0]).filter(Boolean);
-              const cats = [...new Set(nodeRows.flatMap(r => (LOOT_WEIGHTS[r]||'Gear,Weapons,Accessories,Consumables').split(',')))];
-              if (!cats.length) cats.push('Gear','Weapons','Accessories','Consumables');
+              const cats = [...new Set(nodeRows.flatMap(r => (LOOT_WEIGHTS[r]||'').split(',')).filter(Boolean))];
+              if (!cats.length) {
+                const role = (selectedNpc.role||'').toLowerCase();
+                if (role.match(/fisher|farmer|laborer|peasant|servant|innkeep|tavern/)) cats.push('Consumables','Gear');
+                else if (role.match(/guard|soldier|militia|knight|warrior/)) cats.push('Weapons','Armor');
+                else if (role.match(/merchant|trader|vendor/)) cats.push('Consumables','Accessories','Gear');
+                else if (role.match(/mage|wizard|scholar|scribe/)) cats.push('Magic Items','Spellcasting Items');
+                else if (role.match(/thief|rogue|assassin/)) cats.push('Weapons','Accessories');
+                else cats.push('Consumables','Gear');
+              }
+              const rarityFilter = nodeRows.length === 0 ? ['Common','Uncommon'] : ['Common','Uncommon','Rare'];
               const items = [];
               for (const cat of cats.slice(0,3)) {
-                const {data} = await supabase.from('items').select('id,name,category,description,rarity').eq('category',cat.trim()).limit(100);
+                const {data} = await supabase.from('items').select('id,name,category,description,rarity').eq('category',cat.trim()).in('rarity', rarityFilter).limit(100);
                 if (data?.length) items.push(...data.sort(()=>Math.random()-0.5).slice(0,Math.floor(Math.random()*2)+1));
               }
-              const {data:bonus} = await supabase.from('items').select('id,name,category,description,rarity').limit(500);
-              if (bonus) items.push(...bonus.sort(()=>Math.random()-0.5).slice(0,2));
+              const {data:bonus} = await supabase.from('items').select('id,name,category,description,rarity').in('rarity',['Common']).limit(200);
+              if (bonus) items.push(...bonus.sort(()=>Math.random()-0.5).slice(0,1));
               if (!items.length) return;
               await supabase.from('npc_inventory').delete().eq('npc_id', selectedNpc.id);
               await supabase.from('npc_inventory').insert(items.map(i => ({
