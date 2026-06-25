@@ -831,7 +831,7 @@ export default function NPCPanel({ campaignId, sessionId }) {
                 item_category: i.category,
               })));
               await updateNpcField(selectedNpc.id,'loot_generated',true);
-            }} style={{...S.genBtn,marginBottom:4}}>⚄ Generate Loot</button>
+            }} style={{...S.genBtn,marginBottom:4}}>⚄ {selectedNpc.loot_generated ? 'Regenerate Loot' : 'Generate Loot'}</button>
           </div>
          {selectedNpc.loot_generated&&<div style={{marginTop:2,padding:'6px 10px',background:'rgba(184,137,42,0.06)',border:'1px solid rgba(184,137,42,0.2)',borderRadius:5,fontSize:10,color:'rgba(200,180,130,0.5)',fontFamily:"'Cinzel',serif"}}>⬡ Loot staged in Solomon as "{selectedNpc.name}'s Loot"</div>}
           <div style={{display:'flex',gap:6,alignItems:'center',marginTop:8}}>
