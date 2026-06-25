@@ -246,6 +246,8 @@ useEffect(() => {
   const [isDragging, setIsDragging] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [open, setOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState('scribe');
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 700;
 
   const dragOffset = useRef({ x: 0, y: 0 });
   const moved = useRef(false);
@@ -1285,16 +1287,16 @@ const denyEvent = async event => {
 
       {open && (
         <div
-          className="hercules-shell combat-shell"
+           className="hercules-shell combat-shell"
           style={{
             position: 'fixed',
-            left: windowPos.x,
-            top: windowPos.y,
-            width: 'min(1100px, calc(100vw - 48px))',
-            height: 'min(760px, calc(100vh - 110px))',
+            left: isMobile ? 0 : windowPos.x,
+            top: isMobile ? 0 : windowPos.y,
+            width: isMobile ? '100vw' : 'min(1100px, calc(100vw - 48px))',
+            height: isMobile ? '100dvh' : 'min(760px, calc(100vh - 110px))',
             background: '#100d0a',
             border: '1px solid rgba(200,168,74,0.35)',
-            borderRadius: 16,
+            borderRadius: isMobile ? 0 : 16,
             boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
             zIndex: 100000,
             display: 'grid',
@@ -1304,10 +1306,12 @@ const denyEvent = async event => {
         >
           <div
             onMouseDown={e => {
+              if (isMobile) return;
               if (['BUTTON', 'SELECT', 'INPUT', 'OPTION'].includes(e.target.tagName)) return;
               startWindowDrag(e);
             }}
             onTouchStart={e => {
+              if (isMobile) return;
               if (['BUTTON', 'SELECT', 'INPUT', 'OPTION'].includes(e.target.tagName)) return;
               startWindowDrag(e);
             }}
@@ -1420,15 +1424,29 @@ const denyEvent = async event => {
 
           <div
             className="hercules-main combat-main combat-grid"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '270px 1fr 320px',
-              gap: 12,
-              padding: 12,
-              minHeight: 0,
-            }}
+            style={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1, overflow: 'hidden' }}
           >
-            <div className="hercules-panel initiative-panel" style={panelStyle()}>
+            {isMobile && (
+              <div style={{ display: 'flex', borderBottom: '1px solid rgba(200,168,74,0.25)', flexShrink: 0 }}>
+                {[['initiative','Initiative'],['scribe','Scribe'],['bestiary','Bestiary']].map(([tab, label]) => (
+                  <button key={tab} type="button" onClick={() => setMobileTab(tab)} style={{
+                    flex: 1, padding: '10px 4px',
+                    background: mobileTab === tab ? 'rgba(200,168,74,0.15)' : 'transparent',
+                    border: 'none',
+                    borderBottom: mobileTab === tab ? '2px solid rgba(200,168,74,0.8)' : '2px solid transparent',
+                    color: mobileTab === tab ? '#e8d9a7' : '#6b5f45',
+                    fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.1em', cursor: 'pointer',
+                  }}>{label}</button>
+                ))}
+              </div>
+            )}
+            <div style={{
+              display: isMobile ? 'block' : 'grid',
+              gridTemplateColumns: isMobile ? undefined : '270px 1fr 320px',
+              gap: 12, padding: 12, minHeight: 0, flex: 1,
+              overflow: isMobile ? 'auto' : 'hidden',
+            }}>
+            <div className="hercules-panel initiative-panel" style={{ ...panelStyle(), display: isMobile && mobileTab !== 'initiative' ? 'none' : 'flex', ...(isMobile ? { minHeight: 'calc(100dvh - 140px)' } : {}) }}>
               <SectionTitle>Initiative</SectionTitle>
 
               {!session && <EmptyText>No active combat.</EmptyText>}
@@ -1485,7 +1503,7 @@ const denyEvent = async event => {
 </div>
             </div>
 
-            <div className="hercules-panel combat-log-panel" style={panelStyle()}>
+            <div className="hercules-panel combat-log-panel" style={{ ...panelStyle(), display: isMobile && mobileTab !== 'scribe' ? 'none' : 'flex', ...(isMobile ? { minHeight: 'calc(100dvh - 140px)' } : {}) }}>
               <SectionTitle>Scribe Rulings</SectionTitle>
 
               <div
@@ -1513,7 +1531,7 @@ const denyEvent = async event => {
               </div>
             </div>
 
-            <div className="hercules-panel scribe-panel" style={panelStyle()}>
+            <div className="hercules-panel scribe-panel" style={{ ...panelStyle(), display: isMobile && mobileTab !== 'bestiary' ? 'none' : 'flex', ...(isMobile ? { minHeight: 'calc(100dvh - 140px)' } : {}) }}>
               <SectionTitle>Bestiary</SectionTitle>
 
               <input
@@ -1653,6 +1671,7 @@ const denyEvent = async event => {
                   </button>
                 ))}
               </div>
+            </div>
             </div>
           </div>
         </div>
