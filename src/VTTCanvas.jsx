@@ -87,20 +87,27 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   fogCanvas.height = H;
   const fog = fogCanvas.getContext('2d');
 
-  // 1. Fill black
   fog.fillStyle = '#0a0806';
   fog.fillRect(0, 0, W, H);
 
-  // 2. Paint hide zones on top (they add more darkness)
-  fog.globalCompositeOperation = 'source-over';
   fogZones.forEach(zone => {
-    if (zone.type !== 'hide') return;
     const cx = mapRect.x + zone.x * mapRect.w;
     const cy = mapRect.y + zone.y * mapRect.h;
     const r  = zone.r * mapRect.w;
     const feather = zone.feather ?? 0.35;
-    if (feather > 0) {
-      const inner = Math.max(0, r * (1 - feather));
+    const inner = Math.max(0, r * (1 - feather));
+
+    if (zone.type === 'reveal') {
+      fog.globalCompositeOperation = 'destination-out';
+      const grad = fog.createRadialGradient(cx, cy, inner, cx, cy, r);
+      grad.addColorStop(0, 'rgba(0,0,0,1)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      fog.beginPath();
+      fog.arc(cx, cy, r, 0, Math.PI * 2);
+      fog.fillStyle = grad;
+      fog.fill();
+    } else if (zone.type === 'hide') {
+      fog.globalCompositeOperation = 'source-over';
       const grad = fog.createRadialGradient(cx, cy, inner, cx, cy, r);
       grad.addColorStop(0, 'rgba(10,8,6,1)');
       grad.addColorStop(1, 'rgba(10,8,6,0)');
@@ -108,30 +115,7 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
       fog.arc(cx, cy, r, 0, Math.PI * 2);
       fog.fillStyle = grad;
       fog.fill();
-    } else {
-      fog.beginPath();
-      fog.arc(cx, cy, r, 0, Math.PI * 2);
-      fog.fillStyle = 'rgba(10,8,6,1)';
-      fog.fill();
     }
-  });
-
-  // 3. Reveal punches through everything — always wins
-  fog.globalCompositeOperation = 'destination-out';
-  fogZones.forEach(zone => {
-    if (zone.type !== 'reveal') return;
-    const cx = mapRect.x + zone.x * mapRect.w;
-    const cy = mapRect.y + zone.y * mapRect.h;
-    const r  = zone.r * mapRect.w;
-    const feather = zone.feather ?? 0.35;
-    const inner = Math.max(0, r * (1 - feather));
-    const grad = fog.createRadialGradient(cx, cy, inner, cx, cy, r);
-    grad.addColorStop(0, 'rgba(0,0,0,1)');
-    grad.addColorStop(1, 'rgba(0,0,0,0)');
-    fog.beginPath();
-    fog.arc(cx, cy, r, 0, Math.PI * 2);
-    fog.fillStyle = grad;
-    fog.fill();
   });
 
   // ── 3. Composite fog onto main canvas with the same transform ────────────
