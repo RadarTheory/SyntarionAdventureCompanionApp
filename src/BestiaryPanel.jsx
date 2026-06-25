@@ -28,6 +28,7 @@ function CreatureCard({ creature, isDM, campaignId, onAddedToCombat, onPortraitU
   const [expanded, setExpanded] = useState(false);
   const [adding, setAdding]     = useState(false);
   const [added, setAdded]       = useState(false);
+  const [note, setNote]         = useState('');
 
   const col      = CATEGORY_COLORS[creature.category] || COLORS.muted;
   const shortDesc = creature.description
@@ -73,7 +74,7 @@ function CreatureCard({ creature, isDM, campaignId, onAddedToCombat, onPortraitU
     await supabase.from('hercules_initiative').insert({ session_id: hsession.id, character_id: tokenId, character_name: creature.name, roll, modifier: 0, turn_order: roll });
 
     // Log event
-    await supabase.from('hercules_events').insert({ session_id: hsession.id, type: 'enemy_added', actor_name: creature.name, actor_id: tokenId, description: `${creature.name} enters the scene from the Bestiary. Initiative: d20 ${roll} = ${roll}.` });
+    await supabase.from('hercules_events').insert({ session_id: hsession.id, type: 'enemy_added', actor_name: creature.name, actor_id: tokenId, description: `${creature.name} enters the scene from the Bestiary. Initiative: d20 ${roll} = ${roll}.${note.trim() ? ` DM Note: ${note.trim()}` : ''}` });
 
     setAdded(true);
     setAdding(false);
@@ -118,7 +119,12 @@ function CreatureCard({ creature, isDM, campaignId, onAddedToCombat, onPortraitU
             <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No description available.</div>
           )}
           {isDM && (
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <textarea value={note} onChange={e => setNote(e.target.value)}
+                placeholder="Notes for this encounter (loot, behavior, context…)"
+                rows={2}
+                style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 8px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} />
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               <button onClick={addToCombat} disabled={adding}
                 style={{ background: added ? COLORS.magicBg : `${col}14`, border: `1px solid ${added ? COLORS.magic : col + '55'}`, borderRadius: 6, padding: '6px 12px', cursor: adding ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: added ? COLORS.magicText : col, fontWeight: 700, letterSpacing: '0.1em', transition: 'all 0.15s' }}>
                 {adding ? 'Adding…' : added ? '✓ Added to Combat' : '⚔ Add to Combat'}
@@ -137,6 +143,7 @@ function CreatureCard({ creature, isDM, campaignId, onAddedToCombat, onPortraitU
               }} style={{ background: `${col}14`, border: `1px solid ${col}55`, borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: col, fontWeight: 700, letterSpacing: '0.1em' }}>
                 ⚄ Generate Loot
               </button>
+              </div>
             </div>
           )}
         </div>
