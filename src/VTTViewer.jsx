@@ -603,7 +603,7 @@ useEffect(() => {
         {!mapLoaded ? (
           <div style={{ padding: '60px 20px', textAlign: 'center', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: COLORS.dim, fontSize: 12 }}>Loading map…</div>
         ) : (
-          <canvas ref={canvasRef} width={900} height={600} style={{ width: '100%', height: 'auto', maxHeight: '60vh', display: 'block', touchAction: 'none' }}
+          <canvas ref={canvasRef} width={900} height={600} style={{ width: '100%', height: 'auto', maxHeight: window.innerWidth <= 640 ? '60vh' : 'none', display: 'block', touchAction: 'none' }}
             onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
             onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={(e) => handleTouchEnd(e)} />
         )}
