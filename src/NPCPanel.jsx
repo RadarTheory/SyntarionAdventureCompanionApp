@@ -815,7 +815,7 @@ export default function NPCPanel({ campaignId, sessionId }) {
             <button onClick={async () => {
               // Fetch catalog for Scribe context
               const { data: catalog } = await supabase.from('items').select('name,category,rarity').limit(300);
-              const catalogNames = (catalog||[]).map(i => `${i.name} (${i.category})`).join(', ');
+              const catalogNames = (catalog||[]).map(i => i.name).join(', ');
 
               const wealthTier = (() => {
                 const r = (selectedNpc.role||'').toLowerCase();
@@ -839,9 +839,9 @@ Wealth Tier: ${wealthTier}
 Notes: ${selectedNpc.notes || 'None'}
 Conditions: ${(selectedNpc.conditions||[]).join(', ') || 'None'}
 
-Generate between ${countRange} items this NPC realistically carries. Prefer items from this catalog: ${catalogNames}.
+Generate between ${countRange} items this NPC realistically carries. You MUST use exact names from this catalog where possible: ${catalogNames}.
 
-If an item fits but is not in the catalog, invent one appropriate to Soteria with a name, category (Gear/Weapons/Armor/Consumables/Accessories/Magic Items/Artifacts), description (1 sentence), and rarity (Common/Uncommon/Rare).
+Only if no catalog item fits, invent one appropriate to Soteria. Set inCatalog to true and use the EXACT catalog name when pulling from the catalog. Set inCatalog to false only for invented items.
 
 For destitute/poor NPCs: mostly nothing, maybe 1-2 mundane items.
 For wealthy/rich NPCs: mix of practical and valuable items.
@@ -858,7 +858,11 @@ Set inCatalog to false if you invented it.`;
                 });
                 const text = scribeData?.choices?.[0]?.message?.content || '';
                 const clean = text.replace(/```json|```/g, '').trim();
-                scribeItems = JSON.parse(clean);
+                const start = clean.indexOf('[');
+                const end = clean.lastIndexOf(']');
+                if (start !== -1 && end !== -1) {
+                  scribeItems = JSON.parse(clean.slice(start, end + 1));
+                }
               } catch(e) {
                 console.error('Scribe loot failed:', e);
               }
