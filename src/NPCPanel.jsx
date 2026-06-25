@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import supabase from './lib/supabase';
 import { logSessionEvent, getCheckedInCharacterIds } from './lib/sessionEvents';
-import { ALL_CLASSES } from './constants';
+import { ALL_CLASSES, PM_MAJ, PM_MIN, PM_AEON, PM_ASTRAL } from './constants';
 import PortraitUpload from './PortraitUpload';
 
 const RACE_OPTIONS = {
@@ -278,7 +278,7 @@ const S = {
   suggestDismiss:{background:'none',border:'none',color:'rgba(200,130,130,0.5)',cursor:'pointer',fontSize:13,lineHeight:1,padding:'2px 4px'},
 };
 
-const EMPTY_FORM = {name:'',role:'',race:'',race_variant:'',cid:'',status:'Active',category:'Uncategorized',group_name:'',faction:'',notes:'',city_id:'unassigned',alignment:'neutral',vitals_max:16,vitals_current:16,stamina_max:16,stamina_current:16,resolve_max:16,resolve_current:16,stats:{soul:8,spirit:8,mind:8,body:8,will:8,whim:8,affect:8,dream:8},conditions:[],tags:[],selected_nodes:[],selected_abilities:{},loot_items:[]};
+const EMPTY_FORM = {name:'',role:'',race:'',race_variant:'',pamorph_bloodline:'',cid:'',status:'Active',category:'Uncategorized',group_name:'',faction:'',notes:'',city_id:'unassigned',alignment:'neutral',vitals_max:16,vitals_current:16,stamina_max:16,stamina_current:16,resolve_max:16,resolve_current:16,stats:{soul:8,spirit:8,mind:8,body:8,will:8,whim:8,affect:8,dream:8},conditions:[],tags:[],selected_nodes:[],selected_abilities:{},loot_items:[]};
 
 function NPCModal({ cities, groups, onSave, onClose }) {
   const [tab, setTab] = useState('identity');
@@ -294,12 +294,16 @@ function NPCModal({ cities, groups, onSave, onClose }) {
 
   const generateIdentity = () => {
     const r = (form.role||'').toLowerCase();
-    // Auto-pick race and variant
     const races = Object.keys(RACE_OPTIONS);
     const pickedRace = races[Math.floor(Math.random()*races.length)];
     const variants = RACE_OPTIONS[pickedRace];
     const pickedVariant = variants.length > 0 ? variants[Math.floor(Math.random()*variants.length)] : '';
-    setForm(f => ({...f, race: pickedRace, race_variant: pickedVariant}));
+    let pickedBloodline = '';
+    if (pickedRace === "Pa'morph") {
+      const pool = pickedVariant==='Major'?PM_MAJ:pickedVariant==='Minor'?PM_MIN:pickedVariant==='Aeon'?PM_AEON:pickedVariant==='Astral'?PM_ASTRAL:[];
+      if (pool.length) pickedBloodline = pool[Math.floor(Math.random()*pool.length)].id;
+    }
+    setForm(f => ({...f, race: pickedRace, race_variant: pickedVariant, pamorph_bloodline: pickedBloodline}));
     const ALIGNMENTS = ['neutral','magic','tech','neutral','neutral','magic','tech','chaos','order','shadow','light'];
     const PERSONALITIES = [
       'Speaks in measured tones, never more than necessary. Harbors a debt that shapes every decision.',
@@ -444,8 +448,14 @@ function NPCModal({ cities, groups, onSave, onClose }) {
             <div style={{display:'flex',gap:8}}>
               <div style={{...S.field,flex:1}}><label style={S.label}>Race</label><select style={S.fieldSelect} value={form.race} onChange={e=>set('race',e.target.value)||set('race_variant','')}><option value="" style={{background:'#0e0c09'}}>— Select race —</option>{Object.keys(RACE_OPTIONS).map(r=><option key={r} value={r} style={{background:'#0e0c09'}}>{r}</option>)}</select></div>
               {RACE_OPTIONS[form.race]?.length > 0 && (
-                <div style={{...S.field,flex:1}}><label style={S.label}>Variant</label><select style={S.fieldSelect} value={form.race_variant} onChange={e=>set('race_variant',e.target.value)}><option value="" style={{background:'#0e0c09'}}>— None —</option>{RACE_OPTIONS[form.race].map(v=><option key={v} value={v} style={{background:'#0e0c09'}}>{v}</option>)}</select></div>
+                <div style={{...S.field,flex:1}}><label style={S.label}>Variant</label><select style={S.fieldSelect} value={form.race_variant} onChange={e=>{set('race_variant',e.target.value);set('pamorph_bloodline','');}}><option value="" style={{background:'#0e0c09'}}>— None —</option>{RACE_OPTIONS[form.race].map(v=><option key={v} value={v} style={{background:'#0e0c09'}}>{v}</option>)}</select></div>
               )}
+              {form.race === "Pa'morph" && (() => {
+                const pool = form.race_variant==='Major'?PM_MAJ:form.race_variant==='Minor'?PM_MIN:form.race_variant==='Aeon'?PM_AEON:form.race_variant==='Astral'?PM_ASTRAL:[];
+                return pool.length > 0 ? (
+                  <div style={{...S.field,flex:1}}><label style={S.label}>Bloodline</label><select style={S.fieldSelect} value={form.pamorph_bloodline||''} onChange={e=>set('pamorph_bloodline',e.target.value)}><option value="" style={{background:'#0e0c09'}}>— Select bloodline —</option>{pool.map(b=><option key={b.id} value={b.id} style={{background:'#0e0c09'}}>{b.name} ({b.sub})</option>)}</select></div>
+                ) : null;
+              })()}
               <div style={{...S.field,flex:1}}><label style={S.label}>Class</label><select style={S.fieldSelect} value={form.cid} onChange={e=>set('cid',e.target.value)}><option value="" style={{background:'#0e0c09'}}>— Select class —</option>{ALL_CLASSES?.map(c=><option key={c.id} value={c.id} style={{background:'#0e0c09'}}>{c.name}</option>)}</select></div>
             </div>
             <div style={{display:'flex',gap:8}}>
