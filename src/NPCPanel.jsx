@@ -822,17 +822,16 @@ export default function NPCPanel({ campaignId, sessionId }) {
               const {data:bonus} = await supabase.from('items').select('id,name,category,description,rarity').limit(500);
               if (bonus) items.push(...bonus.sort(()=>Math.random()-0.5).slice(0,2));
               if (!items.length) return;
-              const {data:box} = await supabase.from('lootboxes').insert({
-                name:`${selectedNpc.name}'s Loot`, campaign_id: campaignId || null,
-                revealed:false, claimed:false,
-              }).select().single();
-              if (box) {
-                await supabase.from('lootbox_items').insert(items.map(i=>({
-                  lootbox_id:box.id, item_name:i.name,
-                  item_category:i.category, item_desc:i.description||'', qty:1,
-                })));
-                await updateNpcField(selectedNpc.id,'loot_generated',true);
-              }
+              await supabase.from('npc_inventory').delete().eq('npc_id', selectedNpc.id);
+              await supabase.from('npc_inventory').insert(items.map(i => ({
+                npc_id: selectedNpc.id,
+                name: i.name,
+                category: i.category,
+                description: i.description || '',
+                quantity: 1,
+                rarity: i.rarity || null,
+              })));
+              await updateNpcField(selectedNpc.id,'loot_generated',true);
             }} style={{...S.genBtn,marginBottom:4}}>⚄ Generate Loot</button>
           </div>
           {selectedNpc.loot_generated&&<div style={{marginTop:2,padding:'6px 10px',background:'rgba(184,137,42,0.06)',border:'1px solid rgba(184,137,42,0.2)',borderRadius:5,fontSize:10,color:'rgba(200,180,130,0.5)',fontFamily:"'Cinzel',serif"}}>⬡ Loot staged in Solomon as "{selectedNpc.name}'s Loot"</div>}
