@@ -83,7 +83,7 @@ export function FloatButton({ storageKey, defaultPos, children, onClick, title, 
 }
 
 // ─── Toolbar button (docked inside toolbar) ───────────────────────────────────
-function ToolbarButton({ children, onClick, title, badge, onDragOut, size = 56 }) {
+function ToolbarButton({ children, onClick, title, badge, onDragOut, size = 56, showLabel = false }) {
   const [pressing, setPressing] = useState(false);
   const [hovered, setHovered]   = useState(false);
   const startPos = useRef(null);
@@ -149,6 +149,11 @@ function ToolbarButton({ children, onClick, title, badge, onDragOut, size = 56 }
           {badge > 9 ? '9+' : badge}
         </span>
       )}
+      {showLabel && title && (
+        <div style={{ position: 'absolute', bottom: -16, left: '50%', transform: 'translateX(-50%)', fontSize: 7, color: 'rgba(201,185,145,0.7)', fontFamily: "'Cinzel', serif", letterSpacing: '0.06em', whiteSpace: 'nowrap', pointerEvents: 'none', textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
+          {title.split(' —')[0].split(' ·')[0]}
+        </div>
+      )}
     </button>
   );
 }
@@ -209,7 +214,7 @@ export default function FloatToolbar({ buttons }) {
   const undockedButtons = buttons.filter(b =>  undocked[b.id]);
 
   // Scale button size on mobile to fit all buttons on screen
-  const btnSize = mobile ? 48 : 56;
+  const btnSize = mobile ? 42 : 56;
   const isHorizontal = false;
 
   return (
@@ -221,8 +226,8 @@ export default function FloatToolbar({ buttons }) {
           display: 'flex',
           flexDirection: isHorizontal ? 'row' : 'column',
           alignItems: 'center',
-          gap: 8,
-          padding: collapsed ? 6 : 10,
+          gap: mobile ? 14 : 8,
+          padding: collapsed ? 6 : (mobile ? 8 : 10),
           background: 'rgba(8,6,4,0.88)',
           border: '1px solid rgba(201,185,145,0.2)',
           borderRadius: 40,
@@ -280,6 +285,7 @@ export default function FloatToolbar({ buttons }) {
             onClick={btn.onClick}
             onDragOut={(startPos) => handleUndock(btn.id, startPos)}
             size={btnSize}
+            showLabel={mobile}
           >
             {btn.children}
           </ToolbarButton>
