@@ -91,32 +91,14 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   fog.fillStyle = '#0a0806';
   fog.fillRect(0, 0, W, H);
 
-  // Punch reveal holes using destination-out
-  fog.globalCompositeOperation = 'destination-out';
-  fogZones.forEach(zone => {
-    if (zone.type !== 'reveal') return;
-    const cx = mapRect.x + zone.x * mapRect.w;
-    const cy = mapRect.y + zone.y * mapRect.h;
-    const r  = zone.r * mapRect.w;
-    const feather = zone.feather ?? 0.18;
-    const inner = Math.max(0, r * (1 - feather));
-    const grad = fog.createRadialGradient(cx, cy, inner, cx, cy, r);
-    grad.addColorStop(0, 'rgba(0,0,0,1)');
-    grad.addColorStop(1, 'rgba(0,0,0,0)');
-    fog.beginPath();
-    fog.arc(cx, cy, r, 0, Math.PI * 2);
-    fog.fillStyle = grad;
-    fog.fill();
-  });
-
-  // Paint hide zones back on top (source-over)
+  // Paint hide zones on top of base (source-over)
   fog.globalCompositeOperation = 'source-over';
   fogZones.forEach(zone => {
     if (zone.type !== 'hide') return;
     const cx = mapRect.x + zone.x * mapRect.w;
     const cy = mapRect.y + zone.y * mapRect.h;
     const r  = zone.r * mapRect.w;
-    const feather = zone.feather ?? 0.18;
+    const feather = zone.feather ?? 0.35;
     if (feather > 0) {
       const inner = Math.max(0, r * (1 - feather));
       const grad = fog.createRadialGradient(cx, cy, inner, cx, cy, r);
@@ -132,6 +114,24 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
       fog.fillStyle = 'rgba(10,8,6,1)';
       fog.fill();
     }
+  });
+
+  // Punch reveal holes last — cuts through everything including hide zones
+  fog.globalCompositeOperation = 'destination-out';
+  fogZones.forEach(zone => {
+    if (zone.type !== 'reveal') return;
+    const cx = mapRect.x + zone.x * mapRect.w;
+    const cy = mapRect.y + zone.y * mapRect.h;
+    const r  = zone.r * mapRect.w;
+    const feather = zone.feather ?? 0.35;
+    const inner = Math.max(0, r * (1 - feather));
+    const grad = fog.createRadialGradient(cx, cy, inner, cx, cy, r);
+    grad.addColorStop(0, 'rgba(0,0,0,1)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    fog.beginPath();
+    fog.arc(cx, cy, r, 0, Math.PI * 2);
+    fog.fillStyle = grad;
+    fog.fill();
   });
 
   // ── 3. Composite fog onto main canvas with the same transform ────────────
@@ -253,10 +253,11 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   const [showCampaignPicker, setShowCampaignPicker] = useState(false);
   const activeCampaignId = pinnedCampaignId || campaignId;
   const [showCommitPicker, setShowCommitPicker] = useState(false);
-  const [feather, setFeather]                 = useState(0.18);
+  const [feather, setFeather]                 = useState(0.35);
   const [localCampaigns, setLocalCampaigns]   = useState([]);
   const [portraitFullscreen, setPortraitFullscreen] = useState(null);
   const [pendingMoves, setPendingMoves]       = useState([]);
+  const fogHistoryRef = useRef([]);
 
   useEffect(() => {
     if (!campaignId) return;
@@ -493,7 +494,13 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
       const canvas = canvasRef.current;
       const t = transformRef.current;
       const r = brushRadius / (canvas.width * t.scale);
-      setFogZones(prev => [...prev, { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r, feather }]);
+      setFogZones(prev => {
+        if (!paintingRef._snapped) {
+          fogHistoryRef.current = [...fogHistoryRef.current, prev];
+          paintingRef._snapped = true;
+        }
+        return [...prev, { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r, feather }];
+      });
     }
     if (tool === 'erase-token') {
       const canvas = canvasRef.current;
@@ -552,12 +559,13 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
       const r = brushRadius / (canvas.width * t.scale);
       setFogZones(prev => [...prev, { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r, feather }]);
     }
+    // Note: no snapshot here — undo reverts entire stroke at once (snapshotted on pointerdown)
     if (tool === 'token-move' && selectedTokenId && (e.buttons === 1 || e.touches)) {
       setTokens(prev => prev.map(t => t.id === selectedTokenId ? { ...t, x: pos.x, y: pos.y } : t));
     }
   }, [tool, brushRadius, feather, selectedTokenId, tokens, isDM, fogZones]);
 
-  const handlePointerUp = useCallback(() => { paintingRef.current = false; panRef.current.active = false; setSelectedTokenId(null); }, []);
+  const handlePointerUp = useCallback(() => { paintingRef.current = false; paintingRef._snapped = false; panRef.current.active = false; setSelectedTokenId(null); }, []);
   const handlePointerLeave = useCallback(() => { setBrushPreview(null); setHoveredToken(null); }, []);
 
   useEffect(() => {
@@ -574,7 +582,17 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
     setNewTokenLabel(''); setShowTokenForm(false); setPendingClick(null);
   };
 
-  const clearFog = () => setFogZones([]);
+  const undoFog = () => {
+    if (!fogHistoryRef.current.length) return;
+    const prev = fogHistoryRef.current[fogHistoryRef.current.length - 1];
+    fogHistoryRef.current = fogHistoryRef.current.slice(0, -1);
+    setFogZones(prev);
+  };
+
+  const clearFog = () => {
+    fogHistoryRef.current = [...fogHistoryRef.current, fogZones];
+    setFogZones([]);
+  };
   const revealAll = () => setFogZones([{ id: uid(), type: 'reveal', x: 0.5, y: 0.5, r: 1.5 }]);
   const resetView = () => setTransform({ scale: 1, x: 0, y: 0 });
   const pinCampaign = (id) => { setPinnedCampaignId(id); localStorage.setItem('vtt_pinned_campaign', id); setShowCampaignPicker(false); };
@@ -607,7 +625,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         ))}
         <div style={{ width: 1, height: 20, background: COLORS.border, margin: '0 4px' }} />
         <div style={{ ...label8, marginRight: 4 }}>Feather</div>
-        {[0, 0.18, 0.4, 0.7].map((f, i) => (
+        {[0.1, 0.35, 0.6, 0.9].map((f, i) => (
           <button key={f} onClick={() => setFeather(f)} style={{ background: feather === f ? 'rgba(200,168,74,0.15)' : COLORS.card, border: `1px solid ${feather === f ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: feather === f ? '#e8c84a' : COLORS.text }}>
             {['None', 'Light', 'Med', 'Full'][i]}
           </button>
@@ -615,6 +633,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         <div style={{ width: 1, height: 20, background: COLORS.border, margin: '0 4px' }} />
         <button onClick={revealAll} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>Reveal All</button>
         <button onClick={clearFog}  style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>Reset Fog</button>
+        <button onClick={undoFog} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↩ Undo</button>
         <button onClick={resetView} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>⊡ Reset View</button>
         {isDM && (
           <div style={{ position: 'relative' }}>
