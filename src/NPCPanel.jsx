@@ -824,14 +824,15 @@ export default function NPCPanel({ campaignId, sessionId }) {
                 else if (role.match(/thief|rogue|assassin/)) cats.push('Weapons','Accessories');
                 else cats.push('Consumables','Gear');
               }
-              const rarityFilter = nodeRows.length === 0 ? ['Common','Uncommon'] : ['Common','Uncommon','Rare'];
               const items = [];
               for (const cat of cats.slice(0,3)) {
-                const {data} = await supabase.from('items').select('id,name,category,description,rarity').eq('category',cat.trim()).in('rarity', rarityFilter).limit(100);
+                const {data} = await supabase.from('items').select('id,name,category,description,rarity').eq('category',cat.trim()).limit(100);
                 if (data?.length) items.push(...data.sort(()=>Math.random()-0.5).slice(0,Math.floor(Math.random()*2)+1));
               }
-              const {data:bonus} = await supabase.from('items').select('id,name,category,description,rarity').in('rarity',['Common']).limit(200);
-              if (bonus) items.push(...bonus.sort(()=>Math.random()-0.5).slice(0,1));
+              if (!items.length) {
+                const {data:fallback} = await supabase.from('items').select('id,name,category,description,rarity').limit(200);
+                if (fallback?.length) items.push(...fallback.sort(()=>Math.random()-0.5).slice(0,4));
+              }
               if (!items.length) return;
               await supabase.from('npc_inventory').delete().eq('npc_id', selectedNpc.id);
               await supabase.from('npc_inventory').insert(items.map(i => ({
