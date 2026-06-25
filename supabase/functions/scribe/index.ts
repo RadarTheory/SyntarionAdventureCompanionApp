@@ -70,9 +70,9 @@ Deno.serve(async (req) => {
       });
     };
 
-    let res = await attemptCall('gemini-1.5-flash');
+    let res = await attemptCall('gemini-2.0-flash');
     if (res.status === 429) {
-      res = await attemptCall('gemini-1.5-pro');
+      res = await attemptCall('gemini-2.5-flash');
     }
 
     const data = await res.json();
