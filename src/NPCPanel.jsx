@@ -840,6 +840,18 @@ export default function NPCPanel({ campaignId, sessionId }) {
                 item_name: i.name,
                 item_category: i.category,
               })));
+              const { data: existingBoxes } = await supabase.from('lootboxes')
+                .select('id').eq('claimed', false)
+                .ilike('name', `${selectedNpc.name}'%`);
+              if (existingBoxes?.length) {
+                for (const box of existingBoxes) {
+                  await supabase.from('lootbox_items').delete().eq('lootbox_id', box.id);
+                  await supabase.from('lootbox_items').insert(items.map(i => ({
+                    lootbox_id: box.id, item_name: i.name,
+                    item_category: i.category, item_desc: '', qty: 1,
+                  })));
+                }
+              }
               await updateNpcField(selectedNpc.id,'loot_generated',true);
             }} style={{...S.genBtn,marginBottom:4}}>⚄ {selectedNpc.loot_generated ? 'Regenerate Loot' : 'Generate Loot'}</button>
           </div>
