@@ -2278,9 +2278,9 @@ useEffect(() => {
         </div>
         {/* Row 2: clock centered below on mobile, inline right on desktop */}
         {clockState && (
-          isMobile
-            ? <div style={{ display: 'flex', justifyContent: 'center' }}><SoteriaClockDisplay clock={clockState} compact /></div>
-            : <div style={{ position: 'absolute', right: 24, top: 14 }}><SoteriaClockDisplay clock={clockState} compact /></div>
+          <div style={{ display: 'flex', justifyContent: 'center', overflowX: 'auto' }}>
+            <SoteriaClockDisplay clock={clockState} compact />
+          </div>
         )}
       </div>
 
@@ -2327,8 +2327,8 @@ useEffect(() => {
         
       </div>
 
-      <div style={{ flex: 1, overflowY: activeTab === 'Map' ? 'hidden' : 'auto' }}>
-        <div style={{ padding: activeTab === 'Map' ? 0 : (isMobile ? '20px 16px' : '28px 32px'), maxWidth: activeTab === 'Map' ? '100%' : 680, width: '100%', margin: '0 auto', height: activeTab === 'Map' ? '100%' : 'auto' }}>
+      <div style={{ flex: 1, overflowY: activeTab === 'Map' ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: activeTab === 'Map' ? 0 : (isMobile ? '20px 16px' : '28px 32px'), maxWidth: activeTab === 'Map' ? '100%' : 680, width: '100%', margin: '0 auto', height: activeTab === 'Map' ? '100%' : 'auto', flex: activeTab === 'Map' ? 1 : 'none', display: activeTab === 'Map' ? 'flex' : 'block', flexDirection: 'column' }}>
           {false && !isAssigned && userChar && (
             <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '16px 20px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Assign your character to this campaign</div>

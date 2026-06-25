@@ -535,24 +535,6 @@ useEffect(() => {
         const dx = touch.clientX - panRef.current.startX;
         const dy = touch.clientY - panRef.current.startY;
         if (Math.sqrt(dx * dx + dy * dy) < 8) {
-          // It was a tap, not a pan
-          const hitTok = hitTestToken(touch.clientX, touch.clientY);
-          if (hitTok) {
-            setHoveredToken(prev => prev?.id === hitTok.id ? null : { id: hitTok.id, name: hitTok.fullName || hitTok.creatureName || hitTok.label || '?', portrait_url: hitTok.portrait_url || null, clientX: touch.clientX, clientY: touch.clientY });
-          } else {
-            setHoveredToken(null);
-          }
-        }
-      }
-    }
-    // Tap detection — show portrait card on token tap
-    if (panRef.current.panning && !dragRef.current.dragging) {
-      const touch = e?.changedTouches?.[0];
-      if (touch) {
-        const dx = touch.clientX - panRef.current.startX;
-        const dy = touch.clientY - panRef.current.startY;
-        if (Math.sqrt(dx * dx + dy * dy) < 8) {
-          // It was a tap, not a pan
           const hitTok = hitTestToken(touch.clientX, touch.clientY);
           if (hitTok) {
             setHoveredToken(prev => prev?.id === hitTok.id ? null : { id: hitTok.id, name: hitTok.fullName || hitTok.creatureName || hitTok.label || '?', portrait_url: hitTok.portrait_url || null, clientX: touch.clientX, clientY: touch.clientY });
@@ -617,11 +599,11 @@ useEffect(() => {
         </div>
       )}
 
-      <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: `1px solid ${COLORS.border}`, background: '#0d0b09', cursor: draggingToken ? 'grabbing' : 'grab', flex: 1, minHeight: 300 }}>
+      <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: `1px solid ${COLORS.border}`, background: '#0d0b09', cursor: draggingToken ? 'grabbing' : 'grab', flex: 1, minHeight: window.innerWidth <= 640 ? Math.round(window.innerHeight * 0.6) : 300 }}>
         {!mapLoaded ? (
           <div style={{ padding: '60px 20px', textAlign: 'center', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: COLORS.dim, fontSize: 12 }}>Loading map…</div>
         ) : (
-          <canvas ref={canvasRef} width={900} height={600} style={{ width: '100%', height: 'auto', display: 'block', touchAction: 'none' }}
+          <canvas ref={canvasRef} width={900} height={600} style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none' }}
             onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
             onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={(e) => handleTouchEnd(e)} />
         )}
