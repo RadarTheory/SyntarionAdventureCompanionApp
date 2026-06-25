@@ -197,7 +197,7 @@ function DraggablePanel({ defaultX, defaultY, onClose, title, width, accentColor
         <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8d9a7', letterSpacing: '0.12em' }}>⠿ {title}</div>
         <button onClick={onClose} style={{ background: 'transparent', border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 4, padding: '3px 7px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
       </div>
-      <div style={{ flex: 1, overflowY: activeTab === 'Map' ? 'hidden' : 'auto' }}>{children}</div>
+      <div style={{ flex: 1, overflowY: 'auto' }}>{children}</div>
     </div>
   );
 }
