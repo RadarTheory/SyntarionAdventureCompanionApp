@@ -83,7 +83,10 @@ export default function Solomon({ campaignId, onClose }) {
 
     const sub = supabase.channel(`solomon-${campaignId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'lootboxes' }, load)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'lootbox_items' }, loadPendingClaims)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lootbox_items' }, () => {
+        setBoxItems({});
+        loadPendingClaims();
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'loot_presence' }, loadPresence)
       .subscribe();
 
