@@ -737,7 +737,8 @@ useEffect(() => {
       </div>
 
       {hoveredToken && (
-        <div style={{ position: 'fixed', left: hoveredToken.clientX, top: hoveredToken.clientY - 160, transform: 'translateX(-50%)', background: 'rgba(8,6,4,0.82)', backdropFilter: 'blur(10px)', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 10, padding: 10, pointerEvents: 'none', zIndex: 500, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: 110, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+        <div style={{ position: 'fixed', left: hoveredToken.clientX, top: hoveredToken.clientY - 160, transform: 'translateX(-50%)', background: 'rgba(8,6,4,0.82)', backdropFilter: 'blur(10px)', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 10, padding: 10, pointerEvents: hoveredToken.portrait_url ? 'auto' : 'none', zIndex: 500, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: 110, boxShadow: '0 8px 32px rgba(0,0,0,0.6)', cursor: hoveredToken.portrait_url ? 'pointer' : 'default' }}
+          onClick={() => hoveredToken.portrait_url && setPortraitFullscreen(hoveredToken)}>
           {hoveredToken.portrait_url ? (
             <div style={{ width: 72, height: 96, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(200,168,74,0.4)', flexShrink: 0 }}>
               <img src={hoveredToken.portrait_url} alt={hoveredToken.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
@@ -746,6 +747,16 @@ useEffect(() => {
             <div style={{ width: 72, height: 96, borderRadius: 6, background: 'rgba(200,168,74,0.08)', border: '1px solid rgba(200,168,74,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: 'rgba(200,168,74,0.3)' }}>⚔</div>
           )}
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color: '#e8d9a7', letterSpacing: '0.08em', textAlign: 'center', lineHeight: 1.4 }}>{hoveredToken.name}</div>
+        </div>
+      )}
+
+      {portraitFullscreen && (
+        <div onClick={() => setPortraitFullscreen(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={() => setPortraitFullscreen(null)} style={{ position: 'absolute', top: 20, right: 24, background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', color: 'rgba(255,255,255,0.6)', fontSize: 16, fontFamily: "'Cinzel', serif" }}>✕</button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+            <img src={portraitFullscreen.portrait_url} alt={portraitFullscreen.name} style={{ maxHeight: '80vh', maxWidth: '80vw', borderRadius: 10, border: '1px solid rgba(200,168,74,0.3)', boxShadow: '0 24px 80px rgba(0,0,0,0.8)', objectFit: 'contain' }} />
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#e8d9a7', letterSpacing: '0.12em' }}>{portraitFullscreen.name}</div>
+          </div>
         </div>
       )}
 
