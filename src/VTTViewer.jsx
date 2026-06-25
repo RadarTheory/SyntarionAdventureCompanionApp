@@ -439,7 +439,10 @@ useEffect(() => {
       return;
     }
     const hit = hitTestToken(clientX, clientY);
-    setHoveredToken(hit ? { id: hit.id, name: hit.fullName || hit.creatureName || hit.label || '?', portrait_url: hit.portrait_url || null, clientX, clientY } : null);
+    if (hit) {
+      setHoveredToken({ id: hit.id, name: hit.fullName || hit.creatureName || hit.label || '?', portrait_url: hit.portrait_url || null, clientX, clientY });
+    }
+    // Don't clear hoveredToken on mousemove — let the hover card stay so user can click the portrait
   }, [clientToMapCoords, hitTestToken]);
 
   const handleMouseUp = useCallback(() => {
@@ -450,7 +453,6 @@ useEffect(() => {
     dragRef.current = { dragging: false, token: null, startX: 0, startY: 0, moved: false, _lastDragPos: null };
     setDraggingToken(null);
     setDragPos(null);
-    setHoveredToken(null);
     panRef.current.panning = false;
   }, [clientToMapCoords]);
 
