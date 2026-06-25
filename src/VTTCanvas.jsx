@@ -148,13 +148,14 @@ fogZones.forEach(zone => {
     const isPlayerToken = tok.type === 'player';
     if (fogged && !isDM) return;
     if (fogged && isDM && !isPlayerToken) return; // NPC/enemy tokens hidden in fog even for DM
+    // DM always sees player tokens even in fog (dimmed), so they can move them
 
     const isHovered = hoveredTokenId && tok.id === hoveredTokenId;
     const tx = mapRect.x + tok.x * mapRect.w;
 const ty = mapRect.y + tok.y * mapRect.h;
 const r = isHovered ? 22 : 14;
     ctx.save();
-    if (fogged && isPlayerToken) ctx.globalAlpha = 0.4; // DM sees fogged player tokens dimmed
+    if (fogged && isPlayerToken) ctx.globalAlpha = 0.7; // DM sees fogged player tokens dimmed but still usable
 
     if (tok.type === 'player') { ctx.beginPath(); ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4); }
     else { ctx.beginPath(); ctx.arc(tx, ty, r, 0, Math.PI * 2); }
@@ -173,6 +174,19 @@ const r = isHovered ? 22 : 14;
       ctx.fillStyle = '#fff'; ctx.font = `bold ${isHovered ? 12 : 9}px sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
+    }
+    if (tok.status === 'dead' && !tok.characterId) {
+      const deathIcon = getRaceIcon('death', onIconReady);
+      if (deathIcon) {
+        ctx.globalAlpha = 0.85;
+        ctx.drawImage(deathIcon, tx - r, ty - r, r * 2, r * 2);
+      } else {
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = '#e05a5a';
+        ctx.font = `bold ${r}px sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('☠', tx, ty);
+      }
     }
     ctx.restore();
   });
@@ -631,7 +645,8 @@ useEffect(() => {
         const d = Math.sqrt(dx * dx + dy * dy);
         if (d < closestDist) { closest = tok; closestDist = d; }
       });
-      setHoveredToken(closest ? { id: closest.id, name: closest.fullName || closest.creatureName || closest.label || '?', portrait_url: closest.portrait_url || null, race: closest.race || null, clientX, clientY } : null);
+      const closestUnfogged = closest && !isTokenFogged(closest, fogZones) ? closest : null;
+      setHoveredToken(closestUnfogged ? { id: closestUnfogged.id, name: closestUnfogged.fullName || closestUnfogged.creatureName || closestUnfogged.label || '?', portrait_url: closestUnfogged.portrait_url || null, race: closestUnfogged.race || null, clientX, clientY } : null);
     }
 
     if (paintingRef.current && (tool === 'fog-reveal' || tool === 'fog-hide')) {
