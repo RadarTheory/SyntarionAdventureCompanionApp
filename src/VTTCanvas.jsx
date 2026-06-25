@@ -226,6 +226,41 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   const [feather, setFeather]                 = useState(0.3);
   const [localCampaigns, setLocalCampaigns]   = useState([]);
   const [portraitFullscreen, setPortraitFullscreen] = useState(null);
+  const [pendingMoves, setPendingMoves]       = useState([]);
+
+  useEffect(() => {
+    if (!campaignId) return;
+    const loadMoves = async () => {
+      const { data } = await supabase.from('vtt_sessions').select('pending_moves').eq('campaign_id', campaignId).maybeSingle();
+      setPendingMoves(data?.pending_moves || []);
+    };
+    loadMoves();
+    const sub = supabase.channel(`vtt-moves-${campaignId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vtt_sessions', filter: `campaign_id=eq.${campaignId}` },
+        ({ new: row }) => setPendingMoves(row?.pending_moves || []))
+      .subscribe();
+    return () => supabase.removeChannel(sub);
+  }, [campaignId]);
+
+  const approveMoves = async (characterId) => {
+    const approved = pendingMoves.find(m => m.characterId === characterId);
+    if (!approved) return;
+    const next = tokens.map(t => String(t.characterId) === String(characterId) ? { ...t, x: approved.x, y: approved.y } : t);
+    setTokens(next);
+    const remaining = pendingMoves.filter(m => m.characterId !== characterId);
+    const { data: sess } = await supabase.from('vtt_sessions').select('id').eq('campaign_id', campaignId).maybeSingle();
+    if (sess?.id) {
+      await supabase.from('vtt_sessions').update({ tokens: next, pending_moves: remaining, updated_at: new Date().toISOString() }).eq('id', sess.id);
+    }
+    setPendingMoves(remaining);
+  };
+
+  const denyMoves = async (characterId) => {
+    const remaining = pendingMoves.filter(m => m.characterId !== characterId);
+    const { data: sess } = await supabase.from('vtt_sessions').select('id').eq('campaign_id', campaignId).maybeSingle();
+    if (sess?.id) await supabase.from('vtt_sessions').update({ pending_moves: remaining }).eq('id', sess.id);
+    setPendingMoves(remaining);
+  };
 
   useEffect(() => {
     supabase.from('campaigns').select('*').order('created_at', { ascending: true })
@@ -828,6 +863,19 @@ useEffect(() => {
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {isDM && pendingMoves.length > 0 && (
+        <div style={{ background: 'rgba(121,245,167,0.07)', border: '1px solid rgba(121,245,167,0.3)', borderRadius: 8, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color: '#79f5a7', letterSpacing: '0.1em' }}>✥ MOVE REQUESTS — {pendingMoves.length} pending</div>
+          {[...new Map(pendingMoves.map(m => [m.characterId, m])).values()].map(move => (
+            <div key={move.characterId} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(121,245,167,0.05)', border: '1px solid rgba(121,245,167,0.2)', borderRadius: 6, padding: '7px 10px' }}>
+              <div style={{ flex: 1, fontFamily: "'Cinzel', serif", fontSize: 10, color: '#e8d9a7' }}>{move.characterName || 'Player'}</div>
+              <button onClick={() => approveMoves(move.characterId)} style={{ background: 'rgba(121,245,167,0.15)', border: '1px solid rgba(121,245,167,0.4)', borderRadius: 4, padding: '3px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: '#79f5a7', letterSpacing: '0.08em' }}>✓ Approve</button>
+              <button onClick={() => denyMoves(move.characterId)} style={{ background: 'rgba(224,90,90,0.1)', border: '1px solid rgba(224,90,90,0.3)', borderRadius: 4, padding: '3px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: '#e05a5a', letterSpacing: '0.08em' }}>✕ Deny</button>
+            </div>
+          ))}
         </div>
       )}
 
