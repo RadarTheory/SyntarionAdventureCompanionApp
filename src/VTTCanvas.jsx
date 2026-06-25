@@ -147,7 +147,12 @@ fogZones.forEach(zone => {
     const fogged = isTokenFogged(tok, fogZones);
     const isPlayerToken = tok.type === 'player';
     if (fogged && !isDM) return;
-    if (fogged && isDM && !isPlayerToken) return; // NPC/enemy tokens hidden in fog even for DM
+    if (fogged && !isDM) return; // players never see fogged tokens
+    if (isDM) {
+      const inHideZone = fogZones.some(z => z.type === 'hide' && (() => { const dx = tok.x - z.x, dy = tok.y - z.y; return Math.sqrt(dx*dx+dy*dy) <= z.r; })());
+      if (inHideZone) ctx.globalAlpha = 0.4; // DM sees actively hidden tokens dimmed
+      // tokens merely outside a reveal zone render at full alpha for DM — they're not hidden, just unlit
+    }
     // DM always sees player tokens even in fog (dimmed), so they can move them
 
     const isHovered = hoveredTokenId && tok.id === hoveredTokenId;
@@ -155,8 +160,7 @@ fogZones.forEach(zone => {
 const ty = mapRect.y + tok.y * mapRect.h;
 const r = isHovered ? 22 : 14;
     ctx.save();
-    if (fogged && isPlayerToken) ctx.globalAlpha = 0.7; // DM sees fogged player tokens dimmed but still usable
-
+    
     if (tok.type === 'player') { ctx.beginPath(); ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4); }
     else { ctx.beginPath(); ctx.arc(tx, ty, r, 0, Math.PI * 2); }
     ctx.fillStyle = tok.color || '#4a9edd';
@@ -645,8 +649,8 @@ useEffect(() => {
         const d = Math.sqrt(dx * dx + dy * dy);
         if (d < closestDist) { closest = tok; closestDist = d; }
       });
-      const closestUnfogged = closest && !isTokenFogged(closest, fogZones) ? closest : null;
-      setHoveredToken(closestUnfogged ? { id: closestUnfogged.id, name: closestUnfogged.fullName || closestUnfogged.creatureName || closestUnfogged.label || '?', portrait_url: closestUnfogged.portrait_url || null, race: closestUnfogged.race || null, clientX, clientY } : null);
+      const closestVisible = closest && (isDM || !isTokenFogged(closest, fogZones)) ? closest : null;
+      setHoveredToken(closestVisible ? { id: closestVisible.id, name: closestVisible.fullName || closestVisible.creatureName || closestVisible.label || '?', portrait_url: closestVisible.portrait_url || null, race: closestVisible.race || null, clientX, clientY } : null);
     }
 
     if (paintingRef.current && (tool === 'fog-reveal' || tool === 'fog-hide')) {
