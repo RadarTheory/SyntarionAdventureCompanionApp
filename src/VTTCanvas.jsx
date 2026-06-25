@@ -224,6 +224,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   const [feather, setFeather]                 = useState(0.3);
 
 
+const [dbCampaigns, setDbCampaigns] = useState([]);
 useEffect(() => {
   supabase.from('campaigns').select('*').order('created_at', { ascending: true })
     .then(({ data }) => { if (data) setDbCampaigns(data); });
