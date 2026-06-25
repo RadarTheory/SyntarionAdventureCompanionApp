@@ -211,6 +211,9 @@ export default function Solomon({ campaignId, onClose }) {
           {toast}
         </div>
       )}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '6px 16px 0', flexShrink: 0 }}>
+        <button onClick={() => { setBoxItems({}); load(); loadPendingClaims(); }} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '3px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: COLORS.dim, letterSpacing: '0.1em' }}>↺ Refresh</button>
+      </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
