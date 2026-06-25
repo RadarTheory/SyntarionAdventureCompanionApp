@@ -247,11 +247,6 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   const [hoveredToken, setHoveredToken]       = useState(null);
   const [iconTick, setIconTick]               = useState(0);
   const [showTokenForm, setShowTokenForm]     = useState(false);
-  const [showEnemyPicker, setShowEnemyPicker] = useState(false);
-  const [enemyPickerTab, setEnemyPickerTab]   = useState('bestiary');
-  const [enemySearch, setEnemySearch]         = useState('');
-  const [bestiary, setBestiary]               = useState([]);
-  const [npcList, setNpcList]                 = useState([]);
   const [pendingClick, setPendingClick]       = useState(null);
   const [mapSearch, setMapSearch]             = useState('');
   const [pinnedCampaignId, setPinnedCampaignId] = useState(() => localStorage.getItem('vtt_pinned_campaign') || campaignId);
@@ -301,17 +296,6 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
     supabase.from('campaigns').select('*').order('created_at', { ascending: true })
       .then(({ data }) => { if (data) setLocalCampaigns(data); });
   }, []);
-
-  useEffect(() => {
-    supabase.from('beasts').select('name, race').order('name', { ascending: true }).limit(300)
-      .then(({ data, error }) => { if (error) console.error('Bestiary load:', error); if (data) setBestiary(data); });
-  }, []);
-
-  useEffect(() => {
-    if (!campaignId) return;
-    supabase.from('npcs').select('id, name, race').eq('campaign_id', String(campaignId)).order('name', { ascending: true })
-      .then(({ data, error }) => { if (error) console.error('NPC load:', error); if (data) setNpcList(data); });
-  }, [campaignId]);
 
   const conjureTokenToMap = async token => {
     if (!token?.id && !token?.token_id && !token?.name && !token?.label) return;
@@ -511,7 +495,6 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
       const r = brushRadius / (canvas.width * t.scale);
       setFogZones(prev => [...prev, { id: uid(), type: tool === 'fog-reveal' ? 'reveal' : 'hide', x: pos.x, y: pos.y, r, feather }]);
     }
-    if (tool === 'token-enemy') { setPendingClick(pos); setShowEnemyPicker(true); setEnemySearch(''); }
     if (tool === 'erase-token') {
       const canvas = canvasRef.current;
       setTokens(prev => prev.filter(t => {
@@ -585,19 +568,6 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
     return () => { window.removeEventListener('mousemove', handleWindowMove); window.removeEventListener('mouseup', handleWindowUp); };
   }, [handlePointerMove, handlePointerUp]);
 
-  const placeEnemyFromPicker = (name, race, color) => {
-    if (!pendingClick) return;
-    const tokenColor = color || TOKEN_COLORS[Math.floor(Math.random() * TOKEN_COLORS.length)];
-    setTokens(prev => [...prev, {
-      id: uid(), type: 'enemy',
-      label: name.slice(0, 4).toUpperCase(),
-      fullName: name, creatureName: name,
-      color: tokenColor, race: race || null,
-      x: pendingClick.x, y: pendingClick.y,
-    }]);
-    setShowEnemyPicker(false); setPendingClick(null); setEnemySearch('');
-  };
-
   const addEnemyToken = () => {
     if (!pendingClick || !newTokenLabel.trim()) return;
     setTokens(prev => [...prev, { id: uid(), type: 'enemy', label: newTokenLabel.trim(), color: newTokenColor, x: pendingClick.x, y: pendingClick.y }]);
@@ -625,7 +595,6 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         <div style={{ ...label8, marginRight: 4 }}>Tool</div>
         {toolBtn('fog-reveal', '☀ Reveal', tool === 'fog-reveal')}
         {toolBtn('fog-hide',   '◼ Hide',   tool === 'fog-hide')}
-        {toolBtn('token-enemy','⚔ Enemy',  tool === 'token-enemy')}
         {toolBtn('token-move', '✥ Move',   tool === 'token-move')}
         {toolBtn('erase-token','✕ Erase',  tool === 'erase-token')}
         {toolBtn('pan',        '✋ Pan',    tool === 'pan')}
@@ -711,50 +680,6 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
             <img src={portraitFullscreen.portrait_url} alt={portraitFullscreen.name} style={{ maxHeight: '80vh', maxWidth: '80vw', borderRadius: 10, border: '1px solid rgba(200,168,74,0.3)', boxShadow: '0 24px 80px rgba(0,0,0,0.8)', objectFit: 'contain' }} />
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#e8d9a7', letterSpacing: '0.12em' }}>{portraitFullscreen.name}</div>
-          </div>
-        </div>
-      )}
-
-      {showEnemyPicker && (
-        <div style={{ background: COLORS.surface, border: '1px solid rgba(200,168,74,0.3)', borderRadius: 8, padding: '14px 16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {['bestiary', 'npcs'].map(tab => (
-                <button key={tab} onClick={() => {
-                  setEnemyPickerTab(tab); setEnemySearch('');
-                  if (tab === 'bestiary') supabase.from('beasts').select('name, race').order('name', { ascending: true }).limit(80).then(({ data }) => { if (data) setBestiary(data); });
-                  else supabase.from('npcs').select('id, name, race').eq('campaign_id', String(campaignId)).order('name', { ascending: true }).limit(80).then(({ data }) => { if (data) setNpcList(data); });
-                }} style={{ background: enemyPickerTab === tab ? 'rgba(200,168,74,0.15)' : 'transparent', border: `1px solid ${enemyPickerTab === tab ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 5, padding: '4px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: enemyPickerTab === tab ? '#e8c84a' : COLORS.dim }}>
-                  {tab === 'bestiary' ? '⚔ Bestiary' : '👤 NPCs'}
-                </button>
-              ))}
-            </div>
-            <button onClick={() => { setShowEnemyPicker(false); setPendingClick(null); }} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 9, color: COLORS.dim }}>✕</button>
-          </div>
-          <input autoFocus value={enemySearch} onChange={e => {
-            const q = e.target.value;
-            setEnemySearch(q);
-            if (enemyPickerTab === 'bestiary') {
-              const query = supabase.from('beasts').select('name, race').order('name', { ascending: true }).limit(80);
-              (q.trim() ? query.ilike('name', `%${q}%`) : query).then(({ data }) => { if (data) setBestiary(data); });
-            } else {
-              const query = supabase.from('npcs').select('id, name, race').eq('campaign_id', String(campaignId)).order('name', { ascending: true }).limit(80);
-              (q.trim() ? query.ilike('name', `%${q}%`) : query).then(({ data }) => { if (data) setNpcList(data); });
-            }
-          }} placeholder={enemyPickerTab === 'bestiary' ? 'Search creatures…' : 'Search NPCs…'} style={{ width: '100%', boxSizing: 'border-box', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none', marginBottom: 8 }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
-            {enemyPickerTab === 'bestiary'
-              ? bestiary.map(b => (
-                  <button key={b.name} onClick={() => placeEnemyFromPicker(b.name, b.race, null)} style={{ textAlign: 'left', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '7px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.06em', color: COLORS.text }}>
-                    + {b.name}
-                  </button>
-                ))
-              : npcList.map(n => (
-                  <button key={n.id} onClick={() => placeEnemyFromPicker(n.name, n.race, '#c8a860')} style={{ textAlign: 'left', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '7px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.06em', color: '#c8a860' }}>
-                    + {n.name}
-                  </button>
-                ))
-            }
           </div>
         </div>
       )}
