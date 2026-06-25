@@ -284,7 +284,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   const [selectedChar, setSelectedChar] = useState(() => { try { const c = localStorage.getItem('syn_char'); return c ? JSON.parse(c) : null; } catch { return null; } });
 
   const fetchCharacters = async () => {
-    if (!user?.id) return;
+    if (!user?.id) { setLoading(false); return; }
     setLoading(true);
     try {
       const { data, error } = await supabase
