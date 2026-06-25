@@ -225,6 +225,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   const [showCommitPicker, setShowCommitPicker] = useState(false);
   const [feather, setFeather]                 = useState(0.3);
   const [localCampaigns, setLocalCampaigns]   = useState([]);
+  const [portraitFullscreen, setPortraitFullscreen] = useState(null);
 
   useEffect(() => {
     supabase.from('campaigns').select('*').order('created_at', { ascending: true })
