@@ -974,7 +974,6 @@ useEffect(() => {
     switch (activeTab) {
       case 'Catalog': return <ItemCatalog />;
       case 'Music': return <MusicPanel />;
-      import MapPanel from './MapPanel';
       case 'VTT':
         return <VTTCanvas
           campaignId={activeCampaignTab || null}
