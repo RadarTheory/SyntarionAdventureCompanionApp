@@ -247,39 +247,45 @@ export default function FloatToolbar({ buttons }) {
           scrollbarWidth: 'none',
         }}
       >
-        {/* Drag handle + collapse/redock toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingRight: 4 }}>
-          <div
-            onMouseDown={e => { offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }; moved.current = false; setDragging(true); }}
-            onTouchStart={e => { const p = e.touches[0]; offset.current = { x: p.clientX - pos.x, y: p.clientY - pos.y }; moved.current = false; setDragging(true); }}
-            style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(201,185,145,0.08)', border: '1px solid rgba(201,185,145,0.18)', cursor: dragging ? 'grabbing' : 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-            title="Drag to move"
-          >
-            <svg viewBox="0 0 16 16" width={10} height={10} fill="none">
-              <path d="M5 8h6M8 5v6" stroke="rgba(201,185,145,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-          </div>
-          {expanded && (
+        {/* Drag handle — hidden when minimized */}
+        {!minimized && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingRight: 4 }}>
             <div
-              onClick={() => setMinimized(true)}
-              style={{ fontSize: 16, color: 'rgba(201,185,145,0.35)', cursor: 'pointer', lineHeight: 1, padding: '0 4px', userSelect: 'none', fontWeight: 300 }}
-              title="Minimize"
+              onMouseDown={e => { offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }; moved.current = false; setDragging(true); }}
+              onTouchStart={e => { const p = e.touches[0]; offset.current = { x: p.clientX - pos.x, y: p.clientY - pos.y }; moved.current = false; setDragging(true); }}
+              style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(201,185,145,0.08)', border: '1px solid rgba(201,185,145,0.18)', cursor: dragging ? 'grabbing' : 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+              title="Drag to move"
             >
-              −
+              <svg viewBox="0 0 16 16" width={10} height={10} fill="none">
+                <path d="M5 8h6M8 5v6" stroke="rgba(201,185,145,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
             </div>
-          )}
-        </div>
+            {expanded && (
+              <div
+                onClick={() => setMinimized(true)}
+                style={{ fontSize: 16, color: 'rgba(201,185,145,0.35)', cursor: 'pointer', lineHeight: 1, padding: '0 4px', userSelect: 'none', fontWeight: 300 }}
+                title="Minimize"
+              >
+                −
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Minimized — single Astragal button */}
         {minimized && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
             {(() => { const first = dockedButtons[0]; return first ? (
-              <ToolbarButton key={first.id} title={first.title} badge={first.badge} onClick={first.onClick} onDragOut={p => handleUndock(first.id, p)} size={btnSize}>
+              <ToolbarButton key={first.id} title="Expand toolbar" badge={first.badge} onClick={() => setMinimized(false)} onDragOut={p => handleUndock(first.id, p)} size={btnSize}>
                 {first.children}
               </ToolbarButton>
             ) : null; })()}
             {expanded && (
-              <div onClick={() => setMinimized(false)} style={{ fontSize: 16, color: 'rgba(201,185,145,0.5)', cursor: 'pointer', lineHeight: 1, padding: '0 4px', userSelect: 'none', fontWeight: 300 }} title="Expand">+</div>
+              {(() => { const first = dockedButtons[0]; return first ? (
+              <ToolbarButton key={first.id} title={first.title} badge={first.badge} onClick={first.onClick} onDragOut={p => handleUndock(first.id, p)} size={btnSize}>
+                {first.children}
+              </ToolbarButton>
+            ) : null; })()}
             )}
           </div>
         )}
