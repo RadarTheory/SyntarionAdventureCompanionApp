@@ -578,6 +578,12 @@ function NPCModal({ cities, groups, onSave, onClose }) {
         <button onClick={handleSave} disabled={saving||!form.name.trim()} style={S.modalConfirm}>{saving?'Adding…':'✓ Add NPC'}</button>
         <button onClick={onClose} style={S.modalCancel}>Cancel</button>
       </div>
+    <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.45; }
+        }
+      `}</style>
     </div>
   );
 }
@@ -604,6 +610,7 @@ export default function NPCPanel({ campaignId, sessionId }) {
   const [condSearch,setCondSearch]=useState('');
   const [metToast,setMetToast]=useState(null);
   const [editingName,setEditingName]=useState(false);
+  const [lootGenerating,setLootGenerating]=useState(false);
   const [nameDraft,setNameDraft]=useState('');
   const [confirmingName,setConfirmingName]=useState(false);
 
@@ -828,7 +835,9 @@ export default function NPCPanel({ campaignId, sessionId }) {
           {selectedNpc.abilities?.length>0&&(<div style={S.field}><label style={S.label}>Abilities</label><div style={{display:'flex',flexWrap:'wrap',gap:4}}>{selectedNpc.abilities.map((ab,i)=><div key={i} style={{background:'rgba(184,137,42,0.1)',border:'1px solid rgba(184,137,42,0.3)',borderRadius:4,padding:'2px 8px',fontFamily:'Georgia,serif',fontSize:10,color:'#c8b890'}}>{ab.ability}</div>)}</div></div>)}
           <div style={S.field}><label style={S.label}>Conditions</label><div style={{display:'flex',flexWrap:'wrap',gap:3}}>{(selectedNpc.conditions||[]).map(c=>(<div key={c} onClick={()=>toggleNpcCondition(selectedNpc.id,c)} style={{display:'inline-flex',alignItems:'center',gap:3,background:`${condColor(c)}18`,border:`1px solid ${condColor(c)}55`,borderRadius:20,padding:'2px 7px',fontFamily:"'Cinzel',serif",fontSize:9,color:condColor(c),cursor:'pointer'}}><div style={{width:5,height:5,borderRadius:'50%',background:condColor(c)}}/>{c} <span style={{opacity:0.6,marginLeft:2}}>✕</span></div>))}<button onClick={e=>setCondPicker({entityId:selectedNpc.id,entityType:'npc',anchorRect:e.currentTarget.getBoundingClientRect()})} style={{display:'inline-flex',alignItems:'center',background:'rgba(184,137,42,0.08)',border:'1px solid rgba(184,137,42,0.25)',borderRadius:20,padding:'2px 7px',fontFamily:"'Cinzel',serif",fontSize:9,color:'#e8c040',cursor:'pointer'}}>+ Add</button></div></div>
           <div style={{marginTop:8}}>
-            <button onClick={async () => {
+            <button disabled={!!lootGenerating}
+            onClick={async () => {
+              setLootGenerating('pending');
               // Fetch catalog for Scribe context
               const { data: catalog } = await supabase.from('items').select('name,category,rarity').limit(300);
               const catalogNames = (catalog||[]).map(i => i.name.replace(/'/g,"'")).join(', ');
@@ -881,6 +890,9 @@ Set inCatalog to false if you invented it.`;
                 }
               } catch(e) {
                 console.error('Scribe loot failed:', e);
+                setLootGenerating('error');
+                setTimeout(() => setLootGenerating(false), 4000);
+                return;
               }
 
               // Fallback: parse notes for item mentions + role-based defaults
@@ -956,12 +968,20 @@ Set inCatalog to false if you invented it.`;
                 }
               }
               await updateNpcField(selectedNpc.id,'loot_generated',true);
-            }} style={{...S.genBtn,marginBottom:4}}>⚄ {selectedNpc.loot_generated ? 'Regenerate Loot' : 'Generate Loot'}</button>
+              setLootGenerating(false);
+            }} style={{...S.genBtn,marginBottom:4,
+              background: lootGenerating==='pending' ? 'rgba(200,168,74,0.08)' : lootGenerating==='error' ? 'rgba(224,90,90,0.15)' : 'rgba(184,137,42,0.12)',
+              border: lootGenerating==='pending' ? '1px solid rgba(200,168,74,0.6)' : lootGenerating==='error' ? '1px solid rgba(224,90,90,0.5)' : '1px solid rgba(184,137,42,0.35)',
+              color: lootGenerating==='pending' ? '#e8c84a' : lootGenerating==='error' ? '#e05a5a' : '#e8c040',
+              animation: lootGenerating==='pending' ? 'pulse 1.2s ease-in-out infinite' : 'none',
+              cursor: lootGenerating ? 'default' : 'pointer'}}>
+              {lootGenerating==='pending'?'⏳ Contacting Scribe…':lootGenerating==='error'?'⚠ Scribe unavailable — try again':'⚄ '+(selectedNpc.loot_generated?'Regenerate Loot':'Generate Loot')}
+            </button>
           </div>
          {selectedNpc.loot_generated&&<div style={{marginTop:2,padding:'6px 10px',background:'rgba(184,137,42,0.06)',border:'1px solid rgba(184,137,42,0.2)',borderRadius:5,fontSize:10,color:'rgba(200,180,130,0.5)',fontFamily:"'Cinzel',serif"}}>⬡ Inventory generated — passes to Solomon on death</div>}
           <div style={{display:'flex',gap:6,alignItems:'center',marginTop:8}}>
             <div style={{fontSize:10,color:'rgba(200,180,130,0.25)',fontStyle:'italic',flex:1}}>{selectedCity.name}{selectedCity.region?` · ${selectedCity.region}`:''}</div>
-            <button onClick={()=>markMet(selectedNpc,selectedCity.name)} style={{background:'rgba(184,137,42,0.15)',border:'1px solid rgba(184,137,42,0.35)',borderRadius:3,color:'#e8c040',cursor:'pointer',padding:'3px 8px',fontSize:10,fontFamily:"'Cinzel',serif"}}>⬡ Met</button>
+            <button onClick={()=>markMet(selectedNpc,selectedCity.name)} disabled={!!metToast} style={{background:metToast&&metToast.startsWith(selectedNpc.name)?'rgba(96,200,96,0.15)':'rgba(184,137,42,0.15)',border:`1px solid ${metToast&&metToast.startsWith(selectedNpc.name)?'rgba(96,200,96,0.4)':'rgba(184,137,42,0.35)'}`,borderRadius:3,color:metToast&&metToast.startsWith(selectedNpc.name)?'#79f5a7':'#e8c040',cursor:metToast?'default':'pointer',padding:'3px 8px',fontSize:10,fontFamily:"'Cinzel',serif",transition:'all 0.2s'}}>{metToast&&metToast.startsWith(selectedNpc.name)?'✓ Met':'⬡ Met'}</button>
             <button onClick={()=>window.dispatchEvent(new CustomEvent('hercules:add_npc',{detail:{id:selectedNpc.id,name:selectedNpc.name,role:selectedNpc.role||'',conditions:selectedNpc.conditions||[],cityName:selectedCity.name}}))} style={{background:'rgba(60,120,200,0.15)',border:'1px solid rgba(60,120,200,0.35)',borderRadius:3,color:'#80a0e0',cursor:'pointer',padding:'3px 8px',fontSize:10,fontFamily:"'Cinzel',serif"}}>⚔ Combat</button>
             <button onClick={()=>window.dispatchEvent(new CustomEvent('vtt:add_npc_token',{detail:{id:selectedNpc.id,name:selectedNpc.name}}))} style={{background:'rgba(96,200,150,0.15)',border:'1px solid rgba(96,200,150,0.35)',borderRadius:3,color:'#60c896',cursor:'pointer',padding:'3px 8px',fontSize:10,fontFamily:"'Cinzel',serif"}}>⛶ Map</button>
           </div>
