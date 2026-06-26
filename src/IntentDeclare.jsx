@@ -131,10 +131,11 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
         .filter(c => (c.participant_ids || []).map(String).includes(actorIdForLookup))
         .map(c => ({ id: c.entity_id, name: c.entity_name, type: c.entity_type }));
 
-      const [{ data: npcData }, { data: beastData }, { data: vttSession }] = await Promise.all([
+      const [{ data: npcData }, { data: beastData }, { data: vttSession }, { data: charData }] = await Promise.all([
         supabase.from('npcs').select('id, name'),
         supabase.from('beasts').select('id, name').or(`source.eq.global,campaign_id.eq.${campaignId}`),
         supabase.from('vtt_sessions').select('tokens').eq('campaign_id', String(campaignId)).maybeSingle(),
+        supabase.from('characters').select('id, name').eq('campaign_id', String(campaignId)),
       ]);
       const metEntities = [
         ...(npcData || []).filter(n => metNames.has((n.name || '').toLowerCase())).map(n => ({ id: n.id, name: n.name, type: 'npc' })),
@@ -167,7 +168,11 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
             if (beastMatch) return { id: beastMatch.id, name: beastMatch.name, type: 'beast' };
             // No matching database row — fall back to the token itself (e.g. manually-added combatant)
             if (t.characterId) return { id: t.characterId, name: tokenName, type: 'character' };
-return { id: t.id || t.token_id, name: tokenName, type: 'beast' };
+          if (t.characterId) {
+            const charMatch = (charData || []).find(c => String(c.id) === String(t.characterId));
+            return { id: t.characterId, name: charMatch?.name || tokenName, type: 'character' };
+          }
+          return { id: t.id || t.token_id, name: tokenName, type: 'beast' };
           });
       }
 
