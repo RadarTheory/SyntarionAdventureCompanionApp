@@ -303,10 +303,8 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
 
     // Every action carries an intent into the log — explicit if typed,
     // otherwise the speech itself stands as the declared intent.
-    if (hasIntent) {
+    if (!hasSpeech && hasIntent) {
       await logPlainIntent();
-    } else if (hasSpeech) {
-      await logPlainIntent(true);
     }
 
     setSpeechText('');
