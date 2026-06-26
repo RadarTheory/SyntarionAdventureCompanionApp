@@ -316,7 +316,7 @@ export default function HerculesPlayer({ campaignId, char }) {
         <div style={{ maxHeight: 220, overflowY: 'auto', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {events.length === 0
             ? <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Awaiting events…</div>
-            : events.map(ev => (
+            : events.filter(ev => ev.dm_approved !== false).map(ev => (
               <div key={ev.id} style={{ borderBottom: `1px solid ${COLORS.border}`, paddingBottom: 6 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
                   <div style={{ fontSize: 8, color: COLORS.muted, fontFamily: "'Cinzel', serif", letterSpacing: '0.06em' }}>{ev.actor_name}</div>
