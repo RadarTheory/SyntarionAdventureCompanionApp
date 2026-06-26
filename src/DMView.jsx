@@ -1123,12 +1123,11 @@ useEffect(() => {
               ))}
             </div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
-              {['log', 'map', 'memory'].map(t => (
+              {['log', 'memory'].map(t => (
                 <div key={t} onClick={() => setCampaignSubTab(t)} style={{ background: campaignSubTab === t ? COLORS.surface : 'transparent', border: `1px solid ${campaignSubTab === t ? COLORS.borderMid : COLORS.border}`, borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: campaignSubTab === t ? COLORS.text : COLORS.dim, fontFamily: "'Cinzel', serif" }}>{t}</div>
               ))}
             </div>
             {camp && campaignSubTab === 'log' && <SessionLogEditor campaign={camp} />}
-            {camp && campaignSubTab === 'map' && <MapManager campaign={camp} />}
             {camp && campaignSubTab === 'memory' && <DMMemoryPanel campaignId={camp.id} />}
           </div>
         );
