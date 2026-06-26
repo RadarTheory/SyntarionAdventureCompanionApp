@@ -51,19 +51,24 @@ function getMapRect(canvas, mapImg) {
 }
 
 function isTokenFogged(tok, fogZones) {
-  const hideZones = fogZones.filter(z => z.type === 'hide');
-  const revealZones = fogZones.filter(z => z.type === 'reveal');
   const inZone = (zone) => {
     const dx = tok.x - zone.x;
     const dy = tok.y - zone.y;
     return Math.sqrt(dx * dx + dy * dy) <= zone.r;
   };
-  if (hideZones.some(inZone)) return true;
-  if (revealZones.length > 0 && !revealZones.some(inZone)) return true;
-  return false;
+  // Walk zones in chronological order — last one that covers this token wins
+  const revealZones = fogZones.filter(z => z.type === 'reveal');
+  let fogged = revealZones.length > 0; // if any reveals exist, start fogged unless in one
+  if (revealZones.length > 0 && revealZones.some(inZone)) fogged = false;
+  for (const zone of fogZones) {
+    if (!inZone(zone)) continue;
+    if (zone.type === 'hide') fogged = true;
+    if (zone.type === 'reveal') fogged = false;
+  }
+  return fogged;
 }
 
-function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId, onIconReady }) {
+function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId, onIconReady, showGrid, gridSize }) {
   if (!canvas || !mapImg) return;
   const ctx = canvas.getContext('2d');
   const W = canvas.width;
@@ -76,6 +81,18 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   ctx.save();
   ctx.setTransform(transform.scale, 0, 0, transform.scale, transform.x, transform.y);
   ctx.drawImage(mapImg, mapRect.x, mapRect.y, mapRect.w, mapRect.h);
+
+  if (showGrid) {
+    ctx.strokeStyle = 'rgba(200,168,74,0.15)';
+    ctx.lineWidth = 0.5 / transform.scale;
+    for (let x = mapRect.x; x <= mapRect.x + mapRect.w; x += gridSize) {
+      ctx.beginPath(); ctx.moveTo(x, mapRect.y); ctx.lineTo(x, mapRect.y + mapRect.h); ctx.stroke();
+    }
+    for (let y = mapRect.y; y <= mapRect.y + mapRect.h; y += gridSize) {
+      ctx.beginPath(); ctx.moveTo(mapRect.x, y); ctx.lineTo(mapRect.x + mapRect.w, y); ctx.stroke();
+    }
+  }
+
   ctx.restore();
 
   // ── 2. Build fog on an offscreen canvas in unscaled pixel space ──────────
@@ -99,6 +116,12 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
 
     if (zone.type === 'reveal') {
       fog.globalCompositeOperation = 'destination-out';
+      // Solid core so overlapping reveal dots don't leave rings
+      fog.beginPath();
+      fog.arc(cx, cy, inner, 0, Math.PI * 2);
+      fog.fillStyle = 'rgba(0,0,0,1)';
+      fog.fill();
+      // Feathered outer ring only
       const grad = fog.createRadialGradient(cx, cy, inner, cx, cy, r);
       grad.addColorStop(0, 'rgba(0,0,0,1)');
       grad.addColorStop(1, 'rgba(0,0,0,0)');
@@ -240,6 +263,8 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   const [feather, setFeather]                 = useState(0.35);
   const [localCampaigns, setLocalCampaigns]   = useState([]);
   const [portraitFullscreen, setPortraitFullscreen] = useState(null);
+  const [showGrid, setShowGrid] = useState(false);
+  const [gridSize, setGridSize] = useState(40);
   const [pendingMoves, setPendingMoves]       = useState([]);
   const fogHistoryRef = useRef([]);
 
@@ -424,7 +449,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
 
   useEffect(() => {
     if (!mapLoaded) return;
-    drawCanvas({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId: hoveredToken?.id || null, onIconReady: () => setIconTick(t => t + 1) });
+    drawCanvas({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId: hoveredToken?.id || null, onIconReady: () => setIconTick(t => t + 1), showGrid, gridSize });
   }, [fogZones, tokens, brushPreview, mapLoaded, tool, transform, isDM, hoveredToken, iconTick]);
 
   useEffect(() => {
@@ -618,6 +643,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         <button onClick={revealAll} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>Reveal All</button>
         <button onClick={clearFog}  style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>Reset Fog</button>
         <button onClick={undoFog} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↩ Undo</button>
+        <button onClick={() => setShowGrid(g => !g)} style={{ background: showGrid ? 'rgba(200,168,74,0.15)' : COLORS.card, border: `1px solid ${showGrid ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: showGrid ? '#e8c84a' : COLORS.text }}>⊞ Grid</button>
         <button onClick={resetView} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>⊡ Reset View</button>
         {isDM && (
           <div style={{ position: 'relative' }}>
