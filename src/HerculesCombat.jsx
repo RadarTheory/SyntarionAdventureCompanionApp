@@ -1571,149 +1571,19 @@ const denyEvent = async event => {
 
                 <div ref={eventsBottomRef} />
               </div>
-            </div>
 
-            <div className="hercules-panel scribe-panel" style={{ ...panelStyle(), display: isMobile && mobileTab !== 'bestiary' ? 'none' : 'flex', ...(isMobile ? { minHeight: 'calc(100dvh - 140px)' } : {}) }}>
-              <SectionTitle>Bestiary</SectionTitle>
-
-              <input
-                value={creatureSearch}
-                onChange={event => setCreatureSearch(event.target.value)}
-                placeholder="Search creatures..."
-                style={{
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  background: COLORS.card,
-                  border: `1px solid ${COLORS.border}`,
-                  color: COLORS.text,
-                  borderRadius: 6,
-                  padding: '9px 10px',
-                  marginBottom: 10,
-                  fontFamily: 'Georgia, serif',
-                }}
-              />
-
-              <SectionTitle>Scribe Rulings</SectionTitle>
               {session && (
-                <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-                  <input
-                    value={manualCombatantName}
-                    onChange={event => setManualCombatantName(event.target.value)}
-                    onKeyDown={event => {
-                      if (event.key === 'Enter') {
-                        event.preventDefault();
-                        addManualCombatant();
-                      }
-                    }}
-                    placeholder="Add combatant..."
-                    disabled={saving}
-                    style={{
-                      flex: 1,
-                      background: COLORS.card,
-                      border: `1px solid ${COLORS.border}`,
-                      color: COLORS.text,
-                      borderRadius: 6,
-                      padding: '7px 9px',
-                      fontFamily: 'Georgia, serif',
-                      fontSize: 11,
-                      outline: 'none',
-                    }}
-                  />
-
-                  <button
-                    type="button"
-                    onClick={addManualCombatant}
-                    disabled={saving || !manualCombatantName.trim()}
-                    style={{
-                      ...goldButton(),
-                      padding: '7px 9px',
-                      opacity: saving || !manualCombatantName.trim() ? 0.45 : 1,
-                    }}
-                  >
-                    Add
-                  </button>
+                <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                  <input value={manualCombatantName} onChange={e => setManualCombatantName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addManualCombatant(); } }} placeholder="Add combatant..." disabled={saving} style={{ flex: 1, background: COLORS.card, border: `1px solid ${COLORS.border}`, color: COLORS.text, borderRadius: 6, padding: '7px 9px', fontFamily: 'Georgia, serif', fontSize: 11, outline: 'none' }} />
+                  <button type="button" onClick={addManualCombatant} disabled={saving || !manualCombatantName.trim()} style={{ ...goldButton(), padding: '7px 9px', opacity: saving || !manualCombatantName.trim() ? 0.45 : 1 }}>Add</button>
                 </div>
               )}
-
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 8,
-                  marginBottom: 10,
-                  flexShrink: 0,
-                }}
-              >
-                <input
-                  value={manualLogText}
-                  onChange={event => setManualLogText(event.target.value)}
-                  onKeyDown={event => {
-                    if (event.key === 'Enter' && !event.shiftKey) {
-                      event.preventDefault();
-                      addManualLogEntry();
-                    }
-                  }}
-                  placeholder="Add DM note to combat log..."
-                  disabled={!session || saving}
-                  style={{
-                    flex: 1,
-                    background: COLORS.card,
-                    border: `1px solid ${COLORS.border}`,
-                    color: COLORS.text,
-                    borderRadius: 6,
-                    padding: '8px 10px',
-                    fontFamily: 'Georgia, serif',
-                    fontSize: 12,
-                    outline: 'none',
-                  }}
-                />
-
-                <button
-                  type="button"
-                  onClick={addManualLogEntry}
-                  disabled={!session || saving || !manualLogText.trim()}
-                  style={{
-                    ...goldButton(),
-                    opacity: !session || saving || !manualLogText.trim() ? 0.45 : 1,
-                    cursor: !session || saving || !manualLogText.trim() ? 'default' : 'pointer',
-                  }}
-                >
-                  Add
-                </button>
-              </div>
-
-              <div
-                style={{
-                  overflowY: 'auto',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 6,
-                }}
-              >
-                {filteredCreatures.length === 0 && <EmptyText>No structured creature names found.</EmptyText>}
-
-                {filteredCreatures.map(name => (
-                  <button
-                    type="button"
-                    key={name}
-                    onClick={() => addCreature(name)}
-                    style={{
-                      textAlign: 'left',
-                      background: COLORS.card,
-                      border: `1px solid ${COLORS.border}`,
-                      borderRadius: 6,
-                      color: COLORS.text,
-                      padding: '8px 10px',
-                      cursor: 'pointer',
-                      fontFamily: "'Cinzel', serif",
-                      fontSize: 10,
-                      letterSpacing: '0.06em',
-                    }}
-                  >
-                    + {name}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                <input value={manualLogText} onChange={e => setManualLogText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addManualLogEntry(); } }} placeholder="Add DM note to combat log..." disabled={!session || saving} style={{ flex: 1, background: COLORS.card, border: `1px solid ${COLORS.border}`, color: COLORS.text, borderRadius: 6, padding: '8px 10px', fontFamily: 'Georgia, serif', fontSize: 12, outline: 'none' }} />
+                <button type="button" onClick={addManualLogEntry} disabled={!session || saving || !manualLogText.trim()} style={{ ...goldButton(), opacity: !session || saving || !manualLogText.trim() ? 0.45 : 1 }}>Add</button>
               </div>
             </div>
+
             </div>
           </div>
         </div>
