@@ -201,7 +201,10 @@ export default function Roster({ user, userChar, onHome }) {
 
   const fetchAll = async () => {
     setLoading(true);
-    const { data } = await supabase.from('characters').select('*');
+    const { data } = await supabase
+      .from('characters')
+      .select('*')
+      .or(`user_id.eq.${user?.id},and(status.eq.approved,user_id.is.null)`);
     if (data) setAllChars(data);
     setLoading(false);
   };
