@@ -252,9 +252,11 @@ export default function FloatToolbar({ buttons }) {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingRight: 4 }}>
             <div
               onMouseDown={e => { offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }; moved.current = false; setDragging(true); }}
+              onMouseUp={() => { if (!moved.current && Object.keys(undocked).length > 0) setUndocked({}); }}
               onTouchStart={e => { const p = e.touches[0]; offset.current = { x: p.clientX - pos.x, y: p.clientY - pos.y }; moved.current = false; setDragging(true); }}
-              style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(201,185,145,0.08)', border: '1px solid rgba(201,185,145,0.18)', cursor: dragging ? 'grabbing' : 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-              title="Drag to move"
+              onTouchEnd={() => { if (!moved.current && Object.keys(undocked).length > 0) setUndocked({}); }}
+              style={{ width: 28, height: 28, borderRadius: '50%', background: Object.keys(undocked).length > 0 ? 'rgba(200,168,74,0.25)' : 'rgba(201,185,145,0.08)', border: `1px solid ${Object.keys(undocked).length > 0 ? 'rgba(200,168,74,0.6)' : 'rgba(201,185,145,0.18)'}`, cursor: dragging ? 'grabbing' : 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+              title={Object.keys(undocked).length > 0 ? 'Click to snap all tools back' : 'Drag to move'}
             >
               <svg viewBox="0 0 16 16" width={10} height={10} fill="none">
                 <path d="M5 8h6M8 5v6" stroke="rgba(201,185,145,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
