@@ -615,6 +615,23 @@ useEffect(() => {
     setSaving(false);
   };
 
+  const removeDuplicatesFromInitiative = async () => {
+    const sid = session?.id || activeSessionIdRef.current;
+    if (!sid) return;
+    setSaving(true);
+    const seen = new Map();
+    for (const row of initiative) {
+      const key = (row.character_name || '').toLowerCase();
+      if (seen.has(key)) {
+        await supabase.from('hercules_initiative').delete().eq('id', row.id);
+      } else {
+        seen.set(key, row.id);
+      }
+    }
+    await loadInitiative(sid);
+    setSaving(false);
+  };
+
   const rollBoardTokens = useCallback(async () => {
     const sid = session?.id || activeSessionIdRef.current;
 
@@ -1407,6 +1424,11 @@ const denyEvent = async event => {
             {!isMobile && session && (
               <button type="button" onClick={rollBoardTokens} disabled={saving} style={goldButton()}>
                 Roll Board Tokens
+              </button>
+            )}
+            {!isMobile && session && (
+              <button type="button" onClick={removeDuplicatesFromInitiative} disabled={saving} style={goldButton()}>
+                Dedup
               </button>
             )}
             {!isMobile && session && initiative.length > 0 && (
