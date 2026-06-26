@@ -402,7 +402,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   }, [vttSession]);
 
   const loadSession = async () => {
-    const { data } = await supabase.from('vtt_sessions').select('*').eq('campaign_id', campaignId).maybeSingle();
+    const { data } = await supabase.from('vtt_sessions').select('*').eq('campaign_id', String(campaignId)).maybeSingle();
     if (data) {
       setVttSession(data);
       setFogZones(data.fog_zones || []);
@@ -410,9 +410,9 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
       setMapFilename(data.map_filename);
       if (data.view_transform) setTransform(data.view_transform);
     } else {
-      const { data: camp } = await supabase.from('campaigns').select('map_url').eq('id', campaignId).single();
+      const { data: camp } = await supabase.from('campaigns').select('map_url').eq('id', String(campaignId)).single();
       const filename = camp?.map_url || null;
-      const { data: newSession } = await supabase.from('vtt_sessions').insert({ campaign_id: campaignId, map_filename: filename, fog_zones: [], tokens: [], pending_moves: [] }).select().single();
+      const { data: newSession } = await supabase.from('vtt_sessions').insert({ campaign_id: String(campaignId), map_filename: filename, fog_zones: [], tokens: [], pending_moves: [] }).select().single();
       if (newSession) { setVttSession(newSession); setMapFilename(filename); }
     }
   };
