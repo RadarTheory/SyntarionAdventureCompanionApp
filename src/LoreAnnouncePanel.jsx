@@ -151,13 +151,19 @@ export default function LoreAnnouncePanel({ campaignId, embedded }) {
       ));
 
       // 3. Log to Hercules event log
-      await supabase.from('hercules_events').insert({
-        session_id: activeSession.id,
-        type: 'lore',
-        actor_name: 'The Architect',
-        actor_id: null,
-        description: `⟦ LORE ⟧ ${entryTitle} — ${text.trim()}`,
-      });
+      const { data: hSession } = await supabase.from('hercules_sessions')
+        .select('id').eq('campaign_id', String(campaignId)).eq('status', 'active')
+        .order('created_at', { ascending: false }).limit(1).maybeSingle();
+      if (hSession?.id) {
+        await supabase.from('hercules_events').insert({
+          session_id: hSession.id,
+          type: 'lore',
+          actor_name: 'The Architect',
+          actor_id: null,
+          description: `⟦ LORE ⟧ ${entryTitle} — ${text.trim()}`,
+          dm_approved: true,
+        });
+      }
 
       // 4. Send to player inboxes
       await Promise.all(selected.map(charId =>
