@@ -632,7 +632,22 @@ export default function NPCPanel({ campaignId, sessionId }) {
   const addCity=async()=>{if(!newCityName.trim())return;const{data}=await supabase.from('npc_cities').insert({id:`city_${newId()}`,name:newCityName.trim(),region:''}).select().single();if(data)setCities(prev=>[...prev,data]);setNewCityName('');setShowCityModal(false);};
   const addGroup=async()=>{const{city_id,category,name}=newGroupForm;if(!name.trim())return;const{data}=await supabase.from('npc_groups').insert({id:`grp_${newId()}`,city_id,name:name.trim(),category}).select().single();if(data)setGroups(prev=>[...prev,data]);setNewGroupForm(f=>({...f,name:''}));setShowGroupModal(false);};
   const togglePlayerCondition=async(playerId,cond)=>{const player=players.find(p=>p.id===playerId);if(!player)return;const cur=player.conditions||[];const next=cur.includes(cond)?cur.filter(c=>c!==cond):[...cur,cond];setPlayers(prev=>prev.map(p=>p.id===playerId?{...p,conditions:next}:p));const{data:row}=await supabase.from('characters').select('data').eq('id',playerId).maybeSingle();const existing=typeof row?.data==='string'?JSON.parse(row.data||'{}'):(row?.data||{});await supabase.from('characters').update({data:{...existing,conditions:next}}).eq('id',playerId);};
-  const markMet=async(npc,cityName)=>{const checkins=await getCheckedInCharacterIds(sessionId);if(!checkins.length){setMetToast('No players checked in');setTimeout(()=>setMetToast(null),3000);return;}await Promise.all(checkins.map(({character_id})=>supabase.from('grimoire_entries').insert({character_id:String(character_id),campaign_id:String(campaignId),type:'npc',title:npc.name,body:[npc.role,npc.faction,cityName].filter(Boolean).join(' · ')||null,dm_note:npc.notes||null})));await logSessionEvent(campaignId,sessionId,'npc_met',{npc_name:npc.name,npc_role:npc.role||'',city:cityName,character_ids:checkins.map(c=>c.character_id)});setMetToast(`${npc.name} added to ${checkins.length} grimoire${checkins.length!==1?'s':''}`);setTimeout(()=>setMetToast(null),3000);};
+  const markMet=async(npc,cityName)=>{
+    const checkins=await getCheckedInCharacterIds(sessionId);
+    if(!checkins.length){setMetToast('No players checked in');setTimeout(()=>setMetToast(null),3000);return;}
+    let added=0;
+    await Promise.all(checkins.map(async({character_id})=>{
+      const {data:existing}=await supabase.from('grimoire_entries')
+        .select('id').eq('character_id',String(character_id))
+        .eq('campaign_id',String(campaignId)).eq('type','npc').eq('title',npc.name).maybeSingle();
+      if(existing){return;}
+      await supabase.from('grimoire_entries').insert({character_id:String(character_id),campaign_id:String(campaignId),type:'npc',title:npc.name,body:[npc.role,npc.faction,cityName].filter(Boolean).join(' · ')||null,dm_note:npc.notes||null});
+      added++;
+    }));
+    await logSessionEvent(campaignId,sessionId,'npc_met',{npc_name:npc.name,npc_role:npc.role||'',city:cityName,character_ids:checkins.map(c=>c.character_id)});
+    setMetToast(added>0?`${npc.name} added to ${added} grimoire${added!==1?'s':''}`:`${npc.name} already in grimoires`);
+    setTimeout(()=>setMetToast(null),3000);
+  };
 
   const q=search.toLowerCase().trim();
   const citiesWithNpcs=useMemo(()=>cities.map(city=>{let cityNpcs=npcs.filter(n=>n.city_id===city.id);if(q){const cm=city.name.toLowerCase().includes(q)||(city.region||'').toLowerCase().includes(q);if(!cm)cityNpcs=cityNpcs.filter(n=>n.name.toLowerCase().includes(q)||(n.role||'').toLowerCase().includes(q)||(n.faction||'').toLowerCase().includes(q)||(n.category||'').toLowerCase().includes(q)||(n.group_name||'').toLowerCase().includes(q)||(n.notes||'').toLowerCase().includes(q));}return{...city,npcs:cityNpcs,groups:groups.filter(g=>g.city_id===city.id)};}).filter(city=>!q||city.npcs.length>0),[cities,npcs,groups,q]);
