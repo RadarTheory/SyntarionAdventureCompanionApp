@@ -170,9 +170,9 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
             if (t.characterId) return { id: t.characterId, name: tokenName, type: 'character' };
           if (t.characterId) {
             const charMatch = (charData || []).find(c => String(c.id) === String(t.characterId));
-            return { id: t.characterId, name: charMatch?.name || tokenName, type: 'character' };
+            return { id: t.characterId, name: charMatch?.name || tokenName, type: 'adventurer' };
           }
-          return { id: t.id || t.token_id, name: tokenName, type: 'beast' };
+          return { id: t.id || t.token_id, name: tokenName, type: 'adventurer' };
           });
       }
 
