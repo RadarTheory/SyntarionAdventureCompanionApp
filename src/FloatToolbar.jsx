@@ -247,27 +247,26 @@ export default function FloatToolbar({ buttons }) {
         }}
       >
         {/* Drag handle + collapse/redock toggle */}
-        <div
-          onMouseDown={e => { offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }; moved.current = false; setDragging(true); }}
-          onTouchStart={e => { const p = e.touches[0]; offset.current = { x: p.clientX - pos.x, y: p.clientY - pos.y }; moved.current = false; setDragging(true); }}
-          onClick={() => {
-            if (!moved.current) {
-              if (Object.keys(undocked).length > 0) {
-                setUndocked({});
-              } else {
-                setCollapsed(c => !c);
-              }
-            }
-          }}
-          style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(201,185,145,0.08)', border: '1px solid rgba(201,185,145,0.18)', cursor: dragging ? 'grabbing' : 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}
-          title={collapsed ? 'Expand toolbar' : 'Collapse toolbar (drag to move)'}
-        >
-          <svg viewBox="0 0 16 16" width={10} height={10} fill="none">
-            {collapsed
-              ? <path d="M4 6l4 4 4-4" stroke="rgba(201,185,145,0.7)" strokeWidth="1.5" strokeLinecap="round"/>
-              : <path d="M4 10l4-4 4 4" stroke="rgba(201,185,145,0.7)" strokeWidth="1.5" strokeLinecap="round"/>
-            }
-          </svg>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingRight: 4 }}>
+          <div
+            onMouseDown={e => { offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }; moved.current = false; setDragging(true); }}
+            onTouchStart={e => { const p = e.touches[0]; offset.current = { x: p.clientX - pos.x, y: p.clientY - pos.y }; moved.current = false; setDragging(true); }}
+            style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(201,185,145,0.08)', border: '1px solid rgba(201,185,145,0.18)', cursor: dragging ? 'grabbing' : 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            title="Drag to move"
+          >
+            <svg viewBox="0 0 16 16" width={10} height={10} fill="none">
+              <path d="M5 8h6M8 5v6" stroke="rgba(201,185,145,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </div>
+          {expanded && (
+            <div
+              onClick={() => setCollapsed(c => !c)}
+              style={{ fontSize: 16, color: collapsed ? 'rgba(201,185,145,0.6)' : 'rgba(201,185,145,0.35)', cursor: 'pointer', lineHeight: 1, padding: '0 4px', userSelect: 'none', fontWeight: 300 }}
+              title={collapsed ? 'Expand' : 'Minimize'}
+            >
+              {collapsed ? '+' : '−'}
+            </div>
+          )}
         </div>
 
         {/* Docked buttons */}
