@@ -954,7 +954,7 @@ const denyEvent = async event => {
     dm_approved: false,
     outcome: event.type === 'move_request'
       ? 'Move denied. Waypoints cleared.'
-      : 'Denied by DM. No effect is applied.',
+      : `Denied: ${event.description?.slice(0, 80) || event.type}`,
     dm_note: null,
   }).eq('id', event.id);
 
@@ -1737,7 +1737,16 @@ function EventCard({ event, onApprove, onDeny, onCustom }) {
   const [custom, setCustom] = useState('');
 
   const pending = event.dm_approved === null || event.dm_approved === undefined;
+  const denied = event.dm_approved === false;
   const suggestion = event.scribe_suggestion || createScribeSuggestion(event);
+
+  if (denied) {
+    return (
+      <div style={{ color: COLORS.dim, fontSize: 10, fontFamily: 'Georgia, serif', fontStyle: 'italic', padding: '4px 2px' }}>
+        ✕ {event.outcome || `Denied: ${event.actor_name}`}
+      </div>
+    );
+  }
 
   return (
     <div
