@@ -11,6 +11,33 @@ export default function PartyProximityPanel({ campaignId, isDM = false, char = n
   const sessionId = useActiveGameSession(campaignId);
   const { rows, zones } = useProximity(sessionId);
   const [checkedIn, setCheckedIn] = useState([]);
+
+  // Auto-add nearby players to Grimoire every 60 seconds
+  useEffect(() => {
+    if (!char?.id || !campaignId || !sessionId) return;
+    const run = async () => {
+      const myZoneNames = rows.filter(r => r.entity_type === 'player' && String(r.entity_id) === String(char.id)).map(r => r.zone_name);
+      const nearbyPlayers = rows.filter(r => myZoneNames.includes(r.zone_name) && r.entity_type === 'player' && String(r.entity_id) !== String(char.id));
+      for (const p of nearbyPlayers) {
+        const { data: existing } = await supabase.from('grimoire_entries')
+          .select('id').eq('character_id', String(char.id))
+          .eq('campaign_id', String(campaignId))
+          .eq('type', 'person').eq('title', p.entity_name).maybeSingle();
+        if (!existing) {
+          await supabase.from('grimoire_entries').insert({
+            character_id: String(char.id),
+            campaign_id: String(campaignId),
+            type: 'person',
+            title: p.entity_name,
+            body: `Met in ${p.zone_name}.`,
+          });
+        }
+      }
+    };
+    run();
+    const interval = setInterval(run, 60000);
+    return () => clearInterval(interval);
+  }, [rows, char?.id, campaignId, sessionId]);
   const [npcs, setNpcs] = useState([]);
   const [beasts, setBeasts] = useState([]);
   const [newZoneName, setNewZoneName] = useState('');
