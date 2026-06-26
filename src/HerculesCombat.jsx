@@ -1424,10 +1424,14 @@ const denyEvent = async event => {
                 const { data: vttSession } = await supabase.from('vtt_sessions').select('tokens').eq('campaign_id', String(campaignId)).maybeSingle();
                 const tokens = Array.isArray(vttSession?.tokens) ? vttSession.tokens : [];
                 const alreadyIn = new Set(initiative.map(r => (r.character_name || '').toLowerCase()));
+                const { data: charData } = await supabase.from('characters').select('id, name').eq('campaign_id', String(campaignId));
                 const candidates = tokens.filter(t => {
                   const name = (t.name || t.creatureName || t.label || '').toLowerCase();
                   return name && !alreadyIn.has(name);
-                }).map(t => ({ ...t, selected: t.status !== 'dead' }));
+                }).map(t => {
+                  const charMatch = (charData || []).find(c => String(c.id) === String(t.characterId));
+                  return { ...t, selected: t.status !== 'dead', resolvedName: charMatch?.name || t.fullName || t.name || t.creatureName || t.label || 'Token' };
+                });
                 setRollTokensModal(candidates);
               }} disabled={saving} style={goldButton()}>
                 Roll Board Tokens
@@ -1625,7 +1629,7 @@ const denyEvent = async event => {
               ? <div style={{ color: COLORS.dim, fontSize: 11, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>All board tokens are already in initiative.</div>
               : <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16, maxHeight: 300, overflowY: 'auto' }}>
                   {rollTokensModal.map((t, i) => {
-                    const name = t.name || t.creatureName || t.label || 'Token';
+                    const name = t.resolvedName || t.name || t.creatureName || t.label || 'Token';
                     return (
                       <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', background: COLORS.card, borderRadius: 6, cursor: 'pointer', border: `1px solid ${COLORS.border}` }}>
                         <input type="checkbox" checked={t.selected} onChange={() => setRollTokensModal(prev => prev.map((x, j) => j === i ? { ...x, selected: !x.selected } : x))} />
@@ -1650,7 +1654,7 @@ const denyEvent = async event => {
                     const roll = Math.floor(Math.random() * 20) + 1;
                     const modifier = Number(token.initiative_modifier ?? token.modifier ?? 0);
                     const tokenId = String(token.id || token.token_id || token.character_id || crypto.randomUUID());
-                    const tokenName = token.name || token.creatureName || token.label || 'Token';
+                    const tokenName = token.resolvedName || token.name || token.creatureName || token.label || 'Token';
                     return { session_id: sid, character_id: tokenId, character_name: tokenName, roll, modifier, turn_order: roll + modifier };
                   });
                   await supabase.from('hercules_initiative').insert(rowsToInsert);
