@@ -1130,9 +1130,6 @@ const denyEvent = async event => {
 
     const actorName = row.character_name || row.actor_name || 'Combatant';
 
-    const confirmed = window.confirm(`Remove ${actorName} from initiative?`);
-    if (!confirmed) return;
-
     setSaving(true);
 
     const { data, error } = await supabase
@@ -1323,8 +1320,8 @@ const denyEvent = async event => {
             position: 'fixed',
             left: isMobile ? 0 : windowPos.x,
             top: isMobile ? 0 : windowPos.y,
-            width: isMobile ? '100vw' : 'min(1100px, calc(100vw - 48px))',
-            height: isMobile ? '100dvh' : 'min(760px, calc(100vh - 110px))',
+            width: isMobile ? '100vw' : 'min(1400px, calc(100vw - 24px))',
+            height: isMobile ? '100dvh' : 'min(820px, calc(100vh - 60px))',
             background: '#100d0a',
             border: '1px solid rgba(200,168,74,0.35)',
             borderRadius: isMobile ? 0 : 16,
@@ -1426,12 +1423,7 @@ const denyEvent = async event => {
                 Roll Board Tokens
               </button>
             )}
-            {!isMobile && session && (
-              <button type="button" onClick={removeDuplicatesFromInitiative} disabled={saving} style={goldButton()}>
-                Dedup
-              </button>
-            )}
-            {!isMobile && session && initiative.length > 0 && (
+             {!isMobile && session && initiative.length > 0 && (
               <button type="button" onClick={nextTurn} disabled={saving} style={{ ...goldButton(), background: 'rgba(200,168,74,0.28)', border: '1px solid rgba(200,168,74,0.8)', fontWeight: 700 }}>
                 Next Turn ▶
               </button>
@@ -1467,7 +1459,7 @@ const denyEvent = async event => {
           >
             {isMobile && (
               <div style={{ display: 'flex', borderBottom: '1px solid rgba(200,168,74,0.25)', flexShrink: 0, width: '100%', overflow: 'hidden' }}>
-                {[['initiative','Initiative'],['scribe','Scribe'],['bestiary','Bestiary']].map(([tab, label]) => (
+                {[['initiative','Initiative'],['scribe','Scribe']].map(([tab, label]) => (
                   <button key={tab} type="button" onClick={() => setMobileTab(tab)} style={{
                     flex: 1, padding: '10px 4px',
                     background: mobileTab === tab ? 'rgba(200,168,74,0.15)' : 'transparent',
@@ -1481,7 +1473,7 @@ const denyEvent = async event => {
             )}
             <div style={{
               display: isMobile ? 'block' : 'grid',
-              gridTemplateColumns: isMobile ? undefined : '270px 1fr 320px',
+              gridTemplateColumns: isMobile ? undefined : '300px 1fr',
               gap: 12, padding: 12, minHeight: 0, flex: 1,
               overflow: isMobile ? 'auto' : 'hidden',
               boxSizing: 'border-box',
