@@ -1473,7 +1473,7 @@ const denyEvent = async event => {
             )}
             <div style={{
               display: isMobile ? 'block' : 'grid',
-              gridTemplateColumns: isMobile ? undefined : '300px 1fr',
+              gridTemplateColumns: isMobile ? undefined : '380px 1fr',
               gap: 12, padding: 12, minHeight: 0, flex: 1,
               overflow: isMobile ? 'auto' : 'hidden',
               boxSizing: 'border-box',
