@@ -310,7 +310,9 @@ export default function LarkPanel({ char, campaignId, isDM = false, embedded = f
   if (!isDM) {
     const cid = char?.id ? String(char.id) : null;
     if (!cid) { setLarks([]); setLoading(false); return; }
-    q = q.or(`sender_id.eq.${cid},recipient_id.eq.${cid}`);
+    // Players only see larks they sent OR larks explicitly addressed to them by ID
+    // NPC larks addressed by name are only visible to the sender
+    q = q.or(`sender_id.eq.${cid},and(recipient_id.eq.${cid},recipient_type.eq.player)`);
   }
   const { data } = await q;
   if (data) setLarks(data);
@@ -321,7 +323,7 @@ export default function LarkPanel({ char, campaignId, isDM = false, embedded = f
 
   const inboxLarks = larks.filter(l =>
     l.recipient_id === charIdStr ||
-    (l.recipient_type === 'player' && l.recipient_name === char?.name)
+    (l.recipient_type === 'player' && l.recipient_name === char?.name && l.recipient_id === charIdStr)
   );
   const sentLarks = larks.filter(l => l.sender_id === charIdStr);
 
