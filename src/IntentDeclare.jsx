@@ -167,12 +167,13 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
 });
             if (beastMatch) return { id: beastMatch.id, name: beastMatch.name, type: 'beast' };
             // No matching database row — fall back to the token itself (e.g. manually-added combatant)
-            if (t.characterId) return { id: t.characterId, name: tokenName, type: 'character' };
-          if (t.characterId) {
-            const charMatch = (charData || []).find(c => String(c.id) === String(t.characterId));
-            return { id: t.characterId, name: charMatch?.name || tokenName, type: 'adventurer' };
-          }
-          return { id: t.id || t.token_id, name: tokenName, type: 'adventurer' };
+            if (t.characterId) {
+              const proxMatch = (proxRows || []).find(r => String(r.character_id) === String(t.characterId));
+              const charMatch = (charData || []).find(c => String(c.id) === String(t.characterId));
+              const resolvedName = proxMatch?.character_name || proxMatch?.name || charMatch?.name || tokenName;
+              return { id: t.characterId, name: resolvedName, type: 'adventurer' };
+            }
+            return { id: t.id || t.token_id, name: tokenName, type: 'adventurer' };
           });
       }
 
