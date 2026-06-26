@@ -724,7 +724,7 @@ function VitalsPanel({ row, onClose, campaignId }) {
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN DM VIEW
 // ═════════════════════════════════════════════════════════════════════════════
-const DM_TABS = ['Inbox', 'Characters', 'Campaigns', 'Scribe', 'Memory', 'Catalog', 'Maps', 'VTT'];
+const DM_TABS = ['Inbox', 'Characters', 'Campaigns', 'Scribe', 'Memory', 'Catalog', 'VTT'];
 
 export default function DMView({ user, session, onHome }) {
   const { isMobile } = useDevice();
@@ -974,7 +974,7 @@ useEffect(() => {
     switch (activeTab) {
       case 'Catalog': return <ItemCatalog />;
       case 'Music': return <MusicPanel />;
-      case 'Maps': return <MapPanel />;
+      import MapPanel from './MapPanel';
       case 'VTT':
         return <VTTCanvas
           campaignId={activeCampaignTab || null}
