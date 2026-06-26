@@ -264,6 +264,7 @@ useEffect(() => {
   const [initiative, setInitiative] = useState([]);
   const [creatureSearch, setCreatureSearch] = useState('');
   const [saving, setSaving] = useState(false);
+  const [rollTokensModal, setRollTokensModal] = useState(null); // null | array of token candidates
   const eventsBottomRef = useRef(null);
 
   useEffect(() => {
@@ -1419,7 +1420,16 @@ const denyEvent = async event => {
               </button>
             )}
             {!isMobile && session && (
-              <button type="button" onClick={rollBoardTokens} disabled={saving} style={goldButton()}>
+              <button type="button" onClick={async () => {
+                const { data: vttSession } = await supabase.from('vtt_sessions').select('tokens').eq('campaign_id', String(campaignId)).maybeSingle();
+                const tokens = Array.isArray(vttSession?.tokens) ? vttSession.tokens : [];
+                const alreadyIn = new Set(initiative.map(r => (r.character_name || '').toLowerCase()));
+                const candidates = tokens.filter(t => {
+                  const name = (t.name || t.creatureName || t.label || '').toLowerCase();
+                  return name && !alreadyIn.has(name);
+                }).map(t => ({ ...t, selected: t.status !== 'dead' }));
+                setRollTokensModal(candidates);
+              }} disabled={saving} style={goldButton()}>
                 Roll Board Tokens
               </button>
             )}
@@ -1603,6 +1613,54 @@ const denyEvent = async event => {
               embedded
               initialEntity={{ type: 'beast', id: speakRow.character_id, name: speakRow.character_name }}
             />
+          </div>
+        </div>
+      )}
+
+      {rollTokensModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200010, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#100d0a', border: '1px solid rgba(200,168,74,0.4)', borderRadius: 14, padding: 20, minWidth: 320, maxWidth: 480, boxShadow: '0 24px 80px rgba(0,0,0,0.8)' }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#e8d9a7', letterSpacing: '0.14em', marginBottom: 14 }}>Roll Board Tokens</div>
+            {rollTokensModal.length === 0
+              ? <div style={{ color: COLORS.dim, fontSize: 11, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>All board tokens are already in initiative.</div>
+              : <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16, maxHeight: 300, overflowY: 'auto' }}>
+                  {rollTokensModal.map((t, i) => {
+                    const name = t.name || t.creatureName || t.label || 'Token';
+                    return (
+                      <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', background: COLORS.card, borderRadius: 6, cursor: 'pointer', border: `1px solid ${COLORS.border}` }}>
+                        <input type="checkbox" checked={t.selected} onChange={() => setRollTokensModal(prev => prev.map((x, j) => j === i ? { ...x, selected: !x.selected } : x))} />
+                        <span style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.text }}>{name}</span>
+                        {t.status === 'dead' && <span style={{ fontSize: 8, color: '#e05a5a', fontFamily: "'Cinzel', serif" }}>DEAD</span>}
+                      </label>
+                    );
+                  })}
+                </div>
+            }
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button type="button" onClick={() => setRollTokensModal(null)} style={plainButton()}>Cancel</button>
+              {rollTokensModal.length > 0 && (
+                <button type="button" onClick={async () => {
+                  const selected = rollTokensModal.filter(t => t.selected);
+                  setRollTokensModal(null);
+                  if (selected.length === 0) return;
+                  const sid = session?.id || activeSessionIdRef.current;
+                  if (!sid) return;
+                  setSaving(true);
+                  const rowsToInsert = selected.map(token => {
+                    const roll = Math.floor(Math.random() * 20) + 1;
+                    const modifier = Number(token.initiative_modifier ?? token.modifier ?? 0);
+                    const tokenId = String(token.id || token.token_id || token.character_id || crypto.randomUUID());
+                    const tokenName = token.name || token.creatureName || token.label || 'Token';
+                    return { session_id: sid, character_id: tokenId, character_name: tokenName, roll, modifier, turn_order: roll + modifier };
+                  });
+                  await supabase.from('hercules_initiative').insert(rowsToInsert);
+                  await supabase.from('hercules_events').insert(rowsToInsert.map(r => ({ session_id: sid, type: 'initiative', actor_name: r.character_name, actor_id: r.character_id, description: `${r.character_name} was rolled into initiative by the DM.` })));
+                  await loadInitiative(sid);
+                  await loadEvents(sid);
+                  setSaving(false);
+                }} style={goldButton()}>Roll Selected</button>
+              )}
+            </div>
           </div>
         </div>
       )}
