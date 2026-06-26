@@ -87,20 +87,32 @@ export default function PartyProximityPanel({ campaignId, isDM = false, char = n
   // PLAYER VIEW — just show who/what is near them
   if (!isDM) {
     const myZoneNames = rows.filter(r => r.entity_type === 'player' && String(r.entity_id) === String(char?.id)).map(r => r.zone_name);
-    const nearby = rows.filter(r => myZoneNames.includes(r.zone_name));
+    const nearbyPlayers = rows.filter(r => myZoneNames.includes(r.zone_name) && r.entity_type === 'player' && String(r.entity_id) !== String(char?.id));
+    const nearbyNpcs = rows.filter(r => myZoneNames.includes(r.zone_name) && (r.entity_type === 'npc' || r.entity_type === 'beast'));
     return (
       <div style={{ padding: 16 }}>
         <div style={{ ...label8(), marginBottom: 10 }}>In Your Area</div>
-        {nearby.length === 0 ? (
+        {nearbyPlayers.length === 0 && nearbyNpcs.length === 0 ? (
           <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No one nearby yet.</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {nearby.map(r => (
+            {nearbyPlayers.map(r => (
               <div key={r.id} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', display: 'flex', justifyContent: 'space-between' }}>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text }}>{r.entity_name}</div>
-                <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", textTransform: 'uppercase' }}>{r.entity_type}</div>
+                <div style={{ fontSize: 8, color: 'rgba(96,150,224,0.7)', fontFamily: "'Cinzel', serif", textTransform: 'uppercase' }}>Player</div>
               </div>
             ))}
+            {nearbyNpcs.length > 0 && (
+              <>
+                <div style={{ ...label8(), marginTop: 6 }}>Also Nearby</div>
+                {nearbyNpcs.map(r => (
+                  <div key={r.id} style={{ background: 'rgba(200,168,74,0.05)', border: `1px solid rgba(200,168,74,0.2)`, borderRadius: 6, padding: '8px 10px', display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.dim }}>{r.entity_name}</div>
+                    <div style={{ fontSize: 8, color: 'rgba(200,168,74,0.5)', fontFamily: "'Cinzel', serif", textTransform: 'uppercase' }}>{r.entity_type}</div>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         )}
       </div>
