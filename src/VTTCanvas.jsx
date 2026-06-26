@@ -365,7 +365,8 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         const next = [...filtered, {
           id: uid(), type: tokenData.type || 'enemy', label: tokenData.label, color: tokenData.color,
           characterId: tokenData.characterId || null, creatureName: tokenData.creatureName || null,
-          fullName: tokenData.fullName || tokenData.creatureName || tokenData.label || null,
+          fullName: tokenData.fullName || tokenData.name || tokenData.creatureName || tokenData.label || null,
+          name: tokenData.fullName || tokenData.name || tokenData.creatureName || tokenData.label || null,
           race: tokenData.race || null, portrait_url: tokenData.portrait_url || null, x, y,
         }];
         if (vttSession?.id) {
