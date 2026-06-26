@@ -45,18 +45,21 @@ function getMapRect(canvas, mapImg) {
 }
 
 function isTokenFogged(tok, fogZones) {
-  const hideZones = fogZones.filter(z => z.type === 'hide');
-  const revealZones = fogZones.filter(z => z.type === 'reveal');
   const inZone = (zone) => {
     const dx = tok.x - zone.x;
     const dy = tok.y - zone.y;
     return Math.sqrt(dx * dx + dy * dy) <= zone.r;
   };
-  if (hideZones.some(inZone)) return true;
-  if (revealZones.length > 0 && !revealZones.some(inZone)) return true;
-  return false;
+  const revealZones = fogZones.filter(z => z.type === 'reveal');
+  let fogged = revealZones.length > 0;
+  if (revealZones.length > 0 && revealZones.some(inZone)) fogged = false;
+  for (const zone of fogZones) {
+    if (!inZone(zone)) continue;
+    if (zone.type === 'hide') fogged = true;
+    if (zone.type === 'reveal') fogged = false;
+  }
+  return fogged;
 }
-
 function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves, draggingToken, dragPos, userCharId, hoveredTokenId, onIconReady }) {
   if (!canvas || !mapImg) return;
   const ctx = canvas.getContext('2d');
@@ -74,43 +77,38 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
   const fogCtx = fogCanvas.getContext('2d');
   fogCtx.fillStyle = 'rgba(10,8,6,0.85)';
   fogCtx.fillRect(0, 0, W, H);
-  fogCtx.globalCompositeOperation = 'destination-out';
   fogZones.forEach(zone => {
+    const cx = mapRect.x + zone.x * mapRect.w;
+    const cy = mapRect.y + zone.y * mapRect.h;
+    const r = zone.r * mapRect.w;
+    const feather = zone.feather ?? 0.35;
+    const inner = Math.max(0, r * (1 - feather));
     if (zone.type === 'reveal') {
-      const cx = mapRect.x + zone.x * mapRect.w;
-      const cy = mapRect.y + zone.y * mapRect.h;
-      const r = zone.r * mapRect.w;
-      const feather = zone.feather ?? 0.3;
-      const grad = fogCtx.createRadialGradient(cx, cy, r * (1 - feather), cx, cy, r);
+      fogCtx.globalCompositeOperation = 'destination-out';
+      fogCtx.beginPath();
+      fogCtx.arc(cx, cy, inner, 0, Math.PI * 2);
+      fogCtx.fillStyle = 'rgba(0,0,0,1)';
+      fogCtx.fill();
+      const grad = fogCtx.createRadialGradient(cx, cy, inner, cx, cy, r);
       grad.addColorStop(0, 'rgba(0,0,0,1)');
       grad.addColorStop(1, 'rgba(0,0,0,0)');
       fogCtx.beginPath();
       fogCtx.arc(cx, cy, r, 0, Math.PI * 2);
       fogCtx.fillStyle = grad;
       fogCtx.fill();
-    }
-  });
-  fogCtx.globalCompositeOperation = 'source-over';
-  fogZones.forEach(zone => {
-    if (zone.type === 'hide') {
-      const cx = mapRect.x + zone.x * mapRect.w;
-      const cy = mapRect.y + zone.y * mapRect.h;
-      const r = zone.r * mapRect.w;
-      const feather = zone.feather ?? 0;
-      if (feather > 0) {
-        const grad = fogCtx.createRadialGradient(cx, cy, r * (1 - feather), cx, cy, r);
-        grad.addColorStop(0, 'rgba(10,8,6,0.85)');
-        grad.addColorStop(1, 'rgba(10,8,6,0)');
-        fogCtx.beginPath();
-        fogCtx.arc(cx, cy, r, 0, Math.PI * 2);
-        fogCtx.fillStyle = grad;
-        fogCtx.fill();
-      } else {
-        fogCtx.beginPath();
-        fogCtx.arc(cx, cy, r, 0, Math.PI * 2);
-        fogCtx.fillStyle = 'rgba(10,8,6,0.85)';
-        fogCtx.fill();
-      }
+    } else if (zone.type === 'hide') {
+      fogCtx.globalCompositeOperation = 'source-over';
+      fogCtx.beginPath();
+      fogCtx.arc(cx, cy, inner, 0, Math.PI * 2);
+      fogCtx.fillStyle = 'rgba(10,8,6,0.92)';
+      fogCtx.fill();
+      const grad = fogCtx.createRadialGradient(cx, cy, inner, cx, cy, r);
+      grad.addColorStop(0, 'rgba(10,8,6,0.92)');
+      grad.addColorStop(1, 'rgba(10,8,6,0)');
+      fogCtx.beginPath();
+      fogCtx.arc(cx, cy, r, 0, Math.PI * 2);
+      fogCtx.fillStyle = grad;
+      fogCtx.fill();
     }
   });
   ctx.drawImage(fogCanvas, 0, 0);
