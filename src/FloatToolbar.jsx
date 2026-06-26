@@ -52,7 +52,7 @@ export function FloatButton({ storageKey, defaultPos, children, onClick, title, 
     <button
       title={title}
       onMouseDown={e => { offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }; moved.current = false; setDragging(true); }}
-      onTouchStart={e => { const p = e.touches[0]; offset.current = { x: p.clientX - pos.x, y: p.clientY - pos.y }; moved.current = false; setDragging(true); }}
+      onClick={() => { setUndocked({}); }}
       onClick={() => { if (!moved.current) onClick(); }}
       onMouseEnter={() => onHover?.(true)}
       onMouseLeave={() => onHover?.(false)}
