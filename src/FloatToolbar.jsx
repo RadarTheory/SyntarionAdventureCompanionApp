@@ -272,23 +272,15 @@ export default function FloatToolbar({ buttons }) {
           </div>
         )}
 
-        {/* Minimized — single Astragal button */}
-        {minimized && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
-            {(() => { const first = dockedButtons[0]; return first ? (
-              <ToolbarButton key={first.id} title="Expand toolbar" badge={first.badge} onClick={() => setMinimized(false)} onDragOut={p => handleUndock(first.id, p)} size={btnSize}>
-                {first.children}
-              </ToolbarButton>
-            ) : null; })()}
-            {expanded && (
-              {(() => { const first = dockedButtons[0]; return first ? (
-              <ToolbarButton key={first.id} title={first.title} badge={first.badge} onClick={first.onClick} onDragOut={p => handleUndock(first.id, p)} size={btnSize}>
-                {first.children}
-              </ToolbarButton>
-            ) : null; })()}
-            )}
-          </div>
-        )}
+        {/* Minimized — single Astragal button, click to restore */}
+        {minimized && (() => {
+          const first = dockedButtons[0];
+          return first ? (
+            <ToolbarButton title="Expand toolbar" badge={first.badge} onClick={() => setMinimized(false)} onDragOut={p => handleUndock(first.id, p)} size={btnSize}>
+              {first.children}
+            </ToolbarButton>
+          ) : null;
+        })()}
 
         {/* Docked buttons */}
         {!minimized && dockedButtons.map(btn => (
