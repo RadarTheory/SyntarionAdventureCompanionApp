@@ -58,87 +58,35 @@ function useDraggable(initial = { x: 24, y: 24 }) {
 
 function useDictation(onResult) {
   const [listening, setListening] = useState(false);
-  const [transcribing, setTranscribing] = useState(false);
   const [micError, setMicError] = useState(null);
-  const mediaRecorderRef = useRef(null);
-  const chunksRef = useRef([]);
-  const supported = typeof window !== 'undefined' && !!navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== 'undefined';
+  const recogRef = useRef(null);
+  const supported = typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 
-  const pickMimeType = () => {
-    const candidates = ['audio/mp4', 'audio/webm', 'audio/aac', 'audio/ogg'];
-    return candidates.find(t => MediaRecorder.isTypeSupported?.(t)) || '';
-  };
-
-  const stop = () => {
-    if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop();
-  };
-
-  const start = async () => {
-    if (!supported || listening) return;
-    setMicError(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = pickMimeType();
-      const rec = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-      chunksRef.current = [];
-
-      rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-
-      rec.onstop = async () => {
-        stream.getTracks().forEach(t => t.stop()); // release mic immediately
-        setListening(false);
-        const blob = new Blob(chunksRef.current, { type: rec.mimeType || mimeType || 'audio/webm' });
-        chunksRef.current = [];
-        if (blob.size === 0) return;
-
-        setTranscribing(true);
-        try {
-          const audioBase64 = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(String(reader.result).split(',')[1] || '');
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-          });
-
-          const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Transcription timed out')), 15000));
-          const { data, error } = await Promise.race([
-            supabase.functions.invoke('transcribe', { body: { audioBase64, mimeType: blob.type } }),
-            timeout,
-          ]);
-
-          if (error) {
-            console.error('Transcribe error:', error);
-            setMicError(error.message || 'Transcription failed.');
-          } else if (data?.text) {
-            onResult(data.text.trim());
-          } else {
-            setMicError('No speech detected.');
-          }
-        } catch (err) {
-          console.error('Transcription failed:', err);
-          setMicError(err?.message || 'Transcription failed.');
-        }
-        setTranscribing(false);
-      };
-
-      mediaRecorderRef.current = rec;
-      rec.start();
-      setListening(true);
-    } catch (err) {
+  const toggle = () => {
+    if (!supported) return;
+    if (listening) {
+      recogRef.current?.stop();
       setListening(false);
-      if (err?.name === 'NotAllowedError' || err?.name === 'SecurityError') {
-        setMicError('Microphone access is blocked. Check your browser/site settings.');
-      } else if (err?.name === 'NotFoundError') {
-        setMicError('No microphone found.');
-      } else {
-        setMicError('Could not access the microphone.');
-      }
+      return;
     }
+    setMicError(null);
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = new SR();
+    rec.lang = 'en-US';
+    rec.interimResults = false;
+    rec.continuous = false;
+    rec.onresult = (e) => onResult(e.results[0][0].transcript.trim());
+    rec.onerror = (e) => {
+      setMicError(e.error === 'not-allowed' ? 'Microphone access blocked.' : 'Speech recognition error.');
+      setListening(false);
+    };
+    rec.onend = () => setListening(false);
+    recogRef.current = rec;
+    rec.start();
+    setListening(true);
   };
 
-  const toggle = () => { if (listening) stop(); else start(); };
-
-  return { listening, transcribing, toggle, supported, micError };
+  return { listening, transcribing: false, toggle, supported, micError };
 }
 
 export default function IntentDeclare({ campaignId, char, compact = false, embedded = false }) {
