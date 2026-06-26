@@ -17,19 +17,19 @@ export default function PartyProximityPanel({ campaignId, isDM = false, char = n
     if (!char?.id || !campaignId || !sessionId) return;
     const run = async () => {
       const myZoneNames = rows.filter(r => r.entity_type === 'player' && String(r.entity_id) === String(char.id)).map(r => r.zone_name);
-      const nearbyPlayers = rows.filter(r => myZoneNames.includes(r.zone_name) && r.entity_type === 'player' && String(r.entity_id) !== String(char.id));
-      for (const p of nearbyPlayers) {
+      const nearbyNpcs = rows.filter(r => myZoneNames.includes(r.zone_name) && (r.entity_type === 'npc' || r.entity_type === 'beast'));
+      for (const n of nearbyNpcs) {
         const { data: existing } = await supabase.from('grimoire_entries')
           .select('id').eq('character_id', String(char.id))
           .eq('campaign_id', String(campaignId))
-          .eq('type', 'person').eq('title', p.entity_name).maybeSingle();
+          .eq('type', n.entity_type).eq('title', n.entity_name).maybeSingle();
         if (!existing) {
           await supabase.from('grimoire_entries').insert({
             character_id: String(char.id),
             campaign_id: String(campaignId),
-            type: 'person',
-            title: p.entity_name,
-            body: `Met in ${p.zone_name}.`,
+            type: n.entity_type,
+            title: n.entity_name,
+            body: `Encountered in ${n.zone_name}.`,
           });
         }
       }
