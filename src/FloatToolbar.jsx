@@ -170,6 +170,7 @@ export default function FloatToolbar({ buttons }) {
   const [undocked, setUndocked]   = useState(savedDocked || {});
   const [hoveredBtn, setHoveredBtn] = useState(null);
   const [expanded, setExpanded]   = useState(false);
+  const [minimized, setMinimized] = useState(false);
 
   const offset     = useRef({ x: 0, y: 0 });
   const moved      = useRef(false);
@@ -231,7 +232,7 @@ export default function FloatToolbar({ buttons }) {
           alignItems: 'flex-start',
           gap: 6,
           padding: '10px 8px',
-          width: expanded ? 220 : 68,
+          width: minimized ? 58 : expanded ? 220 : 68,
           background: 'rgba(8,6,4,0.92)',
           border: '1px solid rgba(201,185,145,0.2)',
           borderRadius: 20,
@@ -260,17 +261,31 @@ export default function FloatToolbar({ buttons }) {
           </div>
           {expanded && (
             <div
-              onClick={() => setCollapsed(c => !c)}
-              style={{ fontSize: 16, color: collapsed ? 'rgba(201,185,145,0.6)' : 'rgba(201,185,145,0.35)', cursor: 'pointer', lineHeight: 1, padding: '0 4px', userSelect: 'none', fontWeight: 300 }}
-              title={collapsed ? 'Expand' : 'Minimize'}
+              onClick={() => setMinimized(true)}
+              style={{ fontSize: 16, color: 'rgba(201,185,145,0.35)', cursor: 'pointer', lineHeight: 1, padding: '0 4px', userSelect: 'none', fontWeight: 300 }}
+              title="Minimize"
             >
-              {collapsed ? '+' : '−'}
+              −
             </div>
           )}
         </div>
 
+        {/* Minimized — single Astragal button */}
+        {minimized && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
+            {(() => { const first = dockedButtons[0]; return first ? (
+              <ToolbarButton key={first.id} title={first.title} badge={first.badge} onClick={first.onClick} onDragOut={p => handleUndock(first.id, p)} size={btnSize}>
+                {first.children}
+              </ToolbarButton>
+            ) : null; })()}
+            {expanded && (
+              <div onClick={() => setMinimized(false)} style={{ fontSize: 16, color: 'rgba(201,185,145,0.5)', cursor: 'pointer', lineHeight: 1, padding: '0 4px', userSelect: 'none', fontWeight: 300 }} title="Expand">+</div>
+            )}
+          </div>
+        )}
+
         {/* Docked buttons */}
-        {dockedButtons.map(btn => (
+        {!minimized && dockedButtons.map(btn => (
           <div key={btn.id} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', flexShrink: 0 }}
             onClick={() => { if (mobile) setExpanded(e => !e); }}
           >
