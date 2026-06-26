@@ -153,12 +153,21 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
           .map(t => {
             const tokenName = t.name || t.creatureName || t.label || 'Unknown';
             if (t.beast_id) return { id: t.beast_id, name: tokenName, type: 'beast' };
-            const npcMatch = (npcData || []).find(n => (n.name || '').toLowerCase() === tokenName.toLowerCase());
+            const npcMatch = (npcData || []).find(n => {
+            const a = (n.name || '').toLowerCase();
+            const b = tokenName.toLowerCase();
+            return a === b || a.startsWith(b) || b.startsWith(a);
+});
             if (npcMatch) return { id: npcMatch.id, name: npcMatch.name, type: 'npc' };
-            const beastMatch = (beastData || []).find(b => (b.name || '').toLowerCase() === tokenName.toLowerCase());
+            const beastMatch = (beastData || []).find(b => {
+            const a = (b.name || '').toLowerCase();
+            const bName = tokenName.toLowerCase();
+            return a === bName || a.startsWith(bName) || bName.startsWith(a);
+});
             if (beastMatch) return { id: beastMatch.id, name: beastMatch.name, type: 'beast' };
             // No matching database row — fall back to the token itself (e.g. manually-added combatant)
-            return { id: t.id || t.token_id, name: tokenName, type: 'beast' };
+            if (t.characterId) return { id: t.characterId, name: tokenName, type: 'character' };
+return { id: t.id || t.token_id, name: tokenName, type: 'beast' };
           });
       }
 
