@@ -11,6 +11,16 @@
   filter: drop-shadow(0 0 8px rgba(230, 190, 80, 0.65));
 }
 
+button:active {
+  transform: scale(0.94);
+  opacity: 0.8;
+  transition: transform 0.08s ease, opacity 0.08s ease;
+}
+
+button {
+  transition: transform 0.08s ease, opacity 0.08s ease;
+}
+
 @keyframes spSphere {
   0% {
     border-left: 0 solid rgba(230, 210, 140, 0.95);
@@ -31,4 +41,23 @@
     border-left: 0 solid rgba(230, 210, 140, 0.95);
     border-right: 0 solid rgba(230, 210, 140, 0.95);
   }
+}
+
+button {
+  transition: transform 0.08s ease, opacity 0.08s ease, box-shadow 0.15s ease;
+}
+
+button:active {
+  transform: scale(0.94);
+  opacity: 0.8;
+}
+
+button.success {
+  box-shadow: 0 0 0 2px #64c864, 0 0 12px rgba(100,200,100,0.4);
+  transition: box-shadow 0.2s ease;
+}
+
+button.error {
+  box-shadow: 0 0 0 2px #e05a5a, 0 0 12px rgba(224,90,90,0.4);
+  transition: box-shadow 0.2s ease;
 }
