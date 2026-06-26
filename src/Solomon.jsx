@@ -148,16 +148,25 @@ export default function Solomon({ campaignId, onClose }) {
   const approveClaim = async (item) => {
     setSaving(item.id);
 
-    // Write to character's pack
-    await supabase.from('character_items').insert({
-      character_id: item.claimed_by,
-      slot: `pack__${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-      name: item.item_name,
-      description: `${item.item_category || 'Misc'}|${item.item_desc || ''}${item.note ? ' — ' + item.note : ''}`,
-      attuned: false,
-      bonuses: {},
-      weight: item.qty || 1,
-    });
+    // Scribe Tokens are currency — increment on the character, don't add to pack
+    const isScribeToken = item.item_name?.toLowerCase().includes('scribe token');
+    if (isScribeToken) {
+      const { data: charRow } = await supabase.from('characters').select('data').eq('id', item.claimed_by).maybeSingle();
+      const d = typeof charRow?.data === 'string' ? JSON.parse(charRow.data) : (charRow?.data || {});
+      const newCount = (d.scribeTokens || 0) + (item.qty || 1);
+      await supabase.from('characters').update({ data: { ...d, scribeTokens: newCount } }).eq('id', item.claimed_by);
+    } else {
+      // Write to character's pack
+      await supabase.from('character_items').insert({
+        character_id: item.claimed_by,
+        slot: `pack__${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        name: item.item_name,
+        description: `${item.item_category || 'Misc'}|${item.item_desc || ''}${item.note ? ' — ' + item.note : ''}`,
+        attuned: false,
+        bonuses: {},
+        weight: item.qty || 1,
+      });
+    }
 
     // Mark item approved
     await supabase.from('lootbox_items').update({
@@ -311,6 +320,18 @@ export default function Solomon({ campaignId, onClose }) {
                     await supabase.from('lootbox_items').delete().eq('id', itemId);
                     setBoxItems(prev => ({ ...prev, [box.id]: prev[box.id].filter(i => i.id !== itemId) }));
                   }}
+                  onAddScribeToken={async () => {
+                    await supabase.from('lootbox_items').insert({
+                      lootbox_id: box.id,
+                      item_name: 'Scribe Token',
+                      item_category: 'Currency',
+                      item_desc: 'Grants one consultation with The Scribe.',
+                      qty: 1,
+                      claim_status: 'unclaimed',
+                    });
+                    setBoxItems(prev => ({ ...prev, [box.id]: undefined }));
+                    loadItems(box.id);
+                  }}
                   action={
                     <button
                       onClick={() => revealBox(box)}
@@ -383,7 +404,7 @@ export default function Solomon({ campaignId, onClose }) {
   );
 }
 
-function BoxRow({ box, items, expanded, onToggle, presence, revealMode, action, onDeleteItem }) {
+function BoxRow({ box, items, expanded, onToggle, presence, revealMode, action, onDeleteItem, onAddScribeToken }) {
   const modeLabel = revealMode === 'multi'
     ? `Multi-player · ${presence.length} present`
     : revealMode === 'single'
@@ -424,6 +445,13 @@ function BoxRow({ box, items, expanded, onToggle, presence, revealMode, action, 
 
       {expanded && (
         <div style={{ borderTop: `1px solid ${COLORS.border}`, padding: '10px 12px' }}>
+          {onAddScribeToken && (
+            <div style={{ marginBottom: 10 }}>
+              <button onClick={onAddScribeToken} style={{ background: 'rgba(200,168,74,0.08)', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: '#c8a84a', letterSpacing: '0.08em', display: 'block' }}>
+                ✦ Add Scribe Token
+              </button>
+            </div>
+          )}
           {!items ? (
             <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Loading…</div>
           ) : items.length === 0 ? (
