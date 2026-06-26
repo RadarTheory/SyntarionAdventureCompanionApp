@@ -61,13 +61,32 @@ export default function PartyProximityPanel({ campaignId, isDM = false, char = n
 
   const assign = async (zoneName, entityType, entityId, entityName) => {
     if (!sessionId) return;
-    // remove from any other zone first (an entity is only in one zone at a time)
     await supabase.from('session_proximity').delete()
       .eq('session_id', sessionId).eq('entity_type', entityType).eq('entity_id', String(entityId));
     await supabase.from('session_proximity').insert({
       session_id: sessionId, campaign_id: String(campaignId), zone_name: zoneName,
       entity_type: entityType, entity_id: String(entityId), entity_name: entityName,
     });
+
+    // If adding an NPC/beast to a zone, write them to every player in that zone's Grimoire
+    if (entityType === 'npc' || entityType === 'beast') {
+      const playersInZone = rows.filter(r => r.zone_name === zoneName && r.entity_type === 'player');
+      await Promise.all(playersInZone.map(async p => {
+        const { data: existing } = await supabase.from('grimoire_entries')
+          .select('id').eq('character_id', String(p.entity_id))
+          .eq('campaign_id', String(campaignId))
+          .eq('type', entityType).eq('title', entityName).maybeSingle();
+        if (!existing) {
+          await supabase.from('grimoire_entries').insert({
+            character_id: String(p.entity_id),
+            campaign_id: String(campaignId),
+            type: entityType,
+            title: entityName,
+            body: `Encountered in ${zoneName}.`,
+          });
+        }
+      }));
+    }
   };
 
   const remove = async (row) => {
