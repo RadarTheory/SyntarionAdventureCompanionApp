@@ -631,7 +631,7 @@ useEffect(() => {
       </div>
 
       {hoveredToken && (
-        <div style={{ position: 'fixed', left: hoveredToken.clientX, top: hoveredToken.clientY - 160, transform: 'translateX(-50%)', background: 'rgba(8,6,4,0.82)', backdropFilter: 'blur(10px)', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 10, padding: 10, pointerEvents: 'auto', zIndex: 500, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: 110, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+        <div style={{ position: 'fixed', left: hoveredToken.clientX, top: hoveredToken.clientY - 160, transform: 'translateX(-50%)', background: 'rgba(8,6,4,0.82)', backdropFilter: 'blur(10px)', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 10, padding: 10, pointerEvents: 'auto', zIndex: 200005, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: 110, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
           {hoveredToken.portrait_url ? (
             <div onClick={() => setPortraitFullscreen(hoveredToken)} style={{ width: 72, height: 96, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(200,168,74,0.4)', flexShrink: 0, cursor: 'pointer' }}>
               <img src={hoveredToken.portrait_url} alt={hoveredToken.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
