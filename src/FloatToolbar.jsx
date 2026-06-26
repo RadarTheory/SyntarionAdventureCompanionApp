@@ -169,6 +169,7 @@ export default function FloatToolbar({ buttons }) {
   const [dragging, setDragging]   = useState(false);
   const [undocked, setUndocked]   = useState(savedDocked || {});
   const [hoveredBtn, setHoveredBtn] = useState(null);
+  const [expanded, setExpanded]   = useState(false);
 
   const offset     = useRef({ x: 0, y: 0 });
   const moved      = useRef(false);
@@ -221,35 +222,28 @@ export default function FloatToolbar({ buttons }) {
     <>
       <div
         ref={toolbarRef}
+        onMouseEnter={() => !mobile && setExpanded(true)}
+        onMouseLeave={() => !mobile && setExpanded(false)}
         style={{
           position: 'fixed', left: pos.x, top: pos.y, zIndex: 99999,
           display: 'flex',
-          flexDirection: isHorizontal ? 'row' : 'column',
-          alignItems: 'center',
-          gap: mobile ? 14 : 8,
-          padding: collapsed ? 6 : (mobile ? 8 : 10),
-          background: 'rgba(8,6,4,0.88)',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          gap: 6,
+          padding: '10px 8px',
+          width: expanded ? 220 : 68,
+          background: 'rgba(8,6,4,0.92)',
           border: '1px solid rgba(201,185,145,0.2)',
-          borderRadius: 40,
+          borderRadius: 20,
           boxShadow: '0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)',
           backdropFilter: 'blur(12px)',
           touchAction: dragging ? 'none' : 'pan-y',
-          transition: dragging ? 'none' : 'padding 0.2s ease',
+          transition: dragging ? 'none' : 'width 0.22s ease, padding 0.22s ease',
           userSelect: 'none',
-          ...(isHorizontal && {
-            maxWidth: 'calc(100vw - 16px)',
-            overflowX: 'auto',
-            overflowY: 'visible',
-            WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'none',
-          }),
-          ...(!isHorizontal && {
-            maxHeight: `calc(100vh - ${pos.y + 16}px)`,
-            overflowY: 'auto',
-            overflowX: 'visible',
-            WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'none',
-          }),          
+          overflow: 'hidden',
+          maxHeight: `calc(100vh - ${pos.y + 16}px)`,
+          overflowY: 'auto',
+          scrollbarWidth: 'none',
         }}
       >
         {/* Drag handle + collapse/redock toggle */}
@@ -277,25 +271,33 @@ export default function FloatToolbar({ buttons }) {
         </div>
 
         {/* Docked buttons */}
-        {!collapsed && dockedButtons.map(btn => (
-          <ToolbarButton
-            key={btn.id}
-            title={btn.title}
-            badge={btn.badge}
-            onClick={btn.onClick}
-            onDragOut={(startPos) => handleUndock(btn.id, startPos)}
-            size={btnSize}
-            showLabel={mobile}
+        {dockedButtons.map(btn => (
+          <div key={btn.id} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', flexShrink: 0 }}
+            onClick={() => { if (mobile) setExpanded(e => !e); }}
           >
-            {btn.children}
-          </ToolbarButton>
-        ))}
-
-        {collapsed && dockedButtons.length > 0 && (
-          <div style={{ fontSize: 8, color: 'rgba(201,185,145,0.5)', fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', writingMode: isHorizontal ? 'horizontal-tb' : 'vertical-rl', padding: '2px 0' }}>
-            {dockedButtons.length}
+            <ToolbarButton
+              title={btn.title}
+              badge={btn.badge}
+              onClick={btn.onClick}
+              onDragOut={(startPos) => handleUndock(btn.id, startPos)}
+              size={btnSize}
+            >
+              {btn.children}
+            </ToolbarButton>
+            {expanded && (
+              <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color: 'rgba(230,210,160,0.9)', letterSpacing: '0.1em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {btn.title?.split(' —')[0]?.split(' ·')[0] || btn.id}
+                </div>
+                {btn.description && (
+                  <div style={{ fontSize: 8, color: 'rgba(201,185,145,0.45)', fontFamily: 'Georgia, serif', fontStyle: 'italic', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 1 }}>
+                    {btn.description}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-        )}
+        ))}
       </div>
 
       {/* Undocked free-floating buttons */}
