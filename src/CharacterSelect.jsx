@@ -17,7 +17,7 @@ const CAMPAIGNS = [
 //   onCreate    — fn() called when player wants to create a new character
 //   onHome      — fn() back to Landing
 // ═════════════════════════════════════════════════════════════════════════════
-export default function CharacterSelect({ savedChars = [], onSelect, onCreate, onHome }) {
+export default function CharacterSelect({ savedChars = [], onSelect, onCreate, onHome, onClaim }) {
   const { isMobile } = useDevice();
 
   const ink = '#1a1714';
@@ -112,7 +112,7 @@ export default function CharacterSelect({ savedChars = [], onSelect, onCreate, o
 
             {/* Claim or Create — secondary, at the bottom */}
             <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button onClick={onClaim} style={{
+              <button onClick={onClaim || onCreate} style={{
                 width: '100%',
                 background: 'transparent',
                 border: '1px solid rgba(26,23,20,0.18)',
