@@ -77,7 +77,7 @@ function useDictation(onResult) {
     rec.continuous = false;
     rec.onresult = (e) => onResult(e.results[0][0].transcript.trim());
     rec.onerror = (e) => {
-      setMicError(e.error === 'not-allowed' ? 'Microphone access blocked.' : 'Speech recognition error.');
+      setMicError(e.error === 'not-allowed' ? 'Microphone access blocked.' : `Speech error: ${e.error}`);
       setListening(false);
     };
     rec.onend = () => setListening(false);
