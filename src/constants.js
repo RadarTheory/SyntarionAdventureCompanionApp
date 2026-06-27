@@ -63,7 +63,8 @@ export const RACES = [
   { id:'seraphan',  name:'Seraphan',   sub:'Aasimar',    tag:'magic',lean:-1, sub2:'Celestial blood', variants:[], ns:'seraphan', desc:"Celestial-blooded and occasionally burdened by it. The Seraphan carry a presence that others read before the Seraphan has spoken." },
   { id:'drakazir',  name:'Drakazir',   sub:'Dragonborn', tag:'any',  lean:0,  sub2:'10 color lineages', variants:['Black','Blue','Brass','Bronze','Copper','Gold','Green','Red','Silver','White'], ns:'drakazir', desc:"Lineage-proud and breath-gifted. The ten lineages have different cultural relationships to the age of steam, but all of them remember when the world was hotter." },
   { id:'nazari',    name:'Nazari',     sub:'Sea-folk',   tag:'tech', lean:1,  sub2:'Aquatic · Superior darkvision', variants:[], ns:'nazari', desc:"Deep-water people who surface with purpose. Every Nazari on land is there by deliberate choice — the Sylvan Lung they invented to breathe surface air is proof of that." },
-  { id:'chronison', name:'Chronison',  sub:'Construct',  tag:'tech', lean:2,  sub2:'Defensive · Corrupted/Rogue · Specialist', variants:['Defensive','Corrupted/Rogue','Specialist'], ns:'chronison', desc:"Built, not born. Sentience arrived uninvited in most cases, and has since made itself at home." },
+  { id:'chronison', name:'Chronison',  sub:'Construct',  tag:'tech', lean:2,  sub2:'Defensive · Corrupted/Rogue · Specialist', variants:['Defensive','Corrupted/Rogue','Specialist'], ns:'chronison', desc:"Built, not born. Sentience arrived uninvited in most cases, and has since made itself at home. Chronison cannot use magic in any form — their constructed nature is fundamentally incompatible with arcane, divine, and spiritual disciplines. The only exception is a weapon or tool infused with a special deposit of Grimrite element, which briefly bridges the gap between material and resonant." },
+  { id:'folwoade',  name:'Folwoade',   sub:'Pure Magic', tag:'magic',lean:-2, sub2:'Beings of living resonance', variants:[], ns:'folwoade', desc:"The Folwoade are not born in any conventional sense — they coalesce from concentrations of pure magical resonance, taking a form that is part living creature and part sustained spell. Pale, ageless, and faintly luminous, they carry the weight of the Lines in their bones and perceive the world through a register most mortals cannot reach. They cannot use technology — their nature rejects the material logic of machines, mechanisms, and constructed systems entirely. The only exception is an item infused with a special deposit of Grimrite element, which allows brief and uncomfortable interaction with the technical world." },
 ];
 
 // ─── RACE VARIANT DESCRIPTIONS ────────────────────────────────────────────────
@@ -633,6 +634,17 @@ export const RACIAL_TRAITS = {
       Red:    { name: 'Rageheat',         text: "Once per rest, when you deal damage, you may roll to leave heat behind it that doesn't stop when the strike does. On a success, deal minor additional damage or impose –1 to the target's next physical roll." },
       Silver: { name: 'Silver Frost',     text: "Once per rest, when a creature moves near you, you may roll to chill its momentum at the point of passing. On a success, reduce its movement by one step. The cold has opinions about speed." },
       White:  { name: 'Glass Refraction', text: "Once per rest, when you would be targeted or clearly observed, you may roll to distort what they are looking at. On a success, impose –1 on the attacker's roll or ignore a visibility penalty." },
+    },
+  },
+
+  folwoade: {
+    passive: {
+      name: 'Living Resonance',
+      text: "The Folwoade exist as sustained magical entities. They automatically sense the presence, type, and relative strength of any active magic, spirit, or divine force within their immediate area. This is not a skill — it is simply how they perceive.",
+    },
+    active: {
+      name: 'Resonant Collapse',
+      text: "Once per rest, the Folwoade may release a pulse of concentrated arcane resonance. On a success, disrupt all active magical effects within close range — spells, wards, enchantments, and spirit-bonds are interrupted or destabilized for one exchange. The Folwoade takes –1 to their next roll from the exertion of containment.",
     },
   },
 
