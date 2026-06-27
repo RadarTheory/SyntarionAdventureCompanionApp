@@ -29,6 +29,7 @@ import PartyProximityPanel from './PartyProximityPanel';
 import MapPanel from './MapPanel';
 import DMSpeakPanel from './DMSpeakPanel';
 import PortraitUpload from './PortraitUpload';
+import AssetsPanel from './AssetsPanel';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -970,180 +971,30 @@ useEffect(() => {
     onRegisterAddCreature={fn => { herculesAddCreature.current = fn; }}
   />
 
-  const renderTab = () => {
-    switch (activeTab) {
-      case 'Catalog': return <ItemCatalog />;
-      case 'Music': return <MusicPanel />;
-      case 'VTT':
-        return <VTTCanvas
-          campaignId={activeCampaignTab || null}
-          onRegisterPlaceToken={fn => { vttPlaceTokenRef.current = fn; }}
-          checkedInPlayers={uniqueCheckins}
-          isDM={true}
-        />;
+const renderTab = () => {
+  switch (activeTab) {
+    case 'npcs':      return <NPCPanel campaignId={campaignId} sessionId={sessionId} />;
+    case 'items':     return <ItemCatalog />;
+    case 'characters':return <RosterAdmin />;
+    case 'scribe':    return <ScribeDMPanel />;
+    case 'memories':  return <MemoriesPanel />;
+    case 'vtt':       return <VTTViewerAdmin />;
+    case 'assets':    return <AssetsPanel />; // Added
+    default:          return null;
+  }
+};
 
-      case 'Scribe':
-        return (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', gap: 16 }}>
-            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: COLORS.deity, letterSpacing: '0.1em' }}>The Scribe</div>
-            <div style={{ fontSize: 12, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', maxWidth: 320 }}>
-              An ancient archival intelligence, bound to answer the Architect alone. Open a consult to query the Soteria archives.
-            </div>
-            <button onClick={() => setShowScribePanel(true)} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 8, padding: '12px 28px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.deityText, marginTop: 8 }}>
-              ✦ Open Consult
-            </button>
-          </div>
-        );
+// ...
 
-      case 'Inbox':
-        return (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ ...label8() }}>{showArchive ? 'Archived Messages' : 'Player Messages'}</div>
-              <button onClick={() => setShowArchive(!showArchive)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 10px', cursor: 'pointer', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>{showArchive ? '← Active' : '⌂ Archive'}</button>
-            </div>
-            {displayedMessages.length === 0 ? (
-              <div style={{ background: COLORS.card, border: `1px dashed ${COLORS.border}`, borderRadius: 8, padding: '40px 20px', textAlign: 'center' }}>
-                <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{showArchive ? 'The archive is empty.' : 'No messages. The world is quiet.'}</div>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {displayedMessages.map(session => {
-                  const displayName = session.sender_name || session.character_name || 'Unknown';
-                  const playerTag = session.player_username ? ` (@${session.player_username})` : '';
-                  return (
-                    <div key={session.session_id} onClick={() => !session.ended && !session.archived && openSession(session)}
-                      style={{ background: session.ended || session.archived ? 'transparent' : (session.read ? COLORS.card : 'rgba(121,245,167,0.06)'), border: `1px solid ${session.ended || session.archived ? COLORS.border : (session.read ? COLORS.border : COLORS.magic + '44')}`, borderRadius: 8, padding: '12px 16px', cursor: session.ended || session.archived ? 'default' : 'pointer', opacity: session.ended || session.archived ? 0.55 : 1, transition: 'all 0.15s' }}
-                      onMouseEnter={e => { if (!session.ended && !session.archived) e.currentTarget.style.borderColor = COLORS.borderMid; }}
-                      onMouseLeave={e => { if (!session.ended && !session.archived) e.currentTarget.style.borderColor = session.read ? COLORS.border : COLORS.magic + '44'; }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                        <div>
-                          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, fontWeight: 700, color: COLORS.text }}>{displayName}</div>
-                          {playerTag && <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.06em', marginTop: 1 }}>{playerTag}</div>}
-                        </div>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                          {session.ended && <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', textTransform: 'uppercase' }}>Ended</div>}
-                          {!session.read && !session.ended && !session.is_dm && !session.archived && <div style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS.magic }} />}
-                          <div style={{ fontSize: 9, color: COLORS.dim }}>{new Date(session.created_at).toLocaleDateString()}</div>
-                          <button onClick={session.archived ? (e) => unarchiveSession(e, session.session_id) : (e) => archiveSession(e, session.session_id)} title={session.archived ? 'Restore' : 'Archive'} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 3, padding: '2px 6px', cursor: 'pointer', fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>{session.archived ? '↩' : '⌂'}</button>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 4 }}>{dbCampaigns.find(c => String(c.id) === String(session.campaign_id))?.subtitle || 'No campaign'}</div>
-                      <div style={{ fontSize: 12, color: COLORS.textSub, fontFamily: 'Georgia, serif', lineHeight: 1.5 }}>{session.content?.substring(0, 120)}{session.content?.length > 120 ? '…' : ''}</div>
-                    <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 4 }}>{dbCampaigns.find(c => String(c.id) === String(session.campaign_id))?.subtitle || 'No campaign'}</div>
-
-{session.type === 'lore_announcement' && session.lore_title && (
-  <div style={{
-    fontSize: 8, color: '#e8c84a', fontFamily: "'Cinzel', serif",
-    letterSpacing: '0.14em', textTransform: 'uppercase',
-    marginBottom: 4,
-  }}>⟦ LORE ⟧ {session.lore_title}</div>
-)}
-
-<div style={{ fontSize: 12, color: COLORS.textSub, fontFamily: 'Georgia, serif', lineHeight: 1.5 }}>{session.content?.substring(0, 120)}{session.content?.length > 120 ? '…' : ''}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        );
-
-      case 'Characters':
-        return (
-          <div>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', gap: 4 }}>
-                {['all', 'awaiting_adventure', 'approved', 'rejected', 'draft'].map(s => (
-                  <div key={s} onClick={() => setFilterStatus(s)} style={{ background: filterStatus === s ? COLORS.surface : 'transparent', border: `1px solid ${filterStatus === s ? COLORS.borderMid : COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: filterStatus === s ? COLORS.text : COLORS.dim, fontFamily: "'Cinzel', serif" }}>
-                    {s === 'all' ? 'All' : s === 'awaiting_adventure' ? 'Pending' : s.charAt(0).toUpperCase() + s.slice(1)}
-                  </div>
-                ))}
-              </div>
-              <div style={{ display: 'flex', gap: 4 }}>
-                {[{ id: 'all', subtitle: 'All' }, ...dbCampaigns].map(c => (
-                  <div key={c.id} onClick={() => setFilterCampaign(c.id)} style={{ background: filterCampaign === c.id ? COLORS.surface : 'transparent', border: `1px solid ${filterCampaign === c.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: filterCampaign === c.id ? COLORS.text : COLORS.dim, fontFamily: "'Cinzel', serif" }}>{c.subtitle}</div>
-                ))}
-              </div>
-            </div>
-            <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', marginBottom: 12 }}>{filtered.length} character{filtered.length !== 1 ? 's' : ''}</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {filtered.map(char => {
-                const cls = ALL_CLASSES.find(c => c.id === char.cid);
-                return (
-                  <div key={char.id} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 3 }}>{char.name || 'Unnamed'}</div>
-                      <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 3 }}>{getRaceDisplay(char.race, char.rv, char.pmV)}{cls ? ` · ${cls.name}` : ''}</div>
-                     <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                              {char.campaign_id ? (dbCampaigns.find(c => String(c.id) === String(char.campaign_id))?.subtitle || char.campaign_id) : 'Unassigned'}
-                              {char.user_id ? '' : ' · Unclaimed'}
-                            </div>
-                            {char.player_email && (
-                              <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>
-                                {char.player_email}
-                              </div>
-                            )}
-                            {char.submitted_at && (
-                              <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginTop: 1 }}>
-                                Submitted {new Date(char.submitted_at).toLocaleDateString()}
-                              </div>
-                            )}
-                      {char.created_at && (
-                        <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginTop: 1 }}>
-                          Submitted {new Date(char.created_at).toLocaleDateString()}
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-                      <StatusBadge status={char.status} />
-                      <button onClick={() => setEditingChar(char)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 10px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif", transition: 'all 0.12s' }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.borderMid; e.currentTarget.style.color = COLORS.text; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.color = COLORS.muted; }}
-                      >Edit</button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-
-      case 'Campaigns': {
-        const camp = dbCampaigns.find(c => c.id === activeCampaignTab);
-        return (
-          <div>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
-              {dbCampaigns.map(c => (
-                <div key={c.id} onClick={() => { setActiveCampaignTab(c.id); localStorage.setItem('dm_active_campaign', c.id); }} style={{ flex: 1, background: activeCampaignTab === c.id ? COLORS.surface : 'transparent', border: `1px solid ${activeCampaignTab === c.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '8px 4px', cursor: 'pointer', textAlign: 'center' }}>
-                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: activeCampaignTab === c.id ? COLORS.text : COLORS.dim }}>{c.subtitle}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
-              {['log', 'memory'].map(t => (
-                <div key={t} onClick={() => setCampaignSubTab(t)} style={{ background: campaignSubTab === t ? COLORS.surface : 'transparent', border: `1px solid ${campaignSubTab === t ? COLORS.borderMid : COLORS.border}`, borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: campaignSubTab === t ? COLORS.text : COLORS.dim, fontFamily: "'Cinzel', serif" }}>{t}</div>
-              ))}
-            </div>
-            {camp && campaignSubTab === 'log' && <SessionLogEditor campaign={camp} />}
-            {camp && campaignSubTab === 'memory' && <DMMemoryPanel campaignId={camp.id} />}
-          </div>
-        );
-      }
-
-      case 'Memory':
-        return (
-          <div>
-            <div style={{ ...label8(), marginBottom: 12 }}>World Memory</div>
-            <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>Global notes, world events, faction states, and lore that feeds into all Scribe consultations.</div>
-            <DMMemoryPanel />
-          </div>
-        );
-
-      default: return null;
-    }
-  };
+<div style={{display:'flex',borderBottom:`1px solid ${COLORS.border}`}}>
+  <button onClick={() => setActiveTab('npcs')} style={{flex:1,padding:'10px',background:'none',border:'none',borderBottom:activeTab==='npcs'?`2px solid ${COLORS.magic}`:'none',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:11,color:activeTab==='npcs'?COLORS.magic:COLORS.muted,textTransform:'uppercase',letterSpacing:'0.1em'}}>NPCs</button>
+  <button onClick={() => setActiveTab('items')} style={{flex:1,padding:'10px',background:'none',border:'none',borderBottom:activeTab==='items'?`2px solid ${COLORS.magic}`:'none',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:11,color:activeTab==='items'?COLORS.magic:COLORS.muted,textTransform:'uppercase',letterSpacing:'0.1em'}}>Items</button>
+  <button onClick={() => setActiveTab('characters')} style={{flex:1,padding:'10px',background:'none',border:'none',borderBottom:activeTab==='characters'?`2px solid ${COLORS.magic}`:'none',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:11,color:activeTab==='characters'?COLORS.magic:COLORS.muted,textTransform:'uppercase',letterSpacing:'0.1em'}}>Characters</button>
+  <button onClick={() => setActiveTab('scribe')} style={{flex:1,padding:'10px',background:'none',border:'none',borderBottom:activeTab==='scribe'?`2px solid ${COLORS.magic}`:'none',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:11,color:activeTab==='scribe'?COLORS.magic:COLORS.muted,textTransform:'uppercase',letterSpacing:'0.1em'}}>Scribe</button>
+  <button onClick={() => setActiveTab('memories')} style={{flex:1,padding:'10px',background:'none',border:'none',borderBottom:activeTab==='memories'?`2px solid ${COLORS.magic}`:'none',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:11,color:activeTab==='memories'?COLORS.magic:COLORS.muted,textTransform:'uppercase',letterSpacing:'0.1em'}}>Memories</button>
+  <button onClick={() => setActiveTab('vtt')} style={{flex:1,padding:'10px',background:'none',border:'none',borderBottom:activeTab==='vtt'?`2px solid ${COLORS.magic}`:'none',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:11,color:activeTab==='vtt'?COLORS.magic:COLORS.muted,textTransform:'uppercase',letterSpacing:'0.1em'}}>VTT</button>
+  <button onClick={() => setActiveTab('assets')} style={{flex:1,padding:'10px',background:'none',border:'none',borderBottom:activeTab==='assets'?`2px solid ${COLORS.magic}`:'none',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:11,color:activeTab==='assets'?COLORS.magic:COLORS.muted,textTransform:'uppercase',letterSpacing:'0.1em'}}>Assets</button> // Added
+</div>
 
   const logDmAstragalToHercules = async payload => {
     const currentCampaignId = activeCampaignTab;

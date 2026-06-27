@@ -199,6 +199,7 @@ function TraitBlock({ raceId, rv, pmV }) {
 export default function StepRace({
   race, setRace, rv, setRv, pmV, setPmV,
   fn, setFn, ln, setLn, age, setAge, gender, setGender,
+  portraitUrl, setPortraitUrl,
   generateBoons, goNext, goBack,
 }) {
   const { isMobile, isDesktop } = useDevice();
