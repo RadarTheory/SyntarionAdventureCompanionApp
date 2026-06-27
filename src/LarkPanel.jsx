@@ -78,24 +78,24 @@ function ComposeForm({ char, campaignId, npcs, players, onSent, onCancel, isDM }
   }, [recipientName]);
 
   const send = async () => {
-    if (!body.trim() || !recipientName.trim()) return;
-    if (recipientType === 'player' && !warned) { setWarned(true); return; }
-    setSending(true);
-    await supabase.from('larks').insert({
-      campaign_id:    String(campaignId),
-      sender_id:      char?.id ? String(char.id) : null,
-      sender_name:    char?.name || 'Unknown',
-      recipient_type: recipientType,
-      recipient_name: recipientName.trim(),
-      recipient_id:   recipientId || null,
-      subject:        subject.trim() || null,
-      body:           body.trim(),
-      delivery_estimate: estimate,
-      status:         'in_flight',
-    });
-    setSending(false);
-    onSent();
-  };
+  if (!body.trim() || !recipientName.trim()) return;
+  if (recipientType === 'player' && !warned) { setWarned(true); return; }
+  setSending(true);
+  await supabase.from('larks').insert({
+    campaign_id:    String(campaignId),
+    sender_id:      char?.id ? String(char.id) : null,
+    sender_name:    char?.name || 'Unknown',
+    recipient_type: recipientType,
+    recipient_name: recipientName.trim(),
+    recipient_id:   recipientType === 'player' ? recipientId : null, // Set recipient_id for player larks
+    subject:        subject.trim() || null,
+    body:           body.trim(),
+    delivery_estimate: estimate,
+    status:         'in_flight',
+  });
+  setSending(false);
+  onSent();
+};
 
   const npcList = npcs || [];
   const playerList = players || [];
@@ -322,9 +322,9 @@ export default function LarkPanel({ char, campaignId, isDM = false, embedded = f
   const charIdStr = char?.id ? String(char.id) : null;
 
   const inboxLarks = larks.filter(l =>
-    l.recipient_id === charIdStr ||
-    (l.recipient_type === 'player' && l.recipient_name === char?.name && l.recipient_id === charIdStr)
-  );
+  l.recipient_id === charIdStr ||
+  (l.recipient_type === 'player' && l.recipient_name === char?.name && l.recipient_id === charIdStr)
+);
   const sentLarks = larks.filter(l => l.sender_id === charIdStr);
 
   const tabs = isDM
