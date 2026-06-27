@@ -426,8 +426,9 @@ export default function Wizard({ onComplete, onHome }) {
     setBoonOrigin,
     setBoonRole,
     setBoonPersonality,
-    // Character state
-    fn, setFn, ln, setLn, age, setAge, gender, setGender,
+    campaign,
+    portrait_url: portraitUrl || null,
+    savedAt: Date.now(),
     race, setRace, rv, setRv, pmV, setPmV,
     beliefType, setBeliefType, beliefSub, setBeliefSub,
     deity, setDeity, spirit, setSpirit,
