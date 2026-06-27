@@ -311,6 +311,7 @@ export default function Wizard({ onComplete, onHome }) {
   const [heritageAbilities, setHeritageAbilities] = useState([]);
   const [disciplinePoints, setDisciplinePoints] = useState({});
   const [campaign, setCampaign]   = useState('');
+  const [portraitUrl, setPortraitUrl] = useState('');
 
   // ── LIVE SLIDERS (read only for player) ──
   // Computed from choices, not manually set by player
