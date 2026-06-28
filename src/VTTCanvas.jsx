@@ -700,7 +700,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         ) : !mapLoaded ? (
           <div style={{ padding: '60px 20px', textAlign: 'center', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: COLORS.dim, fontSize: 12 }}>Loading map…</div>
         ) : (
-          <canvas ref={canvasRef} width={900} height={600} style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none', objectFit: 'contain' }}
+          <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: `1px solid ${COLORS.border}`, background: '#0d0b09', cursor: tool === 'pan' ? 'grab' : tool === 'fog-reveal' || tool === 'fog-hide' ? 'crosshair' : tool === 'erase-token' ? 'not-allowed' : 'default' }}>
             onMouseDown={handlePointerDown} onMouseMove={handlePointerMove} onMouseUp={handlePointerUp} onMouseLeave={handlePointerLeave}
             onTouchStart={handlePointerDown} onTouchMove={handlePointerMove} onTouchEnd={handlePointerUp} />
         )}
