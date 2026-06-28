@@ -768,6 +768,7 @@ export default function DMView({ user, session, onHome }) {
   const [showSpeak, setShowSpeak] = useState(false);
   const [showProximity, setShowProximity] = useState(false);
   const [activeGameSessionId, setActiveGameSessionId] = useState(null);
+  const [vttMinimized, setVttMinimized] = useState(false);
 
   useEffect(() => {
     if (!activeCampaignTab) { setActiveGameSessionId(null); return; }
@@ -1061,7 +1062,21 @@ const renderTab = () => {
     case 'Catalog': return <ItemCatalog />;
 
     case 'VTT': return (
-      <div style={{ position: 'fixed', inset: 0, top: 0, left: 0, right: 0, bottom: 0, zIndex: 10 }}>
+      <div style={{
+        position: 'fixed',
+        top: vttMinimized ? 'auto' : 0,
+        bottom: vttMinimized ? 0 : 'auto',
+        left: vttMinimized ? 70 : 0,
+        right: vttMinimized ? 'auto' : 0,
+        width: vttMinimized ? 320 : '100vw',
+        height: vttMinimized ? 200 : '100vh',
+        zIndex: 10,
+        borderRadius: vttMinimized ? 10 : 0,
+        overflow: 'hidden',
+        border: vttMinimized ? '1px solid rgba(200,168,74,0.3)' : 'none',
+        boxShadow: vttMinimized ? '0 8px 32px rgba(0,0,0,0.6)' : 'none',
+        transition: 'all 0.25s ease',
+      }}>
         <VTTCanvas
           campaignId={activeCampaignTab}
           isDM={true}
@@ -1069,17 +1084,17 @@ const renderTab = () => {
           onRegisterPlaceToken={fn => { vttPlaceTokenRef.current = fn; }}
         />
         <button
-          onClick={() => setActiveTab('Inbox')}
-          title="Minimize VTT"
+          onClick={() => setVttMinimized(v => !v)}
+          title={vttMinimized ? 'Expand VTT' : 'Minimize VTT'}
           style={{
-            position: 'fixed', top: 8, left: 70, zIndex: 99999,
+            position: 'absolute', top: 8, left: 8, zIndex: 99999,
             background: 'rgba(16,13,10,0.85)', border: '1px solid rgba(240,238,235,0.18)',
             borderRadius: 5, width: 22, height: 22, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: 'rgba(240,238,235,0.5)', fontSize: 14, lineHeight: 1,
             backdropFilter: 'blur(4px)',
           }}
-        >−</button>
+        >{vttMinimized ? '⤢' : '−'}</button>
       </div>
     );
 
