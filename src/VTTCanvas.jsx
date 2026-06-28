@@ -494,6 +494,8 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
 
   const handlePointerDown = useCallback((e) => {
     e.preventDefault();
+    if (e.touches && e.touches.length >= 2) { panRef.current = { active: true, lastX: e.touches[0].clientX, lastY: e.touches[0].clientY }; return; }
+    if (e.pointerType === 'touch' && e.isPrimary === false) return;
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     if (e.ctrlKey && (e.button === 0 || e.buttons === 1)) { panRef.current = { active: true, lastX: clientX, lastY: clientY }; return; }
@@ -536,6 +538,20 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
 
   const handlePointerMove = useCallback((e) => {
     e.preventDefault();
+    if (e.touches && e.touches.length >= 2) {
+      if (panRef.current.active) {
+        const canvas = canvasRef.current;
+        const rect = canvas.getBoundingClientRect();
+        const scaleRatio = canvas.width / rect.width;
+        const dx = (e.touches[0].clientX - panRef.current.lastX) * scaleRatio;
+        const dy = (e.touches[0].clientY - panRef.current.lastY) * scaleRatio;
+        panRef.current.lastX = e.touches[0].clientX;
+        panRef.current.lastY = e.touches[0].clientY;
+        setTransform(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
+      }
+      return;
+    }
+    if (e.pointerType === 'touch' && e.isPrimary === false) return;
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     if (panRef.current.active) {
