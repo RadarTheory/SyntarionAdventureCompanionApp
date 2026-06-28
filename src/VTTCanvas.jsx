@@ -275,7 +275,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
       setPendingMoves(data?.pending_moves || []);
     };
     loadMoves();
-    const sub = supabase.channel(`vtt-moves-${campaignId}`)
+    const sub = supabase.channel(`vtt-moves-${campaignId}-${uid()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'vtt_sessions', filter: `campaign_id=eq.${campaignId}` },
         ({ new: row }) => setPendingMoves(row?.pending_moves || []))
       .subscribe();
@@ -348,7 +348,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   useEffect(() => {
     if (!campaignId) return;
     loadSession();
-    const sub = supabase.channel(`vtt-${campaignId}`)
+    const sub = supabase.channel(`vtt-${campaignId}-${uid()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'vtt_sessions', filter: `campaign_id=eq.${campaignId}` }, () => loadSession())
       .subscribe();
     return () => supabase.removeChannel(sub);
@@ -700,7 +700,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         ) : !mapLoaded ? (
           <div style={{ padding: '60px 20px', textAlign: 'center', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: COLORS.dim, fontSize: 12 }}>Loading map…</div>
         ) : (
-          <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: `1px solid ${COLORS.border}`, background: '#0d0b09', cursor: tool === 'pan' ? 'grab' : tool === 'fog-reveal' || tool === 'fog-hide' ? 'crosshair' : tool === 'erase-token' ? 'not-allowed' : 'default' }}>
+          <canvas ref={canvasRef} width={900} height={600} style={{ width: '100%', height: 'auto', display: 'block', touchAction: 'none' }}
             onMouseDown={handlePointerDown} onMouseMove={handlePointerMove} onMouseUp={handlePointerUp} onMouseLeave={handlePointerLeave}
             onTouchStart={handlePointerDown} onTouchMove={handlePointerMove} onTouchEnd={handlePointerUp} />
         )}
