@@ -618,7 +618,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', minHeight: 0 }}>
       <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 14px', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
         <div style={{ ...label8, marginRight: 4 }}>Tool</div>
         {toolBtn('fog-reveal', '☀ Reveal', tool === 'fog-reveal')}
@@ -670,7 +670,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         </button>
       </div>
 
-      <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: `1px solid ${COLORS.border}`, background: '#0d0b09', cursor: tool === 'pan' ? 'grab' : tool === 'fog-reveal' || tool === 'fog-hide' ? 'crosshair' : tool === 'erase-token' ? 'not-allowed' : 'default' }}>
+      <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: `1px solid ${COLORS.border}`, background: '#0d0b09', flex: 1, minHeight: 0, cursor: tool === 'pan' ? 'grab' : tool === 'fog-reveal' || tool === 'fog-hide' ? 'crosshair' : tool === 'erase-token' ? 'not-allowed' : 'default' }}>
         {!mapFilename ? (
           <div style={{ padding: '28px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.muted, letterSpacing: '0.1em', textTransform: 'uppercase', textAlign: 'center' }}>Select a map to begin</div>
@@ -684,7 +684,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         ) : !mapLoaded ? (
           <div style={{ padding: '60px 20px', textAlign: 'center', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: COLORS.dim, fontSize: 12 }}>Loading map…</div>
         ) : (
-          <canvas ref={canvasRef} width={900} height={600} style={{ width: '100%', height: 'auto', display: 'block', touchAction: 'none' }}
+          <canvas ref={canvasRef} width={900} height={600} style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none', objectFit: 'contain' }}
             onMouseDown={handlePointerDown} onMouseMove={handlePointerMove} onMouseUp={handlePointerUp} onMouseLeave={handlePointerLeave}
             onTouchStart={handlePointerDown} onTouchMove={handlePointerMove} onTouchEnd={handlePointerUp} />
         )}
