@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useDevice } from './useDevice';
 import {
   COLORS, RACES, PM_MAJ, PM_MIN, PM_AEON, PM_ASTRAL,
@@ -472,14 +471,16 @@ export default function StepRace({
 
           <div style={{ marginBottom: 20 }}>
             <span style={label}>Portrait (optional)</span>
-            <PortraitUpload
-              currentUrl={portraitUrl}
-              onUploaded={async (url) => {
-                setPortraitUrl(url);
-                await supabase.from('character_portraits').insert({ url, character_id: null });
-              }}
-              size={72}
-            />
+            <Suspense fallback={<div style={{ fontSize: 9, color: COLORS.dim }}>Loading…</div>}>
+              <PortraitUpload
+                currentUrl={portraitUrl}
+                onUploaded={async (url) => {
+                  setPortraitUrl(url);
+                  await supabase.from('character_portraits').insert({ url, character_id: null });
+                }}
+                size={72}
+              />
+            </Suspense>
           </div>
 
           <div style={{ marginBottom: 16 }}>
