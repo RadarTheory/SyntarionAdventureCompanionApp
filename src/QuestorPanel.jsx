@@ -48,13 +48,17 @@ export function QuestorPlayerPanel({ char, campaignId, embedded = false }) {
 
   const pickUpQuest = async (quest) => {
     const already = myQuests.find(q => q.quest_id === quest.id);
-    if (already) return;
-    await supabase.from('quest_characters').insert({
-      quest_id: quest.id,
-      character_id: String(char.id),
-      character_name: char.name,
-      status: 'active',
-    });
+    if (already && already.status === 'active') return;
+    if (already) {
+      await supabase.from('quest_characters').update({ status: 'active' }).eq('id', already.id);
+    } else {
+      await supabase.from('quest_characters').insert({
+        quest_id: quest.id,
+        character_id: String(char.id),
+        character_name: char.name,
+        status: 'active',
+      });
+    }
     await supabase.from('grimoire_entries').insert({
       character_id: String(char.id),
       campaign_id: campaignId,
@@ -64,6 +68,36 @@ export function QuestorPlayerPanel({ char, campaignId, embedded = false }) {
       is_dm: false,
     });
     showToast(`Quest accepted: ${quest.title}`);
+    loadAll();
+  };
+
+  const rejectQuest = async (quest) => {
+    const already = myQuests.find(q => q.quest_id === quest.id);
+    if (already) {
+      await supabase.from('quest_characters').update({ status: 'rejected' }).eq('id', already.id);
+    } else {
+      await supabase.from('quest_characters').insert({
+        quest_id: quest.id,
+        character_id: String(char.id),
+        character_name: char.name,
+        status: 'rejected',
+      });
+    }
+    showToast(`Quest declined.`);
+    loadAll();
+  };
+
+  const abandonQuest = async (mq) => {
+    await supabase.from('quest_characters').update({ status: 'abandoned' }).eq('id', mq.id);
+    await supabase.from('grimoire_entries').insert({
+      character_id: String(char.id),
+      campaign_id: campaignId,
+      type: 'event',
+      title: `Quest Abandoned — ${mq.quests?.title}`,
+      content: `${char.name} abandoned the quest: ${mq.quests?.title}.`,
+      is_dm: false,
+    });
+    showToast(`Quest abandoned.`);
     loadAll();
   };
 
@@ -147,11 +181,20 @@ export function QuestorPlayerPanel({ char, campaignId, embedded = false }) {
                         {quest.reward_notes && <div style={{ fontSize: 9, color: COLORS.dim, fontStyle: 'italic', marginTop: 4 }}>{quest.reward_notes}</div>}
                       </div>
 
-                      {!taken && (
-                        <button onClick={() => pickUpQuest(quest)}
-                          style={{ width: '100%', background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 7, padding: '9px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.magicText, fontWeight: 700, letterSpacing: '0.1em' }}>
-                          ✦ Accept Quest
-                        </button>
+                      {(!taken || taken.status === 'rejected' || taken.status === 'abandoned') && (
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button onClick={() => pickUpQuest(quest)}
+                            style={{ flex: 1, background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 7, padding: '9px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.magicText, fontWeight: 700, letterSpacing: '0.1em' }}>
+                            ✦ Accept Quest
+                          </button>
+                          <button onClick={() => rejectQuest(quest)}
+                            style={{ background: 'transparent', border: '1px solid rgba(224,90,90,0.4)', borderRadius: 7, padding: '9px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: '#e05a5a' }}>
+                            Decline
+                          </button>
+                        </div>
+                      )}
+                      {taken && taken.status === 'active' && (
+                        <div style={{ textAlign: 'center', fontSize: 9, color: '#79f5a7', fontFamily: "'Cinzel', serif", padding: '6px', border: '1px solid rgba(121,245,167,0.2)', borderRadius: 6 }}>✦ Quest Active</div>
                       )}
                       {taken && taken.status === 'completed' && (
                         <div style={{ textAlign: 'center', fontSize: 10, color: '#79f5a7', fontFamily: "'Cinzel', serif" }}>✓ Completed</div>

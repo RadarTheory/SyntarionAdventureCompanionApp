@@ -973,28 +973,119 @@ useEffect(() => {
 
 const renderTab = () => {
   switch (activeTab) {
-    case 'npcs':      return <NPCPanel campaignId={campaignId} sessionId={sessionId} />;
-    case 'items':     return <ItemCatalog />;
-    case 'characters':return <RosterAdmin />;
-    case 'scribe':    return <ScribeDMPanel />;
-    case 'memories':  return <MemoriesPanel />;
-    case 'vtt':       return <VTTViewerAdmin />;
-    case 'assets':    return <AssetsPanel />; // Added
-    default:          return null;
+    case 'Inbox': return (
+      <div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+          <button onClick={() => setShowArchive(false)} style={{ background: !showArchive ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: !showArchive ? COLORS.text : COLORS.dim }}>Active {unreadCount > 0 && `(${unreadCount} unread)`}</button>
+          <button onClick={() => setShowArchive(true)} style={{ background: showArchive ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: showArchive ? COLORS.text : COLORS.dim }}>Archive</button>
+        </div>
+        {displayedMessages.length === 0 && <div style={{ fontSize: 13, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{showArchive ? 'No archived messages.' : 'No active messages.'}</div>}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {displayedMessages.map(session => (
+            <div key={session.session_id} onClick={() => openSession(session)} style={{ background: COLORS.card, border: `1px solid ${session.ended ? COLORS.border : COLORS.borderMid}`, borderRadius: 10, padding: '14px 16px', cursor: 'pointer', opacity: session.ended ? 0.65 : 1, transition: 'all 0.15s ease' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, fontWeight: 700, color: COLORS.text }}>{session.sender_name || session.character_name || 'Unknown'}</div>
+                    {!session.read && !session.ended && !session.is_dm && <div style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS.magic, flexShrink: 0 }} />}
+                    {session.ended && <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", border: `1px solid ${COLORS.border}`, borderRadius: 3, padding: '1px 5px' }}>ENDED</div>}
+                  </div>
+                  <div style={{ fontSize: 11, color: COLORS.textSub, fontFamily: 'Georgia, serif', fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.content?.substring(0, 60)}{session.content?.length > 60 ? '…' : ''}</div>
+                  <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 4 }}>{new Date(session.created_at).toLocaleString()}</div>
+                </div>
+                <button onClick={e => showArchive ? unarchiveSession(e, session.session_id) : archiveSession(e, session.session_id)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", flexShrink: 0, marginLeft: 8 }}>{showArchive ? 'Unarchive' : 'Archive'}</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+
+    case 'Characters': return (
+      <div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+          {['all', 'draft', 'awaiting_adventure', 'approved', 'rejected'].map(s => (
+            <button key={s} onClick={() => setFilterStatus(s)} style={{ background: filterStatus === s ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: filterStatus === s ? COLORS.text : COLORS.dim, textTransform: 'capitalize' }}>{s === 'all' ? 'All' : s.replace('_', ' ')}</button>
+          ))}
+        </div>
+        {filtered.length === 0 && <div style={{ fontSize: 13, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No characters found.</div>}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {filtered.map(char => (
+            <div key={char.id} onClick={() => setEditingChar(char)} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
+              {(char.portrait_url || char.data?.portrait_url) && <img src={char.portrait_url || char.data?.portrait_url} alt="" style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover', flexShrink: 0, border: `1px solid ${COLORS.border}` }} />}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: COLORS.text }}>{char.name}</div>
+                  <StatusBadge status={char.status} />
+                </div>
+                <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif' }}>{getRaceDisplay(char.race, char.rv)} · {char.cid || 'No class'}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+
+    case 'Campaigns': return (
+      <div>
+        {dbCampaigns.length === 0 && <div style={{ fontSize: 13, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No campaigns found.</div>}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
+          {dbCampaigns.map(c => (
+            <button key={c.id} onClick={() => { setActiveCampaignTab(c.id); localStorage.setItem('dm_active_campaign', c.id); }} style={{ background: activeCampaignTab === c.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${activeCampaignTab === c.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: activeCampaignTab === c.id ? COLORS.text : COLORS.dim }}>{c.subtitle || c.id}</button>
+          ))}
+        </div>
+        {activeCampaignTab && (() => {
+          const camp = dbCampaigns.find(c => c.id === activeCampaignTab);
+          if (!camp) return null;
+          return (
+            <div>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
+                {['log', 'memory', 'map', 'music'].map(sub => (
+                  <button key={sub} onClick={() => setCampaignSubTab(sub)} style={{ background: campaignSubTab === sub ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: campaignSubTab === sub ? COLORS.text : COLORS.dim, textTransform: 'capitalize' }}>{sub}</button>
+                ))}
+              </div>
+              {campaignSubTab === 'log' && <SessionLogEditor campaign={camp} />}
+              {campaignSubTab === 'memory' && <DMMemoryPanel campaignId={camp.id} />}
+              {campaignSubTab === 'map' && <MapManager campaign={camp} />}
+              {campaignSubTab === 'music' && <MusicPanel />}
+            </div>
+          );
+        })()}
+      </div>
+    );
+
+    case 'Scribe': return <ScribeDMPanel embedded activeCampaignId={activeCampaignTab} />;
+
+    case 'Memory': return <DMMemoryPanel campaignId={activeCampaignTab} />;
+
+    case 'Catalog': return <ItemCatalog />;
+
+    case 'VTT': return (
+      <div style={{ position: 'fixed', inset: 0, top: 0, left: 0, right: 0, bottom: 0, zIndex: 10 }}>
+        <VTTCanvas
+          campaignId={activeCampaignTab}
+          isDM={true}
+          sessionId={activeGameSessionId}
+          onRegisterPlaceToken={fn => { vttPlaceTokenRef.current = fn; }}
+        />
+        <button
+          onClick={() => setActiveTab('Inbox')}
+          title="Minimize VTT"
+          style={{
+            position: 'fixed', top: 8, left: 70, zIndex: 99999,
+            background: 'rgba(16,13,10,0.85)', border: '1px solid rgba(240,238,235,0.18)',
+            borderRadius: 5, width: 22, height: 22, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'rgba(240,238,235,0.5)', fontSize: 14, lineHeight: 1,
+            backdropFilter: 'blur(4px)',
+          }}
+        >−</button>
+      </div>
+    );
+
+    default: return null;
   }
 };
-
-// ...
-
-<div style={{display:'flex',borderBottom:`1px solid ${COLORS.border}`}}>
-  <button onClick={() => setActiveTab('npcs')} style={{flex:1,padding:'10px',background:'none',border:'none',borderBottom:activeTab==='npcs'?`2px solid ${COLORS.magic}`:'none',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:11,color:activeTab==='npcs'?COLORS.magic:COLORS.muted,textTransform:'uppercase',letterSpacing:'0.1em'}}>NPCs</button>
-  <button onClick={() => setActiveTab('items')} style={{flex:1,padding:'10px',background:'none',border:'none',borderBottom:activeTab==='items'?`2px solid ${COLORS.magic}`:'none',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:11,color:activeTab==='items'?COLORS.magic:COLORS.muted,textTransform:'uppercase',letterSpacing:'0.1em'}}>Items</button>
-  <button onClick={() => setActiveTab('characters')} style={{flex:1,padding:'10px',background:'none',border:'none',borderBottom:activeTab==='characters'?`2px solid ${COLORS.magic}`:'none',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:11,color:activeTab==='characters'?COLORS.magic:COLORS.muted,textTransform:'uppercase',letterSpacing:'0.1em'}}>Characters</button>
-  <button onClick={() => setActiveTab('scribe')} style={{flex:1,padding:'10px',background:'none',border:'none',borderBottom:activeTab==='scribe'?`2px solid ${COLORS.magic}`:'none',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:11,color:activeTab==='scribe'?COLORS.magic:COLORS.muted,textTransform:'uppercase',letterSpacing:'0.1em'}}>Scribe</button>
-  <button onClick={() => setActiveTab('memories')} style={{flex:1,padding:'10px',background:'none',border:'none',borderBottom:activeTab==='memories'?`2px solid ${COLORS.magic}`:'none',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:11,color:activeTab==='memories'?COLORS.magic:COLORS.muted,textTransform:'uppercase',letterSpacing:'0.1em'}}>Memories</button>
-  <button onClick={() => setActiveTab('vtt')} style={{flex:1,padding:'10px',background:'none',border:'none',borderBottom:activeTab==='vtt'?`2px solid ${COLORS.magic}`:'none',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:11,color:activeTab==='vtt'?COLORS.magic:COLORS.muted,textTransform:'uppercase',letterSpacing:'0.1em'}}>VTT</button>
-  <button onClick={() => setActiveTab('assets')} style={{flex:1,padding:'10px',background:'none',border:'none',borderBottom:activeTab==='assets'?`2px solid ${COLORS.magic}`:'none',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:11,color:activeTab==='assets'?COLORS.magic:COLORS.muted,textTransform:'uppercase',letterSpacing:'0.1em'}}>Assets</button> // Added
-</div>
 
   const logDmAstragalToHercules = async payload => {
     const currentCampaignId = activeCampaignTab;
