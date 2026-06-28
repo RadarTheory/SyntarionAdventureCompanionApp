@@ -429,6 +429,8 @@ export default function Wizard({ onComplete, onHome }) {
     campaign,
     portrait_url: portraitUrl || null,
     savedAt: Date.now(),
+    fn, setFn, ln, setLn, age, setAge, gender, setGender,
+    portraitUrl, setPortraitUrl,
     race, setRace, rv, setRv, pmV, setPmV,
     beliefType, setBeliefType, beliefSub, setBeliefSub,
     deity, setDeity, spirit, setSpirit,
