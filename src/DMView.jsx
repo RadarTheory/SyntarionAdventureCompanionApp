@@ -294,6 +294,16 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
   const [data, setData] = useState({ portrait_url: char.portrait_url || char.data?.portrait_url || null, ...char });
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    await supabase.from('characters').delete().eq('id', char.id);
+    setDeleting(false);
+    onSave();
+    onClose();
+  };
 
   const handleSave = async (newStatus) => {
     setSaving(true);
@@ -412,6 +422,33 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
         </div>
         <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${COLORS.border}` }}>
           <DMMemoryPanel characterId={char.id} />
+        </div>
+
+        {/* ── Danger zone: permanent delete ── */}
+        <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid rgba(224,90,90,0.25)` }}>
+          <div style={{ ...label8(), marginBottom: 10, color: '#e05a5a' }}>Danger Zone</div>
+          {!confirmDelete ? (
+            <button onClick={() => setConfirmDelete(true)}
+              style={{ width: '100%', background: 'transparent', border: '1px solid rgba(224,90,90,0.4)', borderRadius: 6, padding: '9px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#e05a5a' }}>
+              ⌦ Delete Character Permanently
+            </button>
+          ) : (
+            <div style={{ background: 'rgba(224,90,90,0.06)', border: '1px solid rgba(224,90,90,0.35)', borderRadius: 8, padding: '12px 14px' }}>
+              <div style={{ fontSize: 11, color: COLORS.text, fontFamily: 'Georgia, serif', lineHeight: 1.5, marginBottom: 12 }}>
+                This permanently erases <strong>{char.name}</strong> from Supabase. This cannot be undone.
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={handleDelete} disabled={deleting}
+                  style={{ flex: 1, background: 'rgba(224,90,90,0.15)', border: '1px solid rgba(224,90,90,0.6)', borderRadius: 6, padding: '9px', cursor: deleting ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#e05a5a', fontWeight: 700, opacity: deleting ? 0.6 : 1 }}>
+                  {deleting ? 'Deleting…' : 'Confirm — Delete Forever'}
+                </button>
+                <button onClick={() => setConfirmDelete(false)} disabled={deleting}
+                  style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '9px 16px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.dim }}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
