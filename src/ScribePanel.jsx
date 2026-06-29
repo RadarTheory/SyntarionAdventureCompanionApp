@@ -124,13 +124,32 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
   const bottomRef               = useRef(null);
   const lockRef                 = useRef(false);
   
-  const tokens = char?.scribeTokens ?? 0;
+  const [liveTokens, setLiveTokens] = useState(char?.scribeTokens ?? 0);
+
+  useEffect(() => {
+    if (!char?.id) return;
+    supabase.from('characters').select('data').eq('id', char.id).maybeSingle()
+      .then(({ data }) => {
+        const d = typeof data?.data === 'string' ? JSON.parse(data.data) : (data?.data || {});
+        setLiveTokens(d.scribeTokens ?? 0);
+      });
+    const sub = supabase.channel(`scribe_tokens_${char.id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'characters', filter: `id=eq.${char.id}` },
+        ({ new: row }) => {
+          const d = typeof row.data === 'string' ? JSON.parse(row.data) : (row.data || {});
+          setLiveTokens(d.scribeTokens ?? 0);
+        })
+      .subscribe();
+    return () => supabase.removeChannel(sub);
+  }, [char?.id]);
+
+  const tokens = liveTokens;
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
 
   const handleAsk = async () => {
     if (lockRef.current || !input.trim() || loading) return;
-    if ((char?.scribeTokens ?? 0) <= 0) {
+    if (liveTokens <= 0) {
       setMessages(p => [...p, { role: 'scribe', content: 'The archives demand payment. Seek a Scribe Token from the Architect.', time: new Date() }]);
       return;
     }
@@ -156,7 +175,7 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
       }));
 
       const answer = await callGemini(system, geminiHistory);
-      const newTokens = Math.max(0, (char?.scribeTokens || 0) - 1);
+      const newTokens = Math.max(0, liveTokens - 1);
       const { id, status, campaign_id, user_id, ...blob } = char || {};
       await supabase.from('characters').update({ data: { ...blob, scribeTokens: newTokens } }).eq('id', char.id);
       onUpdateChar?.({ ...char, scribeTokens: newTokens });

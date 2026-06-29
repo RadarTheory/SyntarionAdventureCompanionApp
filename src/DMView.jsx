@@ -518,6 +518,43 @@ function DMMemoryPanel({ characterId, campaignId }) {
 }
 
 // ─── SESSION LOG EDITOR ───────────────────────────────────────────────────────
+function FormattedLog({ text }) {
+  if (!text) return null;
+  // Break a run-on entry before inline "Capitalized Label:" headers, then on newlines.
+  const withBreaks = String(text).replace(/\s+([A-Z][^.:—\n]{0,46}(?:\([^)]*\))?:)\s/g, '\n\n$1 ');
+  const blocks = withBreaks.split(/\n+/).map(b => b.trim()).filter(Boolean);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+      {blocks.map((block, i) => {
+        const isAllCaps = block.length < 60 && block === block.toUpperCase() && /[A-Z]/.test(block);
+        const headerMatch = block.match(/^([A-Z][^.:—]{0,46}(?:\([^)]*\))?)\s*[:—]\s+([\s\S]*)$/);
+
+        if (isAllCaps) {
+          return (
+            <div key={i} style={{ fontFamily: "'Cinzel', serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', color: '#e8d9a7', textTransform: 'uppercase', marginTop: i === 0 ? 0 : 4 }}>
+              {block}
+            </div>
+          );
+        }
+        if (headerMatch && headerMatch[1].length < 42) {
+          const [, head, rest] = headerMatch;
+          return (
+            <p key={i} style={{ fontSize: 12, color: COLORS.textSub, fontFamily: 'Georgia, serif', lineHeight: 1.7, margin: 0 }}>
+              <strong style={{ color: '#e8d9a7', fontFamily: "'Cinzel', serif", fontSize: 11, letterSpacing: '0.04em' }}>{head}</strong>{rest ? ` — ${rest}` : ''}
+            </p>
+          );
+        }
+        return (
+          <p key={i} style={{ fontSize: 12, color: COLORS.textSub, fontFamily: 'Georgia, serif', lineHeight: 1.7, margin: 0 }}>
+            {block}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 function SessionLogEditor({ campaign }) {
   const [log, setLog] = useState([]);
   const [newEntry, setNewEntry] = useState('');
@@ -566,7 +603,7 @@ function SessionLogEditor({ campaign }) {
               </div>
               <button onClick={() => deleteEntry(entry.id)} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 14 }}>×</button>
             </div>
-            <p style={{ fontSize: 12, color: COLORS.textSub, fontFamily: 'Georgia, serif', lineHeight: 1.7, margin: 0 }}>{entry.content}</p>
+            <FormattedLog text={entry.content} />
           </div>
         ))}
         {log.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No entries yet. The chronicle awaits.</div>}
