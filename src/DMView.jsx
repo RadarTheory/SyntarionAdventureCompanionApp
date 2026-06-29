@@ -30,6 +30,7 @@ import MapPanel from './MapPanel';
 import DMSpeakPanel from './DMSpeakPanel';
 import PortraitUpload from './PortraitUpload';
 import AssetsPanel from './AssetsPanel';
+import ChroniclePanel from './ChroniclePanel';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe — an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -762,7 +763,7 @@ function VitalsPanel({ row, onClose, campaignId }) {
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN DM VIEW
 // ═════════════════════════════════════════════════════════════════════════════
-const DM_TABS = ['Inbox', 'Characters', 'Campaigns', 'Scribe', 'Memory', 'Catalog', 'VTT'];
+const DM_TABS = ['Inbox', 'Characters', 'Campaigns', 'Chronicle', 'Scribe', 'Memory', 'Catalog', 'VTT'];
 
 export default function DMView({ user, session, onHome }) {
   const { isMobile } = useDevice();
@@ -1093,6 +1094,8 @@ const renderTab = () => {
     );
 
     case 'Scribe': return <ScribeDMPanel embedded activeCampaignId={activeCampaignTab} />;
+
+    case 'Chronicle': return <ChroniclePanel campaignId={activeCampaignTab} />;
 
     case 'Memory': return <DMMemoryPanel campaignId={activeCampaignTab} />;
 

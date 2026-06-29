@@ -134,6 +134,7 @@ Produce a JSON object with exactly this structure (no markdown, no backticks, ra
     await supabase.from('session_logs').insert({
       campaign_id: String(session.campaign_id),
       session_id: String(session.id),
+      entry: dmRecord,
       title: `Session · ${sessionDate}`,
       summary: dmRecord,
       raw_events: Object.fromEntries(
