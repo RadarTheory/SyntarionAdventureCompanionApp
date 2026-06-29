@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
-import { getSessionEvents } from './lib/sessionEvents';
+import { fetchHerculesEventsForCampaign, eventsToTranscript, compileLocalSynopsis } from './lib/compileSession';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -45,28 +45,28 @@ useEffect(() => {
   draft();
 }, []);
 
-  const draft = async () => {
+ const draft = async () => {
+    // Always load the real combat events first — this is the source of truth.
+    const { events } = await fetchHerculesEventsForCampaign(session.campaign_id);
+    const local = compileLocalSynopsis(events, checkins);
+
     try {
-      const events = await getSessionEvents(session.id);
+      const transcript = eventsToTranscript(events);
       const characterList = checkins.map(c => `${c.character_name} (id: ${c.character_id})`).join(', ');
-      const eventSummary = events.length > 0
-        ? events.map(e => `[${e.event_type}] ${JSON.stringify(e.payload)}`).join('\n')
-        : 'No recorded events. Session may have been freeform roleplay.';
 
       const prompt = `You are The Scribe, chronicler of the world of Soteria.
 
 A session has just ended for campaign: ${campaign?.subtitle || session.campaign_id}
-Duration: from ${session.started_at ? new Date(session.started_at).toLocaleString() : 'unknown'} to now.
 Players present: ${characterList || 'Unknown'}
 
-Session events log:
-${eventSummary}
+Combat & event transcript (chronological):
+${transcript}
 
 Produce a JSON object with exactly this structure (no markdown, no backticks, raw JSON only):
 {
-  "dm_record": "A thorough structured debrief for the DM. Include: NPCs encountered, combat outcomes, loot distributed, decisions made, plot threads opened or closed, any notable player choices. Use mechanical language freely. Be specific and detailed.",
+  "dm_record": "A thorough structured debrief for the DM. Include: combat outcomes, who struck whom, damage, deaths, dialogue, decisions, plot threads. Be specific and detailed.",
   "player_chronicles": {
-    ${checkins.map(c => `"${c.character_id}": "A 2-4 paragraph narrative chronicle written in third person for ${c.character_name} specifically. Write only what ${c.character_name} could have witnessed or experienced. Use vivid in-world prose. No mechanical language. No dice rolls mentioned. Refer to the character by name throughout."`).join(',\n    ')}
+    ${checkins.map(c => `"${c.character_id}": "A 2-4 paragraph narrative chronicle in third person for ${c.character_name}, using only what ${c.character_name} witnessed. Vivid in-world prose. No dice numbers. Refer to ${c.character_name} by name."`).join(',\n    ')}
   }
 }`;
 
@@ -85,19 +85,22 @@ Produce a JSON object with exactly this structure (no markdown, no backticks, ra
       const clean = text.replace(/```json|```/g, '').trim();
       const parsed = JSON.parse(clean);
 
-      setDmRecord(parsed.dm_record || '');
+      setDmRecord(parsed.dm_record || local.dmRecord);
       const built = {};
       checkins.forEach(c => {
         built[c.character_id] = {
           name: c.character_name,
-          text: parsed.player_chronicles?.[c.character_id] || `${c.character_name} was present for the session.`,
+          text: parsed.player_chronicles?.[c.character_id] || local.chronicles[c.character_id]?.text || `${c.character_name} was present for the session.`,
           publish: true,
         };
       });
       setChronicles(built);
       setPhase('review');
     } catch (err) {
-      setError(err.message);
+      // Scribe failed (quota, network, bad JSON) — fall back to the local compile.
+      setError(`Scribe unavailable (${err.message}). Showing the compiled event log instead — edit and approve below.`);
+      setDmRecord(local.dmRecord);
+      setChronicles(local.chronicles);
       setPhase('review');
     }
   };
