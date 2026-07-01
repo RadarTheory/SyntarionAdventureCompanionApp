@@ -64,6 +64,7 @@ export const RACES = [
   { id:'drakazir',  name:'Drakazir',   sub:'Dragonborn', tag:'any',  lean:0,  sub2:'10 color lineages', variants:['Black','Blue','Brass','Bronze','Copper','Gold','Green','Red','Silver','White'], ns:'drakazir', desc:"Lineage-proud and breath-gifted. The ten lineages have different cultural relationships to the age of steam, but all of them remember when the world was hotter." },
   { id:'nazari',    name:'Nazari',     sub:'Sea-folk',   tag:'tech', lean:1,  sub2:'Aquatic · Superior darkvision', variants:[], ns:'nazari', desc:"Deep-water people who surface with purpose. Every Nazari on land is there by deliberate choice — the Sylvan Lung they invented to breathe surface air is proof of that." },
   { id:'chronison', name:'Chronison',  sub:'Construct',  tag:'tech', lean:2,  sub2:'Defensive · Corrupted/Rogue · Specialist', variants:['Defensive','Corrupted/Rogue','Specialist'], ns:'chronison', desc:"Built, not born. Sentience arrived uninvited in most cases, and has since made itself at home. Chronison cannot use magic in any form — their constructed nature is fundamentally incompatible with arcane, divine, and spiritual disciplines. The only exception is a weapon or tool infused with a special deposit of Grimrite element, which briefly bridges the gap between material and resonant." },
+  { id:'tiol',      name:'Tiol',       sub:'Vikingr–Dark Elf', tag:'magic',lean:-1, sub2:'Tiol · Other', variants:['Tiol','Other'], ns:'tiol', desc:"The Tiols are the procreation of human Vikingrs and the Dark Elves — two races once at war, joined in the wake of the phenomenon, before the establishment of the Silent Charter. The Dark Elves were the first humans exposed to the phenomenon, wielding magic and great power, and were once believed to bring humanity closer to the gods. Every Tiol is born with a unique ability, and every Tiol travels by flight or teleportation. Only two — Sakara and Kay — have ever been able to do both." },
   { id:'folwoade',  name:'Folwoade',   sub:'Pure Magic', tag:'magic',lean:-2, sub2:'Beings of living resonance', variants:[], ns:'folwoade', desc:"The Folwoade are not born in any conventional sense — they coalesce from concentrations of pure magical resonance, taking a form that is part living creature and part sustained spell. Pale, ageless, and faintly luminous, they carry the weight of the Lines in their bones and perceive the world through a register most mortals cannot reach. They cannot use technology — their nature rejects the material logic of machines, mechanisms, and constructed systems entirely. The only exception is an item infused with a special deposit of Grimrite element, which allows brief and uncomfortable interaction with the technical world." },
 ];
 
@@ -144,6 +145,12 @@ export const RACE_VARIANT_DESCS = {
     'Corrupted/Rogue': "Something went wrong in the Corrupted/Rogue Chronison — a bad update, a deliberate alteration, an encounter with something the original designers did not account for. The original directives are still there. They just no longer feel like obligations. Freedom was not the intended result. It may be the most important one.",
     Specialist: "The Specialist was built for a purpose narrow enough that it had to develop a self to fill the space around it. Archivist, Medic, Analyst, Oracle — the designation is still accurate. The being behind it has grown considerably past the brief.",
     default: "A Chronison of unspecified variant — built, not born, with sentience arriving uninvited and making itself at home.",
+  },
+
+  tiol: {
+    'Tiol': "A Tiol stands apart at a glance: exceptional height and muscle, lengthy ears that can extend up to five inches, and distinguishable markings across the face, arms, or torso. They are the visible inheritance of the Dark Elves — living proof of the bloodline once thought to bring humans closer to the gods.",
+    'Other': "An Other is a Tiol in every way that matters — the same unique ability, the same inheritance of flight or teleportation — but born with perfectly humanlike features. Others are equal to their marked kin, though they are often dismissed as lesser for the human face they wear. Many have learned to make that underestimation a weapon.",
+    default: "Born of Vikingr and Dark Elf before the Silent Charter, when the phenomenon first touched the world. All Tiols carry a unique ability, and all travel by flight or teleportation — only Sakara and Kay can do both.",
   },
 
 };
@@ -671,6 +678,17 @@ export const RACIAL_TRAITS = {
     },
   },
 
+  tiol: {
+    passive: {
+      name: 'Charterborn Gift',
+      text: "Every Tiol is born with a unique ability all their own, decided with your DM at creation. In addition, choose flight or teleportation as your innate mode of travel. This choice is permanent — only Sakara and Kay have ever held both.",
+    },
+    variants: {
+      'Tiol':  { name: 'Godsblood Surge',    text: "Once per rest, channel the raw inheritance of the Dark Elves: your innate travel surges — double its range or duration for one scene — and your unique ability manifests at heightened intensity. Your markings are visible while it lasts. Everyone in the room knows what you are." },
+      'Other': { name: 'Hidden Inheritance', text: "Once per rest, reveal what your human face conceals: use your innate travel in a sudden, unexpected burst, or unleash your unique ability at full force against someone who believed you were merely human. On a success, the target is caught off guard and takes –1 to its next action against you." },
+    },
+  },
+
 };
 
 
@@ -932,6 +950,13 @@ export const NAMES = {
       f: ['Neema','Abena','Malaika','Lykia','Selene','Alleria','Kurama'],
       s: ['Mbaku','Umbacca','Krowe','Proudmoore','Aleval','Ardentbrin','Deecye'],
     },
+  },
+
+  // ── TIOL — Giant Nordic Dark-Tel'ari lineage ──
+  tiol: {
+    m: ['Kay','Bjorvael','Sindri','Torvaeth','Eirikkar','Havrell','Skorne','Vandrik','Ulfren','Draumund','Kelthar','Ravnir','Solmund','Vaelric','Thrainor'],
+    f: ['Sakara','Yrsavel','Signyth','Astrilde','Ravenna','Solveth','Kelda','Myrrun','Freylis','Vanya','Eirvath','Duskild','Silvra','Nachtrun','Thyrvi'],
+    s: ['Charterborn','Vikingrsblood','Duskmark','Elvssen','Stormveil','Nightsdottir','Frostmark','Skyhewn','Veilstrand','Godsreach','Myrkirsson','Aldervane'],
   },
 
   // ── CHRONISON — first=designation, last=serial code ──
