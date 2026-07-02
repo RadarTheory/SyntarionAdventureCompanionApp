@@ -122,7 +122,7 @@ export default function StepBelief({
               style={{
                 background: isActive ? t.bg : 'transparent',
                 border: `1.5px solid ${isActive ? t.border : COLORS.border}`,
-                borderRadius: 8,
+                borderRadius: 3,
                 padding: isMobile ? '12px 8px' : '14px 12px',
                 cursor: 'pointer',
                 textAlign: 'center',
@@ -159,7 +159,7 @@ export default function StepBelief({
           padding: '10px 14px',
           background: beliefType === 'god' ? COLORS.deityBg : beliefType === 'spirit' ? COLORS.spiritBg : COLORS.unaffiliatedBg,
           border: `1px solid ${beliefType === 'god' ? COLORS.deity : beliefType === 'spirit' ? COLORS.spirit : COLORS.unaffiliated}`,
-          borderRadius: 8,
+          borderRadius: 3,
           fontFamily: 'Georgia, serif',
           fontStyle: 'italic',
           fontSize: 12,
@@ -193,7 +193,7 @@ export default function StepBelief({
                     style={{
                       background: isSelected ? COLORS.deityBg : isExpanded ? 'rgba(168,85,247,0.06)' : COLORS.card,
                       border: `1.5px solid ${isSelected ? COLORS.deity : isExpanded ? COLORS.deityDim : COLORS.border}`,
-                      borderRadius: 8,
+                      borderRadius: 3,
                       padding: '11px 13px',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
@@ -231,7 +231,7 @@ export default function StepBelief({
                           fontFamily: "'Cinzel', serif",
                           background: COLORS.deityBg,
                           border: `1px solid ${COLORS.deity}`,
-                          borderRadius: 4,
+                          borderRadius: 2,
                           padding: '2px 6px',
                           flexShrink: 0,
                           marginLeft: 6,
@@ -262,7 +262,7 @@ export default function StepBelief({
                           style={{
                             background: COLORS.deityBg,
                             border: `1px solid ${COLORS.deity}`,
-                            borderRadius: 6,
+                            borderRadius: 2,
                             padding: '8px 18px',
                             cursor: 'pointer',
                             fontFamily: "'Cinzel', serif",
@@ -308,7 +308,7 @@ export default function StepBelief({
                     style={{
                       background: isSelected ? COLORS.spiritBg : isExpanded ? 'rgba(249,115,22,0.06)' : COLORS.card,
                       border: `1.5px solid ${isSelected ? COLORS.spirit : isExpanded ? COLORS.spiritDim : COLORS.border}`,
-                      borderRadius: 8,
+                      borderRadius: 3,
                       padding: '11px 13px',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
@@ -345,7 +345,7 @@ export default function StepBelief({
                           fontFamily: "'Cinzel', serif",
                           background: COLORS.spiritBg,
                           border: `1px solid ${COLORS.spirit}`,
-                          borderRadius: 4,
+                          borderRadius: 2,
                           padding: '2px 6px',
                           flexShrink: 0,
                           marginLeft: 6,
@@ -375,7 +375,7 @@ export default function StepBelief({
                           style={{
                             background: COLORS.spiritBg,
                             border: `1px solid ${COLORS.spirit}`,
-                            borderRadius: 6,
+                            borderRadius: 2,
                             padding: '8px 18px',
                             cursor: 'pointer',
                             fontFamily: "'Cinzel', serif",
@@ -416,7 +416,7 @@ export default function StepBelief({
                   style={{
                     background: isSelected ? COLORS.unaffiliatedBg : COLORS.card,
                     border: `1.5px solid ${isSelected ? COLORS.unaffiliated : COLORS.border}`,
-                    borderRadius: 8,
+                    borderRadius: 3,
                     padding: '13px',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
@@ -469,7 +469,7 @@ export default function StepBelief({
           style={{
             background: 'transparent',
             border: `1px solid ${COLORS.border}`,
-            borderRadius: 4,
+            borderRadius: 2,
             padding: '10px 20px',
             color: COLORS.muted,
             cursor: 'pointer',
@@ -488,7 +488,7 @@ export default function StepBelief({
           style={{
             background: canAdvance ? COLORS.surface : 'transparent',
             border: `1px solid ${canAdvance ? COLORS.borderMid : COLORS.border}`,
-            borderRadius: 4,
+            borderRadius: 2,
             padding: '10px 24px',
             color: canAdvance ? COLORS.text : COLORS.dim,
             cursor: canAdvance ? 'pointer' : 'default',

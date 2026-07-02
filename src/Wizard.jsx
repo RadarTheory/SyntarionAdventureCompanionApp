@@ -175,7 +175,7 @@ function BoonPanel({ origin, role, personality }) {
     <div style={{
       background: COLORS.card,
       border: `1px solid ${COLORS.border}`,
-      borderRadius: 8,
+      borderRadius: 3,
       padding: '12px 16px',
       marginBottom: 16,
     }}>
@@ -207,7 +207,7 @@ function BoonPanel({ origin, role, personality }) {
             color: COLORS.magicText, fontFamily: "'Cinzel', serif",
             background: COLORS.magicBg,
             border: `1px solid ${COLORS.magic}`,
-            borderRadius: 4, padding: '2px 8px',
+            borderRadius: 2, padding: '2px 8px',
           }}>▸ {personality.boon}</div>
         </div>
       )}
@@ -563,7 +563,7 @@ function StepStub({ label, goNext, goBack }) {
         <button onClick={goBack} style={{
           background: 'transparent',
           border: `1px solid ${COLORS.border}`,
-          borderRadius: 4, padding: '10px 20px',
+          borderRadius: 2, padding: '10px 20px',
           color: COLORS.muted, cursor: 'pointer',
           fontFamily: "'Cinzel', serif", fontSize: 9,
           letterSpacing: '0.14em', textTransform: 'uppercase',
@@ -571,7 +571,7 @@ function StepStub({ label, goNext, goBack }) {
         <button onClick={goNext} style={{
           background: COLORS.surface,
           border: `1px solid ${COLORS.borderMid}`,
-          borderRadius: 4, padding: '10px 20px',
+          borderRadius: 2, padding: '10px 20px',
           color: COLORS.text, cursor: 'pointer',
           fontFamily: "'Cinzel', serif", fontSize: 9,
           letterSpacing: '0.14em', textTransform: 'uppercase',

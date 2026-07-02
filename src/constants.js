@@ -12,14 +12,14 @@ export const COLORS = {
   card:       '#2c2419',
   border:     'rgba(240,238,235,0.08)',
   borderMid:  'rgba(240,238,235,0.15)',
-  magic:      '#79f5a7',
-  magicDim:   '#16a34a',
-  magicBg:    'rgba(34,197,94,0.10)',
-  magicText:  '#86efac',
-  tech:       '#3b82f6',
-  techDim:    '#2563eb',
-  techBg:     'rgba(59,130,246,0.10)',
-  techText:   '#93c5fd',
+  magic:      '#6f9e78',
+  magicDim:   '#4a6b52',
+  magicBg:    'rgba(111,158,120,0.08)',
+  magicText:  '#a8c5ae',
+  tech:       '#c08a4e',
+  techDim:    '#8a5f33',
+  techBg:     'rgba(192,138,78,0.08)',
+  techText:   '#d9b285',
   deity:      '#a855f7',
   deityDim:   '#7c3aed',
   deityBg:    'rgba(168,85,247,0.10)',
@@ -1682,7 +1682,7 @@ export const ABILITY_TREE = {
   },
 
   // ─── WHIM ROW ───────────────────────────────────────────────────────────────
-  // Starter: Mystic | Magic Elite: Arcani | Tech Elite: Engineer
+  // Starter: Mystic | Magic Elite: Arcani | Tech Elite: Axion
   whim: {
     id: 'whim', label: 'Whim', sublabel: 'Shaeid',
     starter: 'Mystic',
@@ -1725,7 +1725,7 @@ export const ABILITY_TREE = {
       },
     },
     tech: {
-      elite: 'Engineer',
+      elite: 'Axion',
       nodes: [
         {
           id: 'gunsmith', name: 'Gunsmith', cost: 1, lean: 0.25,
@@ -1765,12 +1765,12 @@ export const ABILITY_TREE = {
         },
       ],
       eliteNode: {
-        id: 'engineer', name: 'Engineer', cost: 4, lean: 0.5,
+        id: 'axion', name: 'Axion', cost: 4, lean: 0.5,
         abilities: [
-          { n: 'Engineer I',   d: 'Placeholder — fill in elite ability description.' },
-          { n: 'Engineer II',  d: 'Placeholder — fill in elite ability description.' },
-          { n: 'Engineer III', d: 'Placeholder — fill in elite ability description.' },
-          { n: 'Engineer IV',  d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Axion I',   d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Axion II',  d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Axion III', d: 'Placeholder — fill in elite ability description.' },
+          { n: 'Axion IV',  d: 'Placeholder — fill in elite ability description.' },
         ],
       },
     },

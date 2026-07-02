@@ -58,7 +58,7 @@ export default function StepClass({
           style={{
             background: isSelected ? bg : isExpanded ? `${bg}55` : COLORS.card,
             border: `1.5px solid ${isSelected ? color : isExpanded ? dimCol : COLORS.border}`,
-            borderRadius: 8,
+            borderRadius: 3,
             padding: '11px 13px',
             cursor: 'pointer',
             transition: 'all 0.15s ease',
@@ -92,7 +92,7 @@ export default function StepClass({
                 textTransform: 'uppercase',
                 fontWeight: 700,
                 padding: '2px 7px',
-                borderRadius: 20,
+                borderRadius: 2,
                 background: bg,
                 color: text,
                 border: `1px solid ${color}`,
@@ -118,7 +118,7 @@ export default function StepClass({
                 fontFamily: "'Cinzel', serif",
                 background: bg,
                 border: `1px solid ${color}`,
-                borderRadius: 4,
+                borderRadius: 2,
                 padding: '2px 6px',
                 flexShrink: 0,
                 marginLeft: 6,
@@ -166,7 +166,7 @@ export default function StepClass({
                           color: text,
                           background: bg,
                           border: `1px solid ${color}`,
-                          borderRadius: 6,
+                          borderRadius: 2,
                           padding: '4px 10px',
                           visibility: i === 0 ? 'visible' : 'hidden',
                         }}>{cls.name}</span>
@@ -209,7 +209,7 @@ export default function StepClass({
                         color: text,
                         background: bg,
                         border: `1px solid ${color}`,
-                        borderRadius: 6,
+                        borderRadius: 2,
                         padding: '4px 10px',
                       }}>{prog.capstone}</span>
                       {prog.secret && (
@@ -218,7 +218,7 @@ export default function StepClass({
                           fontSize: 10,
                           color: COLORS.muted,
                           border: `1px dashed ${COLORS.borderMid}`,
-                          borderRadius: 6,
+                          borderRadius: 2,
                           padding: '4px 10px',
                           fontStyle: 'italic',
                         }}>{prog.secret}</span>
@@ -230,7 +230,7 @@ export default function StepClass({
                         color: COLORS.textSub,
                         fontStyle: 'italic',
                         border: `1px solid ${COLORS.border}`,
-                        borderRadius: 6,
+                        borderRadius: 2,
                         padding: '4px 10px',
                       }}>{prog.relic}</span>
                     </div>
@@ -257,7 +257,7 @@ export default function StepClass({
                 marginBottom: 14,
                 padding: '6px 10px',
                 background: bg,
-                borderRadius: 6,
+                borderRadius: 2,
                 border: `1px solid ${color}`,
               }}>
                 {path === 'magic'
@@ -271,7 +271,7 @@ export default function StepClass({
                 style={{
                   background: bg,
                   border: `1px solid ${color}`,
-                  borderRadius: 6,
+                  borderRadius: 2,
                   padding: '8px 18px',
                   cursor: 'pointer',
                   fontFamily: "'Cinzel', serif",
@@ -329,7 +329,7 @@ export default function StepClass({
             padding: '10px 14px',
             background: bg,
             border: `1px solid ${border}`,
-            borderRadius: 8,
+            borderRadius: 3,
             fontFamily: 'Georgia, serif',
             fontStyle: 'italic',
             fontSize: 12,
@@ -399,7 +399,7 @@ export default function StepClass({
           style={{
             background: 'transparent',
             border: `1px solid ${COLORS.border}`,
-            borderRadius: 4,
+            borderRadius: 2,
             padding: '10px 20px',
             color: COLORS.muted,
             cursor: 'pointer',
@@ -418,7 +418,7 @@ export default function StepClass({
           style={{
             background: canAdvance ? COLORS.surface : 'transparent',
             border: `1px solid ${canAdvance ? COLORS.borderMid : COLORS.border}`,
-            borderRadius: 4,
+            borderRadius: 2,
             padding: '10px 24px',
             color: canAdvance ? COLORS.text : COLORS.dim,
             cursor: canAdvance ? 'pointer' : 'default',

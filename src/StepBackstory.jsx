@@ -173,7 +173,7 @@ const handleSubmit = async (type) => {
         <div style={{
           background: COLORS.card,
           border: `1px solid ${COLORS.border}`,
-          borderRadius: 10,
+          borderRadius: 3,
           padding: '16px 18px',
           marginBottom: 20,
           position: 'relative',
@@ -242,7 +242,7 @@ const handleSubmit = async (type) => {
                 fontFamily: "'Cinzel', serif",
                 background: COLORS.magicBg,
                 border: `1px solid ${COLORS.magic}`,
-                borderRadius: 4,
+                borderRadius: 2,
                 padding: '3px 10px',
               }}>▸ {boonPersonality.boon}</div>
             </div>
@@ -269,7 +269,7 @@ const handleSubmit = async (type) => {
             minHeight: 160,
             background: COLORS.card,
             border: `1px solid ${COLORS.border}`,
-            borderRadius: 8,
+            borderRadius: 3,
             padding: '12px 14px',
             color: COLORS.text,
             fontSize: 13,
@@ -312,7 +312,7 @@ const handleSubmit = async (type) => {
               style={{
                 background: 'transparent',
                 border: `1px solid ${COLORS.border}`,
-                borderRadius: 4,
+                borderRadius: 2,
                 padding: '4px 10px',
                 cursor: 'pointer',
                 fontFamily: "'Cinzel', serif",
@@ -330,7 +330,7 @@ const handleSubmit = async (type) => {
               style={{
                 background: COLORS.card,
                 border: `1px solid ${COLORS.borderMid}`,
-                borderRadius: 8,
+                borderRadius: 3,
                 padding: '12px 14px',
                 cursor: 'pointer',
                 display: 'flex',
@@ -360,7 +360,7 @@ const handleSubmit = async (type) => {
             <div style={{
               padding: '12px 14px',
               border: `1px dashed ${COLORS.border}`,
-              borderRadius: 8,
+              borderRadius: 3,
               fontSize: 11,
               color: COLORS.dim,
               fontFamily: 'Georgia, serif',
@@ -379,7 +379,7 @@ const handleSubmit = async (type) => {
           padding: '10px 14px',
           background: COLORS.warnBg,
           border: `1px solid ${COLORS.warn}`,
-          borderRadius: 8,
+          borderRadius: 3,
           fontSize: 11,
           color: COLORS.warn,
           fontFamily: 'Georgia, serif',
@@ -400,7 +400,7 @@ const handleSubmit = async (type) => {
         <button onClick={goBack} style={{
           background: 'transparent',
           border: `1px solid ${COLORS.border}`,
-          borderRadius: 4,
+          borderRadius: 2,
           padding: '10px 20px',
           color: COLORS.muted,
           cursor: 'pointer',
@@ -415,7 +415,7 @@ const handleSubmit = async (type) => {
           <button onClick={goNext} style={{
             background: 'transparent',
             border: `1px solid ${COLORS.border}`,
-            borderRadius: 4,
+            borderRadius: 2,
             padding: '10px 20px',
             color: COLORS.muted,
             cursor: 'pointer',
@@ -432,7 +432,7 @@ const handleSubmit = async (type) => {
               style={{
                 background: COLORS.deityBg,
                 border: `1px solid ${COLORS.deity}`,
-                borderRadius: 4,
+                borderRadius: 2,
                 padding: '10px 24px',
                 color: COLORS.deityText,
                 cursor: 'pointer',
@@ -453,7 +453,7 @@ const handleSubmit = async (type) => {
               gap: 8,
               background: COLORS.deityBg,
               border: `1px solid ${COLORS.deity}`,
-              borderRadius: 4,
+              borderRadius: 2,
               padding: '8px 14px',
             }}>
               <span style={{
@@ -470,7 +470,7 @@ const handleSubmit = async (type) => {
                 style={{
                   background: COLORS.deity,
                   border: 'none',
-                  borderRadius: 4,
+                  borderRadius: 2,
                   padding: '5px 14px',
                   cursor: submitting ? 'default' : 'pointer',
                   color: '#fff',
@@ -486,7 +486,7 @@ const handleSubmit = async (type) => {
                 style={{
                   background: 'transparent',
                   border: `1px solid ${COLORS.border}`,
-                  borderRadius: 4,
+                  borderRadius: 2,
                   padding: '5px 10px',
                   cursor: 'pointer',
                   color: COLORS.muted,

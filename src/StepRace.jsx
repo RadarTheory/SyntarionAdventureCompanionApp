@@ -23,7 +23,7 @@ const label = {
 const inp = (extra = {}) => ({
   background: COLORS.card,
   border: `1px solid ${COLORS.border}`,
-  borderRadius: 6,
+  borderRadius: 2,
   padding: '9px 12px',
   color: COLORS.text,
   fontSize: 13,
@@ -82,7 +82,7 @@ function TraitBlock({ raceId, rv, pmV }) {
         <div style={{
           background: 'rgba(240,238,235,0.04)',
           border: `1px solid ${COLORS.border}`,
-          borderRadius: 6,
+          borderRadius: 2,
           padding: '9px 11px',
           marginBottom: 8,
         }}>
@@ -122,7 +122,7 @@ function TraitBlock({ raceId, rv, pmV }) {
         <div style={{
           background: 'rgba(240,238,235,0.04)',
           border: `1px solid ${COLORS.border}`,
-          borderRadius: 6,
+          borderRadius: 2,
           padding: '9px 11px',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
@@ -158,7 +158,7 @@ function TraitBlock({ raceId, rv, pmV }) {
         <div style={{
           background: 'rgba(240,238,235,0.03)',
           border: `1px solid ${COLORS.border}`,
-          borderRadius: 6,
+          borderRadius: 2,
           padding: '9px 11px',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
@@ -294,7 +294,7 @@ export default function StepRace({
                 style={{
                   background: isSelected ? 'rgba(240,238,235,0.06)' : COLORS.card,
                   border: `1.5px solid ${isSelected ? COLORS.borderMid : COLORS.border}`,
-                  borderRadius: 8,
+                  borderRadius: 3,
                   height: '100%',
                   padding: '11px 13px',
                   cursor: 'pointer',
@@ -322,7 +322,7 @@ export default function StepRace({
                       textTransform: 'uppercase',
                       fontWeight: 700,
                       padding: '2px 7px',
-                      borderRadius: 20,
+                      borderRadius: 2,
                       background: tc.bg,
                       color: tc.color,
                       border: `1px solid ${tc.border}`,
@@ -373,7 +373,7 @@ export default function StepRace({
                               style={{
                                 background: rv === v ? 'rgba(240,238,235,0.08)' : 'transparent',
                                 border: `1px solid ${rv === v ? COLORS.borderMid : COLORS.border}`,
-                                borderRadius: 6,
+                                borderRadius: 2,
                                 padding: '7px 10px',
                                 cursor: 'pointer',
                                 fontSize: 11,
@@ -398,7 +398,7 @@ export default function StepRace({
                       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: 6, marginBottom: 14 }}>
                         {PM_MAJ.map(p => (
                           <div key={p.id} onClick={() => setPmV(pmV === p.id ? null : p.id)}
-                            style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
+                            style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 2, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
                             <div style={{ fontSize: 11, color: pmV === p.id ? COLORS.text : COLORS.muted, fontFamily: 'Georgia, serif' }}>{p.name}</div>
                             <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{p.sub}</div>
                           </div>
@@ -409,7 +409,7 @@ export default function StepRace({
                       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: 6, marginBottom: 14 }}>
                         {PM_MIN.map(p => (
                           <div key={p.id} onClick={() => setPmV(pmV === p.id ? null : p.id)}
-                            style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
+                            style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 2, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
                             <div style={{ fontSize: 11, color: pmV === p.id ? COLORS.text : COLORS.muted, fontFamily: 'Georgia, serif' }}>{p.name}</div>
                             <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{p.sub}</div>
                           </div>
@@ -420,7 +420,7 @@ export default function StepRace({
                       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: 6, marginBottom: 14 }}>
                         {PM_AEON.map(p => (
                           <div key={p.id} onClick={() => setPmV(pmV === p.id ? null : p.id)}
-                            style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
+                            style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 2, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
                             <div style={{ fontSize: 11, color: pmV === p.id ? COLORS.text : COLORS.muted, fontFamily: 'Georgia, serif' }}>{p.name}</div>
                             <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{p.sub}</div>
                           </div>
@@ -431,7 +431,7 @@ export default function StepRace({
                       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: 6 }}>
                         {PM_ASTRAL.map(p => (
                           <div key={p.id} onClick={() => setPmV(pmV === p.id ? null : p.id)}
-                            style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
+                            style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 2, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
                             <div style={{ fontSize: 11, color: pmV === p.id ? COLORS.text : COLORS.muted, fontFamily: 'Georgia, serif' }}>{p.name}</div>
                             <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{p.sub}</div>
                           </div>
@@ -453,7 +453,7 @@ export default function StepRace({
         <div style={{
           background: COLORS.card,
           border: `1px solid ${COLORS.border}`,
-          borderRadius: 10,
+          borderRadius: 3,
           padding: isMobile ? '16px' : '20px 24px',
           marginBottom: 24,
         }}>
@@ -493,7 +493,7 @@ export default function StepRace({
                   style={{
                     background: gender === val ? 'rgba(240,238,235,0.08)' : 'transparent',
                     border: `1px solid ${gender === val ? COLORS.borderMid : COLORS.border}`,
-                    borderRadius: 6,
+                    borderRadius: 2,
                     padding: '7px 16px',
                     cursor: 'pointer',
                     fontSize: 11,
@@ -519,7 +519,7 @@ export default function StepRace({
                 onClick={genFirst}
                 style={{
                   display: 'block', width: '100%', background: 'transparent',
-                  border: `1px solid ${COLORS.border}`, borderRadius: 6,
+                  border: `1px solid ${COLORS.border}`, borderRadius: 2,
                   padding: '6px 10px', cursor: 'pointer', fontSize: 9,
                   letterSpacing: '0.12em', textTransform: 'uppercase',
                   color: COLORS.muted, fontFamily: "'Cinzel', serif",
@@ -546,7 +546,7 @@ export default function StepRace({
                 onClick={genLast}
                 style={{
                   display: 'block', width: '100%', background: 'transparent',
-                  border: `1px solid ${COLORS.border}`, borderRadius: 6,
+                  border: `1px solid ${COLORS.border}`, borderRadius: 2,
                   padding: '6px 10px', cursor: 'pointer', fontSize: 9,
                   letterSpacing: '0.12em', textTransform: 'uppercase',
                   color: COLORS.muted, fontFamily: "'Cinzel', serif",
@@ -614,7 +614,7 @@ export default function StepRace({
           style={{
             background: 'transparent',
             border: `1px solid ${COLORS.border}`,
-            borderRadius: 4,
+            borderRadius: 2,
             padding: '10px 20px',
             color: COLORS.muted,
             cursor: 'pointer',
@@ -633,7 +633,7 @@ export default function StepRace({
           style={{
             background: canAdvance ? COLORS.surface : 'transparent',
             border: `1px solid ${canAdvance ? COLORS.borderMid : COLORS.border}`,
-            borderRadius: 4,
+            borderRadius: 2,
             padding: '10px 24px',
             color: canAdvance ? COLORS.text : COLORS.dim,
             cursor: canAdvance ? 'pointer' : 'default',

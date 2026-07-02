@@ -120,7 +120,7 @@ const handleStatTap = (statKey) => {
         style={{
           background: isAssigned ? axisBg(axis) : isTarget ? 'rgba(240,238,235,0.04)' : COLORS.card,
           border: `1.5px solid ${isAssigned ? col : isTarget ? COLORS.borderMid : COLORS.border}`,
-          borderRadius: 8,
+          borderRadius: 3,
           padding: '10px 12px',
           cursor: statMode === 'roll' && (isTarget || isAssigned) ? 'pointer' : 'default',
           transition: 'all 0.15s ease',
@@ -164,7 +164,7 @@ const handleStatTap = (statKey) => {
                 color: axisText(axis),
                 background: axisBg(axis),
                 border: `1.5px solid ${col}`,
-                borderRadius: 6,
+                borderRadius: 2,
                 padding: '4px 6px',
                 outline: 'none',
                 fontFamily: "'Cinzel', serif",
@@ -228,7 +228,7 @@ const handleStatTap = (statKey) => {
           <button key={id} onClick={() => { setStatMode(id); handleReset(); }} style={{
             background: statMode === id ? 'rgba(240,238,235,0.08)' : 'transparent',
             border: `1px solid ${statMode === id ? COLORS.borderMid : COLORS.border}`,
-            borderRadius: 6,
+            borderRadius: 2,
             padding: '8px 18px',
             cursor: 'pointer',
             fontFamily: "'Cinzel', serif",
@@ -249,7 +249,7 @@ const handleStatTap = (statKey) => {
             <button onClick={doRoll} disabled={!canRoll} style={{
               background: canRoll ? COLORS.surface : 'transparent',
               border: `1px solid ${canRoll ? COLORS.borderMid : COLORS.border}`,
-              borderRadius: 6,
+              borderRadius: 2,
               padding: '10px 20px',
               cursor: canRoll ? 'pointer' : 'default',
               fontFamily: "'Cinzel', serif",
@@ -263,7 +263,7 @@ const handleStatTap = (statKey) => {
               <button onClick={saveRoll} style={{
                 background: COLORS.magicBg,
                 border: `1px solid ${COLORS.magic}`,
-                borderRadius: 6,
+                borderRadius: 2,
                 padding: '10px 20px',
                 cursor: 'pointer',
                 fontFamily: "'Cinzel', serif",
@@ -278,7 +278,7 @@ const handleStatTap = (statKey) => {
               <button onClick={handleReset} style={{
                 background: 'transparent',
                 border: `1px solid ${COLORS.border}`,
-                borderRadius: 6,
+                borderRadius: 2,
                 padding: '10px 16px',
                 cursor: 'pointer',
                 fontFamily: "'Cinzel', serif",
@@ -306,7 +306,7 @@ const handleStatTap = (statKey) => {
                   <div key={i} style={{
                     background: COLORS.card,
                     border: `1px solid ${COLORS.border}`,
-                    borderRadius: 6,
+                    borderRadius: 2,
                     padding: '8px 12px',
                     minWidth: 42,
                     textAlign: 'center',
@@ -333,7 +333,7 @@ const handleStatTap = (statKey) => {
                 padding: '14px 16px',
                 background: isActive ? 'rgba(240,238,235,0.04)' : 'transparent',
                 border: `1px solid ${isActive ? COLORS.borderMid : COLORS.border}`,
-                borderRadius: 10,
+                borderRadius: 3,
                 opacity: isLocked ? 0.35 : 1,
                 transition: 'all 0.2s ease',
               }}>
@@ -365,7 +365,7 @@ const handleStatTap = (statKey) => {
                         style={{
                           background: isAssignedRoll ? COLORS.dim : isSelected ? COLORS.surface : COLORS.card,
                           border: `1.5px solid ${isSelected ? COLORS.borderMid : COLORS.border}`,
-                          borderRadius: 6,
+                          borderRadius: 2,
                           padding: '8px 12px',
                           minWidth: 42,
                           textAlign: 'center',
@@ -407,7 +407,7 @@ const handleStatTap = (statKey) => {
               fontStyle: 'italic',
               fontSize: 12,
               border: `1px dashed ${COLORS.border}`,
-              borderRadius: 8,
+              borderRadius: 3,
               marginBottom: 20,
             }}>
               Roll your stats above. Save up to 3 sets, then assign from your favourite.
@@ -453,7 +453,7 @@ const handleStatTap = (statKey) => {
       style={{
         background: COLORS.magicBg,
         border: `1px solid ${COLORS.magic}`,
-        borderRadius: 6,
+        borderRadius: 2,
         padding: '10px 24px',
         cursor: 'pointer',
         fontFamily: "'Cinzel', serif",
@@ -485,7 +485,7 @@ const handleStatTap = (statKey) => {
         <button onClick={goBack} style={{
           background: 'transparent',
           border: `1px solid ${COLORS.border}`,
-          borderRadius: 4,
+          borderRadius: 2,
           padding: '10px 20px',
           color: COLORS.muted,
           cursor: 'pointer',
@@ -498,7 +498,7 @@ const handleStatTap = (statKey) => {
         <button onClick={goNext} disabled={!canAdvance} style={{
           background: canAdvance ? COLORS.surface : 'transparent',
           border: `1px solid ${canAdvance ? COLORS.borderMid : COLORS.border}`,
-          borderRadius: 4,
+          borderRadius: 2,
           padding: '10px 24px',
           color: canAdvance ? COLORS.text : COLORS.dim,
           cursor: canAdvance ? 'pointer' : 'default',
