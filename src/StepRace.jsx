@@ -239,7 +239,7 @@ export default function StepRace({
       return;
     }
     setRace(r.id);
-    setRv(null);
+    setRv(r.variants?.[0] || null);
     setPmV(null);
     setExpandedRace(r.id);
   };
@@ -358,7 +358,7 @@ export default function StepRace({
                     <TraitBlock raceId={r.id} rv={rv} pmV={pmV} />
         
                     {/* Variants (non-Pa'morph) */}
-                    {r.variants?.length > 0 && !r.isPamorph && (
+                    {r.variants?.length > 1 && !r.isPamorph && (
                       <div style={{ marginBottom: 14 }}>
                         <span style={label}>Variant</span>
                         <div style={{
