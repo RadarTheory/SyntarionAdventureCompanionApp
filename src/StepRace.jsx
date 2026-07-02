@@ -588,16 +588,16 @@ export default function StepRace({
           </div>
 
           {!fn && (
-            <div style={{
-              marginTop: 12,
-              fontSize: 10,
-              color: COLORS.muted,
-              fontFamily: 'Georgia, serif',
-              fontStyle: 'italic',
-            }}>
-              * First name is required to continue.
-            </div>
-          )}
+  <div style={{
+    marginTop: 12,
+    fontSize: 10, 
+    color: COLORS.muted,
+    fontFamily: 'Georgia, serif',
+    fontStyle: 'italic',
+  }}>
+    First name is required to continue.
+  </div>
+)}
         </div>
       )}
 
