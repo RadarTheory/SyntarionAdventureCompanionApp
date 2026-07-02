@@ -234,15 +234,15 @@ export default function StepRace({
   };
 
   const handleRaceClick = (r) => {
-    if (expandedRace === r.id) {
-      setExpandedRace(null);
-      return;
-    }
-    setRace(r.id);
-    setRv(r.variants?.[0] || null);
-    setPmV(null);
-    setExpandedRace(r.id);
-  };
+  if (expandedRace === r.id) {
+    setExpandedRace(null);
+    return;
+  }
+  setRace(r.id);
+  setRv(r.variants?.[0] || null);
+  setPmV(null);
+  setExpandedRace(r.id);
+};
 
   const cols = isDesktop ? 4 : 2;
   const canAdvance = !!race && !!fn;
