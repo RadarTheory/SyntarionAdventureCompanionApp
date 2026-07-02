@@ -64,7 +64,7 @@ export const RACES = [
   { id:'drakazir',  name:'Drakazir',   sub:'Dragonborn', tag:'any',  lean:0,  sub2:'10 color lineages', variants:['Black','Blue','Brass','Bronze','Copper','Gold','Green','Red','Silver','White'], ns:'drakazir', desc:"Lineage-proud and breath-gifted. The ten lineages have different cultural relationships to the age of steam, but all of them remember when the world was hotter." },
   { id:'nazari',    name:'Nazari',     sub:'Sea-folk',   tag:'tech', lean:1,  sub2:'Aquatic · Superior darkvision', variants:[], ns:'nazari', desc:"Deep-water people who surface with purpose. Every Nazari on land is there by deliberate choice — the Sylvan Lung they invented to breathe surface air is proof of that." },
   { id:'chronison', name:'Chronison',  sub:'Construct',  tag:'tech', lean:2,  sub2:'Defensive · Corrupted/Rogue · Specialist', variants:['Defensive','Corrupted/Rogue','Specialist'], ns:'chronison', desc:"Built, not born. Sentience arrived uninvited in most cases, and has since made itself at home. Chronison cannot use magic in any form — their constructed nature is fundamentally incompatible with arcane, divine, and spiritual disciplines. The only exception is a weapon or tool infused with a special deposit of Grimrite element, which briefly bridges the gap between material and resonant." },
-  { id:'tiol',      name:'Tiol',       sub:'Vikingr–Dark Elf', tag:'magic',lean:-1, sub2:'Tiol · Other', variants:['Tiol','Other'], ns:'tiol', desc:"The Tiols are the procreation of human Vikingrs and the Dark Elves — two races once at war, joined in the wake of the phenomenon, before the establishment of the Silent Charter. The Dark Elves were the first humans exposed to the phenomenon, wielding magic and great power, and were once believed to bring humanity closer to the gods. Every Tiol is born with a unique ability, and every Tiol travels by flight or teleportation. Only two — Sakara and Kay — have ever been able to do both." },
+  { id:'tiol',      name:'Tiol',       sub:'Giant Vàld Dark-Tel\'ari', tag:'magic',lean:-1, sub2:'Tiol · Other', variants:['Tiol','Other'], ns:'tiol', desc:"The Tiols are the procreation of human Vikingrs and the Dark Elves — two races once at war, joined in the wake of the phenomenon, before the establishment of the Silent Charter. The Dark Elves were the first humans exposed to the phenomenon, wielding magic and great power, and were once believed to bring humanity closer to the gods. Every Tiol is born with a unique ability, and every Tiol travels by flight or teleportation. Only two — Sakara and Kay — have ever been able to do both." },
   { id:'folwoade',  name:'Folwoade',   sub:'Pure Magic', tag:'magic',lean:-2, sub2:'Beings of living resonance', variants:[], ns:'folwoade', desc:"The Folwoade are not born in any conventional sense — they coalesce from concentrations of pure magical resonance, taking a form that is part living creature and part sustained spell. Pale, ageless, and faintly luminous, they carry the weight of the Lines in their bones and perceive the world through a register most mortals cannot reach. They cannot use technology — their nature rejects the material logic of machines, mechanisms, and constructed systems entirely. The only exception is an item infused with a special deposit of Grimrite element, which allows brief and uncomfortable interaction with the technical world." },
 ];
 
@@ -150,7 +150,7 @@ export const RACE_VARIANT_DESCS = {
   tiol: {
     'Tiol': "A Tiol stands apart at a glance: exceptional height and muscle, lengthy ears that can extend up to five inches, and distinguishable markings across the face, arms, or torso. They are the visible inheritance of the Dark Elves — living proof of the bloodline once thought to bring humans closer to the gods.",
     'Other': "An Other is a Tiol in every way that matters — the same unique ability, the same inheritance of flight or teleportation — but born with perfectly humanlike features. Others are equal to their marked kin, though they are often dismissed as lesser for the human face they wear. Many have learned to make that underestimation a weapon.",
-    default: "Born of Vikingr and Dark Elf before the Silent Charter, when the phenomenon first touched the world. All Tiols carry a unique ability, and all travel by flight or teleportation — only Sakara and Kay can do both.",
+    default: "Born of Vald Addamar and Dark Tel'ari, when the phenomenon first touched the world. All Tiols carry a unique ability, and all travel by flight or teleportation.",
   },
 
 };
@@ -1094,6 +1094,7 @@ export const CLASSES = {
     { id:'druid',      name:'Druid',      path:'Nature',    disc:'Essence',   t2:'Ovate / Wildheart',      t3:'Dryad / Primalist',       stats:'Wis/Dex', magicTechNudge:-1 },
     { id:'sage',       name:'Sage',       path:'Arcane',    disc:'Gnosis',    t2:'Codexer / Scribe',       t3:'Glyphsage / Runesiph',    stats:'Int',     magicTechNudge:-1 },
     { id:'mystic',     name:'Mystic',     path:'Mythic',    disc:'Shaeid',    t2:'Guardian',               t3:'Arcani / Maleficar',      stats:'Wis/Cha', magicTechNudge:-2 },
+    { id:'bard',       name:'Bard',       path:'Melodic',   disc:'Resonance', t2:'Minstrel',               t3:'Rhapsodist',              stats:'Cha/Wis', magicTechNudge:-1 },
     { id:'magister',   name:'Magister',   path:'Shadow',    disc:'Wraill',    t2:'Hemoclast / Harrow',     t3:'Necromancer / Darkweaver',stats:'Int/Cha', magicTechNudge:-2 },
   ],
   tech: [
@@ -1104,6 +1105,7 @@ export const CLASSES = {
     { id:'scholar',   name:'Scholar',   path:'Academic',    disc:'Reason',    t2:'Tactician / Cartographer',t3:'Strategist / Archivist', stats:'Int/Wis', magicTechNudge:1  },
     { id:'rogue',     name:'Rogue',     path:'Covert',      disc:'Lithium',   t2:'Inspector / Ranger',     t3:'Detective / Strider',     stats:'Dex/Int', magicTechNudge:1  },
     { id:'artificer', name:'Artificer', path:'Engineering', disc:'Ingenuity', t2:'Gunslinger / Tinkerer',  t3:'Thaumaturge / Machinist', stats:'Int/Dex', magicTechNudge:2  },
+    { id:'poet',      name:'Poet',      path:'Rhetoric',    disc:'Resonance', t2:'Herald',                 t3:'Provocateur',             stats:'Cha/Int', magicTechNudge:1  },
   ],
 };
 
@@ -2406,3 +2408,29 @@ export function getRacialTraits(raceId, rv, pmV) {
 
   return { passive, active };
 }
+
+// ═══════════════════════════════════════════════════════════
+// CLASS PROGRESSION TREE (from Class Ability Tree master map)
+// branches: [ [T2, T3], ... ]  → capstone → relic
+// ═══════════════════════════════════════════════════════════
+export const PROGRESSION = {
+  // ── Magic path ──
+  Inquisitor: { row: 'Soul',   branches: [['Cleric','Paladin'], ['Devout','Augur']],                              capstone: 'Iridesce', relic: 'Ecliphane' },
+  Zealot:     { row: 'Spirit', branches: [['Shaman','Monk'], ['Bokor','Loaite']],                                 capstone: 'Caelyn', secret: 'The Lockcaste', relic: 'Caelvern' },
+  Weaver:     { row: 'Mind',   branches: [['Warlock','Castor'], ['Wizard','Magus'], ['Sorcerer','Evoke']],        capstone: 'Archon', relic: 'Archwand' },
+  Druid:      { row: 'Body',   branches: [['Ovate','Wild'], ['Primalist','Dryte']],                               capstone: 'Dyreon', relic: 'Fetchglove' },
+  Sage:       { row: 'Will',   branches: [['Scribe','Runesiph'], ['Codexer','Glyphsage']],                        capstone: 'Makemark', relic: 'Sigilawl' },
+  Mystic:     { row: 'Whim',   branches: [['Guardian','Dryad'], ['Fatebinder','Wishwright']],                     capstone: 'Arcani', relic: 'Shaeidblade' },
+  Bard:       { row: 'Affect', branches: [['Minstrel','Rhapsodist']],                                             capstone: 'Cantor', relic: 'Elderlute' },
+  Magister:   { row: 'Dream',  branches: [['Haruspex','Maleficar'], ['Harrow','Hemoclast'], ['Necromancer','Darkweaver']], capstone: 'Eldritch', relic: 'Felrod' },
+
+  // ── Tech path ──
+  Rogue:      { row: 'Soul',   branches: [['Inspector','Detective'], ['Strider','Ranger']],                       capstone: 'Sleuth', relic: 'Sleeve Stiletto' },
+  Merchant:   { row: 'Spirit', branches: [['Emissary','Tycoon'], ['Negotiator','Vizier']],                        capstone: 'Baron', relic: 'Warlatch' },
+  Scholar:    { row: 'Mind',   branches: [['Strategist','Tactician'], ['Cartographer','Archivist'], ['Scientist','Inventor']], capstone: 'Laureate', relic: 'Cypherhedron' },
+  Fighter:    { row: 'Body',   branches: [['Barbarian','Knight'], ['Swashbuckler','Marauder']],                   capstone: 'Gallant', relic: 'Praethic Blade' },
+  Vanguard:   { row: 'Will',   branches: [['Sentine','Stalwart'], ['Null','Warden']],                             capstone: 'Whyth', relic: 'Whythryn' },
+  Artificer:  { row: 'Whim',   branches: [['Gunsmith','Gunslinger'], ['Tinkerer','Machinist']],                   capstone: 'Engineer', relic: 'Coglock Pistol' },
+  Poet:       { row: 'Affect', branches: [['Herald','Provocateur']],                                              capstone: 'Tribune', relic: 'Cryerquill' },
+  Alchemist:  { row: 'Dream',  branches: [['Oneir','Philosopher'], ['Mutagenist','Biomancer'], ['Bombardier','Saboteur']], capstone: 'Eikon', relic: 'Philosophial' },
+};

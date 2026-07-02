@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useDevice } from './useDevice';
-import { COLORS, CLASSES } from './constants';
+import { COLORS, CLASSES, PROGRESSION } from './constants';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // STEP CLASS
@@ -136,46 +136,107 @@ export default function StepClass({
                 borderTop: `1px solid ${COLORS.border}`,
               }}
             >
-              {/* Progression path */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                marginBottom: 14,
-                flexWrap: 'wrap',
-              }}>
-                {/* Base */}
-                <span style={{
-                  fontFamily: "'Cinzel', serif",
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: text,
-                  background: bg,
-                  border: `1px solid ${color}`,
-                  borderRadius: 6,
-                  padding: '4px 10px',
-                }}>{cls.name}</span>
+              {/* Progression tree */}
+              {(() => {
+                const prog = PROGRESSION[cls.name];
+                if (!prog) return null;
+                return (
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{
+                      fontSize: 8,
+                      letterSpacing: '0.14em',
+                      textTransform: 'uppercase',
+                      color: COLORS.dim,
+                      fontFamily: "'Cinzel', serif",
+                      marginBottom: 8,
+                    }}>{prog.row} row</div>
 
-                <span style={{ color: COLORS.dim, fontSize: 10 }}>→</span>
+                    {prog.branches.map(([t2, t3], i) => (
+                      <div key={t2} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        flexWrap: 'wrap',
+                        marginBottom: 6,
+                      }}>
+                        <span style={{
+                          fontFamily: "'Cinzel', serif",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: text,
+                          background: bg,
+                          border: `1px solid ${color}`,
+                          borderRadius: 6,
+                          padding: '4px 10px',
+                          visibility: i === 0 ? 'visible' : 'hidden',
+                        }}>{cls.name}</span>
+                        <span style={{ color: COLORS.dim, fontSize: 10 }}>→</span>
+                        <span style={{
+                          fontFamily: 'Georgia, serif',
+                          fontSize: 11,
+                          color: COLORS.textSub,
+                          fontStyle: 'italic',
+                        }}>{t2}</span>
+                        <span style={{ color: COLORS.dim, fontSize: 10 }}>→</span>
+                        <span style={{
+                          fontFamily: 'Georgia, serif',
+                          fontSize: 11,
+                          color: COLORS.muted,
+                          fontStyle: 'italic',
+                        }}>{t3}</span>
+                      </div>
+                    ))}
 
-                {/* T2 */}
-                <span style={{
-                  fontFamily: 'Georgia, serif',
-                  fontSize: 11,
-                  color: COLORS.textSub,
-                  fontStyle: 'italic',
-                }}>{cls.t2}</span>
-
-                <span style={{ color: COLORS.dim, fontSize: 10 }}>→</span>
-
-                {/* T3 */}
-                <span style={{
-                  fontFamily: 'Georgia, serif',
-                  fontSize: 11,
-                  color: COLORS.muted,
-                  fontStyle: 'italic',
-                }}>{cls.t3}</span>
-              </div>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      flexWrap: 'wrap',
+                      marginTop: 10,
+                      paddingTop: 10,
+                      borderTop: `1px dashed ${COLORS.border}`,
+                    }}>
+                      <span style={{
+                        fontSize: 9,
+                        color: COLORS.dim,
+                        fontFamily: 'Georgia, serif',
+                        fontStyle: 'italic',
+                      }}>Culminates in</span>
+                      <span style={{
+                        fontFamily: "'Cinzel', serif",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: text,
+                        background: bg,
+                        border: `1px solid ${color}`,
+                        borderRadius: 6,
+                        padding: '4px 10px',
+                      }}>{prog.capstone}</span>
+                      {prog.secret && (
+                        <span style={{
+                          fontFamily: "'Cinzel', serif",
+                          fontSize: 10,
+                          color: COLORS.muted,
+                          border: `1px dashed ${COLORS.borderMid}`,
+                          borderRadius: 6,
+                          padding: '4px 10px',
+                          fontStyle: 'italic',
+                        }}>{prog.secret}</span>
+                      )}
+                      <span style={{ color: COLORS.dim, fontSize: 10 }}>⟶</span>
+                      <span style={{
+                        fontFamily: 'Georgia, serif',
+                        fontSize: 11,
+                        color: COLORS.textSub,
+                        fontStyle: 'italic',
+                        border: `1px solid ${COLORS.border}`,
+                        borderRadius: 6,
+                        padding: '4px 10px',
+                      }}>{prog.relic}</span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Stats */}
               <div style={{
