@@ -290,6 +290,75 @@ function ScribePanel({ onClose }) {
   );
 }
 
+// ─── ASSIGN OWNER PANEL ──────────────────────────────────────────────────────
+function AssignOwnerPanel({ char }) {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [owner, setOwner] = useState(null);
+  const [ownerId, setOwnerId] = useState(char.user_id || null);
+
+  useEffect(() => {
+    if (!ownerId) { setOwner(null); return; }
+    supabase.from('profiles').select('id, username, email').eq('id', ownerId).maybeSingle()
+      .then(({ data }) => setOwner(data || null));
+  }, [ownerId]);
+
+  const runSearch = async () => {
+    const q = query.trim();
+    if (!q) return;
+    setSearching(true);
+    const { data } = await supabase.from('profiles')
+      .select('id, username, email')
+      .or(`email.ilike.%${q}%,username.ilike.%${q}%`)
+      .limit(10);
+    setResults(data || []);
+    setSearching(false);
+  };
+
+  const assign = async (profile) => {
+    await supabase.from('characters').update({ user_id: profile.id }).eq('id', char.id);
+    setOwnerId(profile.id);
+    setResults([]); setQuery('');
+  };
+
+  const unassign = async () => {
+    await supabase.from('characters').update({ user_id: null }).eq('id', char.id);
+    setOwnerId(null);
+  };
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ ...label8(), marginBottom: 8 }}>Assigned Player</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <div style={{ flex: 1, fontSize: 11, color: owner ? COLORS.text : COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: owner ? 'normal' : 'italic' }}>
+          {owner ? `${owner.username || owner.email}${owner.email && owner.username ? ` · ${owner.email}` : ''}` : 'Unclaimed — no player assigned'}
+        </div>
+        {ownerId && (
+          <button onClick={unassign} style={{ background: 'transparent', border: `1px solid ${COLORS.warn}55`, borderRadius: 4, padding: '4px 10px', cursor: 'pointer', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.warn, fontFamily: "'Cinzel', serif" }}>Unassign</button>
+        )}
+      </div>
+      <div style={{ display: 'flex', gap: 6 }}>
+        <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && runSearch()} placeholder="Search by email or username…" style={{ flex: 1, background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
+        <button onClick={runSearch} disabled={searching || !query.trim()} style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '7px 14px', cursor: searching || !query.trim() ? 'default' : 'pointer', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.magicText, fontFamily: "'Cinzel', serif", opacity: searching ? 0.6 : 1 }}>{searching ? '…' : 'Search'}</button>
+      </div>
+      {results.length > 0 && (
+        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 180, overflowY: 'auto', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: 6 }}>
+          {results.map(p => (
+            <div key={p.id} onClick={() => assign(p)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, background: 'rgba(240,238,235,0.03)', border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '7px 10px', cursor: 'pointer' }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 10, color: COLORS.text, fontFamily: "'Cinzel', serif", letterSpacing: '0.05em' }}>{p.username || '—'}</div>
+                <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.email}</div>
+              </div>
+              <div style={{ fontSize: 7, color: COLORS.magic, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>Assign →</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── CHARACTER EDITOR ─────────────────────────────────────────────────────────
 function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
   const [data, setData] = useState({ portrait_url: char.portrait_url || char.data?.portrait_url || null, ...char });
@@ -352,6 +421,8 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
             {campaigns.map(c => <div key={c.id}onClick={() => set('campaign', data.campaign === c.id ? null : c.id)} style={{ background: data.campaign === c.id ? COLORS.magicBg : 'transparent', border: `1px solid ${data.campaign === c.id ? COLORS.magic : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontSize: 10, color: data.campaign === c.id ? COLORS.magicText : COLORS.muted, fontFamily: "'Cinzel', serif", letterSpacing: '0.06em' }}>{c.subtitle}</div>)}
           </div>
         </div>
+
+        <AssignOwnerPanel char={char} />
 
         <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
           <div style={{ flex: 1 }}>
