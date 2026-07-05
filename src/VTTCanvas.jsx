@@ -346,13 +346,13 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   useEffect(() => { onTokensChange?.(tokens); }, [tokens, onTokensChange]);
 
   useEffect(() => {
-    if (!campaignId) return;
+    if (!activeCampaignId) return;
     loadSession();
-    const sub = supabase.channel(`vtt-${campaignId}-${uid()}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'vtt_sessions', filter: `campaign_id=eq.${campaignId}` }, () => loadSession())
+    const sub = supabase.channel(`vtt-${activeCampaignId}-${uid()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vtt_sessions', filter: `campaign_id=eq.${activeCampaignId}` }, () => loadSession())
       .subscribe();
     return () => supabase.removeChannel(sub);
-  }, [campaignId]);
+  }, [activeCampaignId]);
 
   useEffect(() => {
     if (!onRegisterPlaceToken) return;
@@ -402,7 +402,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   }, [vttSession]);
 
   const loadSession = async () => {
-    const { data } = await supabase.from('vtt_sessions').select('*').eq('campaign_id', String(campaignId)).maybeSingle();
+    const { data } = await supabase.from('vtt_sessions').select('*').eq('campaign_id', String(activeCampaignId)).maybeSingle();
     if (data) {
       setVttSession(data);
       setFogZones(data.fog_zones || []);
@@ -410,31 +410,53 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
       setMapFilename(data.map_filename);
       if (data.view_transform) setTransform(data.view_transform);
     } else {
-      const { data: camp } = await supabase.from('campaigns').select('map_url').eq('id', String(campaignId)).single();
+      const { data: camp } = await supabase.from('campaigns').select('map_url').eq('id', String(activeCampaignId)).single();
       const filename = camp?.map_url || null;
-      const { data: newSession } = await supabase.from('vtt_sessions').insert({ campaign_id: String(campaignId), map_filename: filename, fog_zones: [], tokens: [], pending_moves: [] }).select().single();
+      const { data: newSession } = await supabase.from('vtt_sessions').insert({ campaign_id: String(activeCampaignId), map_filename: filename, fog_zones: [], tokens: [], pending_moves: [], map_states: {} }).select().single();
       if (newSession) { setVttSession(newSession); setMapFilename(filename); }
     }
   };
 
+  // Stash the current map's board state into map_states so it survives map switches
+  const stashCurrentMapState = async () => {
+    if (!vttSession?.id || !mapFilename) return vttSession?.map_states || {};
+    const states = { ...(vttSession.map_states || {}) };
+    states[mapFilename] = { fog_zones: fogZones, tokens, view_transform: transform };
+    await supabase.from('vtt_sessions').update({ map_states: states, updated_at: new Date().toISOString() }).eq('id', vttSession.id);
+    setVttSession(prev => prev ? { ...prev, map_states: states } : prev);
+    return states;
+  };
+
   const pickMap = async (filename) => {
-    if (!vttSession) {
-      const { data } = await supabase.from('vtt_sessions').upsert({ campaign_id: campaignId, map_filename: filename, fog_zones: [], tokens: [], pending_moves: [] }, { onConflict: 'campaign_id' }).select().single();
-      if (data) setVttSession(data);
+    let session = vttSession;
+    let states = session?.map_states || {};
+    if (!session) {
+      const { data } = await supabase.from('vtt_sessions').upsert({ campaign_id: String(activeCampaignId), map_filename: filename, fog_zones: [], tokens: [], pending_moves: [], map_states: {} }, { onConflict: 'campaign_id' }).select().single();
+      if (data) { session = data; setVttSession(data); states = data.map_states || {}; }
     } else {
-      await supabase.from('vtt_sessions').update({ map_filename: filename }).eq('id', vttSession.id);
+      states = await stashCurrentMapState();
     }
-    await supabase.from('campaigns').update({ map_url: filename }).eq('id', campaignId);
-    setMapFilename(filename); setMapSearch(''); setTransform({ scale: 1, x: 0, y: 0 });
+    const target = states[filename] || {};
+    const nextFog = target.fog_zones || [];
+    const nextTokens = target.tokens || [];
+    const nextTransform = target.view_transform || { scale: 1, x: 0, y: 0 };
+    if (session?.id) {
+      await supabase.from('vtt_sessions').update({ map_filename: filename, fog_zones: nextFog, tokens: nextTokens, updated_at: new Date().toISOString() }).eq('id', session.id);
+    }
+    await supabase.from('campaigns').update({ map_url: filename }).eq('id', activeCampaignId);
+    setFogZones(nextFog); setTokens(nextTokens); setTransform(nextTransform);
+    setMapFilename(filename); setMapSearch('');
   };
 
   const save = async (targetCampaignId) => {
     setSaving(true);
-    const { data: existing } = await supabase.from('vtt_sessions').select('id').eq('campaign_id', targetCampaignId).maybeSingle();
+    const { data: existing } = await supabase.from('vtt_sessions').select('id, map_states').eq('campaign_id', targetCampaignId).maybeSingle();
+    const states = { ...(existing?.map_states || vttSession?.map_states || {}) };
+    if (mapFilename) states[mapFilename] = { fog_zones: fogZones, tokens, view_transform: transform };
     if (existing) {
-      await supabase.from('vtt_sessions').update({ fog_zones: fogZones, tokens, map_filename: mapFilename, view_transform: transform, updated_at: new Date().toISOString() }).eq('id', existing.id);
+      await supabase.from('vtt_sessions').update({ fog_zones: fogZones, tokens, map_filename: mapFilename, view_transform: transform, map_states: states, updated_at: new Date().toISOString() }).eq('id', existing.id);
     } else {
-      await supabase.from('vtt_sessions').insert({ campaign_id: targetCampaignId, map_filename: mapFilename, fog_zones: fogZones, tokens, pending_moves: [], view_transform: transform });
+      await supabase.from('vtt_sessions').insert({ campaign_id: targetCampaignId, map_filename: mapFilename, fog_zones: fogZones, tokens, pending_moves: [], view_transform: transform, map_states: states });
     }
     await supabase.from('campaigns').update({ map_url: mapFilename }).eq('id', targetCampaignId);
     setSaving(false); setShowCommitPicker(false);

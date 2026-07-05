@@ -1050,6 +1050,21 @@ const denyEvent = async event => {
       description: `${actorName} has been marked dead.`,
     });
 
+    // Propagate death to the VTT token so the death icon renders on the board
+    const { data: vttData } = await supabase.from('vtt_sessions')
+      .select('id, tokens')
+      .eq('campaign_id', String(campaignId))
+      .maybeSingle();
+    if (vttData?.id) {
+      const deadKey = String(row.character_id || row.character_name || '').toLowerCase();
+      const updatedTokens = (vttData.tokens || []).map(t => {
+        const keys = [t.id, t.token_id, t.characterId, t.name, t.creatureName, t.label]
+          .filter(v => v != null).map(v => String(v).toLowerCase());
+        return keys.includes(deadKey) ? { ...t, status: 'dead' } : t;
+      });
+      await supabase.from('vtt_sessions').update({ tokens: updatedTokens, updated_at: new Date().toISOString() }).eq('id', vttData.id);
+    }
+
     await loadInitiative(sid);
     await loadEvents(sid);
   };
