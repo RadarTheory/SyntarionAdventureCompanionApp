@@ -324,13 +324,19 @@ function AssignOwnerPanel({ char }) {
   };
 
   const assign = async (profile) => {
-    await supabase.from('characters').update({ user_id: profile.id }).eq('id', char.id);
+    const { data, error } = await supabase.from('characters')
+      .update({ user_id: profile.id }).eq('id', char.id).select('id, user_id');
+    if (error) { alert(`Assign failed: ${error.message}`); return; }
+    if (!data?.length) { alert('Assign failed: 0 rows written (a database policy filtered it).'); return; }
     setOwnerId(profile.id);
     setResults([]); setQuery('');
   };
 
   const unassign = async () => {
-    await supabase.from('characters').update({ user_id: null }).eq('id', char.id);
+    const { data, error } = await supabase.from('characters')
+      .update({ user_id: null }).eq('id', char.id).select('id');
+    if (error) { alert(`Unassign failed: ${error.message}`); return; }
+    if (!data?.length) { alert('Unassign failed: 0 rows written (a database policy filtered it).'); return; }
     setOwnerId(null);
   };
 

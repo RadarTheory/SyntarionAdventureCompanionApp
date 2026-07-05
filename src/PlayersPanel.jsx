@@ -33,7 +33,7 @@ export default function PlayersPanel({ onOpenCharacter, onMessage, showVTT, onPl
     if (!collapsed) fetchAll();
   }, [collapsed]);
 
-  const userList = users.map(u => ({ ...u, chars: characters.filter(c => c.user_id === u.id) }));
+  const userList = users.map(u => ({ ...u, chars: characters.filter(c => c.user_id != null && String(c.user_id) === String(u.id)) }));
   const unclaimed = characters.filter(c => !c.user_id);
 
   const statusColor = (s) => ({ approved: COLORS.magic, awaiting_adventure: COLORS.deity, rejected: COLORS.warn, draft: COLORS.dim }[s] || COLORS.dim);
@@ -72,7 +72,15 @@ export default function PlayersPanel({ onOpenCharacter, onMessage, showVTT, onPl
             </div>
           )}
         </div>
-        {!collapsed && <div style={{ fontSize: 10, color: COLORS.dim, flexShrink: 0 }}>›</div>}
+        {!collapsed && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <button onClick={e => { e.stopPropagation(); fetchAll(); }} title="Refresh players"
+              style={{ background: 'transparent', border: `1px solid rgba(240,238,235,0.12)`, borderRadius: 4, padding: '2px 7px', cursor: 'pointer', fontSize: 10, color: loading ? COLORS.deity : COLORS.dim, lineHeight: 1 }}>
+              {loading ? '…' : '↺'}
+            </button>
+            <div style={{ fontSize: 10, color: COLORS.dim }}>›</div>
+          </div>
+        )}
       </div>
 
       {/* ── Body ── */}
