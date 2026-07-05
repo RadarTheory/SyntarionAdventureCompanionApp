@@ -310,7 +310,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   useEffect(() => { fetchCharacters(); }, [user?.id]);
 
   const goHome = () => { localStorage.setItem('syn_view', 'home'); setAppView('home'); fetchCharacters(); };
-  const handlePlay = () => { const v = savedChars.length > 0 ? 'character-select' : 'wizard'; localStorage.setItem('syn_view', v); setAppView(v); };
+  const handlePlay = () => { localStorage.setItem('syn_view', 'character-select'); setAppView('character-select'); };
   const handleDMSuccess = () => { setShowDMModal(false); localStorage.setItem('syn_view', 'dm'); setAppView('dm'); };
 
   // ── Render Views ───────────────────────────────────────────────────────────
