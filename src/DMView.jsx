@@ -297,22 +297,29 @@ function AssignOwnerPanel({ char }) {
   const [searching, setSearching] = useState(false);
   const [owner, setOwner] = useState(null);
   const [ownerId, setOwnerId] = useState(char.user_id || null);
+  const [allUsers, setAllUsers] = useState(null);
+
+  const loadUsers = async () => {
+    if (allUsers) return allUsers;
+    const { data } = await supabase.rpc('get_user_profiles');
+    const mapped = (data || []).map(u => ({ ...u, username: u.email ? u.email.split('@')[0] : '—' }));
+    setAllUsers(mapped);
+    return mapped;
+  };
 
   useEffect(() => {
     if (!ownerId) { setOwner(null); return; }
-    supabase.from('profiles').select('id, username, email').eq('id', ownerId).maybeSingle()
-      .then(({ data }) => setOwner(data || null));
+    loadUsers().then(list => setOwner(list.find(u => u.id === ownerId) || null));
   }, [ownerId]);
 
   const runSearch = async () => {
-    const q = query.trim();
+    const q = query.trim().toLowerCase();
     if (!q) return;
     setSearching(true);
-    const { data } = await supabase.from('profiles')
-      .select('id, username, email')
-      .or(`email.ilike.%${q}%,username.ilike.%${q}%`)
-      .limit(10);
-    setResults(data || []);
+    const list = await loadUsers();
+    setResults(list.filter(u =>
+      (u.email || '').toLowerCase().includes(q) || (u.username || '').toLowerCase().includes(q)
+    ).slice(0, 10));
     setSearching(false);
   };
 
@@ -332,7 +339,7 @@ function AssignOwnerPanel({ char }) {
       <div style={{ ...label8(), marginBottom: 8 }}>Assigned Player</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <div style={{ flex: 1, fontSize: 11, color: owner ? COLORS.text : COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: owner ? 'normal' : 'italic' }}>
-          {owner ? `${owner.username || owner.email}${owner.email && owner.username ? ` · ${owner.email}` : ''}` : 'Unclaimed — no player assigned'}
+          {owner ? `${owner.username} · ${owner.email}` : 'Unclaimed — no player assigned'}
         </div>
         {ownerId && (
           <button onClick={unassign} style={{ background: 'transparent', border: `1px solid ${COLORS.warn}55`, borderRadius: 4, padding: '4px 10px', cursor: 'pointer', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.warn, fontFamily: "'Cinzel', serif" }}>Unassign</button>
