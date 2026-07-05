@@ -143,12 +143,12 @@ export default function StepClass({
                 return (
                   <div style={{ marginBottom: 14 }}>
                     <div style={{
-                      fontSize: 8,
+                      fontSize: 10,
                       letterSpacing: '0.14em',
                       textTransform: 'uppercase',
-                      color: COLORS.dim,
+                      color: COLORS.muted,
                       fontFamily: "'Cinzel', serif",
-                      marginBottom: 8,
+                      marginBottom: 10,
                     }}>{prog.row} row</div>
 
                     {prog.branches.map(([t2, t3], i) => (
@@ -180,8 +180,8 @@ export default function StepClass({
                         <span style={{ color: COLORS.dim, fontSize: 10 }}>→</span>
                         <span style={{
                           fontFamily: 'Georgia, serif',
-                          fontSize: 11,
-                          color: COLORS.muted,
+                          fontSize: 12,
+                          color: COLORS.textSub,
                           fontStyle: 'italic',
                         }}>{t3}</span>
                       </div>
@@ -194,7 +194,6 @@ export default function StepClass({
                       flexWrap: 'wrap',
                       marginTop: 10,
                       paddingTop: 10,
-                      borderTop: `1px dashed ${COLORS.border}`,
                     }}>
                       <span style={{
                         fontSize: 9,
@@ -260,10 +259,7 @@ export default function StepClass({
                 borderRadius: 2,
                 border: `1px solid ${color}`,
               }}>
-                {path === 'magic'
-                  ? `Pulls the Magic | Tech meter toward Magic (${cls.magicTechNudge})`
-                  : `Pulls the Magic | Tech meter toward Tech (+${cls.magicTechNudge})`
-                }
+                {`Pulls the Magic | Tech meter ${cls.magicTechNudge < 0 ? 'toward Magic' : 'toward Tech'} (${cls.magicTechNudge < 0 ? '' : '+'}${cls.magicTechNudge})`}
               </div>
 
               <button
