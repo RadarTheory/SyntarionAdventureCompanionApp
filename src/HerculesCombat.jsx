@@ -1056,11 +1056,12 @@ const denyEvent = async event => {
       .eq('campaign_id', String(campaignId))
       .maybeSingle();
     if (vttData?.id) {
-      const deadKey = String(row.character_id || row.character_name || '').toLowerCase();
+      const norm = (v) => String(v).toLowerCase().replace(/\s*#\d+\s*$/, '').trim();
+      const deadKey = norm(row.character_id || row.character_name || '');
       const updatedTokens = (vttData.tokens || []).map(t => {
-        const keys = [t.id, t.token_id, t.characterId, t.name, t.creatureName, t.label]
-          .filter(v => v != null).map(v => String(v).toLowerCase());
-        return keys.includes(deadKey) ? { ...t, status: 'dead' } : t;
+        const keys = [t.id, t.token_id, t.characterId, t.name, t.fullName, t.creatureName, t.label]
+          .filter(v => v != null).map(norm);
+        return keys.some(k => k === deadKey || (deadKey.length > 2 && (k.startsWith(deadKey) || deadKey.startsWith(k)))) ? { ...t, status: 'dead' } : t;
       });
       await supabase.from('vtt_sessions').update({ tokens: updatedTokens, updated_at: new Date().toISOString() }).eq('id', vttData.id);
     }

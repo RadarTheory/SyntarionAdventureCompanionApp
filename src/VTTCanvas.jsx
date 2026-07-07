@@ -199,7 +199,7 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
     }
 
     // Death overlay (enemies only)
-    if (tok.status === 'dead' && !tok.characterId) {
+    if (tok.status === 'dead' && tok.type !== 'player') {
       const deathIcon = getRaceIcon('death', onIconReady);
       if (deathIcon) {
         ctx.globalAlpha = 0.85;
@@ -401,12 +401,21 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
     return () => window.removeEventListener('vtt:add_npc_token', handler);
   }, [vttSession]);
 
+  const hydratePortraits = async (toks) => {
+    const charIds = [...new Set((toks || []).filter(t => t.characterId).map(t => String(t.characterId)))];
+    if (charIds.length === 0) return toks || [];
+    const { data: chars } = await supabase.from('characters').select('id, data').in('id', charIds);
+    if (!chars) return toks;
+    const map = Object.fromEntries(chars.map(c => [String(c.id), (typeof c.data === 'string' ? JSON.parse(c.data) : c.data)?.portrait_url || null]));
+    return toks.map(t => t.characterId && map[String(t.characterId)] ? { ...t, portrait_url: map[String(t.characterId)] } : t);
+  };
+
   const loadSession = async () => {
     const { data } = await supabase.from('vtt_sessions').select('*').eq('campaign_id', String(activeCampaignId)).maybeSingle();
     if (data) {
       setVttSession(data);
       setFogZones(data.fog_zones || []);
-      setTokens(data.tokens || []);
+      setTokens(await hydratePortraits(data.tokens || []));
       setMapFilename(data.map_filename);
       if (data.view_transform) setTransform(data.view_transform);
     } else {

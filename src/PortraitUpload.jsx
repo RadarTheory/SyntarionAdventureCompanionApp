@@ -177,7 +177,7 @@ export default function PortraitUpload({ currentUrl, onUploaded, size = 96 }) {
     const { error } = await supabase.storage.from('portraits').upload(path, blob, { upsert: true, contentType: `image/${ext === 'png' ? 'png' : 'jpeg'}` });
     if (error) { console.error('Portrait upload failed:', error); setUploading(false); return; }
     const { data } = supabase.storage.from('portraits').getPublicUrl(path);
-    onUploaded(data.publicUrl);
+    onUploaded(`${data.publicUrl}?v=${Date.now()}`);
     setUploading(false);
   };
 
