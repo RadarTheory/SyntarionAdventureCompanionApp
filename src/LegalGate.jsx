@@ -17,7 +17,11 @@ const DOCS = {
 // ─── MINIMAL MARKDOWN RENDER ─────────────────────────────────────────────────
 function Inline({ text }) {
   const clean = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
-  return clean.split('**').map((part, i) => (i % 2 ? <strong key={i}>{part}</strong> : part));
+  return clean.split('**').map((part, i) =>
+    i % 2
+      ? <strong key={i}>{part}</strong>
+      : part.split('*').map((seg, j) => (j % 2 ? <em key={`${i}-${j}`}>{seg}</em> : seg))
+  );
 }
 
 function Markdown({ text }) {
