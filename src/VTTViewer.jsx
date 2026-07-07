@@ -97,7 +97,15 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
       fogCtx.fillStyle = grad;
       fogCtx.fill();
     } else if (zone.type === 'hide') {
-      }
+      fogCtx.globalCompositeOperation = 'source-over';
+      const grad = fogCtx.createRadialGradient(cx, cy, inner, cx, cy, r);
+      grad.addColorStop(0, 'rgba(10,8,6,1)');
+      grad.addColorStop(1, 'rgba(10,8,6,0)');
+      fogCtx.beginPath();
+      fogCtx.arc(cx, cy, r, 0, Math.PI * 2);
+      fogCtx.fillStyle = grad;
+      fogCtx.fill();
+    }
   });
   ctx.drawImage(fogCanvas, 0, 0);
 
