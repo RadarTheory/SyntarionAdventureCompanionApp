@@ -75,7 +75,7 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
   const fogCanvas = document.createElement('canvas');
   fogCanvas.width = W; fogCanvas.height = H;
   const fogCtx = fogCanvas.getContext('2d');
-  fogCtx.fillStyle = 'rgba(10,8,6,0.85)';
+  fogCtx.fillStyle = 'rgba(10,8,6,1)';
   fogCtx.fillRect(0, 0, W, H);
   fogZones.forEach(zone => {
     const cx = mapRect.x + zone.x * mapRect.w;
@@ -97,19 +97,7 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
       fogCtx.fillStyle = grad;
       fogCtx.fill();
     } else if (zone.type === 'hide') {
-      fogCtx.globalCompositeOperation = 'source-over';
-      fogCtx.beginPath();
-      fogCtx.arc(cx, cy, inner, 0, Math.PI * 2);
-      fogCtx.fillStyle = 'rgba(10,8,6,0.92)';
-      fogCtx.fill();
-      const grad = fogCtx.createRadialGradient(cx, cy, inner, cx, cy, r);
-      grad.addColorStop(0, 'rgba(10,8,6,0.92)');
-      grad.addColorStop(1, 'rgba(10,8,6,0)');
-      fogCtx.beginPath();
-      fogCtx.arc(cx, cy, r, 0, Math.PI * 2);
-      fogCtx.fillStyle = grad;
-      fogCtx.fill();
-    }
+      }
   });
   ctx.drawImage(fogCanvas, 0, 0);
 
