@@ -7,8 +7,9 @@ import supabase from './lib/supabase';
 export const LEGAL_VERSION = '2026-07-06';
 
 const DOCS = {
-  tos:  { label: 'Terms of Service', path: '/legal/TERMS_OF_SERVICE.md' },
-  eula: { label: 'EULA',             path: '/legal/EULA.md' },
+  tos:     { label: 'Terms of Service', path: `/legal/TERMS_OF_SERVICE.md?v=${LEGAL_VERSION}`, acceptance: true },
+  eula:    { label: 'EULA',             path: `/legal/EULA.md?v=${LEGAL_VERSION}`,             acceptance: true },
+  privacy: { label: 'Privacy Policy',   path: `/legal/PRIVACY_POLICY.md?v=${LEGAL_VERSION}`,   acceptance: false },
 };
 
 // ─── MINIMAL MARKDOWN RENDER ─────────────────────────────────────────────────
@@ -37,9 +38,9 @@ function Markdown({ text }) {
 // Read-only mode: <LegalGate readOnly initialTab="tos" onClose={...} />
 export default function LegalGate({ user, onAccept, readOnly = false, initialTab = 'tos', onClose }) {
   const [tab, setTab] = useState(initialTab);
-  const [docs, setDocs] = useState({ tos: null, eula: null });
+  const [docs, setDocs] = useState({ tos: null, eula: null, privacy: null });
   const [agreed, setAgreed] = useState({ tos: false, eula: false });
-const [saving, setSaving] = useState(false);
+ const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
   const scrollRef = useRef(null);
   const scrollPos = useRef({ tos: 0, eula: 0 });
@@ -124,7 +125,7 @@ const [saving, setSaving] = useState(false);
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 6, padding: '16px 28px 0' }}>
-          {Object.entries(DOCS).map(([key, d]) => {
+          {Object.entries(DOCS).filter(([, d]) => readOnly || d.acceptance).map(([key, d]) => {
             const isAgreed = !readOnly && agreed[key];
             return (
               <button

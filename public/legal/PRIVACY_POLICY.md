@@ -1,0 +1,94 @@
+# Privacy Policy
+
+**Syntarion Adventure Companion App**
+**Effective Date:** July 6, 2026
+**Operator:** Adrian Gilmore, doing business as **Theonhex Media & Publishing** ("Operator," "we," "us")
+
+This Privacy Policy explains what information we collect through the Syntarion Adventure Companion App (the "Service"), how we use it, and the choices you have. It should be read together with the Terms of Service and the End User License Agreement. By using the Service, you acknowledge this Policy.
+
+The short version: we collect what the Service needs to function, we do not sell your personal information, we do not run ads or third-party trackers, and some of what you type or say is sent to AI providers when — and only when — you use the AI features.
+
+## 1. Information We Collect
+
+**Account information.** When you sign in with Google, we receive your email address and basic profile information from Google. You may also set a display name within the Service.
+
+**Your Content.** Material you create or submit through the Service: characters (names, backstories, statistics, equipment), journal and Grimoire entries, Lark letters, chat messages and intent declarations, uploaded portraits and images, and campaign or session material you author.
+
+**Gameplay event logs.** The Service records gameplay events — combat actions, session activity, map and token state, loot assignments, and similar — to power features like session chronicles, Grimoires, combat history, and campaign persistence.
+
+**Voice recordings.** If you use voice dictation, the audio you record is captured for transcription as described in Section 3.
+
+**Local device storage.** The Service stores preferences in your browser's local storage — such as your selected view, active character, dark mode setting, and pinned campaign. This data stays on your device and is not transmitted to us. We do not use advertising cookies or third-party analytics trackers.
+
+## 2. How We Use Information
+
+We use the information above to:
+
+(a) operate the Service — authentication, character and campaign management, the virtual tabletop, messaging, and session tools;
+(b) display shared content to other participants in your campaign, which is how a shared tabletop works by design;
+(c) power AI-assisted features when you invoke them (Section 3);
+(d) maintain, debug, and improve the Service; and
+(e) enforce the Terms of Service and protect the Service and its users.
+
+We do not sell your personal information, and we do not use it for advertising.
+
+## 3. The Scribe and AI Features — Disclaimer
+
+The Service includes AI-assisted features, including the Scribe (lore consultation and session synopsis) and voice dictation. **These features only process your data when you actively use them.**
+
+**What is sent, and to whom:**
+
+- **The Scribe / lore consultation / session synopsis:** the text you submit, together with relevant campaign context (such as lore excerpts and gameplay events needed to answer your request), is transmitted to and processed by **Google's Gemini API**.
+- **Voice dictation:** audio you record is transmitted to and processed by **Groq's Whisper transcription service**. We retain the resulting transcription as part of Your Content; we do not retain the audio after transcription.
+
+**About the output.** AI-generated content is produced by statistical language models. It may be inaccurate, incomplete, invented, or inconsistent with established Soteria lore — even when it sounds confident. It is provided for entertainment and convenience only. It is not canon unless adopted by the DM, and **the DM's ruling is always final**. Do not rely on AI output for anything beyond your table.
+
+**About the providers.** Google and Groq process submitted data under their own privacy policies and terms, which we do not control. We cannot guarantee how third-party providers retain or use data submitted to them. For this reason, **do not submit sensitive personal information** — yours or anyone else's — through AI features. Character backstories are welcome; real-world medical, financial, or identifying details are not.
+
+## 4. How Information Is Shared
+
+**Campaign participants.** Content shared within a campaign — your character's presence on the map, chat messages, Grimoire entries generated from shared events, and similar — is visible to other participants in that campaign, including the DM. This is by design.
+
+**Infrastructure providers.** The Service is built on **Supabase** (database, authentication, and file storage) and **Vercel** (hosting). Your data is stored and processed by these providers as part of operating the Service.
+
+**AI providers.** As described in Section 3, when you use AI features.
+
+**Legal requirements.** We may disclose information if required by law, or to protect the rights, safety, or property of the Operator, the Service, or its users.
+
+We do not share your personal information with anyone else, and we never sell it.
+
+## 5. Data Storage and Security
+
+Data is stored with our infrastructure providers using access controls that restrict campaign and character data to the users authorized to see it. We take reasonable measures to protect your information, but no online service can guarantee absolute security. Do not reuse passwords across services, and back up anything you cannot afford to lose.
+
+## 6. Data Retention and Deletion
+
+We retain your information for as long as your account is active or as needed to operate the Service.
+
+You may request deletion of your account and associated personal data by contacting us at the address in Section 10. Upon account deletion, your personal information — including your email address and directly identifiable private data — will be permanently deleted.
+
+**Please note two exceptions, disclosed here plainly:**
+
+- **Characters persist.** As described in Section 4.1 of the EULA, characters created through gameplay — name, race, class, equipment, statistics, key logs, and narrative history — are preserved by the Operator after account deletion and may be incorporated into the ongoing lore and future creative works of the Soteria setting, with attribution by your saved nickname. This does not include your email address or other private personal data.
+- **Shared campaign records.** Content interwoven with other players' campaign history (such as event logs referencing your character) may be retained in anonymized or campaign-historical form, because deleting it would destroy other users' records.
+
+## 7. Children
+
+The Service is not directed to children under 13, and we do not knowingly collect personal information from them. If you are under 18, you must have permission from a parent or guardian to use the Service. If you believe a child under 13 has provided us personal information, contact us and we will delete it.
+
+## 8. Your Choices
+
+- **Access and correction:** you can update your display name in Settings; for other corrections, contact us.
+- **Deletion:** request account deletion at any time (Section 6).
+- **AI features:** entirely optional — nothing is sent to AI providers unless you use them.
+- **Local storage:** clear your browser's site data at any time to remove locally stored preferences.
+
+Depending on where you live, you may have additional rights under local law (such as rights of access, portability, or deletion). We will honor valid requests to the extent required.
+
+## 9. Changes to This Policy
+
+We may update this Policy from time to time. Material changes will be announced through the Service or the repository, with an updated Effective Date. Continued use of the Service after changes take effect constitutes acknowledgment.
+
+## 10. Contact
+
+Questions about this Policy or your data: **contact@theonhexmedia.com**
