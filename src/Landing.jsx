@@ -161,18 +161,49 @@ function SyntarionLogo({ size = 320, darkMode = false }) {
 
 // ─── DM SIGIL MODAL ──────────────────────────────────────────────────────────
 function DMSigilModal({ onSuccess, onCancel }) {
+  const [modules, setModules] = useState([]);
+  const [moduleId, setModuleId] = useState(null);
+  const [mode, setMode] = useState('unlock'); // 'unlock' | 'create'
+  const [newName, setNewName] = useState('');
   const [input, setInput] = useState('');
-  const [error, setError] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   const [shake, setShake] = useState(false);
 
-  const attempt = () => {
-    if (input === import.meta.env.VITE_DM_PASSWORD) {
-      onSuccess();
+  useEffect(() => {
+    supabase.from('modules').select('id, name').order('created_at', { ascending: true })
+      .then(({ data }) => {
+        setModules(data || []);
+        if (data?.length) setModuleId(data[0].id);
+      });
+  }, []);
+
+  const fail = (msg) => {
+    setError(msg);
+    setShake(true);
+    setTimeout(() => setShake(false), 500);
+    setTimeout(() => setError(''), 2500);
+  };
+
+  const attempt = async () => {
+    if (busy) return;
+    setBusy(true);
+    if (mode === 'create') {
+      const { data, error: err } = await supabase.rpc('create_module', {
+        p_name: newName, p_description: null, p_password: input,
+      });
+      setBusy(false);
+      if (err) return fail(err.message);
+      onSuccess({ id: data, name: newName.trim() });
     } else {
-      setError(true);
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
-      setTimeout(() => setError(false), 2000);
+      if (!moduleId) { setBusy(false); return fail('No module selected.'); }
+      const { data, error: err } = await supabase.rpc('verify_module_dm', {
+        p_module_id: moduleId, p_password: input,
+      });
+      setBusy(false);
+      if (err) return fail(err.message);
+      if (data === true) onSuccess(modules.find(m => m.id === moduleId));
+      else fail('The archives remain sealed.');
     }
   };
 
@@ -215,18 +246,48 @@ function DMSigilModal({ onSuccess, onCancel }) {
           color: '#f0eeeb', letterSpacing: '0.06em', marginBottom: 6,
         }}>Enter the Sigil</div>
         <div style={{
-          fontSize: 12, color: 'rgba(240,238,235,0.32)', marginBottom: 24,
+          fontSize: 12, color: 'rgba(240,238,235,0.32)', marginBottom: 18,
           lineHeight: 1.65, fontFamily: 'Georgia, serif', fontStyle: 'italic',
         }}>
-          The archives are sealed.<br />Prove you hold the key.
+          {mode === 'create'
+            ? <>Forge a new module.<br />Name it, and set its sigil.</>
+            : <>The archives are sealed.<br />Prove you hold the key.</>}
         </div>
+        {mode === 'unlock' ? (
+          <select
+            value={moduleId ?? ''}
+            onChange={e => setModuleId(Number(e.target.value))}
+            style={{
+              width: '100%', background: '#1c1815',
+              border: '1px solid rgba(240,238,235,0.14)', borderRadius: 8,
+              padding: '10px 12px', fontSize: 13, color: '#f0eeeb',
+              outline: 'none', marginBottom: 12, fontFamily: 'Georgia, serif',
+            }}
+          >
+            {modules.length === 0 && <option value="">No modules yet</option>}
+            {modules.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
+        ) : (
+          <input
+            value={newName}
+            onChange={e => { setNewName(e.target.value); setError(''); }}
+            placeholder="Module name"
+            style={{
+              width: '100%', background: 'rgba(240,238,235,0.06)',
+              border: '1px solid rgba(240,238,235,0.14)', borderRadius: 8,
+              padding: '11px 14px', fontSize: 13, color: '#f0eeeb',
+              outline: 'none', boxSizing: 'border-box', marginBottom: 12,
+              fontFamily: 'Georgia, serif',
+            }}
+          />
+        )}
         <input
           autoFocus
           type="password"
           value={input}
-          onChange={e => { setInput(e.target.value); setError(false); }}
+          onChange={e => { setInput(e.target.value); setError(''); }}
           onKeyDown={e => e.key === 'Enter' && attempt()}
-          placeholder="···"
+          placeholder={mode === 'create' ? 'Set the sigil (min 6 chars)' : '···'}
           style={{
             width: '100%', background: 'rgba(240,238,235,0.06)',
             border: `1px solid ${error ? '#ef4444' : 'rgba(240,238,235,0.14)'}`,
@@ -241,7 +302,7 @@ function DMSigilModal({ onSuccess, onCancel }) {
             fontSize: 11, color: '#ef4444', letterSpacing: '0.12em',
             textTransform: 'uppercase', marginBottom: 12,
             fontFamily: "'Cinzel', serif",
-          }}>The archives remain sealed.</div>
+          }}>{error}</div>
         )}
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={onCancel} style={{
@@ -251,14 +312,24 @@ function DMSigilModal({ onSuccess, onCancel }) {
             letterSpacing: '0.12em', textTransform: 'uppercase',
             cursor: 'pointer', fontFamily: "'Cinzel', serif",
           }}>Retreat</button>
-          <button onClick={attempt} style={{
+          <button onClick={attempt} disabled={busy} style={{
             flex: 2, background: 'rgba(240,238,235,0.06)',
             border: '1px solid rgba(240,238,235,0.18)', borderRadius: 8,
             padding: '10px 0', color: '#f0eeeb', fontSize: 11,
             letterSpacing: '0.14em', textTransform: 'uppercase',
-            cursor: 'pointer', fontFamily: "'Cinzel', serif", fontWeight: 700,
-          }}>Enter</button>
+            cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1,
+            fontFamily: "'Cinzel', serif", fontWeight: 700,
+          }}>{busy ? '…' : mode === 'create' ? 'Forge' : 'Enter'}</button>
         </div>
+        <button
+          onClick={() => { setMode(mode === 'create' ? 'unlock' : 'create'); setError(''); setInput(''); }}
+          style={{
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            marginTop: 14, color: 'rgba(240,238,235,0.35)', fontSize: 10,
+            letterSpacing: '0.12em', textTransform: 'uppercase',
+            fontFamily: "'Cinzel', serif", textDecoration: 'underline',
+          }}
+        >{mode === 'create' ? '← Unlock an existing module' : 'Forge a new module'}</button>
       </div>
       <style>{`
         @keyframes shake {
@@ -281,6 +352,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   const campaignChars = savedChars.filter(c => c.status === 'approved' && c.campaign_id);
   const [loading, setLoading] = useState(true);
   const [showDMModal, setShowDMModal] = useState(false);
+  const [dmModule, setDmModule] = useState(null);
   const [hoveredBtn, setHoveredBtn] = useState(null);
   const [selectedChar, setSelectedChar] = useState(() => { try { const c = localStorage.getItem('syn_char'); return c ? JSON.parse(c) : null; } catch { return null; } });
   const [legalStatus, setLegalStatus] = useState('checking'); // 'checking' | 'needed' | 'accepted'
@@ -331,7 +403,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
 
   const goHome = () => { localStorage.setItem('syn_view', 'home'); setAppView('home'); fetchCharacters(); };
   const handlePlay = () => { localStorage.setItem('syn_view', 'character-select'); setAppView('character-select'); };
-  const handleDMSuccess = () => { setShowDMModal(false); localStorage.setItem('syn_view', 'dm'); setAppView('dm'); };
+  const handleDMSuccess = (module) => { setDmModule(module || null); setShowDMModal(false); localStorage.setItem('syn_view', 'dm'); setAppView('dm'); };
 
   // ── Legal Gate ─────────────────────────────────────────────────────────────
   if (legalStatus === 'checking') return (
@@ -372,7 +444,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
     <Settings user={user} darkMode={darkMode} setDarkMode={setDarkMode} onHome={goHome} />
   );
 
-  if (appView === 'dm') return <DMView onHome={goHome} />;
+  if (appView === 'dm') return <DMView onHome={goHome} module={dmModule} />;
 
   if (appView === 'sheet') return (
     <CharacterSheet
