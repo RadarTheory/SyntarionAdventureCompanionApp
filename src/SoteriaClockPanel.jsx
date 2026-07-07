@@ -145,9 +145,10 @@ export function SoteriaClockDisplay({ clock, compact = false }) {
         <span style={{ fontFamily: 'monospace', opacity: 0.85 }}>{getClockTime(live.pass, live.fragment)}</span>
         <SunMoonCycleBar clock={clock} width={110} showBodyLabels={false} />
         <span style={{ opacity: 0.5 }}>·</span>
-        <span>Turn {live.turn} • {getLesserCycleName(live.lesser_cycle)}</span>
+                <span> of {getLesserCycleName(live.lesser_cycle)}</span>
         <span style={{ opacity: 0.5 }}>·</span>
         <span>{live.anui} {live.era === 'EU' ? 'E.U.' : 'E.D.'}</span>
+        
         {clock.session_anchor_at && (
           <span style={{ fontSize: 9, color: '#9fe0aa', background: 'rgba(121,245,167,0.1)', padding: '1px 6px', borderRadius: 8, border: '1px solid rgba(121,245,167,0.3)' }}>
             LIVE
@@ -491,7 +492,7 @@ const save = async (patch) => {
               SET WORLD TIME
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <div>
                 {label('ERA')}
                 <select value={draft.era} onChange={e => setDraft(d => ({ ...d, era: e.target.value }))}
@@ -504,6 +505,7 @@ const save = async (patch) => {
                 {label('ANUI (YEAR)')}
                 {numInput('anui', 1, 9999)}
               </div>
+
               <div>
                 {label('GREATER CYCLE (1–13)')}
                 <select value={draft.greater_cycle} onChange={e => setDraft(d => ({ ...d, greater_cycle: parseInt(e.target.value) }))}
@@ -513,19 +515,42 @@ const save = async (patch) => {
                   ))}
                 </select>
               </div>
+
               <div>
-                {label('TURN (1–28)')}
-                {numInput('turn', 1, 28)}
+                {label('LESSER CYCLE (1–4)')}
+                <select value={draft.lesser_cycle || 1} onChange={e => setDraft(d => ({ ...d, lesser_cycle: parseInt(e.target.value) }))}
+                  style={{ background: 'rgba(14,10,7,0.8)', border: '1px solid rgba(201,185,145,0.25)', borderRadius: 6, color: '#e6d2a0', fontFamily: "'Cinzel', serif", fontSize: 11, padding: '4px 8px', width: '100%' }}>
+                  <option value="1">1. Isain</option>
+                  <option value="2">2. Bherun</option>
+                  <option value="3">3. Ysyl</option>
+                  <option value="4">4. Qarra</option>
+                </select>
               </div>
+
+              <div>
+                {label('TURN (NAMED)')}
+                <select value={draft.turn} onChange={e => setDraft(d => ({ ...d, turn: parseInt(e.target.value) }))}
+                  style={{ background: 'rgba(14,10,7,0.8)', border: '1px solid rgba(201,185,145,0.25)', borderRadius: 6, color: '#e6d2a0', fontFamily: "'Cinzel', serif", fontSize: 11, padding: '4px 8px', width: '100%' }}>
+                  <option value="1">1. Ínanmturn</option>
+                  <option value="2">2. Ixturn</option>
+                  <option value="3">3. Silturn</option>
+                  <option value="4">4. Halusturn</option>
+                  <option value="5">5. Dinturn</option>
+                  <option value="6">6. Ifuturn</option>
+                  <option value="7">7. Sevaxturn</option>
+                </select>
+              </div>
+
               <div>
                 {label('PASS (1–13)')}
                 <select value={draft.pass} onChange={e => setDraft(d => ({ ...d, pass: parseInt(e.target.value) }))}
                   style={{ background: 'rgba(14,10,7,0.8)', border: '1px solid rgba(201,185,145,0.25)', borderRadius: 6, color: '#e6d2a0', fontFamily: "'Cinzel', serif", fontSize: 11, padding: '4px 8px', width: '100%' }}>
                   {PASSES.map(p => (
-                    <option key={p.id} value={p.id}>{p.id}. {p.name} ({p.label})</option>
+                    <option key={p.id} value={p.id}>{p.id}. {p.name}</option>
                   ))}
                 </select>
               </div>
+
               <div>
                 {label('FRAGMENT (0–119)')}
                 {numInput('fragment', 0, 119)}

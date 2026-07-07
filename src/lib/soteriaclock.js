@@ -124,6 +124,7 @@ export function getLesserCycleName(lesserCycleIndex) {
   return names[(lesserCycleIndex - 1) % 4] || "Unknown Cycle";
 }
 
+
 export async function advanceCampaignClockByCombatTurn(campaignId) {
   if (!campaignId) return;
   const { data: clock } = await supabase.from('world_clock').select('*')
