@@ -170,56 +170,6 @@ export default function Solomon({ campaignId, onClose }) {
     setSaving(null);
   };
 
-  const placeOnMap = async (box) => {
-    setSaving(box.id);
-    const tokenKey = `loot_${box.id}`;
-    const { data: sess } = await supabase.from('vtt_sessions').select('id, tokens').eq('campaign_id', String(campaignId)).maybeSingle();
-    if (!sess?.id) {
-      showToast('No VTT session for this campaign yet — open the VTT tab once first.');
-      setSaving(null);
-      return;
-    }
-    const existing = sess.tokens || [];
-    if (existing.some(t => t.id === tokenKey)) {
-      showToast(`⬡ "${box.name}" is already on the map`);
-      setSaving(null);
-      return;
-    }
-    const next = [...existing, {
-      id: tokenKey, type: 'loot', label: '⬡',
-      fullName: box.name || 'Lootbox', creatureName: box.name || 'Lootbox',
-      color: '#e8c84a', lootbox_id: box.id, x: 0.5, y: 0.5,
-    }];
-    const { error } = await supabase.from('vtt_sessions').update({ tokens: next, updated_at: new Date().toISOString() }).eq('id', sess.id);
-    showToast(error ? '✕ Failed to place on map' : `⌖ "${box.name}" placed on the map`);
-    setSaving(null);
-  };
-
-  const placeOnMap = async (box) => {
-    setSaving(box.id);
-    const tokenKey = `loot_${box.id}`;
-    const { data: sess } = await supabase.from('vtt_sessions').select('id, tokens').eq('campaign_id', String(campaignId)).maybeSingle();
-    if (!sess?.id) {
-      showToast('No VTT session for this campaign yet — open the VTT tab once first.');
-      setSaving(null);
-      return;
-    }
-    const existing = sess.tokens || [];
-    if (existing.some(t => t.id === tokenKey)) {
-      showToast(`⬡ "${box.name}" is already on the map`);
-      setSaving(null);
-      return;
-    }
-    const next = [...existing, {
-      id: tokenKey, type: 'loot', label: '⬡',
-      fullName: box.name || 'Lootbox', creatureName: box.name || 'Lootbox',
-      color: '#e8c84a', lootbox_id: box.id, x: 0.5, y: 0.5,
-    }];
-    const { error } = await supabase.from('vtt_sessions').update({ tokens: next, updated_at: new Date().toISOString() }).eq('id', sess.id);
-    showToast(error ? '✕ Failed to place on map' : `⌖ "${box.name}" placed on the map`);
-    setSaving(null);
-  };
-
   const approveClaim = async (item) => {
     setSaving(item.id);
 
