@@ -101,14 +101,14 @@ export function soterianSecondsToFragments(soterianSeconds) {
   return soterianSeconds / SOTERIAN_SECONDS_PER_FRAGMENT;
 }
 
-// The clock only moves passively while a session is actively running, anchored to
-// when it started. Computed fresh on every render from real elapsed time — no
-// setInterval ticking required, so it stays correct even if no tab has it open.
 export function getLiveClock(clock) {
-  if (!clock?.session_anchor_at || clock.paused) return clock;
+  if (!clock) return clock;
+  // Lesser Cycle is derived, not stored — attach it on every path so displays never see undefined
+  const withLesser = (c) => ({ ...c, lesser_cycle: Math.floor(((c.turn || 1) - 1) / 7) + 1 });
+  if (!clock.session_anchor_at || clock.paused) return withLesser(clock);
   const elapsedSeconds = (Date.now() - new Date(clock.session_anchor_at).getTime()) / 1000;
-  if (elapsedSeconds <= 0) return clock;
-  return advanceFragments(clock, elapsedSeconds * FRAGMENTS_PER_REAL_SECOND);
+  if (elapsedSeconds <= 0) return withLesser(clock);
+  return withLesser(advanceFragments(clock, elapsedSeconds * FRAGMENTS_PER_REAL_SECOND));
 }
 
 // Hour:minute readout within Soteria's 26-hour day (13 passes × 120 one-minute fragments)

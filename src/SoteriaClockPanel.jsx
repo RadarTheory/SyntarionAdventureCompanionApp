@@ -145,7 +145,7 @@ export function SoteriaClockDisplay({ clock, compact = false }) {
         <span style={{ fontFamily: 'monospace', opacity: 0.85 }}>{getClockTime(live.pass, live.fragment)}</span>
         <SunMoonCycleBar clock={clock} width={110} showBodyLabels={false} />
         <span style={{ opacity: 0.5 }}>·</span>
-                <span> of {getLesserCycleName(live.lesser_cycle)}</span>
+                <span> of {getLesserCycleName(live.lesser_cycle || Math.floor((live.turn - 1) / 7) + 1)}</span>
         <span style={{ opacity: 0.5 }}>·</span>
         <span>{live.anui} {live.era === 'EU' ? 'E.U.' : 'E.D.'}</span>
         
@@ -180,7 +180,7 @@ export function SoteriaClockDisplay({ clock, compact = false }) {
         <SunMoonCycleBar clock={clock} />
       </div>
       <div style={{ marginTop: 10, fontSize: 12, opacity: 0.8 }}>
-        Turn {live.turn} of {getLesserCycleName(live.lesser_cycle)} • {cycleName}
+        Turn {live.turn} of {getLesserCycleName(live.lesser_cycle || Math.floor((live.turn - 1) / 7) + 1)} • {cycleName}
       </div>
       <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>
         Anui {live.anui} {live.era === 'EU' ? 'E.U.' : 'E.D.'}
