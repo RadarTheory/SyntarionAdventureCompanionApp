@@ -94,7 +94,7 @@ export default function LegalGate({ user, onAccept, readOnly = false, initialTab
           </div>
           {!readOnly && (
             <div style={{ fontSize: 11.5, color: 'rgba(240,238,235,0.4)', fontStyle: 'italic', marginTop: 6, lineHeight: 1.6 }}>
-              Please review and accept the Terms of Service and End User<br />License Agreement to continue.
+              Please review and accept the Terms of Service and End User<br />License Agreement.
             </div>
           )}
         </div>
