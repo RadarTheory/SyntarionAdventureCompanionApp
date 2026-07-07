@@ -214,8 +214,9 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
     if (tok.status === 'dead' && tok.type !== 'player') {
       const deathIcon = getRawIcon('/death.png', onIconReady);
       if (deathIcon) {
-        ctx.globalAlpha = 0.85;
-        ctx.drawImage(deathIcon, tx - r, ty - r, r * 2, r * 2);
+        ctx.globalAlpha = 0.9;
+        const dr = r * 0.8;
+        ctx.drawImage(deathIcon, tx - dr, ty - dr, dr * 2, dr * 2);
       } else {
         ctx.globalAlpha = 0.9;
         ctx.fillStyle = '#e05a5a';

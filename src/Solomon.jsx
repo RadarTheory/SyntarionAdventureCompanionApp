@@ -148,9 +148,10 @@ export default function Solomon({ campaignId, onClose }) {
   const placeOnMap = async (box) => {
     setSaving(box.id);
     const tokenKey = `loot_${box.id}`;
-    const { data: sess } = await supabase.from('vtt_sessions').select('id, tokens').eq('campaign_id', String(campaignId)).maybeSingle();
+    const boardCampaign = localStorage.getItem('vtt_pinned_campaign') || String(campaignId);
+    const { data: sess } = await supabase.from('vtt_sessions').select('id, tokens').eq('campaign_id', boardCampaign).maybeSingle();
     if (!sess?.id) {
-      showToast('No VTT session for this campaign yet — open the VTT tab once first.');
+      showToast('No VTT session for this board yet — open the VTT tab once first.');
       setSaving(null);
       return;
     }
@@ -212,7 +213,8 @@ export default function Solomon({ campaignId, onClose }) {
         claimed_at: new Date().toISOString(),
       }).eq('id', item.lootbox_id);
       // Sweep the lootbox token off the map, if it was placed
-      const { data: sess } = await supabase.from('vtt_sessions').select('id, tokens').eq('campaign_id', String(campaignId)).maybeSingle();
+      const boardCampaign = localStorage.getItem('vtt_pinned_campaign') || String(campaignId);
+      const { data: sess } = await supabase.from('vtt_sessions').select('id, tokens').eq('campaign_id', boardCampaign).maybeSingle();
       const tokenKey = `loot_${item.lootbox_id}`;
       if (sess?.id && (sess.tokens || []).some(t => t.id === tokenKey)) {
         await supabase.from('vtt_sessions').update({ tokens: sess.tokens.filter(t => t.id !== tokenKey), updated_at: new Date().toISOString() }).eq('id', sess.id);
