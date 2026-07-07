@@ -9,6 +9,7 @@ import CampaignView from './CampaignView';
 import Roster from './Roster';
 import DMView from './DMView';
 import Settings from './Settings';
+import LegalGate, { LEGAL_VERSION } from './LegalGate';
 
 // ─── MOVABLE DRIFTSTONE BUTTON ───────────────────────────────────────────────
 function DriftstoneButton({ onClick, isMobile }) {
@@ -282,6 +283,18 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   const [showDMModal, setShowDMModal] = useState(false);
   const [hoveredBtn, setHoveredBtn] = useState(null);
   const [selectedChar, setSelectedChar] = useState(() => { try { const c = localStorage.getItem('syn_char'); return c ? JSON.parse(c) : null; } catch { return null; } });
+  const [legalStatus, setLegalStatus] = useState('checking'); // 'checking' | 'needed' | 'accepted'
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from('legal_acceptances')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('version', LEGAL_VERSION)
+      .maybeSingle()
+      .then(({ data }) => setLegalStatus(data ? 'accepted' : 'needed'));
+  }, [user?.id]);
 
   const fetchCharacters = async () => {
     if (!user?.id) { setLoading(false); return; }
@@ -312,6 +325,11 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   const goHome = () => { localStorage.setItem('syn_view', 'home'); setAppView('home'); fetchCharacters(); };
   const handlePlay = () => { localStorage.setItem('syn_view', 'character-select'); setAppView('character-select'); };
   const handleDMSuccess = () => { setShowDMModal(false); localStorage.setItem('syn_view', 'dm'); setAppView('dm'); };
+
+  // ── Legal Gate ─────────────────────────────────────────────────────────────
+  if (legalStatus === 'needed') return (
+    <LegalGate user={user} onAccept={() => setLegalStatus('accepted')} />
+  );
 
   // ── Render Views ───────────────────────────────────────────────────────────
   if (appView === 'character-select') return (

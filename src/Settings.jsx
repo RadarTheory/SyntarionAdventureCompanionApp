@@ -2,12 +2,14 @@ import { useState } from 'react';
 import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
 import { COLORS } from './constants';
+import LegalGate from './LegalGate';
 
 export default function Settings({ user, darkMode, setDarkMode, onHome }) {
   const { isMobile } = useDevice();
   const [displayName, setDisplayName] = useState(user?.user_metadata?.display_name || user?.user_metadata?.full_name || '');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [legalTab, setLegalTab] = useState(null); // 'tos' | 'eula' | null
 
   const ink   = darkMode ? COLORS.text    : '#1a1714';
   const bg    = darkMode ? COLORS.wizard  : '#f0eeeb';
@@ -182,7 +184,36 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
           </div>
         </div>
 
+        {/* ── LEGAL ── */}
+        <div style={{ marginBottom: 36 }}>
+          <SectionHead>Legal</SectionHead>
+          <div style={{ background: card, border: `1px solid ${border}`, borderRadius: 10, overflow: 'hidden' }}>
+            {[
+              { id: 'tos', label: 'Terms of Service' },
+              { id: 'eula', label: 'End User License Agreement' },
+            ].map((doc, i) => (
+              <button
+                key={doc.id}
+                onClick={() => setLegalTab(doc.id)}
+                style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  width: '100%', background: 'transparent', cursor: 'pointer',
+                  border: 'none', borderBottom: i === 0 ? `1px solid ${border}` : 'none',
+                  padding: '14px 20px', textAlign: 'left',
+                }}
+              >
+                <span style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: ink }}>{doc.label}</span>
+                <span style={{ fontSize: 13, color: muted }}>→</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
       </div>
+
+      {legalTab && (
+        <LegalGate readOnly initialTab={legalTab} onClose={() => setLegalTab(null)} />
+      )}
     </div>
   );
 }
