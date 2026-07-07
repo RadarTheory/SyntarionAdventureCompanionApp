@@ -46,18 +46,6 @@ function getRawIcon(src, onReady) {
   return rawIconCache[src] || null;
 }
 
-const rawIconCache = {};
-function getRawIcon(src, onReady) {
-  if (rawIconCache[src] === undefined) {
-    rawIconCache[src] = null;
-    const img = new Image();
-    img.onload = () => { rawIconCache[src] = img; onReady?.(); };
-    img.onerror = () => { rawIconCache[src] = false; };
-    img.src = src;
-  }
-  return rawIconCache[src] || null;
-}
-
 function getMapRect(canvas, mapImg) {
   const W = canvas.width, H = canvas.height;
   const imgRatio = mapImg.width / mapImg.height;
