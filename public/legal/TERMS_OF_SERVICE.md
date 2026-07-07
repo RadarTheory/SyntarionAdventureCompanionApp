@@ -1,88 +1,86 @@
-# Terms of Service
+# End User License Agreement (EULA)
 
 **Syntarion Adventure Companion App**
 **Effective Date:** July 6, 2026
-**Operator:** Adrian Gilmore, doing business as **Theonhex Media & Publishing** ("Operator," "we," "us")
+**Licensor:** Adrian Gilmore, doing business as **Theonhex Media & Publishing** ("Licensor," "we," "us")
 
-These Terms of Service ("Terms") govern your access to and use of the hosted Syntarion Adventure Companion App and related services (the "Service"). By creating an account or using the Service, you agree to these Terms and to the accompanying [End User License Agreement](./EULA.md), which is incorporated by reference. If you do not agree, do not use the Service.
+This End User License Agreement ("Agreement") is a legal agreement between you ("User," "you") and the Licensor governing your use of the Syntarion Adventure Companion App, including its software, source code, and all associated creative content (collectively, the "Software").
 
-## 1. The Service
+By accessing, downloading, installing, or using the Software — including viewing or copying any portion of this repository — you agree to be bound by this Agreement. If you do not agree, do not use the Software.
 
-Syntarion is a tabletop RPG companion platform providing character creation and management, virtual tabletop features, campaign and session tools, in-world messaging, and AI-assisted features, set in the fictional world of Soteria. The Service is currently operated by a solo developer and is provided as an evolving, best-effort platform. Features may change, break, or be removed at any time.
+## 1. Grant of License
 
-## 2. Eligibility and Accounts
+Subject to this Agreement, the Licensor grants you a limited, non-exclusive, non-transferable, revocable license to:
 
-You must be at least 13 years old to use the Service. If you are under 18, you must have permission from a parent or guardian.
+(a) access and use the hosted Syntarion application for personal, non-commercial tabletop gameplay; and  
+(b) view and study the source code in this repository for personal, educational, and evaluation purposes.
 
-You are responsible for your account credentials and all activity under your account. Accounts are personal and may not be shared or transferred. Notify us promptly of any unauthorized use. We may suspend or terminate accounts at our discretion, including for violations of these Terms.
+This is a license, not a sale. No ownership rights are transferred to you.
 
-## 3. Your Content
+## 2. Restrictions
 
-"Your Content" means material you create or submit through the Service: character names and backstories, journal and Grimoire entries, Lark letters, chat and intent declarations, uploaded portraits and images, and voice recordings submitted for transcription.
+You may NOT, without prior written permission from the Licensor:
 
-**You retain ownership of Your Content.** You grant the Operator a worldwide, non-exclusive, royalty-free license to host, store, reproduce, display, and process Your Content as needed to operate, maintain, and improve the Service — including displaying it to other participants in your campaign (for example, your character's presence on the shared map, or Grimoire entries generated from shared events).
+(a) copy, redistribute, sublicense, sell, rent, lease, or host the Software or any substantial portion of it;  
+(b) use the Software or any derivative of it for commercial purposes;  
+(c) fork, republish, or deploy the source code as a competing or standalone service;  
+(d) remove, obscure, or alter any copyright, trademark, or attribution notices;  
+(e) reverse engineer server-side components, circumvent authentication, or probe the Software for vulnerabilities except through responsible disclosure to the Licensor;  
+(f) use the Software's source code, data files, or content to train, fine-tune, or ground machine learning models; or  
+(g) extract, reproduce, or reuse the Soteria Content described in Section 3.
 
-You represent that you have the rights to everything you submit, and that Your Content does not infringe anyone else's rights. Do not upload material you do not have permission to use — including copyrighted artwork as character portraits.
+## 3. Soteria Content — Reserved Creative Rights
 
-To the extent Your Content incorporates elements of the Soteria setting, ownership of those underlying elements remains with the Operator as described in the EULA.
+The Software includes original creative works from the fictional world of **Soteria**, including but not limited to: the names Soteria, Syntarion, Nazros, Simic, Lorúk, Altum, and Stygia; all lore text, cosmology, doctrines, and histories; character, NPC, deity, and faction names; the bestiary and all creature descriptions and statistics; original races (including the Tiol), classes, the Magicka/Ingenium ability trees, the 8-stat system, and named resource substances; maps, artwork, icons, and portraits; and any content connected to the novels *The Lockcaste* and *Veinrunner* (collectively, "Soteria Content").
 
-## 4. Acceptable Use
+**All Soteria Content is the exclusive intellectual property of the Licensor. No license to the Soteria Content is granted under this Agreement beyond what is strictly necessary to display it to you during authorized use of the Software.** You may not reproduce, adapt, publish, or create derivative works from the Soteria Content in any medium, including other games, fiction, or AI-generated works.
 
-You agree not to:
+## 4. User-Created Content
 
-(a) harass, threaten, or abuse other users, or submit content that is unlawful, hateful, or sexually exploitative — including any content sexualizing minors, which will result in immediate termination and reporting;
-(b) impersonate others or misrepresent your affiliation;
-(c) attempt to access accounts, campaigns, or data not assigned to you, or interfere with DM-only tools;
-(d) probe, scan, overload, or disrupt the Service or its infrastructure, or circumvent authentication or rate limits;
-(e) scrape, harvest, or bulk-export content or data from the Service;
-(f) use the Service to develop a competing product; or
-(g) use the AI features to generate content prohibited by these Terms or by the AI providers' own acceptable use policies.
+Characters, backstories, and other original material you create while using the Software remain yours, subject to the Terms of Service and the provisions below.
 
-Tabletop roleplay routinely involves fictional violence and mature themes; that is expected and permitted within the bounds above. Use judgment appropriate to your table.
+### 4.1 Character Persistence, Attribution, and Creative Use Rights Upon Account Deletion
 
-## 5. AI Features and Third-Party Processing
+When you delete your account, all personal information associated with that account (including your email address and any directly identifiable private data) will be permanently deleted and will not be retained by the Licensor.
 
-The Service includes AI-assisted features. When you use them, relevant content is transmitted to third-party providers for processing:
+However, **your character(s)** — specifically the character name, race, class, equipment, statistics, key logs, and narrative history created through gameplay — **will be preserved** by the Licensor. 
 
-- **The Scribe / lore consultation / session synopsis:** text you submit, plus relevant campaign context, is processed by Google's Gemini API.
-- **Voice dictation:** audio you record is processed by Groq's Whisper transcription service.
+By using the Software, you irrevocably grant the Licensor a perpetual, worldwide, royalty-free, non-exclusive license to use, adapt, modify, publish, display, and incorporate your character(s) into future publications, novels, games, world-building materials, or other creative works under **Theonhex Media & Publishing**.
 
-By using these features you consent to this processing. AI-generated output may be inaccurate, inconsistent with established lore, or otherwise flawed; it is provided for entertainment and convenience, and the DM's ruling is final. We do not guarantee that third-party providers will not retain or use submitted data per their own policies, and we encourage you not to submit sensitive personal information through AI features.
+The Licensor will make reasonable efforts to provide appropriate **attribution** to the original creator on any published character sheet or official appearance of the character. The original creator will be identified as the player whose **saved nickname** (as set in your account settings) was associated with the character at the time it was first assigned or created. Even if the Dungeon Master (DM) initially created the character on your behalf, the first player to whom it was assigned will be recognized as the original creator for attribution purposes.
 
-## 6. Privacy and Data
+You acknowledge and agree that your character(s) may be featured as notable or canonical figures in the world of Soteria, may participate in official storylines, and may become part of the permanent history and lore of the setting. The Licensor may attribute such characters using the name(s) you provided, and may make reasonable creative edits for narrative consistency.
 
-We collect and store the data needed to run the Service: account information (such as email address), Your Content, and gameplay event logs (used for features like session chronicles, Grimoires, and combat history). Data is stored with our infrastructure providers (Supabase and Vercel).
+This grant survives account deletion and termination of this Agreement.
 
-We do not sell your personal information. Campaign participants can see content shared within the campaign by design. You may request deletion of your account and associated personal data by contacting us; some content interwoven with shared campaign records (such as event logs referencing your character) may be retained in anonymized or campaign-historical form.
+## 5. Third-Party Components
 
-## 7. Fees
+The Software incorporates open-source dependencies (including React, Vite, and the Supabase client libraries), each governed by its own license. Nothing in this Agreement restricts your rights under those third-party licenses with respect to those components alone.
 
-The Service is currently free. We may introduce paid tiers or subscriptions in the future; any paid features will be clearly identified, and continued use of paid features will be subject to additional terms presented at that time. We will not retroactively charge for past use.
+## 6. Updates and Availability
 
-## 8. Intellectual Property
+The Licensor may modify, update, or discontinue the Software at any time without notice. This Agreement applies to all updates unless a replacement agreement is provided.
 
-The Service, its software, and all Soteria Content (as defined in the EULA) are the property of the Operator and are protected by copyright and other intellectual property laws. Except for the limited rights expressly granted in these Terms and the EULA, all rights are reserved. Feedback and suggestions you provide may be used by the Operator without obligation or compensation.
+## 7. Termination
 
-## 9. Termination
+This license terminates automatically if you breach this Agreement. Upon termination, you must cease all use of the Software and destroy any copies in your possession. Sections 3, 4, 4.1, 8, 9, and 10 survive termination.
 
-You may stop using the Service and request account deletion at any time. We may suspend or terminate your access at any time, with or without notice, for violation of these Terms, to protect the Service or its users, or upon discontinuation of the Service. Sections 3 (license to Your Content, as needed to wind down), 5, 8, 10, 11, and 12 survive termination.
+## 8. Disclaimer of Warranty
 
-## 10. Disclaimers
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE," WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. THE LICENSOR DOES NOT WARRANT THAT THE SOFTWARE WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE, OR THAT DATA WILL NOT BE LOST.
 
-THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE," WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, SECURE, OR ERROR-FREE, OR THAT DATA (INCLUDING CHARACTERS, CAMPAIGNS, AND SESSION HISTORY) WILL NEVER BE LOST. BACK UP ANYTHING YOU CANNOT AFFORD TO LOSE.
+## 9. Limitation of Liability
 
-## 11. Limitation of Liability
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE LICENSOR SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF DATA, PROFITS, OR GOODWILL, ARISING FROM OR RELATED TO YOUR USE OF THE SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. THE LICENSOR'S TOTAL AGGREGATE LIABILITY SHALL NOT EXCEED THE GREATER OF (A) AMOUNTS YOU PAID FOR THE SOFTWARE IN THE TWELVE MONTHS PRECEDING THE CLAIM, OR (B) FIFTY U.S. DOLLARS (US $50).
 
-TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE OPERATOR SHALL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR FOR LOSS OF DATA, PROFITS, OR GOODWILL, ARISING FROM YOUR USE OF THE SERVICE. TOTAL AGGREGATE LIABILITY SHALL NOT EXCEED THE GREATER OF (A) AMOUNTS YOU PAID FOR THE SERVICE IN THE TWELVE MONTHS PRECEDING THE CLAIM, OR (B) FIFTY U.S. DOLLARS (US $50). Some jurisdictions do not allow certain limitations; in those jurisdictions, these limitations apply to the fullest extent permitted.
+## 10. Governing Law
 
-## 12. Governing Law and Disputes
+This Agreement is governed by the laws of the State of Texas, USA, without regard to conflict-of-law principles. Any dispute shall be brought exclusively in the state or federal courts located in Taylor County, Texas.
 
-These Terms are governed by the laws of the State of Texas, USA. Disputes shall be resolved exclusively in the state or federal courts located in Taylor County, Texas, and you consent to their jurisdiction. Before filing any claim, you agree to attempt informal resolution by contacting us and allowing 30 days to respond.
+## 11. General
 
-## 13. Changes to These Terms
+If any provision of this Agreement is held unenforceable, the remainder remains in effect. Failure to enforce a provision is not a waiver. This Agreement, together with the Terms of Service, constitutes the entire agreement between you and the Licensor regarding the Software.
 
-We may update these Terms from time to time. Material changes will be announced through the Service or the repository, with an updated Effective Date. Continued use of the Service after changes take effect constitutes acceptance.
+## 12. Contact
 
-## 14. Contact
-
-Questions about these Terms: **contact@theonhexmedia.com**
+Questions about this Agreement: **contact@theonhexmedia.com**

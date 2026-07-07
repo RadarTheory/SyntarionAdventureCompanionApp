@@ -12,7 +12,7 @@ By accessing, downloading, installing, or using the Software — including viewi
 
 Subject to this Agreement, the Licensor grants you a limited, non-exclusive, non-transferable, revocable license to:
 
-(a) access and use the hosted Syntarion application for personal, non-commercial tabletop gameplay; and
+(a) access and use the hosted Syntarion application for personal, non-commercial tabletop gameplay; and  
 (b) view and study the source code in this repository for personal, educational, and evaluation purposes.
 
 This is a license, not a sale. No ownership rights are transferred to you.
@@ -21,12 +21,12 @@ This is a license, not a sale. No ownership rights are transferred to you.
 
 You may NOT, without prior written permission from the Licensor:
 
-(a) copy, redistribute, sublicense, sell, rent, lease, or host the Software or any substantial portion of it;
-(b) use the Software or any derivative of it for commercial purposes;
-(c) fork, republish, or deploy the source code as a competing or standalone service;
-(d) remove, obscure, or alter any copyright, trademark, or attribution notices;
-(e) reverse engineer server-side components, circumvent authentication, or probe the Software for vulnerabilities except through responsible disclosure to the Licensor;
-(f) use the Software's source code, data files, or content to train, fine-tune, or ground machine learning models; or
+(a) copy, redistribute, sublicense, sell, rent, lease, or host the Software or any substantial portion of it;  
+(b) use the Software or any derivative of it for commercial purposes;  
+(c) fork, republish, or deploy the source code as a competing or standalone service;  
+(d) remove, obscure, or alter any copyright, trademark, or attribution notices;  
+(e) reverse engineer server-side components, circumvent authentication, or probe the Software for vulnerabilities except through responsible disclosure to the Licensor;  
+(f) use the Software's source code, data files, or content to train, fine-tune, or ground machine learning models; or  
 (g) extract, reproduce, or reuse the Soteria Content described in Section 3.
 
 ## 3. Soteria Content — Reserved Creative Rights
@@ -37,7 +37,21 @@ The Software includes original creative works from the fictional world of **Sote
 
 ## 4. User-Created Content
 
-Characters, backstories, and other original material you create while using the Software remain yours, subject to the Terms of Service. To the extent your creations incorporate Soteria Content (for example, a character of a Soteria race or class), your rights extend only to your original contribution, not to the underlying Soteria Content.
+Characters, backstories, and other original material you create while using the Software remain yours, subject to the Terms of Service and the provisions below.
+
+### 4.1 Character Persistence, Attribution, and Creative Use Rights Upon Account Deletion
+
+When you delete your account, all personal information associated with that account (including your email address and any directly identifiable private data) will be permanently deleted and will not be retained by the Licensor.
+
+However, **your character(s)** — specifically the character name, race, class, equipment, statistics, key logs, and narrative history created through gameplay — **will be preserved** by the Licensor. 
+
+By using the Software, you irrevocably grant the Licensor a perpetual, worldwide, royalty-free, non-exclusive license to use, adapt, modify, publish, display, and incorporate your character(s) into future publications, novels, games, world-building materials, or other creative works under **Theonhex Media & Publishing**.
+
+The Licensor will make reasonable efforts to provide appropriate **attribution** to the original creator on any published character sheet or official appearance of the character. The original creator will be identified as the player whose **saved nickname** (as set in your account settings) was associated with the character at the time it was first assigned or created. Even if the Dungeon Master (DM) initially created the character on your behalf, the first player to whom it was assigned will be recognized as the original creator for attribution purposes.
+
+You acknowledge and agree that your character(s) may be featured as notable or canonical figures in the world of Soteria, may participate in official storylines, and may become part of the permanent history and lore of the setting. The Licensor may attribute such characters using the name(s) you provided, and may make reasonable creative edits for narrative consistency.
+
+This grant survives account deletion and termination of this Agreement.
 
 ## 5. Third-Party Components
 
@@ -49,7 +63,7 @@ The Licensor may modify, update, or discontinue the Software at any time without
 
 ## 7. Termination
 
-This license terminates automatically if you breach this Agreement. Upon termination, you must cease all use of the Software and destroy any copies in your possession. Sections 3, 4, 8, 9, and 10 survive termination.
+This license terminates automatically if you breach this Agreement. Upon termination, you must cease all use of the Software and destroy any copies in your possession. Sections 3, 4, 4.1, 8, 9, and 10 survive termination.
 
 ## 8. Disclaimer of Warranty
 

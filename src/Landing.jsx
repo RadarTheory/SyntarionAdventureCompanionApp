@@ -159,6 +159,73 @@ function SyntarionLogo({ size = 320, darkMode = false }) {
   );
 }
 
+// ─── SUBMIT TO GREATER ARCHIVE MODAL ────────────────────────────────────────
+function SubmitToArchiveModal({ module, onClose, onSuccess }) {
+  const [name, setName] = useState(module?.name || '');
+  const [description, setDescription] = useState('');
+  const [consent, setConsent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async () => {
+    if (!consent || !name.trim()) {
+      setError("Please provide a name and confirm consent.");
+      return;
+    }
+
+    setBusy(true);
+    const { error: err } = await supabase
+      .from('modules')
+      .update({
+        name: name.trim(),
+        description: description.trim() || null,
+        submitted_to_archive: true,
+        archive_submitted_at: new Date().toISOString(),
+      })
+      .eq('id', module.id);
+
+    setBusy(false);
+
+    if (err) {
+      setError("Failed to submit. Please try again.");
+      console.error(err);
+    } else {
+      alert("✅ Module submitted to the Greater Archive!\nThank you for contributing to Soteria.");
+      onSuccess?.();
+      onClose();
+    }
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,8,6,0.9)', backdropFilter: 'blur(8px)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={onClose}>
+      <div style={{ background: '#13100d', border: '1px solid #c8a84a44', borderRadius: 12, maxWidth: 440, width: '100%', padding: 32 }} onClick={e => e.stopPropagation()}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 19, marginBottom: 8 }}>Submit to the Greater Archive</div>
+        <div style={{ fontSize: 13, color: '#a09070', lineHeight: 1.5, marginBottom: 20 }}>
+          This will allow Theonhex Media to potentially use your module in official Soteria lore or publications.
+        </div>
+
+        <input value={name} onChange={e => setName(e.target.value)} placeholder="Module Name" style={{ width: '100%', marginBottom: 12, padding: 12, background: '#1c1815', border: '1px solid #c8a84a33', borderRadius: 6, color: '#f0eeeb' }} />
+
+        <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description (optional)" rows={4} style={{ width: '100%', marginBottom: 16, padding: 12, background: '#1c1815', border: '1px solid #c8a84a33', borderRadius: 6, color: '#f0eeeb', resize: 'vertical' }} />
+
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, marginBottom: 20, cursor: 'pointer' }}>
+          <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} />
+          <span>I consent to this module potentially becoming part of the official Soteria world.</span>
+        </label>
+
+        {error && <div style={{ color: '#ef4444', marginBottom: 12 }}>{error}</div>}
+
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button onClick={onClose} style={{ flex: 1, padding: 12, background: 'transparent', border: '1px solid #555', borderRadius: 6 }}>Cancel</button>
+          <button onClick={submit} disabled={busy || !consent || !name.trim()} style={{ flex: 1, padding: 12, background: consent && name.trim() ? '#c8a84a' : '#333', color: '#111', fontWeight: 700, borderRadius: 6 }}>
+            {busy ? 'Submitting...' : 'Submit to Archive'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── DM SIGIL MODAL ──────────────────────────────────────────────────────────
 function DMSigilModal({ onSuccess, onCancel }) {
   const [modules, setModules] = useState([]);
@@ -352,6 +419,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   const campaignChars = savedChars.filter(c => c.status === 'approved' && c.campaign_id);
   const [loading, setLoading] = useState(true);
   const [showDMModal, setShowDMModal] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [dmModule, setDmModule] = useState(null);
   const [hoveredBtn, setHoveredBtn] = useState(null);
   const [selectedChar, setSelectedChar] = useState(() => { try { const c = localStorage.getItem('syn_char'); return c ? JSON.parse(c) : null; } catch { return null; } });
@@ -522,6 +590,14 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
       {showDMModal && (
         <DMSigilModal onSuccess={handleDMSuccess} onCancel={() => setShowDMModal(false)} />
       )}
+
+      {showArchiveModal && dmModule && (
+      <SubmitToArchiveModal
+        module={dmModule}
+        onClose={() => setShowArchiveModal(false)}
+        onSuccess={() => console.log("Module archived successfully")}
+      />
+    )}
 
       {/* Logo */}
       <div style={{ animation: 'fadeUp 1.1s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '0.1s' }}>
