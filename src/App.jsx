@@ -11,7 +11,8 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [splashLoading, setSplashLoading] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('syn_dark') === '1');
+  useEffect(() => { localStorage.setItem('syn_dark', darkMode ? '1' : '0'); }, [darkMode]);
   const [view, setView] = useState(() => localStorage.getItem('syntarion_view') || 'landing');
 
   useEffect(() => {
