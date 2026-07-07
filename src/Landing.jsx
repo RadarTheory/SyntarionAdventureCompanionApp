@@ -286,14 +286,21 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   const [legalStatus, setLegalStatus] = useState('checking'); // 'checking' | 'needed' | 'accepted'
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) { setLegalStatus('needed'); return; }
     supabase
       .from('legal_acceptances')
       .select('id')
       .eq('user_id', user.id)
       .eq('version', LEGAL_VERSION)
       .maybeSingle()
-      .then(({ data }) => setLegalStatus(data ? 'accepted' : 'needed'));
+      .then(({ data, error }) => {
+        if (error) console.error('Legal check failed:', error.message);
+        setLegalStatus(data ? 'accepted' : 'needed');
+      })
+      .catch(err => {
+        console.error('Legal check error:', err);
+        setLegalStatus('needed');
+      });
   }, [user?.id]);
 
   const fetchCharacters = async () => {
@@ -327,6 +334,9 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   const handleDMSuccess = () => { setShowDMModal(false); localStorage.setItem('syn_view', 'dm'); setAppView('dm'); };
 
   // ── Legal Gate ─────────────────────────────────────────────────────────────
+  if (legalStatus === 'checking') return (
+    <div style={{ minHeight: '100vh', background: darkMode ? '#14110c' : '#f0eeeb' }} />
+  );
   if (legalStatus === 'needed') return (
     <LegalGate user={user} onAccept={() => setLegalStatus('accepted')} />
   );
