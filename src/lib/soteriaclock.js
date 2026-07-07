@@ -119,6 +119,11 @@ export function getClockTime(pass, fragment) {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
+export function getLesserCycleName(lesserCycleIndex) {
+  const names = ["Isain", "Bherun", "Ysyl", "Qarra"];
+  return names[(lesserCycleIndex - 1) % 4] || "Unknown Cycle";
+}
+
 export async function advanceCampaignClockByCombatTurn(campaignId) {
   if (!campaignId) return;
   const { data: clock } = await supabase.from('world_clock').select('*')
