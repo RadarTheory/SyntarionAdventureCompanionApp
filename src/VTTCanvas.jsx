@@ -39,6 +39,18 @@ function getRaceIcon(race, onReady) {
   return raceIconCache[key] || null;
 }
 
+const rawIconCache = {};
+function getRawIcon(src, onReady) {
+  if (rawIconCache[src] === undefined) {
+    rawIconCache[src] = null;
+    const img = new Image();
+    img.onload = () => { rawIconCache[src] = img; onReady?.(); };
+    img.onerror = () => { rawIconCache[src] = false; };
+    img.src = src;
+  }
+  return rawIconCache[src] || null;
+}
+
 function getMapRect(canvas, mapImg) {
   const W = canvas.width;
   const H = canvas.height;
@@ -200,7 +212,7 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
 
     // Death overlay (enemies only)
     if (tok.status === 'dead' && tok.type !== 'player') {
-      const deathIcon = getRaceIcon('death', onIconReady);
+      const deathIcon = getRawIcon('/death.png', onIconReady);
       if (deathIcon) {
         ctx.globalAlpha = 0.85;
         ctx.drawImage(deathIcon, tx - r, ty - r, r * 2, r * 2);
