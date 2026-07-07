@@ -145,6 +145,81 @@ export default function Solomon({ campaignId, onClose }) {
     load();
   };
 
+  const placeOnMap = async (box) => {
+    setSaving(box.id);
+    const tokenKey = `loot_${box.id}`;
+    const { data: sess } = await supabase.from('vtt_sessions').select('id, tokens').eq('campaign_id', String(campaignId)).maybeSingle();
+    if (!sess?.id) {
+      showToast('No VTT session for this campaign yet — open the VTT tab once first.');
+      setSaving(null);
+      return;
+    }
+    const existing = sess.tokens || [];
+    if (existing.some(t => t.id === tokenKey)) {
+      showToast(`⬡ "${box.name}" is already on the map`);
+      setSaving(null);
+      return;
+    }
+    const next = [...existing, {
+      id: tokenKey, type: 'loot', label: '⬡',
+      fullName: box.name || 'Lootbox', creatureName: box.name || 'Lootbox',
+      color: '#e8c84a', lootbox_id: box.id, x: 0.5, y: 0.5,
+    }];
+    const { error } = await supabase.from('vtt_sessions').update({ tokens: next, updated_at: new Date().toISOString() }).eq('id', sess.id);
+    showToast(error ? '✕ Failed to place on map' : `⌖ "${box.name}" placed on the map`);
+    setSaving(null);
+  };
+
+  const placeOnMap = async (box) => {
+    setSaving(box.id);
+    const tokenKey = `loot_${box.id}`;
+    const { data: sess } = await supabase.from('vtt_sessions').select('id, tokens').eq('campaign_id', String(campaignId)).maybeSingle();
+    if (!sess?.id) {
+      showToast('No VTT session for this campaign yet — open the VTT tab once first.');
+      setSaving(null);
+      return;
+    }
+    const existing = sess.tokens || [];
+    if (existing.some(t => t.id === tokenKey)) {
+      showToast(`⬡ "${box.name}" is already on the map`);
+      setSaving(null);
+      return;
+    }
+    const next = [...existing, {
+      id: tokenKey, type: 'loot', label: '⬡',
+      fullName: box.name || 'Lootbox', creatureName: box.name || 'Lootbox',
+      color: '#e8c84a', lootbox_id: box.id, x: 0.5, y: 0.5,
+    }];
+    const { error } = await supabase.from('vtt_sessions').update({ tokens: next, updated_at: new Date().toISOString() }).eq('id', sess.id);
+    showToast(error ? '✕ Failed to place on map' : `⌖ "${box.name}" placed on the map`);
+    setSaving(null);
+  };
+
+  const placeOnMap = async (box) => {
+    setSaving(box.id);
+    const tokenKey = `loot_${box.id}`;
+    const { data: sess } = await supabase.from('vtt_sessions').select('id, tokens').eq('campaign_id', String(campaignId)).maybeSingle();
+    if (!sess?.id) {
+      showToast('No VTT session for this campaign yet — open the VTT tab once first.');
+      setSaving(null);
+      return;
+    }
+    const existing = sess.tokens || [];
+    if (existing.some(t => t.id === tokenKey)) {
+      showToast(`⬡ "${box.name}" is already on the map`);
+      setSaving(null);
+      return;
+    }
+    const next = [...existing, {
+      id: tokenKey, type: 'loot', label: '⬡',
+      fullName: box.name || 'Lootbox', creatureName: box.name || 'Lootbox',
+      color: '#e8c84a', lootbox_id: box.id, x: 0.5, y: 0.5,
+    }];
+    const { error } = await supabase.from('vtt_sessions').update({ tokens: next, updated_at: new Date().toISOString() }).eq('id', sess.id);
+    showToast(error ? '✕ Failed to place on map' : `⌖ "${box.name}" placed on the map`);
+    setSaving(null);
+  };
+
   const approveClaim = async (item) => {
     setSaving(item.id);
 
@@ -186,6 +261,12 @@ export default function Solomon({ campaignId, onClose }) {
         claimed: true,
         claimed_at: new Date().toISOString(),
       }).eq('id', item.lootbox_id);
+      // Sweep the lootbox token off the map, if it was placed
+      const { data: sess } = await supabase.from('vtt_sessions').select('id, tokens').eq('campaign_id', String(campaignId)).maybeSingle();
+      const tokenKey = `loot_${item.lootbox_id}`;
+      if (sess?.id && (sess.tokens || []).some(t => t.id === tokenKey)) {
+        await supabase.from('vtt_sessions').update({ tokens: sess.tokens.filter(t => t.id !== tokenKey), updated_at: new Date().toISOString() }).eq('id', sess.id);
+      }
     }
 
     showToast(`✓ Approved: ${item.item_name}`);
@@ -316,6 +397,7 @@ export default function Solomon({ campaignId, onClose }) {
                   expanded={expanded === box.id}
                   onToggle={() => toggleExpand(box.id)}
                   presence={presence}
+                  onPlaceOnMap={() => placeOnMap(box)}
                   onDeleteItem={async (itemId) => {
                     await supabase.from('lootbox_items').delete().eq('id', itemId);
                     setBoxItems(prev => ({ ...prev, [box.id]: prev[box.id].filter(i => i.id !== itemId) }));
@@ -361,6 +443,7 @@ export default function Solomon({ campaignId, onClose }) {
                   onToggle={() => toggleExpand(box.id)}
                   presence={presence}
                   revealMode={box.reveal_mode}
+                  onPlaceOnMap={() => placeOnMap(box)}
                   action={
                     <button
                       onClick={() => hideBox(box)}
@@ -404,7 +487,7 @@ export default function Solomon({ campaignId, onClose }) {
   );
 }
 
-function BoxRow({ box, items, expanded, onToggle, presence, revealMode, action, onDeleteItem, onAddScribeToken }) {
+function BoxRow({ box, items, expanded, onToggle, presence, revealMode, action, onDeleteItem, onAddScribeToken, onPlaceOnMap }) {
   const modeLabel = revealMode === 'multi'
     ? `Multi-player · ${presence.length} present`
     : revealMode === 'single'
@@ -440,6 +523,12 @@ function BoxRow({ box, items, expanded, onToggle, presence, revealMode, action, 
             {expanded ? '▲' : '▾'}
           </div>
         </button>
+        {onPlaceOnMap && (
+          <button onClick={onPlaceOnMap} title="Place this lootbox on the VTT map"
+            style={{ background: 'rgba(200,168,74,0.08)', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 7, padding: '7px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: '#c8a84a', letterSpacing: '0.06em', flexShrink: 0 }}>
+            ⌖ Map
+          </button>
+        )}
         {action}
       </div>
 
