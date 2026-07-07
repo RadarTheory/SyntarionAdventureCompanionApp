@@ -188,17 +188,20 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
         <div style={{ marginBottom: 36 }}>
           <SectionHead>Legal</SectionHead>
           <div style={{ background: card, border: `1px solid ${border}`, borderRadius: 10, overflow: 'hidden' }}>
-            {[
+             {[
               { id: 'tos', label: 'Terms of Service' },
               { id: 'eula', label: 'End User License Agreement' },
-            ].map((doc, i) => (
+               { id: 'privacy', label: 'Privacy Policy' },
+              { id: 'ai', label: 'AI Disclosure' },
+              { id: 'credits', label: 'Credits' },
+            ].map((doc, i, arr) => (
               <button
                 key={doc.id}
                 onClick={() => setLegalTab(doc.id)}
                 style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   width: '100%', background: 'transparent', cursor: 'pointer',
-                  border: 'none', borderBottom: i === 0 ? `1px solid ${border}` : 'none',
+                  border: 'none', borderBottom: i < arr.length - 1 ? `1px solid ${border}` : 'none',
                   padding: '14px 20px', textAlign: 'left',
                 }}
               >

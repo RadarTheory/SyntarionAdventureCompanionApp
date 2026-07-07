@@ -10,6 +10,8 @@ const DOCS = {
   tos:     { label: 'Terms of Service', path: `/legal/TERMS_OF_SERVICE.md?v=${LEGAL_VERSION}`, acceptance: true },
   eula:    { label: 'EULA',             path: `/legal/EULA.md?v=${LEGAL_VERSION}`,             acceptance: true },
   privacy: { label: 'Privacy Policy',   path: `/legal/PRIVACY_POLICY.md?v=${LEGAL_VERSION}`,   acceptance: false },
+  ai:      { label: 'AI Disclosure',    path: `/legal/AI_DISCLOSURE.md?v=${LEGAL_VERSION}`,    acceptance: false },
+  credits: { label: 'Credits',          path: `/legal/CREDITS.md?v=${LEGAL_VERSION}`,          acceptance: false },
 };
 
 // ─── MINIMAL MARKDOWN RENDER ─────────────────────────────────────────────────
@@ -38,7 +40,7 @@ function Markdown({ text }) {
 // Read-only mode: <LegalGate readOnly initialTab="tos" onClose={...} />
 export default function LegalGate({ user, onAccept, readOnly = false, initialTab = 'tos', onClose }) {
   const [tab, setTab] = useState(initialTab);
-  const [docs, setDocs] = useState({ tos: null, eula: null, privacy: null });
+  const [docs, setDocs] = useState({ tos: null, eula: null, privacy: null, ai: null, credits: null });
   const [agreed, setAgreed] = useState({ tos: false, eula: false });
  const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -124,7 +126,7 @@ export default function LegalGate({ user, onAccept, readOnly = false, initialTab
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 6, padding: '16px 28px 0' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '16px 28px 0' }}>
           {Object.entries(DOCS).filter(([, d]) => readOnly || d.acceptance).map(([key, d]) => {
             const isAgreed = !readOnly && agreed[key];
             return (
@@ -132,7 +134,7 @@ export default function LegalGate({ user, onAccept, readOnly = false, initialTab
                 key={key}
                 onClick={() => setTab(key)}
                 style={{
-                  flex: 1,
+                  flex: '1 1 30%',
                   background: isAgreed ? 'rgba(212,185,78,0.10)' : tab === key ? 'rgba(240,238,235,0.08)' : 'transparent',
                   border: `1px solid ${isAgreed ? 'rgba(212,185,78,0.55)' : tab === key ? 'rgba(240,238,235,0.25)' : 'rgba(240,238,235,0.1)'}`,
                   borderRadius: 8, padding: '9px 0',
