@@ -322,6 +322,7 @@ function HerculesLite({ campaignId, char, onClose }) {
 function CampaignList({ onSelect, userChar, onHome }) {
   const { isMobile } = useDevice();
   const [campaigns, setCampaigns] = useState([]);
+  const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showSigil, setShowSigil] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
@@ -336,8 +337,11 @@ function CampaignList({ onSelect, userChar, onHome }) {
   const [dmUnlocked, setDmUnlocked] = useState(false);
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from('campaigns').select('*').order('created_at', { ascending: true });
-    // Merge DB campaigns with any legacy hardcoded ones not yet migrated
+    const [{ data: mods }, { data }] = await Promise.all([
+      supabase.from('modules').select('id, name, description').order('created_at', { ascending: true }),
+      supabase.from('campaigns').select('*').order('created_at', { ascending: true }),
+    ]);
+    setModules(mods || []);
     setCampaigns(data || []);
     setLoading(false);
   };
@@ -535,7 +539,7 @@ function CampaignList({ onSelect, userChar, onHome }) {
               <button onClick={() => setShowCreate(false)} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 8, padding: '11px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: 'rgba(240,238,235,0.35)', letterSpacing: '0.1em' }}>Cancel</button>
               <button onClick={handleCreate} disabled={creating || !draft.name.trim() || !draft.subtitle.trim()}
                 style={{ flex: 2, background: (!draft.name.trim() || creating) ? 'rgba(200,168,74,0.06)' : 'rgba(200,168,74,0.16)', border: `1px solid ${(!draft.name.trim() || creating) ? 'rgba(200,168,74,0.2)' : 'rgba(200,168,74,0.55)'}`, borderRadius: 8, padding: '11px', cursor: (creating || !draft.name.trim()) ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: '#e8c84a', fontWeight: 700, letterSpacing: '0.12em', transition: 'all 0.15s' }}>
-                {creating ? 'Creating…' : '✦ Create Module'}
+                {creating ? 'Creating…' : '✦ Create Adventure'}
               </button>
             </div>
           </div>
@@ -554,7 +558,7 @@ function CampaignList({ onSelect, userChar, onHome }) {
         </div>
        <button onClick={() => dmUnlocked ? setShowCreate(true) : setShowSigil(true)}
           style={{ background: '#1a1714', border: '1px solid rgba(26,23,20,0.3)', borderRadius: 8, padding: isMobile ? '10px 14px' : '11px 18px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: '#f0eeeb', letterSpacing: '0.12em', whiteSpace: 'nowrap', flexShrink: 0, marginLeft: 16 }}>
-          + Add Module
+          + Add Adventure
         </button>
       </div>
 
@@ -566,7 +570,21 @@ function CampaignList({ onSelect, userChar, onHome }) {
         {!loading && campaigns.length === 0 && (
           <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,23,20,0.4)', textAlign: 'center', padding: '40px 0' }}>No campaigns yet. The Architect will open the world.</div>
         )}
-        {campaigns.map((c) => {
+        {modules.map((mod) => {
+          const modCampaigns = campaigns.filter(c => c.module_id === mod.id);
+          if (!loading && modCampaigns.length === 0) return null;
+          return (
+            <div key={`module-${mod.id}`} style={{ marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, margin: '10px 2px 12px' }}>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#1a1714' }}>✦ {mod.name}</div>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(26,23,20,0.12)' }} />
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(26,23,20,0.35)' }}>Module · {modCampaigns.length} campaign{modCampaigns.length === 1 ? '' : 's'}</div>
+              </div>
+              {mod.description && (
+                <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 11, color: 'rgba(26,23,20,0.4)', margin: '0 2px 12px' }}>{mod.description}</div>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {modCampaigns.map((c) => {
           const isAssigned = userChar?.campaign_id === String(c.id);
           return (
             <button key={c.id} onClick={() => onSelect(c)}
@@ -598,6 +616,10 @@ function CampaignList({ onSelect, userChar, onHome }) {
   )}
 </div>
             </button>
+          );
+        })}
+              </div>
+            </div>
           );
         })}
       </div>
