@@ -1,4 +1,7 @@
 export default function LoadingScreen() {
+  // Force fresh video load by adding timestamp
+  const videoSrc = `/faviconloadingtransparent.mp4?t=${Date.now()}`;
+
   return (
     <div
       style={{
@@ -12,7 +15,8 @@ export default function LoadingScreen() {
       }}
     >
       <video
-        src="/faviconloadingtransparent.mp4"
+        key={videoSrc}                    // Important: forces React to reload
+        src={videoSrc}
         autoPlay
         muted
         loop

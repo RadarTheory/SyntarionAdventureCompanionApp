@@ -38,6 +38,7 @@ function Markdown({ text }) {
 export default function LegalGate({ user, onAccept, readOnly = false, initialTab = 'tos', onClose }) {
   const [tab, setTab] = useState(initialTab);
   const [docs, setDocs] = useState({ tos: null, eula: null });
+  const [agreed, setAgreed] = useState({ tos: false, eula: false });
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -45,14 +46,18 @@ export default function LegalGate({ user, onAccept, readOnly = false, initialTab
     Promise.all(
       Object.entries(DOCS).map(([key, d]) =>
         fetch(d.path)
-          .then(r => (r.ok ? r.text() : 'Document unavailable. Contact contact@theonhexmedia.com.'))
-          .then(text => [key, text])
+          .then(r => (r.ok ? r.text() : ''))
+          .then(text => {
+            const t = text.trimStart().toLowerCase();
+            const isHtml = !text || t.startsWith('<!doctype') || t.startsWith('<html');
+            return [key, isHtml ? 'Document unavailable. Contact contact@theonhexmedia.com.' : text];
+          })
           .catch(() => [key, 'Document unavailable. Contact contact@theonhexmedia.com.'])
       )
     ).then(entries => setDocs(Object.fromEntries(entries)));
   }, []);
 
-  const accept = async () => {
+  const recordAcceptance = async () => {
     if (!user?.id || saving) return;
     setSaving(true);
     setFailed(false);
@@ -63,6 +68,17 @@ export default function LegalGate({ user, onAccept, readOnly = false, initialTab
     // 23505 = already accepted this version (duplicate) — treat as success
     if (!error || error.code === '23505') onAccept();
     else setFailed(true);
+  };
+
+  const agreeCurrent = () => {
+    const next = { ...agreed, [tab]: true };
+    setAgreed(next);
+    if (next.tos && next.eula) {
+      recordAcceptance();
+    } else {
+      // light up and jump to the document still awaiting agreement
+      setTab(tab === 'tos' ? 'eula' : 'tos');
+    }
   };
 
   return (
@@ -101,23 +117,26 @@ export default function LegalGate({ user, onAccept, readOnly = false, initialTab
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 6, padding: '16px 28px 0' }}>
-          {Object.entries(DOCS).map(([key, d]) => (
-            <button
-              key={key}
-              onClick={() => setTab(key)}
-              style={{
-                flex: 1,
-                background: tab === key ? 'rgba(240,238,235,0.08)' : 'transparent',
-                border: `1px solid ${tab === key ? 'rgba(240,238,235,0.25)' : 'rgba(240,238,235,0.1)'}`,
-                borderRadius: 8, padding: '9px 0',
-                color: tab === key ? '#f0eeeb' : 'rgba(240,238,235,0.4)',
-                fontFamily: "'Cinzel', serif", fontSize: 10,
-                letterSpacing: '0.14em', textTransform: 'uppercase',
-                fontWeight: tab === key ? 700 : 400,
-                cursor: 'pointer', transition: 'all 0.15s',
-              }}
-            >{d.label}</button>
-          ))}
+          {Object.entries(DOCS).map(([key, d]) => {
+            const isAgreed = !readOnly && agreed[key];
+            return (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                style={{
+                  flex: 1,
+                  background: isAgreed ? 'rgba(212,185,78,0.10)' : tab === key ? 'rgba(240,238,235,0.08)' : 'transparent',
+                  border: `1px solid ${isAgreed ? 'rgba(212,185,78,0.55)' : tab === key ? 'rgba(240,238,235,0.25)' : 'rgba(240,238,235,0.1)'}`,
+                  borderRadius: 8, padding: '9px 0',
+                  color: isAgreed ? '#d4b94e' : tab === key ? '#f0eeeb' : 'rgba(240,238,235,0.4)',
+                  fontFamily: "'Cinzel', serif", fontSize: 10,
+                  letterSpacing: '0.14em', textTransform: 'uppercase',
+                  fontWeight: tab === key || isAgreed ? 700 : 400,
+                  cursor: 'pointer', transition: 'all 0.15s',
+                }}
+              >{isAgreed ? '✓ ' : ''}{d.label}</button>
+            );
+          })}
         </div>
 
         {/* Document body */}
@@ -151,17 +170,23 @@ export default function LegalGate({ user, onAccept, readOnly = false, initialTab
             }}>Close</button>
           ) : (
             <>
-              <button onClick={accept} disabled={saving} style={{
-                width: '100%', background: 'rgba(240,238,235,0.09)',
-                border: '1px solid rgba(240,238,235,0.25)', borderRadius: 8,
-                padding: '13px 0', color: '#f0eeeb', fontSize: 12,
+              <button onClick={agreeCurrent} disabled={saving || agreed[tab]} style={{
+                width: '100%',
+                background: agreed[tab] ? 'rgba(212,185,78,0.10)' : 'rgba(240,238,235,0.09)',
+                border: `1px solid ${agreed[tab] ? 'rgba(212,185,78,0.55)' : 'rgba(240,238,235,0.25)'}`,
+                borderRadius: 8,
+                padding: '13px 0', color: agreed[tab] ? '#d4b94e' : '#f0eeeb', fontSize: 12,
                 letterSpacing: '0.16em', textTransform: 'uppercase',
-                cursor: saving ? 'default' : 'pointer',
+                cursor: saving || agreed[tab] ? 'default' : 'pointer',
                 opacity: saving ? 0.6 : 1,
                 fontFamily: "'Cinzel', serif", fontWeight: 700,
-              }}>{saving ? 'Sealing the pact…' : 'I Agree'}</button>
+              }}>
+                {saving ? 'Sealing the pact…'
+                  : agreed[tab] ? `✓ ${DOCS[tab].label} Accepted`
+                  : `I Agree to the ${DOCS[tab].label}`}
+              </button>
               <div style={{ fontSize: 10, color: 'rgba(240,238,235,0.28)', textAlign: 'center', marginTop: 10, fontStyle: 'italic' }}>
-                Version {LEGAL_VERSION} · By selecting "I Agree" you accept both documents.
+                Version {LEGAL_VERSION} · {(agreed.tos ? 1 : 0) + (agreed.eula ? 1 : 0)} of 2 accepted · Both documents must be accepted to enter.
               </div>
             </>
           )}

@@ -3,6 +3,7 @@ import supabase from './lib/supabase';
 import {
   PASSES, getCycleName, getPassInfo, advanceFragments, getLiveClock, getClockTime,
   TRAVEL_METHODS, FRAGMENTS_PER_TURN, GREATER_CYCLES_EU, GREATER_CYCLES_ED,
+  getLesserCycleName
 } from "./lib/soteriaclock";
 
 // ─── ORBITAL CELESTIAL DISPLAY ─────────────────────────────────────────────────
@@ -144,7 +145,7 @@ export function SoteriaClockDisplay({ clock, compact = false }) {
         <span style={{ fontFamily: 'monospace', opacity: 0.85 }}>{getClockTime(live.pass, live.fragment)}</span>
         <SunMoonCycleBar clock={clock} width={110} showBodyLabels={false} />
         <span style={{ opacity: 0.5 }}>·</span>
-        <span>Turn {live.turn}, {cycleName}</span>
+        <span>Turn {live.turn} • {getLesserCycleName(live.lesser_cycle)}</span>
         <span style={{ opacity: 0.5 }}>·</span>
         <span>{live.anui} {live.era === 'EU' ? 'E.U.' : 'E.D.'}</span>
         {clock.session_anchor_at && (
@@ -178,7 +179,7 @@ export function SoteriaClockDisplay({ clock, compact = false }) {
         <SunMoonCycleBar clock={clock} />
       </div>
       <div style={{ marginTop: 10, fontSize: 12, opacity: 0.8 }}>
-        Turn {live.turn} of {cycleName} (Cycle {live.greater_cycle}) — 26hr day
+        Turn {live.turn} of {getLesserCycleName(live.lesser_cycle)} • {cycleName}
       </div>
       <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>
         Anui {live.anui} {live.era === 'EU' ? 'E.U.' : 'E.D.'}
