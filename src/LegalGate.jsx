@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import supabase from './lib/supabase';
 
 // ─── LEGAL VERSION ───────────────────────────────────────────────────────────
@@ -39,8 +39,15 @@ export default function LegalGate({ user, onAccept, readOnly = false, initialTab
   const [tab, setTab] = useState(initialTab);
   const [docs, setDocs] = useState({ tos: null, eula: null });
   const [agreed, setAgreed] = useState({ tos: false, eula: false });
-  const [saving, setSaving] = useState(false);
+const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
+  const scrollRef = useRef(null);
+  const scrollPos = useRef({ tos: 0, eula: 0 });
+
+  // restore this tab's saved scroll position when switching
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollPos.current[tab] || 0;
+  }, [tab]);
 
   useEffect(() => {
     Promise.all(
@@ -140,7 +147,10 @@ export default function LegalGate({ user, onAccept, readOnly = false, initialTab
         </div>
 
         {/* Document body */}
-        <div style={{
+        <div
+          ref={scrollRef}
+          onScroll={e => { scrollPos.current[tab] = e.currentTarget.scrollTop; }}
+          style={{
           flex: 1, overflowY: 'auto',
           margin: '14px 28px',
           padding: '16px 18px',
