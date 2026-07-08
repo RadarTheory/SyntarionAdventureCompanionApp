@@ -228,9 +228,10 @@ const DM_STEPS = [
 export default function Tour({ isDM = false, onClose }) {
   const steps = isDM ? DM_STEPS : PLAYER_STEPS;
   const [i, setI] = useState(0);
-  const [mobile, setMobile] = useState(
+   const [mobile, setMobile] = useState(
     typeof window !== 'undefined' && window.innerWidth < 640
   );
+  const [iconHover, setIconHover] = useState(false);
 
   const last = i === steps.length - 1;
   const step = steps[i];
@@ -315,14 +316,23 @@ export default function Tour({ isDM = false, onClose }) {
 
         {/* Icon + title */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
-          <div style={{
-            width: mobile ? 40 : 48, height: mobile ? 40 : 48,
-            borderRadius: '50%',
-            border: art ? 'none' : `1.5px solid ${step.accent}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: mobile ? 18 : 22, color: step.accent, flexShrink: 0,
-          }}>
-              {art
+          <div
+            onPointerEnter={(e) => { if (e.pointerType === 'mouse') setIconHover(true); }}
+            onPointerLeave={(e) => { if (e.pointerType === 'mouse') setIconHover(false); }}
+            onPointerUp={(e) => { if (e.pointerType !== 'mouse') setIconHover(v => !v); }}
+            style={{
+              width: mobile ? 92 : 128, height: mobile ? 92 : 128,
+              background: C.card,
+              borderRadius: art ? 0 : '50%',
+              border: art ? 'none' : `1.5px solid ${step.accent}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: mobile ? 40 : 56, color: step.accent, flexShrink: 0,
+              transform: iconHover ? 'scale(1.18)' : 'scale(1)',
+              transformOrigin: 'center',
+              transition: 'transform 220ms cubic-bezier(0.16, 1, 0.3, 1)',
+              cursor: 'pointer',
+            }}
+          >              {art
               ? <img src={art} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', mixBlendMode: 'lighten' }} />
               : step.glyph}
           </div>

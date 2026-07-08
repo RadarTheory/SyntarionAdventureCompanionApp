@@ -553,7 +553,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
        {
       id: 'howtoplay',
       label: 'HOW TO PLAY',
-      sub: 'STEP INTO THE AGE OF STEAM',
+      sub: 'Adventure Helper',
       onClick: () => setShowTour(true),
     },
        {
