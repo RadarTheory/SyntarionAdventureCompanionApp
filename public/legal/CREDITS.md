@@ -15,9 +15,13 @@ The world of Soteria, its cosmology, histories, races, classes, factions, bestia
 
 **Application design and development** — Adrian Gilmore, Jake Homer
 
+## Original Music
+
+**Soundtrack/Score** — Theonhex Media & Publishing © 2026 — All Rights Reserved
+
 ## Artwork
 
-**Maps and iconography** — Theonhex Media & Publishing © 2026 — All Rights Reserved
+**Maps and Logo iconography** — Theonhex Media & Publishing © 2026 — All Rights Reserved
 **Character and NPC portraits** — Theonhex Media & Publishing © 2026 — All Rights Reserved
 ## Typography
 

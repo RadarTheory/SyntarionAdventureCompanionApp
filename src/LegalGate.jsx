@@ -7,11 +7,17 @@ import supabase from './lib/supabase';
 export const LEGAL_VERSION = '2026-07-06';
 
 const DOCS = {
-  tos:     { label: 'Terms of Service', path: `/legal/TERMS_OF_SERVICE.md?v=${LEGAL_VERSION}`, acceptance: true },
-  eula:    { label: 'EULA',             path: `/legal/EULA.md?v=${LEGAL_VERSION}`,             acceptance: true },
-  privacy: { label: 'Privacy Policy',   path: `/legal/PRIVACY_POLICY.md?v=${LEGAL_VERSION}`,   acceptance: false },
-  ai:      { label: 'AI Disclosure',    path: `/legal/AI_DISCLOSURE.md?v=${LEGAL_VERSION}`,    acceptance: false },
-  credits: { label: 'Credits',          path: `/legal/CREDITS.md?v=${LEGAL_VERSION}`,          acceptance: false },
+  tos:     { label: 'Terms of Service', path: `/legal/TERMS_OF_SERVICE.md?v=${LEGAL_VERSION}`, acceptance: true,  group: 'legal' },
+  eula:    { label: 'EULA',             path: `/legal/EULA.md?v=${LEGAL_VERSION}`,             acceptance: true,  group: 'legal' },
+  privacy: { label: 'Privacy Policy',   path: `/legal/PRIVACY_POLICY.md?v=${LEGAL_VERSION}`,   acceptance: false, group: 'privacy' },
+  ai:      { label: 'AI Disclosure',    path: `/legal/AI_DISCLOSURE.md?v=${LEGAL_VERSION}`,    acceptance: false, group: 'privacy' },
+  credits: { label: 'Credits',          path: `/legal/CREDITS.md?v=${LEGAL_VERSION}`,          acceptance: false, group: 'credits' },
+};
+
+const GROUP_TITLES = {
+  legal:   'Legal Documents',
+  privacy: 'Privacy & AI',
+  credits: 'Credits',
 };
 
 // ─── MINIMAL MARKDOWN RENDER ─────────────────────────────────────────────────
@@ -44,6 +50,8 @@ function Markdown({ text }) {
 // Read-only mode: <LegalGate readOnly initialTab="tos" onClose={...} />
 export default function LegalGate({ user, onAccept, readOnly = false, initialTab = 'tos', onClose }) {
   const [tab, setTab] = useState(initialTab);
+  const group = DOCS[initialTab]?.group || 'legal';
+  const visibleDocs = Object.entries(DOCS).filter(([, d]) => (readOnly ? d.group === group : d.acceptance));
   const [docs, setDocs] = useState({ tos: null, eula: null, privacy: null, ai: null, credits: null });
   const [agreed, setAgreed] = useState({ tos: false, eula: false });
  const [saving, setSaving] = useState(false);
@@ -120,7 +128,7 @@ export default function LegalGate({ user, onAccept, readOnly = false, initialTab
             Theonhex Media & Publishing
           </div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 19, fontWeight: 700, color: '#f0eeeb', letterSpacing: '0.06em' }}>
-            {readOnly ? 'Legal Documents' : 'Before You Enter Soteria'}
+            {readOnly ? GROUP_TITLES[group] : 'Before You Enter Soteria'}
           </div>
           {!readOnly && (
             <div style={{ fontSize: 11.5, color: 'rgba(240,238,235,0.4)', fontStyle: 'italic', marginTop: 6, lineHeight: 1.6 }}>
@@ -129,9 +137,10 @@ export default function LegalGate({ user, onAccept, readOnly = false, initialTab
           )}
         </div>
 
-        {/* Tabs */}
+     {/* Tabs */}
+        {visibleDocs.length > 1 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '16px 28px 0' }}>
-          {Object.entries(DOCS).filter(([, d]) => readOnly || d.acceptance).map(([key, d]) => {
+          {visibleDocs.map(([key, d]) => {
             const isAgreed = !readOnly && agreed[key];
             return (
               <button
@@ -152,6 +161,7 @@ export default function LegalGate({ user, onAccept, readOnly = false, initialTab
             );
           })}
         </div>
+        )}
 
         {/* Document body */}
         <div
