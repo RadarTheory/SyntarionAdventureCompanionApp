@@ -4,7 +4,7 @@ import supabase from './lib/supabase';
 // ─── LEGAL VERSION ───────────────────────────────────────────────────────────
 // Bump this string whenever TERMS_OF_SERVICE.md or EULA.md are materially
 // updated. Every user will be re-prompted to accept on their next visit.
-export const LEGAL_VERSION = '2026-07-06';
+export const LEGAL_VERSION = '2026-07-07';
 
 const DOCS = {
   tos:     { label: 'Terms of Service', path: `/legal/TERMS_OF_SERVICE.md?v=${LEGAL_VERSION}`, acceptance: true,  group: 'legal' },

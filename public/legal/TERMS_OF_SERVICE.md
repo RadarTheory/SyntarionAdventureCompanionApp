@@ -49,11 +49,15 @@ The Service includes AI-assisted features. When you use them, relevant content i
 
 By using these features you consent to this processing. AI-generated output may be inaccurate, inconsistent with established lore, or otherwise flawed; it is provided for entertainment and convenience, and the DM's ruling is final. We do not guarantee that third-party providers will not retain or use submitted data per their own policies, and we encourage you not to submit sensitive personal information through AI features.
 
+For a plain statement of where AI is and is not used in the Service, see the **AI Disclosure**, available in the Service under Settings → Legal.
+
 ## 6. Privacy and Data
 
 We collect and store the data needed to run the Service: account information (such as email address), Your Content, and gameplay event logs (used for features like session chronicles, Grimoires, and combat history). Data is stored with our infrastructure providers (Supabase and Vercel).
 
 We do not sell your personal information. Campaign participants can see content shared within the campaign by design. You may request deletion of your account and associated personal data by contacting us; some content interwoven with shared campaign records (such as event logs referencing your character) may be retained in anonymized or campaign-historical form.
+
+Full details of what we collect, how it is used and shared, and your choices are set out in our **Privacy Policy**, available in the Service under Settings → Legal, which you should read together with these Terms.
 
 ## 7. Fees
 
