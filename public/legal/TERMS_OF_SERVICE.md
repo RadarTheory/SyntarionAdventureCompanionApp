@@ -1,7 +1,7 @@
 # Terms of Service
 
 **Syntarion Adventure Companion App**
-**Effective Date:** July 6, 2026
+**Effective Date:** July 7, 2026
 **Operator:** Adrian Gilmore, doing business as **Theonhex Media & Publishing** ("Operator," "we," "us")
 
 These Terms of Service ("Terms") govern your access to and use of the hosted Syntarion Adventure Companion App and related services (the "Service"). By creating an account or using the Service, you agree to these Terms and to the accompanying [End User License Agreement](./EULA.md), which is incorporated by reference. If you do not agree, do not use the Service.
