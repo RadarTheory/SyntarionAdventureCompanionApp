@@ -50,8 +50,20 @@ function Markdown({ text }) {
 // Read-only mode: <LegalGate readOnly initialTab="tos" onClose={...} />
 export default function LegalGate({ user, onAccept, readOnly = false, initialTab = 'tos', onClose }) {
   const [tab, setTab] = useState(initialTab);
-  const group = DOCS[initialTab]?.group || 'legal';
+const group = DOCS[initialTab]?.group || 'legal';
   const visibleDocs = Object.entries(DOCS).filter(([, d]) => (readOnly ? d.group === group : d.acceptance));
+  const [returning, setReturning] = useState(false);
+
+  // Re-gate detection: any prior acceptance row means this user has been here before
+  useEffect(() => {
+    if (readOnly || !user?.id) return;
+    supabase
+      .from('legal_acceptances')
+      .select('version')
+      .eq('user_id', user.id)
+      .limit(1)
+      .then(({ data }) => setReturning((data?.length || 0) > 0));
+  }, [readOnly, user?.id]);
   const [docs, setDocs] = useState({ tos: null, eula: null, privacy: null, ai: null, credits: null });
   const [agreed, setAgreed] = useState({ tos: false, eula: false });
  const [saving, setSaving] = useState(false);
@@ -130,12 +142,20 @@ export default function LegalGate({ user, onAccept, readOnly = false, initialTab
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 19, fontWeight: 700, color: '#f0eeeb', letterSpacing: '0.06em' }}>
             {readOnly ? GROUP_TITLES[group] : 'Before You Enter Soteria'}
           </div>
-          {!readOnly && (
-            <div style={{ fontSize: 11.5, color: 'rgba(240,238,235,0.4)', fontStyle: 'italic', marginTop: 6, lineHeight: 1.6 }}>
-              Please review and accept the Terms of Service and End User<br />License Agreement.
-            </div>
-          )}
-        </div>
+         {!readOnly && (
+            <>
+              {returning && (
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#d4b94e', marginTop: 8 }}>
+                  ⟡ We've updated our terms ⟡
+                </div>
+              )}
+              <div style={{ fontSize: 11.5, color: 'rgba(240,238,235,0.4)', fontStyle: 'italic', marginTop: 6, lineHeight: 1.6 }}>
+                {returning
+                  ? 'Our Terms of Service and EULA have changed. Please review and accept the updated documents to continue.'
+                  : <>Please review and accept the Terms of Service and End User<br />License Agreement.</>}
+              </div>
+            </>
+          )}        </div>
 
      {/* Tabs */}
         {visibleDocs.length > 1 && (
