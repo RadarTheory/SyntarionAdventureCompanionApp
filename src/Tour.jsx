@@ -231,12 +231,13 @@ export default function Tour({ isDM = false, onClose }) {
    const [mobile, setMobile] = useState(
     typeof window !== 'undefined' && window.innerWidth < 640
   );
-  const [iconHover, setIconHover] = useState(false);
+ const [iconHover, setIconHover] = useState(false);
+  useEffect(() => { setIconHover(false); }, [i]);
 
-  const last = i === steps.length - 1;
-  const step = steps[i];
+  const last = i === steps.length - 1;  const step = steps[i];
   const chapter = CHAPTERS[step.ch];
   const art = tourIcon(step.icon);
+  const shot = tourIcon(`${step.icon}-ss`);
 
   const finish = useCallback(() => {
     markSeen();
@@ -350,7 +351,20 @@ export default function Tour({ isDM = false, onClose }) {
           lineHeight: 1.65, color: C.faded, minHeight: mobile ? 120 : 100,
         }}>
           {step.body}
-        </p>
+         </p>
+
+        {shot && (
+          <img
+            src={shot}
+            alt={`${step.title} screenshot`}
+            style={{
+              display: 'block', width: '100%',
+              borderRadius: 8,
+              border: `1px solid ${C.cardEdge}`,
+              marginBottom: 18,
+            }}
+          />
+        )}
 
         {/* Progress rail — styled like the alignment sliders */}
         <div style={{
