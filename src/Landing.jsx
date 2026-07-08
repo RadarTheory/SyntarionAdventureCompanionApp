@@ -10,6 +10,7 @@ import Roster from './Roster';
 import DMView from './DMView';
 import Settings from './Settings';
 import LegalGate, { LEGAL_VERSION } from './LegalGate';
+import Tour, { hasSeenTour } from './Tour';
 
 // ─── MOVABLE DRIFTSTONE BUTTON ───────────────────────────────────────────────
 function DriftstoneButton({ onClick, isMobile }) {
@@ -424,6 +425,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   const [hoveredBtn, setHoveredBtn] = useState(null);
   const [selectedChar, setSelectedChar] = useState(() => { try { const c = localStorage.getItem('syn_char'); return c ? JSON.parse(c) : null; } catch { return null; } });
   const [legalStatus, setLegalStatus] = useState('checking'); // 'checking' | 'needed' | 'accepted'
+  const [showTour, setShowTour] = useState(() => !hasSeenTour());
 
   useEffect(() => {
     if (!user?.id) { setLegalStatus('needed'); return; }
@@ -549,6 +551,12 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
       onClick: () => { localStorage.setItem('syn_view', 'campaigns'); setAppView('campaigns'); },
     }] : []),
        {
+      id: 'howtoplay',
+      label: 'HOW TO PLAY',
+      sub: 'STEP INTO THE AGE OF STEAM',
+      onClick: () => setShowTour(true),
+    },
+       {
       id: 'settings',
       label: 'SETTINGS',
       sub: 'Preferences & display',
@@ -587,8 +595,12 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
         Lótjarr's Bag of Games
       </button>
 
-      {showDMModal && (
+     {showDMModal && (
         <DMSigilModal onSuccess={handleDMSuccess} onCancel={() => setShowDMModal(false)} />
+      )}
+
+      {showTour && (
+        <Tour onClose={() => setShowTour(false)} />
       )}
 
       {showArchiveModal && dmModule && (
