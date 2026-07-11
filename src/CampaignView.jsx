@@ -1650,6 +1650,7 @@ function LootboxPanel({ campaignId, userChar, onClaimed }) {
       attuned: false,
       bonuses: {},
       weight: item.qty || 1,
+      equip_slot: item.item_equip_slot || null,
     }));
 
     if (rows.length > 0) {

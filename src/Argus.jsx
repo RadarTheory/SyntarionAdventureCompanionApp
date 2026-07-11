@@ -64,7 +64,7 @@ function GrantModal({ item, onClose }) {
     const { error } = await supabase.from('character_items').insert({
       character_id: String(selectedChar.id), slot: `pack__${Date.now()}`,
       name: item.name, description: `${item.category}|${item.desc}${note ? ' — ' + note : ''}`,
-      attuned: false, bonuses: {}, weight: qty,
+      attuned: false, bonuses: {}, weight: qty, equip_slot: item.equip_slot || null,
     });
     if (!error) {
       await supabase.from('messages').insert({
@@ -86,7 +86,7 @@ function GrantModal({ item, onClose }) {
       if (newBox) { boxId = newBox.id; setLootboxes(p => [newBox, ...p]); }
     }
     if (boxId) {
-      await supabase.from('lootbox_items').insert({ lootbox_id: boxId, item_name: item.name, item_category: item.category, item_type: item.type, item_desc: item.desc, item_meta: item.meta || '', qty, note });
+      await supabase.from('lootbox_items').insert({ lootbox_id: boxId, item_name: item.name, item_category: item.category, item_type: item.type, item_desc: item.desc, item_meta: item.meta || '', item_equip_slot: item.equip_slot || null, qty, note });
       setDone(true);
     }
     setSaving(false);
