@@ -86,8 +86,8 @@ const SLOT_GROUPS = {
   'Ring I': ['ring'], 'Ring II': ['ring'], Neck: ['neck'], Charm: ['charm'],
 };
 function itemFitsSlot(slot, item) {
-  if (item?.equip_slot && SLOT_GROUPS[slot]) return SLOT_GROUPS[slot].includes(item.equip_slot);
-  if (item?.equip_slot) return false;
+  if (!SLOT_GROUPS[slot]) return (SLOT_CATEGORIES[slot] || []).includes(item?.category);
+  if (item?.equip_slot) return SLOT_GROUPS[slot].includes(item.equip_slot);
   return (SLOT_CATEGORIES[slot] || []).includes(item?.category);
 }
 const USE_CATEGORIES = new Set(['Weapons','Magic Items','Artifacts','Spellcasting Items','Consumables']);
