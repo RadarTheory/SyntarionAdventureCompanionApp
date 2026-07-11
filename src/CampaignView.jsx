@@ -75,6 +75,21 @@ const SLOT_CATEGORIES = {
   Relic: ['Magic Items','Artifacts','Spellcasting Items','Accessories','Collectables'],
   Artifact: ['Magic Items','Artifacts','Spellcasting Items','Accessories','Collectables'],
 };
+
+const SLOT_GROUPS = {
+  'Main Hand':   ['blade','ranged','staff'],
+  'Off-Hand':    ['offhand','blade','sidearm'],
+  'Side-Weapon': ['sidearm','blade'],
+  'Heavy':       ['heavy','ranged'],
+  Head: ['head'], Torso: ['torso','cloak'], Waist: ['waist'],
+  Hands: ['hands'], Greaves: ['boots'], Boots: ['boots'],
+  'Ring I': ['ring'], 'Ring II': ['ring'], Neck: ['neck'], Charm: ['charm'],
+};
+function itemFitsSlot(slot, item) {
+  if (item?.equip_slot && SLOT_GROUPS[slot]) return SLOT_GROUPS[slot].includes(item.equip_slot);
+  if (item?.equip_slot) return false;
+  return (SLOT_CATEGORIES[slot] || []).includes(item?.category);
+}
 const USE_CATEGORIES = new Set(['Weapons','Magic Items','Artifacts','Spellcasting Items','Consumables']);
 const USE_KEYWORDS = ['action','cast','activate','once per','bonus action','trigger','expend','channel','invoke'];
 function hasUse(item) {
