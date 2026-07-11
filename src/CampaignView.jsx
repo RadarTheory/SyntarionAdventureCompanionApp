@@ -1431,7 +1431,7 @@ function InventoryPanel({ char, onInventoryChange, isDM = false, campaignId }) {
           delete newItems[slot];
           setItems(newItems);
           onInventoryChange(newItems);
-          alter table character_items add column if not exists equip_slot text;
+          if (newRow) setPackItems(prev => [...prev, { id: newRow.id, name: item.name, category: item.description?.includes('|') ? item.description.split('|')[0] : 'Misc', desc: item.description?.includes('|') ? item.description.split('|').slice(1).join('|') : (item.description || ''), qty: 1, equip_slot: item.equip_slot || null }]);
           setPlayerSlot(null);
         };
 
