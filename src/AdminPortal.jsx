@@ -109,8 +109,8 @@ export default function AdminPortal() {
     setRows(data || []); setTotal(count || 0); setStatus('');
   };
 
-  useEffect(() => { if (isAdmin) { setPage(0); setEditRow(null); } }, [activeTable]);
-  useEffect(() => { if (isAdmin) load(); }, [isAdmin, activeTable, page]);
+  useEffect(() => { if (isAdmin) { setPage(0); setEditRow(null); setStatusFilter(null); } }, [activeTable]);
+  useEffect(() => { if (isAdmin) load(); }, [isAdmin, activeTable, page, statusFilter]);
 
   const login = async () => {
     setAuthErr('');
@@ -225,6 +225,18 @@ export default function AdminPortal() {
           <input style={{ ...S.input, width:160 }} placeholder="contains…" value={filterVal} onChange={e => setFilterVal(e.target.value)} onKeyDown={e => e.key === 'Enter' && load()} />
           <button style={S.btn} onClick={() => { setPage(0); load(); }}>Filter</button>
           <button style={S.btn} onClick={openInsert}>+ Insert</button>
+          {rows.some(r => 'status' in r) && (
+            <div style={{ display:'flex', gap:4 }}>
+              {[...new Set(rows.map(r => r.status).filter(Boolean))].map(s => (
+                <button key={s} onClick={() => { setPage(0); setStatusFilter(statusFilter === s ? null : s); }}
+                  style={{ ...S.btn, padding:'4px 10px', fontSize:9,
+                    background: statusFilter === s ? 'rgba(121,245,167,0.15)' : 'transparent',
+                    borderColor: statusFilter === s ? 'rgba(121,245,167,0.5)' : '#3a352e',
+                    color: statusFilter === s ? '#79f5a7' : '#8a8378' }}>{s}</button>
+              ))}
+              {statusFilter && <button onClick={() => { setPage(0); setStatusFilter(null); }} style={{ ...S.btn, padding:'4px 8px', fontSize:9, color:'#ef4444', borderColor:'rgba(224,90,90,0.4)' }}>×</button>}
+            </div>
+          )}
           <div style={{ marginLeft:'auto', display:'flex', gap:6, alignItems:'center' }}>
             <button style={S.btn} disabled={page === 0} onClick={() => setPage(p => Math.max(0, p - 1))}>‹</button>
             <span style={{ fontSize:10, color:'#8a8378' }}>page {page + 1} / {Math.max(1, Math.ceil(total / PAGE_SIZE))}</span>
