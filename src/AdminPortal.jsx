@@ -37,6 +37,22 @@ export default function AdminPortal() {
   const [editText, setEditText] = useState('');
   const [status, setStatus] = useState('');
   const [inserting, setInserting] = useState(false);
+  const [cellEdit, setCellEdit] = useState(null);      // { rowId, col }
+  const [cellVal_, setCellVal] = useState('');
+
+  const saveCell = async (row) => {
+    const { col } = cellEdit;
+    let val = cellVal_;
+    if (val === '') val = null;
+    else if (val === 'true') val = true;
+    else if (val === 'false') val = false;
+    else if (!isNaN(val) && val.trim() !== '' && typeof row[col] === 'number') val = Number(val);
+    setCellEdit(null);
+    setStatus('Saving…');
+    const { error } = await supabase.from(activeTable).update({ [col]: val }).eq('id', row.id);
+    setStatus(error ? `Error: ${error.message}` : 'Saved.');
+    load();
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => { setSession(data?.session || null); setAuthChecked(true); });
@@ -146,15 +162,50 @@ export default function AdminPortal() {
         </div>
         {status && <div style={{ fontSize:10, color:'#e8a84a', marginBottom:8 }}>{status}</div>}
 
-        {/* Row list */}
-        <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-          {rows.map(r => (
-            <button key={r.id ?? JSON.stringify(r)} onClick={() => openEdit(r)}
-              style={{ textAlign:'left', background:'#12100c', border:'1px solid #2a251e', borderRadius:5, padding:'7px 10px', color:'#c9c2b6', fontSize:10, fontFamily:'monospace', cursor:'pointer', overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis' }}>
-              {JSON.stringify(r)}
-            </button>
-          ))}
-        </div>
+        {/* Table grid */}
+        {rows.length > 0 && (() => {
+          const cols = [...new Set(rows.flatMap(r => Object.keys(r)))];
+          const cellVal = (v) => v === null ? '∅' : typeof v === 'object' ? JSON.stringify(v) : String(v);
+          return (
+            <div style={{ overflowX:'auto', border:'1px solid #2a251e', borderRadius:6 }}>
+              <table style={{ borderCollapse:'collapse', fontSize:10, width:'100%' }}>
+                <thead>
+                  <tr>
+                    <th style={{ padding:'6px 8px', borderBottom:'1px solid #3a352e', color:'#e8c84a', textAlign:'left', position:'sticky', top:0, background:'#12100c' }}>⋮</th>
+                    {cols.map(c => <th key={c} style={{ padding:'6px 8px', borderBottom:'1px solid #3a352e', color:'#e8c84a', textAlign:'left', whiteSpace:'nowrap', position:'sticky', top:0, background:'#12100c' }}>{c}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map(r => (
+                    <tr key={r.id ?? JSON.stringify(r)} style={{ borderBottom:'1px solid #1e1a15' }}>
+                      <td style={{ padding:'4px 8px' }}>
+                        <button onClick={() => openEdit(r)} title="Edit full row as JSON"
+                          style={{ background:'transparent', border:'1px solid #3a352e', borderRadius:4, color:'#8a8378', fontSize:9, cursor:'pointer', padding:'2px 6px' }}>{'{}'}</button>
+                      </td>
+                      {cols.map(c => {
+                        const isCell = cellEdit && cellEdit.rowId === r.id && cellEdit.col === c;
+                        const isObj = r[c] !== null && typeof r[c] === 'object';
+                        return (
+                          <td key={c}
+                            onDoubleClick={() => { if (c === 'id' || isObj) return; setCellEdit({ rowId: r.id, col: c }); setCellVal(r[c] === null ? '' : String(r[c])); }}
+                            style={{ padding:'4px 8px', color: r[c] === null ? '#4a453c' : '#c9c2b6', maxWidth:260, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', cursor: (c === 'id' || isObj) ? 'default' : 'cell' }}
+                            title={isObj ? 'Edit via {} button (JSON)' : cellVal(r[c])}>
+                            {isCell ? (
+                              <input autoFocus value={cellVal_} onChange={e => setCellVal(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') saveCell(r); if (e.key === 'Escape') setCellEdit(null); }}
+                                onBlur={() => setCellEdit(null)}
+                                style={{ ...S.input, padding:'2px 6px', fontSize:10, width:'100%', boxSizing:'border-box' }} />
+                            ) : cellVal(r[c])}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        })()}
 
         {/* Edit modal */}
         {editRow !== null && (
