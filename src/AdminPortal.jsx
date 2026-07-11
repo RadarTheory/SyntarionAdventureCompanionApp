@@ -5,10 +5,11 @@ const ADMIN_UUID = 'fd2b5a52-e179-4234-9265-9b5ab36d6ace';
 
 const TABLES = [
   'campaigns','modules','characters','character_items','items',
+  'trades','trade_items','npc_inventory',
   'lootboxes','lootbox_items','messages','sessions','session_checkins',
   'session_logs','vtt_sessions','hercules_sessions','hercules_events',
   'hercules_initiative','world_clock','npcs','beasts','grimoire_entries',
-  'larks','merchants','dm_memory','legal_acceptances',
+  'larks','dm_memory','legal_acceptances',
 ];
 
 const PAGE_SIZE = 50;
