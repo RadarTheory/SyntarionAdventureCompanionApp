@@ -1268,9 +1268,9 @@ function InventoryPanel({ char, onInventoryChange, isDM = false, campaignId }) {
           const pack = [];
           data.forEach(row => {
             if (row.slot.startsWith('pack__')) {
-              pack.push({ id: row.id, ...row.bonuses, name: row.name, category: row.description?.split('|')[0] || 'Misc', desc: row.description?.split('|')[1] || '', qty: Number(row.weight) || 1, weight: 0 });
+              pack.push({ id: row.id, ...row.bonuses, name: row.name, category: row.description?.split('|')[0] || 'Misc', desc: row.description?.split('|')[1] || '', qty: Number(row.weight) || 1, weight: 0, equip_slot: row.equip_slot || null });
             } else {
-              equipped[row.slot] = { name: row.name, description: row.description || '', attuned: !!row.attuned, bonuses: row.bonuses || {} };
+              equipped[row.slot] = { name: row.name, description: row.description || '', attuned: !!row.attuned, bonuses: row.bonuses || {}, equip_slot: row.equip_slot || null };
             }
           });
           setItems(equipped);
