@@ -1400,9 +1400,7 @@ function InventoryPanel({ char, onInventoryChange, isDM = false, campaignId }) {
       {!isDM && playerSlot && (() => {
         const { slot, item } = playerSlot;
         const occupied = item && item.name;
-        const compatible = packItems.filter(p =>
-          (SLOT_CATEGORIES[slot] || []).includes(p.category)
-        );
+        const compatible = packItems.filter(p => itemFitsSlot(slot, p));
 
         const equipItem = async (packItem) => {
           const newItems = { ...items, [slot]: { name: packItem.name, description: packItem.desc || '', attuned: true, bonuses: {} } };
@@ -1411,8 +1409,8 @@ function InventoryPanel({ char, onInventoryChange, isDM = false, campaignId }) {
           if (packItem.id) await supabase.from('character_items').delete().eq('id', packItem.id);
           await supabase.from('character_items').upsert({
             character_id: String(char.id), slot,
-            name: packItem.name, description: packItem.desc || '',
-            attuned: true, bonuses: {}, equipped: true,
+            name: packItem.name, description: `${packItem.category || 'Misc'}|${packItem.desc || ''}`,
+            attuned: true, bonuses: {}, equipped: true, equip_slot: packItem.equip_slot || null,
           }, { onConflict: 'character_id,slot' });
           setPackItems(prev => prev.filter(p => p.id !== packItem.id));
           setPlayerSlot(null);
@@ -1423,8 +1421,9 @@ function InventoryPanel({ char, onInventoryChange, isDM = false, campaignId }) {
             character_id: String(char.id),
             slot: `pack__${Date.now()}`,
             name: item.name,
-            description: `Misc|${item.description || ''}`,
+            description: item.description?.includes('|') ? item.description : `Misc|${item.description || ''}`,
             attuned: false, bonuses: {}, equipped: false, weight: 1,
+            equip_slot: item.equip_slot || null,
           };
           const { data: newRow } = await supabase.from('character_items').insert(packRow).select().single();
           await supabase.from('character_items').delete().eq('character_id', String(char.id)).eq('slot', slot);
@@ -1432,7 +1431,7 @@ function InventoryPanel({ char, onInventoryChange, isDM = false, campaignId }) {
           delete newItems[slot];
           setItems(newItems);
           onInventoryChange(newItems);
-          if (newRow) setPackItems(prev => [...prev, { id: newRow.id, name: item.name, category: 'Misc', desc: item.description || '', qty: 1 }]);
+          alter table character_items add column if not exists equip_slot text;
           setPlayerSlot(null);
         };
 
