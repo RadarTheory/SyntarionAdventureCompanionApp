@@ -39,6 +39,43 @@ export default function AdminPortal() {
   const [inserting, setInserting] = useState(false);
   const [cellEdit, setCellEdit] = useState(null);      // { rowId, col }
   const [cellVal_, setCellVal] = useState('');
+  const [view, setView] = useState('tables');          // 'tables' | 'timeline'
+  const [tlCampaign, setTlCampaign] = useState('4');
+  const [tlEvents, setTlEvents] = useState([]);
+  const [tlClock, setTlClock] = useState(null);
+  const [tlCampaigns, setTlCampaigns] = useState([]);
+
+  const loadTimeline = async (cid) => {
+    setStatus('Loading timeline…');
+    const [camps, clock, hsessions, logs, lore, sess] = await Promise.all([
+      supabase.from('campaigns').select('id, subtitle'),
+      supabase.from('world_clock').select('*').eq('campaign_id', cid).maybeSingle(),
+      supabase.from('hercules_sessions').select('id').eq('campaign_id', cid),
+      supabase.from('session_logs').select('id, title, entry, summary, created_at').eq('campaign_id', cid),
+      supabase.from('dm_memory').select('id, content, category, created_at').eq('campaign_id', cid),
+      supabase.from('sessions').select('id, status, created_at, started_at').eq('campaign_id', cid),
+    ]);
+    setTlCampaigns(camps.data || []);
+    setTlClock(clock.data || null);
+    const hsIds = (hsessions.data || []).map(h => h.id);
+    let hevents = [];
+    if (hsIds.length) {
+      const { data } = await supabase.from('hercules_events')
+        .select('id, type, actor_name, description, created_at, session_id')
+        .in('session_id', hsIds).order('created_at', { ascending: false }).limit(500);
+      hevents = data || [];
+    }
+    const merged = [
+      ...hevents.map(e => ({ ...e, _src: 'hercules', _label: `${e.type} · ${e.actor_name || '—'}`, _body: e.description })),
+      ...(logs.data || []).map(e => ({ ...e, _src: 'session_log', _label: e.title || 'Session Record', _body: e.entry || e.summary })),
+      ...(lore.data || []).map(e => ({ ...e, _src: 'dm_memory', _label: e.category || 'memory', _body: e.content })),
+      ...(sess.data || []).map(e => ({ ...e, _src: 'session', _label: `session ${e.status}`, _body: `Session ${e.id} — ${e.status}` })),
+    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    setTlEvents(merged);
+    setStatus('');
+  };
+
+  useEffect(() => { if (isAdmin && view === 'timeline') loadTimeline(tlCampaign); }, [isAdmin, view, tlCampaign]);
 
   const saveCell = async (row) => {
     const { col } = cellEdit;
@@ -136,6 +173,12 @@ export default function AdminPortal() {
     <div style={{ minHeight:'100vh', background:'#0a0806', color:'#f0eeeb', fontFamily:'monospace', display:'flex' }}>
       {/* Sidebar */}
       <div style={{ width:200, borderRight:'1px solid #2a251e', padding:12, display:'flex', flexDirection:'column', gap:4, flexShrink:0, height:'100vh', overflowY:'auto', position:'sticky', top:0 }}>
+        <div style={{ display:'flex', gap:4, marginBottom:10 }}>
+          {[['tables','Tables'],['timeline','Timeline']].map(([v,l]) => (
+            <button key={v} onClick={() => setView(v)}
+              style={{ flex:1, background: view === v ? 'rgba(200,168,74,0.14)' : 'transparent', border:`1px solid ${view === v ? 'rgba(200,168,74,0.5)' : '#3a352e'}`, borderRadius:5, padding:'5px 0', color: view === v ? '#e8c84a' : '#8a8378', fontSize:10, cursor:'pointer', fontFamily:'monospace' }}>{l}</button>
+          ))}
+        </div>
         <div style={{ color:'#e8c84a', fontSize:11, letterSpacing:'0.15em', marginBottom:8 }}>TABLES</div>
         {TABLES.map(t => (
           <button key={t} onClick={() => { setTable(t); setCustomTable(''); }}
@@ -147,6 +190,34 @@ export default function AdminPortal() {
 
       {/* Main */}
       <div style={{ flex:1, padding:16, minWidth:0 }}>
+        {view === 'timeline' && (
+          <div>
+            <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:14, flexWrap:'wrap' }}>
+              <div style={{ color:'#e8c84a', fontSize:13 }}>TIMELINE</div>
+              <select value={tlCampaign} onChange={e => setTlCampaign(e.target.value)} style={{ ...S.input, fontSize:11 }}>
+                {tlCampaigns.map(c => <option key={c.id} value={String(c.id)}>{c.subtitle} ({c.id})</option>)}
+              </select>
+              {tlClock && (
+                <div style={{ fontSize:10, color:'#8a8378', border:'1px solid #2a251e', borderRadius:5, padding:'5px 10px' }}>
+                  ⏱ World Clock: {JSON.stringify(tlClock).slice(0, 160)}
+                </div>
+              )}
+              <div style={{ fontSize:10, color:'#8a8378' }}>{tlEvents.length} events</div>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:4, maxWidth:900 }}>
+              {tlEvents.map(e => (
+                <div key={`${e._src}-${e.id}`} style={{ display:'flex', gap:10, border:'1px solid #1e1a15', borderRadius:5, padding:'6px 10px', fontSize:10 }}>
+                  <div style={{ color:'#4a453c', flexShrink:0, width:130 }}>{new Date(e.created_at).toLocaleString()}</div>
+                  <div style={{ color:{hercules:'#e8a84a',session_log:'#79f5a7',dm_memory:'#c084fc',session:'#7dd3fc'}[e._src], flexShrink:0, width:80 }}>{e._src}</div>
+                  <div style={{ color:'#e8c84a', flexShrink:0, width:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{e._label}</div>
+                  <div style={{ color:'#c9c2b6', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }} title={e._body}>{e._body}</div>
+                </div>
+              ))}
+              {tlEvents.length === 0 && <div style={{ color:'#4a453c', fontSize:11, padding:'20px 0' }}>No events for this campaign.</div>}
+            </div>
+          </div>
+        )}
+        {view === 'tables' && (<>
         <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:12, flexWrap:'wrap' }}>
           <div style={{ color:'#e8c84a', fontSize:13 }}>{activeTable}</div>
           <div style={{ color:'#8a8378', fontSize:10 }}>{total} rows</div>
@@ -222,6 +293,7 @@ export default function AdminPortal() {
             </div>
           </div>
         )}
+        </>)}
       </div>
     </div>
   );
