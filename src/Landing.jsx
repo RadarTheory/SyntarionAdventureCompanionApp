@@ -95,9 +95,12 @@ function DriftstoneButton({ onClick, isMobile }) {
 }
 
 // â”€â”€â”€ SYNTARION LOGO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false }) {
+function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isMobile = false }) {
   const ink = darkMode ? '#f0eeeb' : '#1a1714';
-  const logoMediaSize = useHeroVideo ? size * 2.6 : size;
+   const logoMediaSize = useHeroVideo ? size * 2.6 : size;
+  const heroMask = isMobile
+    ? 'radial-gradient(ellipse 62% 68% at 50% 42%, #000 26%, rgba(0,0,0,0.5) 50%, transparent 76%)'
+    : 'radial-gradient(ellipse 75% 68% at 50% 42%, #000 28%, rgba(0,0,0,0.5) 52%, transparent 88%)';
   const landingBg = '#f0eeeb';
   const [heroVideoSrc] = useState(() => '/landing-creatures.mp4?t=' + Date.now());
   const [videoReady, setVideoReady] = useState(useHeroVideo);
@@ -133,13 +136,13 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false }) {
             style={{
         display: 'block',
               width: logoMediaSize,
-              maxWidth: '96vw',
+              maxWidth: isMobile ? '118vw' : '96vw',
               height: 'auto',
               background: 'transparent',
               opacity: loopBlink ? 0.78 : 1,
               transition: 'opacity 180ms ease',
-            WebkitMaskImage: 'radial-gradient(ellipse 75% 68% at 50% 42%, #000 28%, rgba(0,0,0,0.5) 52%, transparent 88%)',
-              maskImage: 'radial-gradient(ellipse 75% 68% at 50% 42%, #000 28%, rgba(0,0,0,0.5) 52%, transparent 88%)',
+            WebkitMaskImage: heroMask,
+              maskImage: heroMask,
               mixBlendMode: 'normal',
               filter: darkMode ? 'brightness(1.05)' : 'contrast(1.04)',
               pointerEvents: 'none',
@@ -658,7 +661,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
 
       {/* Logo */}
       <div style={{ animation: 'fadeUp 1.1s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '0.1s' }}>
-        <SyntarionLogo size={isMobile ? 238 : 360} darkMode={landingDarkMode} useHeroVideo />
+        <SyntarionLogo size={isMobile ? 238 : 360} darkMode={landingDarkMode} useHeroVideo isMobile={isMobile} />
       </div>
 
       {/* Tagline */}
