@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
+import mammoth from 'mammoth';
 import supabase from './lib/supabase';
 
 // Reuses AdminPortal's visual language (monospace, amber-on-black)
@@ -64,6 +65,43 @@ function parseDictionary(wb, sourceLabel) {
     }
     if (lines.length) {
       sections.push({ source: sourceLabel, title: `Sotrehn — ${name}`, body: lines.join('\n') });
+    }
+  }
+  return sections;
+}
+
+// ── PARSER 3: POI reference (Word doc) ─────────────────────────────────────
+// Two-level: <h1> = region, each <table> = one POI (cell 1 = description with
+// name, cell 2 = NPC roster). Section title = "Region — POI", body = prose + NPCs.
+function htmlToText(s) {
+  s = s.replace(/<\/p>/g, '\n').replace(/<[^>]+>/g, '');
+  s = s.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ');
+  return s.replace(/\n{3,}/g, '\n\n').replace(/[ \t]+/g, ' ').trim();
+}
+async function parseDocxPOI(file, sourceLabel) {
+  const buf = await file.arrayBuffer();
+  const { value: html } = await mammoth.convertToHtml({ arrayBuffer: buf });
+  const parts = html.split(/(<h1>.*?<\/h1>|<table>.*?<\/table>)/s);
+  let region = 'Soteria';
+  const sections = [];
+  for (const p of parts) {
+    if (p.startsWith('<h1>')) {
+      region = htmlToText(p).replace(/:/g, '').trim() || region;
+    } else if (p.startsWith('<table>')) {
+      const cells = [...p.matchAll(/<th[^>]*>(.*?)<\/th>/gs)].map(m => m[1]);
+      if (!cells.length) continue;
+      const desc = cells[0];
+      const npcs = cells[1] || '';
+      const strongMatch = desc.match(/<strong>(.*?)<\/strong>/s);
+      let name = strongMatch ? htmlToText(strongMatch[1]).trim() : '';
+      if (!name || name.length > 60) {
+        const firstLine = htmlToText(desc).split('\n')[0] || '';
+        name = firstLine.includes(':') ? firstLine.split(':')[0].trim() : firstLine.slice(0, 40).trim();
+      }
+      name = name.replace(/^[:\s]+|[:\s]+$/g, '').trim() || 'Unnamed';
+      let body = htmlToText(desc);
+      if (npcs.trim()) body += '\n\nNPCS & PLAYERS:\n' + htmlToText(npcs);
+      if (body.trim()) sections.push({ source: sourceLabel, title: `${region} — ${name}`, body });
     }
   }
   return sections;
@@ -141,7 +179,7 @@ export default function CompendiumUpload() {
       </div>
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 12 }}>
-        <input ref={fileRef} type="file" accept=".xlsx,.xls" onChange={onPick} style={{ display: 'none' }} />
+        <input ref={fileRef} type="file" accept=".xlsx,.xls,.docx" onChange={onPick} style={{ display: 'none' }} />
         <button style={S.btn} onClick={() => fileRef.current?.click()}>Choose file</button>
         <div style={{ fontSize: 11, color: '#c9c2b6' }}>{file ? file.name : 'no file selected'}</div>
 
