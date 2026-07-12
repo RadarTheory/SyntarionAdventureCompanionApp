@@ -355,6 +355,7 @@ const EMOTION_FILE = {
   tinker: 'scribe-tinker-transp',
   sad: 'scribe-sad-transp',
   mad: 'scribe-angry-transp',
+  glitch: 'scribe-glitch-transp',
 };
 
 const randomFrom = (arr, not) => {
@@ -386,7 +387,7 @@ function ScribeFace({ emotion, size = 84, stage = false, forceLoop = false, onEn
           onEnded={onEnded}
           onError={() => setFailed(true)}
           onContextMenu={e => e.preventDefault()}
-          style={{ width: '100%', height: '100%', objectFit: stage ? 'contain' : 'cover', pointerEvents: 'none' }}
+          style={{ width: '100%', height: '100%', objectFit: stage ? 'contain' : 'cover', pointerEvents: 'none', mixBlendMode: 'screen' }}
         />
       ) : (
         <span style={{ fontSize: size * 0.45 }} role="img" aria-label="Scribe">🖋️</span>
@@ -407,26 +408,46 @@ export default function ScribeLite() {
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
 
+  const emotionRef = useRef('idle');
+  const pendingRef = useRef(null);
+
+  useEffect(() => { emotionRef.current = emotion; }, [emotion]);
+
   /* Return to rest: pick a different resting clip than the current one */
   const goIdle = useCallback(() => {
     setEmotion(prev => randomFrom(IDLE_POOL, prev));
   }, []);
 
-  /* One-shots return to rest via onEnded; this timer is the fallback
-     (e.g. video missing → static emblem → no 'ended' event ever fires) */
-  const playEmotion = useCallback((emo, holdMs = 8000) => {
+  /* Resolve whatever emotion is queued behind the glitch */
+  const handlePending = useCallback(() => {
     clearTimeout(emotionTimer.current);
-    setEmotion(emo);
-    if (!LOOPING.has(emo) && !RESTING.has(emo)) {
-      emotionTimer.current = setTimeout(goIdle, holdMs);
+    const p = pendingRef.current;
+    pendingRef.current = null;
+    if (!p) { goIdle(); return; }
+    setEmotion(p.emo);
+    if (!LOOPING.has(p.emo) && !RESTING.has(p.emo)) {
+      emotionTimer.current = setTimeout(goIdle, p.holdMs ?? 8000);
     }
   }, [goIdle]);
 
-  /* A clip finished: resting clips chain onward, one-shots return to rest */
+  /* Every emotion change passes through the glitch clip first */
+  const playEmotion = useCallback((emo, holdMs = 8000) => {
+    clearTimeout(emotionTimer.current);
+    if (emotionRef.current === emo) return;
+    pendingRef.current = { emo, holdMs };
+    setEmotion('glitch');
+    /* fallback: if glitch video is missing, onEnded never fires */
+    emotionTimer.current = setTimeout(handlePending, 900);
+  }, [handlePending]);
+
+  /* A clip finished: glitch resolves its target, others glitch to rest */
   const handleClipEnd = useCallback(() => {
     clearTimeout(emotionTimer.current);
-    goIdle();
-  }, [goIdle]);
+    if (emotionRef.current === 'glitch') { handlePending(); return; }
+    pendingRef.current = { emo: randomFrom(IDLE_POOL, emotionRef.current) };
+    setEmotion('glitch');
+    emotionTimer.current = setTimeout(handlePending, 900);
+  }, [handlePending]);
 
   useEffect(() => () => clearTimeout(emotionTimer.current), []);
 
@@ -495,6 +516,7 @@ export default function ScribeLite() {
   /* Close with a disappearing act, then hide the panel */
   const closeChat = () => {
     clearTimeout(emotionTimer.current);
+    pendingRef.current = null;
     setEmotion('disappearing');
     emotionTimer.current = setTimeout(() => {
       setOpen(false);
@@ -509,14 +531,14 @@ export default function ScribeLite() {
       aria-label="Ask the Scribe"
       style={{
         position: 'fixed', bottom: isMobile ? 16 : 24, right: isMobile ? 16 : 24,
-        zIndex: 1900, width: isMobile ? 60 : 72, height: isMobile ? 60 : 72,
+        zIndex: 1900, width: isMobile ? 68 : 84, height: isMobile ? 68 : 84,
         borderRadius: '50%', border: '1px solid rgba(200,168,74,0.5)',
         background: '#13100d', cursor: 'pointer', padding: 0,
         boxShadow: '0 8px 28px rgba(0,0,0,0.45)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
     >
-      <ScribeFace emotion="idle" size={isMobile ? 56 : 68} forceLoop />
+      <ScribeFace emotion="idle" size={isMobile ? 64 : 80} forceLoop />
     </button>
   );
 
@@ -544,7 +566,7 @@ export default function ScribeLite() {
         padding: '12px 14px 10px', borderBottom: '1px solid rgba(200,168,74,0.18)',
         background: '#171310',
       }}>
-        <ScribeFace emotion={emotion} size={isMobile ? 130 : 160} stage onEnded={handleClipEnd} />
+        <ScribeFace emotion={emotion} size={isMobile ? 180 : 220} stage onEnded={handleClipEnd} />
         <div style={{ textAlign: 'center' }}>
           <div style={{
             fontFamily: "'Cinzel', serif", fontSize: 14, fontWeight: 700,
