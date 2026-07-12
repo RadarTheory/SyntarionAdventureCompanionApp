@@ -634,7 +634,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
 
       {/* Vignette */}
       <div style={{
-        position: 'absolute', inset: 0,
+        position: 'fixed', inset: 0,
         background: 'radial-gradient(ellipse at center, transparent 40%, rgba(26,23,20,0.07) 100%)',
         pointerEvents: 'none',
       }} />
@@ -766,8 +766,8 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
 
       {/* Footer */}
       <div style={{
-      position: 'static',
-        marginTop: 26,
+        position: isMobile ? 'static' : 'absolute', bottom: 24,
+        marginTop: isMobile ? 26 : 0,
         maxWidth: isMobile ? 'min(100%, 360px)' : 'none',
         textAlign: 'center',
         fontFamily: "'Cinzel', serif", fontSize: 9,
