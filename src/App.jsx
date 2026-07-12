@@ -164,14 +164,14 @@ function LoginScreen() {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: '100svh',
         background: '#f0eeeb',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         fontFamily: 'Georgia, serif',
-        padding: 24,
+        padding: 'calc(24px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom))',
       }}
     >
       <style>
@@ -208,7 +208,7 @@ function LoginScreen() {
         Are you ready, Adventurer?
       </div>
 
-      <div style={{ width: '100%', maxWidth: 320, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column' }}>
         <input
           style={inputStyle}
           type="email"

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
 import medallion from './assets/medallion.png';
@@ -12,7 +12,7 @@ import Settings from './Settings';
 import LegalGate, { LEGAL_VERSION } from './LegalGate';
 import Tour, { hasSeenTour } from './Tour';
 
-// ─── MOVABLE DRIFTSTONE BUTTON ───────────────────────────────────────────────
+// â”€â”€â”€ MOVABLE DRIFTSTONE BUTTON â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function DriftstoneButton({ onClick, isMobile }) {
   const [pos, setPos] = useState({ x: 40, y: 40 });
   const [isDragging, setIsDragging] = useState(false);
@@ -94,9 +94,20 @@ function DriftstoneButton({ onClick, isMobile }) {
   );
 }
 
-// ─── SYNTARION LOGO ──────────────────────────────────────────────────────────
-function SyntarionLogo({ size = 320, darkMode = false }) {
+// â”€â”€â”€ SYNTARION LOGO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false }) {
   const ink = darkMode ? '#f0eeeb' : '#1a1714';
+  const logoMediaSize = useHeroVideo ? size * 1.28 : size;
+  const landingBg = '#f0eeeb';
+  const [heroVideoSrc] = useState(() => '/landing-creatures.mp4?t=' + Date.now());
+  const [videoReady, setVideoReady] = useState(useHeroVideo);
+  const [loopBlink, setLoopBlink] = useState(false);
+
+  const handleHeroVideoTime = (event) => {
+    const video = event.currentTarget;
+    if (!video.duration || Number.isNaN(video.duration)) return;
+    setLoopBlink(video.duration - video.currentTime < 0.28);
+  };
 
   return (
     <>
@@ -104,14 +115,47 @@ function SyntarionLogo({ size = 320, darkMode = false }) {
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
       `}</style>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', userSelect: 'none' }}>
-        <img
-          id="syn-medallion"
-          src={medallion}
-          alt="Syntarion medallion"
-          width={size}
-          height={size}
-          style={{ display: 'block', filter: darkMode ? 'invert(1)' : 'none' }}
-        />
+        {useHeroVideo && videoReady ? (
+          <video
+            id="syn-hero-reel"
+            src={heroVideoSrc}
+            width={logoMediaSize}
+            height={logoMediaSize}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            aria-label="Syntarion creatures and characters"
+            onCanPlay={() => setVideoReady(true)}
+            onTimeUpdate={handleHeroVideoTime}
+            onEnded={() => setLoopBlink(false)}
+            onError={() => setVideoReady(false)}
+            style={{
+              display: 'block',
+              width: logoMediaSize,
+              height: logoMediaSize,
+              background: landingBg,
+              objectFit: 'cover',
+              opacity: loopBlink ? 0.78 : 1,
+              transition: 'opacity 180ms ease',
+              WebkitMaskImage: 'radial-gradient(ellipse at center, #000 56%, rgba(0,0,0,0.82) 70%, transparent 100%)',
+              maskImage: 'radial-gradient(ellipse at center, #000 56%, rgba(0,0,0,0.82) 70%, transparent 100%)',
+              mixBlendMode: 'normal',
+              filter: darkMode ? 'brightness(1.05)' : 'contrast(1.04)',
+              pointerEvents: 'none',
+            }}
+          />
+        ) : (
+          <img
+            id="syn-medallion"
+            src={medallion}
+            alt="Syntarion medallion"
+            width={logoMediaSize}
+            height={logoMediaSize}
+            style={{ display: 'block', width: logoMediaSize, height: logoMediaSize, filter: darkMode ? 'invert(1)' : 'none' }}
+          />
+        )}
         <div id="syn-wordmark" style={{
           fontFamily: "'Cinzel', 'Trajan Pro', serif",
           fontSize: size * 0.115,
@@ -160,7 +204,7 @@ function SyntarionLogo({ size = 320, darkMode = false }) {
   );
 }
 
-// ─── SUBMIT TO GREATER ARCHIVE MODAL ────────────────────────────────────────
+// â”€â”€â”€ SUBMIT TO GREATER ARCHIVE MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SubmitToArchiveModal({ module, onClose, onSuccess }) {
   const [name, setName] = useState(module?.name || '');
   const [description, setDescription] = useState('');
@@ -191,7 +235,7 @@ function SubmitToArchiveModal({ module, onClose, onSuccess }) {
       setError("Failed to submit. Please try again.");
       console.error(err);
     } else {
-      alert("✅ Module submitted to the Greater Archive!\nThank you for contributing to Soteria.");
+      alert("âœ… Module submitted to the Greater Archive!\nThank you for contributing to Soteria.");
       onSuccess?.();
       onClose();
     }
@@ -227,7 +271,7 @@ function SubmitToArchiveModal({ module, onClose, onSuccess }) {
   );
 }
 
-// ─── DM SIGIL MODAL ──────────────────────────────────────────────────────────
+// â”€â”€â”€ DM SIGIL MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function DMSigilModal({ onSuccess, onCancel }) {
   const [modules, setModules] = useState([]);
   const [moduleId, setModuleId] = useState(null);
@@ -355,7 +399,7 @@ function DMSigilModal({ onSuccess, onCancel }) {
           value={input}
           onChange={e => { setInput(e.target.value); setError(''); }}
           onKeyDown={e => e.key === 'Enter' && attempt()}
-          placeholder={mode === 'create' ? 'Set the sigil (min 6 chars)' : '···'}
+          placeholder={mode === 'create' ? 'Set the sigil (min 6 chars)' : 'Â·Â·Â·'}
           style={{
             width: '100%', background: 'rgba(240,238,235,0.06)',
             border: `1px solid ${error ? '#ef4444' : 'rgba(240,238,235,0.14)'}`,
@@ -387,7 +431,7 @@ function DMSigilModal({ onSuccess, onCancel }) {
             letterSpacing: '0.14em', textTransform: 'uppercase',
             cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1,
             fontFamily: "'Cinzel', serif", fontWeight: 700,
-          }}>{busy ? '…' : mode === 'create' ? 'Forge' : 'Enter'}</button>
+          }}>{busy ? '...' : mode === 'create' ? 'Forge' : 'Enter'}</button>
         </div>
         <button
           onClick={() => { setMode(mode === 'create' ? 'unlock' : 'create'); setError(''); setInput(''); }}
@@ -397,7 +441,7 @@ function DMSigilModal({ onSuccess, onCancel }) {
             letterSpacing: '0.12em', textTransform: 'uppercase',
             fontFamily: "'Cinzel', serif", textDecoration: 'underline',
           }}
-        >{mode === 'create' ? '← Unlock an existing module' : 'Forge a new module'}</button>
+        >{mode === 'create' ? 'Unlock an existing module' : 'Forge a new module'}</button>
       </div>
       <style>{`
         @keyframes shake {
@@ -412,7 +456,7 @@ function DMSigilModal({ onSuccess, onCancel }) {
   );
 }
 
-// ─── MAIN LANDING COMPONENT ──────────────────────────────────────────────────
+// â”€â”€â”€ MAIN LANDING COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   const { isMobile } = useDevice();
   const [appView, setAppView] = useState(() => localStorage.getItem('syn_view') || 'home');
@@ -475,7 +519,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   const handlePlay = () => { localStorage.setItem('syn_view', 'character-select'); setAppView('character-select'); };
   const handleDMSuccess = (module) => { setDmModule(module || null); setShowDMModal(false); localStorage.setItem('syn_view', 'dm'); setAppView('dm'); };
 
-  // ── Legal Gate ─────────────────────────────────────────────────────────────
+  // â”€â”€ Legal Gate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (legalStatus === 'checking') return (
     <div style={{ minHeight: '100vh', background: darkMode ? '#14110c' : '#f0eeeb' }} />
   );
@@ -483,7 +527,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
     <LegalGate user={user} onAccept={() => setLegalStatus('accepted')} />
   );
 
-  // ── Render Views ───────────────────────────────────────────────────────────
+  // â”€â”€ Render Views â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (appView === 'character-select') return (
     <CharacterSelect
       savedChars={savedChars}
@@ -528,9 +572,10 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
     />
   );
 
-  // ── Home screen ────────────────────────────────────────────────────────────
-  const ink = darkMode ? '#f0eeeb' : '#1a1714';
-  const bg  = darkMode ? '#14110c' : '#f0eeeb';
+  // â”€â”€ Home screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const landingDarkMode = false;
+  const ink = '#1a1714';
+  const bg = '#f0eeeb';
 
   const buttons = [
     {
@@ -538,7 +583,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
       label: 'PLAY',
       primary: true,
       sub: loading
-        ? 'Consulting the archives…'
+        ? 'Consulting the archives...'
         : savedChars.length > 0
           ? `${savedChars.length} character${savedChars.length > 1 ? 's' : ''} saved`
           : 'Begin your journey',
@@ -572,16 +617,17 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100svh',
       background: bg,
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: isMobile ? 'flex-start' : 'center',
       fontFamily: 'Georgia, serif',
       position: 'relative',
-      overflow: 'hidden',
-      padding: isMobile ? '32px 20px' : '40px 24px',
+      overflowX: 'hidden',
+      overflowY: 'auto',
+      padding: isMobile ? 'calc(18px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom))' : '40px 24px',
     }}>
 
       {/* Vignette */}
@@ -592,7 +638,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
       }} />
 
       <button onClick={onOpenBag}>
-        Lótjarr's Bag of Games
+        L&oacute;tjarr's Bag of Games
       </button>
 
      {showDMModal && (
@@ -613,24 +659,24 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
 
       {/* Logo */}
       <div style={{ animation: 'fadeUp 1.1s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '0.1s' }}>
-        <SyntarionLogo size={isMobile ? 220 : 300} darkMode={darkMode} />
+        <SyntarionLogo size={isMobile ? 238 : 360} darkMode={landingDarkMode} useHeroVideo />
       </div>
 
       {/* Tagline */}
       <div style={{
         marginTop: 8,
-        marginBottom: isMobile ? 32 : 44,
+        marginBottom: isMobile ? 24 : 44,
         textAlign: 'center',
         animation: 'fadeUp 1.1s cubic-bezier(0.16,1,0.3,1) both',
         animationDelay: '0.3s',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 12,
-          justifyContent: 'center', marginBottom: 16,
+          justifyContent: isMobile ? 'flex-start' : 'center', marginBottom: 16,
         }}>
-          <div style={{ width: 40, height: '0.5px', background: `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.18)` }} />
+          <div style={{ width: 40, height: '0.5px', background: 'rgba(26,23,20,0.18)' }} />
           <div style={{ width: 4, height: 4, background: ink, transform: 'rotate(45deg)', opacity: 0.25 }} />
-          <div style={{ width: 40, height: '0.5px', background: `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.18)` }} />
+          <div style={{ width: 40, height: '0.5px', background: 'rgba(26,23,20,0.18)' }} />
         </div>
         </div>
 
@@ -640,7 +686,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
         flexDirection: 'column',
         gap: 9,
         width: '100%',
-        maxWidth: isMobile ? '100%' : 320,
+        maxWidth: isMobile ? 360 : 320,
         animation: 'fadeUp 1.1s cubic-bezier(0.16,1,0.3,1) both',
         animationDelay: '0.5s',
       }}>
@@ -650,14 +696,14 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
 
           const bgColor = isPrimary
             ? (isHovered ? '#1a1714' : '#2a2420')
-            : (isHovered ? `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.07)` : 'transparent');
+            : (isHovered ? 'rgba(26,23,20,0.07)' : 'transparent');
 
           const borderColor = isPrimary
             ? '#2a2420'
-            : `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.18)`;
+            : 'rgba(26,23,20,0.18)';
 
           const labelColor = isPrimary ? '#f0eeeb' : ink;
-          const subColor = isPrimary ? 'rgba(240,238,235,0.5)' : `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.4)`;
+          const subColor = isPrimary ? 'rgba(240,238,235,0.5)' : 'rgba(26,23,20,0.4)';
 
           return (
             <button
@@ -707,10 +753,10 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
               </div>
               <div style={{
                 fontSize: 14,
-                color: isPrimary ? 'rgba(240,238,235,0.35)' : `rgba(${darkMode ? '240,238,235' : '26,23,20'},0.4)`,
+                color: isPrimary ? 'rgba(240,238,235,0.35)' : 'rgba(26,23,20,0.4)',
                 transform: isHovered ? 'translateX(3px)' : 'none',
                 transition: 'transform 0.18s ease',
-              }}>→</div>
+              }}>&rarr;</div>
             </button>
           );
         })}
@@ -718,15 +764,18 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
 
       {/* Footer */}
       <div style={{
-        position: 'absolute', bottom: 24,
+        position: isMobile ? 'static' : 'absolute', bottom: 24,
+        marginTop: isMobile ? 26 : 0,
+        maxWidth: isMobile ? 'min(100%, 360px)' : 'none',
+        textAlign: 'center',
         fontFamily: "'Cinzel', serif", fontSize: 9,
         letterSpacing: '0.28em',
-        color: darkMode ? 'rgba(240,238,235,0.18)' : 'rgba(26,23,20,0.22)',
+        color: 'rgba(26,23,20,0.22)',
         textTransform: 'uppercase',
         animation: 'fadeUp 1.2s cubic-bezier(0.16,1,0.3,1) both',
         animationDelay: '0.9s',
       }}>
-        Developed by Adrian 'Radar Theory' Gilmore and Jacob 'Jake' Homer. © 2026 TheonhexMedia & Publishing. All rights reserved.
+        Developed by Adrian 'Radar Theory' Gilmore and Jacob 'Jake' Homer. &copy; 2026 TheonhexMedia &amp; Publishing. All rights reserved.
       </div>
 
       <style>{`
@@ -753,11 +802,11 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   );
 }
 
-// ─── STUB COMPONENT ──────────────────────────────────────────────────────────
+// â”€â”€â”€ STUB COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Stub({ label, onHome, dark }) {
   return (
     <div style={{
-      minHeight: '100vh', background: dark ? '#0d0d1a' : '#f0eeeb',
+      minHeight: '100svh', background: dark ? '#0d0d1a' : '#f0eeeb',
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       fontFamily: 'Georgia, serif', gap: 20,
@@ -767,7 +816,7 @@ function Stub({ label, onHome, dark }) {
         letterSpacing: '0.2em',
         color: dark ? 'rgba(240,238,235,0.35)' : 'rgba(26,23,20,0.35)',
         textTransform: 'uppercase',
-      }}>{label}.jsx — coming soon</div>
+      }}>{label}.jsx - coming soon</div>
       <button onClick={onHome} style={{
         background: 'transparent',
         border: `1px solid ${dark ? 'rgba(240,238,235,0.18)' : 'rgba(26,23,20,0.18)'}`,
@@ -775,8 +824,10 @@ function Stub({ label, onHome, dark }) {
         color: dark ? 'rgba(240,238,235,0.45)' : 'rgba(26,23,20,0.65)',
         fontFamily: "'Cinzel', serif", fontSize: 10,
         letterSpacing: '0.16em', textTransform: 'uppercase', cursor: 'pointer',
-      }}>← Home</button>
+      }}>&larr; Home</button>
     </div>
   );
 }
+
+
 

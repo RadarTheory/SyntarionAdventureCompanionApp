@@ -194,29 +194,31 @@ function DMSigilModal({ onSuccess, onCancel }) {
   );
 }
 
-function DraggablePanel({ defaultX, defaultY, onClose, title, width, accentColor, children }) {
+function DraggablePanel({ defaultX, defaultY, onClose, title, width, accentColor, children, zIndex = 200000, isTop = true, onFocus }) {
   const [pos, setPos] = useState({ x: defaultX, y: defaultY });
   const dragging = useRef(false);
   const offset = useRef({ x: 0, y: 0 });
-  const onMouseDown = (e) => { dragging.current = true; offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }; e.preventDefault(); };
-  const onTouchStart = (e) => { dragging.current = true; const t = e.touches[0]; offset.current = { x: t.clientX - pos.x, y: t.clientY - pos.y }; };
+  const panelWidth = Math.min(width, Math.max(280, window.innerWidth - 24));
+  const focusPanel = () => onFocus?.();
+  const onMouseDown = (e) => { focusPanel(); dragging.current = true; offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }; e.preventDefault(); };
+  const onTouchStart = (e) => { focusPanel(); dragging.current = true; const t = e.touches[0]; offset.current = { x: t.clientX - pos.x, y: t.clientY - pos.y }; };
+  useEffect(() => { focusPanel(); }, []);
   useEffect(() => {
-    const onMove = (e) => { if (!dragging.current) return; const p = e.touches ? e.touches[0] : e; setPos({ x: Math.max(0, Math.min(window.innerWidth - width - 8, p.clientX - offset.current.x)), y: Math.max(0, Math.min(window.innerHeight - 80, p.clientY - offset.current.y)) }); };
+    const onMove = (e) => { if (!dragging.current) return; const p = e.touches ? e.touches[0] : e; setPos({ x: Math.max(8, Math.min(window.innerWidth - panelWidth - 8, p.clientX - offset.current.x)), y: Math.max(8, Math.min(window.innerHeight - 80, p.clientY - offset.current.y)) }); };
     const onUp = () => { dragging.current = false; };
     window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp); window.addEventListener('touchmove', onMove, { passive: false }); window.addEventListener('touchend', onUp);
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onUp); };
-  }, [width]);
+  }, [panelWidth]);
   return (
-    <div style={{ position: 'fixed', left: pos.x, top: pos.y, width, maxHeight: '80vh', zIndex: 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: `1px solid ${accentColor}`, borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
-      <div onMouseDown={onMouseDown} onTouchStart={onTouchStart} style={{ padding: '10px 14px', borderBottom: `1px solid ${accentColor}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'grab', background: 'rgba(255,255,255,0.03)', flexShrink: 0, userSelect: 'none' }}>
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8d9a7', letterSpacing: '0.12em' }}>⠿ {title}</div>
-        <button onClick={onClose} style={{ background: 'transparent', border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 4, padding: '3px 7px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
+    <div onMouseDownCapture={focusPanel} onTouchStartCapture={focusPanel} style={{ position: 'fixed', left: Math.min(pos.x, window.innerWidth - panelWidth - 8), top: pos.y, width: panelWidth, maxWidth: 'calc(100vw - 16px)', maxHeight: 'calc(100svh - 24px)', zIndex, display: 'flex', flexDirection: 'column', background: isTop ? '#100d0a' : 'rgba(16,13,10,0.82)', border: `1px solid ${isTop ? accentColor : 'rgba(201,185,145,0.16)'}`, borderRadius: 14, boxShadow: isTop ? '0 28px 90px rgba(0,0,0,0.78)' : '0 10px 36px rgba(0,0,0,0.42)', overflow: 'hidden', opacity: isTop ? 1 : 0.46, filter: isTop ? 'none' : 'saturate(0.72) brightness(0.72)', transform: isTop ? 'scale(1)' : 'scale(0.985)', transformOrigin: 'top left', transition: dragging.current ? 'none' : 'opacity 0.16s ease, filter 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease' }}>
+      <div onMouseDown={onMouseDown} onTouchStart={onTouchStart} style={{ padding: '10px 14px', borderBottom: `1px solid ${isTop ? accentColor : 'rgba(201,185,145,0.14)'}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'grab', background: isTop ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.015)', flexShrink: 0, userSelect: 'none' }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: isTop ? '#e8d9a7' : 'rgba(232,217,167,0.52)', letterSpacing: '0.12em' }}>? {title}</div>
+        <button onClick={onClose} style={{ background: 'transparent', border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 4, padding: '3px 7px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>?</button>
       </div>
-      <div style={{ flex: 1, overflowY: 'auto' }}>{children}</div>
+      <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>{children}</div>
     </div>
   );
 }
-
 // ─── HERCULES LITE ────────────────────────────────────────────────────────────
 function HerculesLite({ campaignId, char, onClose }) {
   const [session, setSession] = useState(null);
@@ -397,7 +399,7 @@ function CampaignList({ onSelect, userChar, onHome }) {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f0eeeb', fontFamily: 'Georgia, serif' }}>
+    <div style={{ minHeight: '100svh', background: '#f0eeeb', fontFamily: 'Georgia, serif', overflowX: 'hidden' }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap'); * { box-sizing: border-box; } body { margin: 0; }`}</style>
 
       {showSigil && (
@@ -562,23 +564,23 @@ function CampaignList({ onSelect, userChar, onHome }) {
       )}
 
       {/* ── HEADER ── */}
-      <div style={{ padding: isMobile ? '20px 20px 0' : '28px 40px 0' }}>
+      <div style={{ padding: isMobile ? 'calc(20px + env(safe-area-inset-top, 0px)) 20px 0' : '28px 40px 0' }}>
         <button onClick={onHome} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(26,23,20,0.4)', padding: 0 }}>← Home</button>
       </div>
-      <div style={{ padding: isMobile ? '28px 20px 20px' : '36px 40px 24px', borderBottom: '1px solid rgba(26,23,20,0.08)', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+      <div style={{ padding: isMobile ? '28px 20px 20px' : '36px 40px 24px', borderBottom: '1px solid rgba(26,23,20,0.08)', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-end', justifyContent: 'space-between', gap: isMobile ? 16 : 0 }}>
         <div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(26,23,20,0.35)', marginBottom: 8 }}>Soteria · 178 E.U.</div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 24 : 32, fontWeight: 700, color: '#1a1714' }}>CAMPAIGNS</div>
           <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,23,20,0.45)', marginTop: 8 }}>Select a campaign to enter the world.</div>
         </div>
        <button onClick={() => dmUnlocked ? setShowCreate(true) : setShowSigil(true)}
-          style={{ background: '#1a1714', border: '1px solid rgba(26,23,20,0.3)', borderRadius: 8, padding: isMobile ? '10px 14px' : '11px 18px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: '#f0eeeb', letterSpacing: '0.12em', whiteSpace: 'nowrap', flexShrink: 0, marginLeft: 16 }}>
+          style={{ background: '#1a1714', border: '1px solid rgba(26,23,20,0.3)', borderRadius: 8, padding: isMobile ? '12px 14px' : '11px 18px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: '#f0eeeb', letterSpacing: '0.12em', whiteSpace: 'nowrap', flexShrink: 0, marginLeft: isMobile ? 0 : 16, width: isMobile ? '100%' : 'auto' }}>
           + Add Adventure
         </button>
       </div>
 
       {/* ── LIST ── */}
-      <div style={{ padding: isMobile ? '20px' : '28px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ padding: isMobile ? '20px 16px calc(24px + env(safe-area-inset-bottom, 0px))' : '28px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {loading && (
           <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,23,20,0.4)', textAlign: 'center', padding: '40px 0' }}>Consulting the archives…</div>
         )}
@@ -603,7 +605,7 @@ function CampaignList({ onSelect, userChar, onHome }) {
           const isAssigned = userChar?.campaign_id === String(c.id);
           return (
             <button key={c.id} onClick={() => onSelect(c)}
-              style={{ background: isAssigned ? 'rgba(26,23,20,0.04)' : '#fff', border: `1px solid ${isAssigned ? 'rgba(26,23,20,0.25)' : 'rgba(26,23,20,0.1)'}`, borderRadius: 8, padding: isMobile ? '18px 20px' : '20px 28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', width: '100%', transition: 'all 0.18s ease' }}
+              style={{ background: isAssigned ? 'rgba(26,23,20,0.04)' : '#fff', border: `1px solid ${isAssigned ? 'rgba(26,23,20,0.25)' : 'rgba(26,23,20,0.1)'}`, borderRadius: 8, padding: isMobile ? '16px 16px' : '20px 28px', cursor: 'pointer', display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', textAlign: 'left', width: '100%', gap: isMobile ? 12 : 0, transition: 'all 0.18s ease' }}
               onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(26,23,20,0.10)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
               onMouseLeave={e => { e.currentTarget.style.boxShadow = ''; e.currentTarget.style.transform = 'none'; }}>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -618,7 +620,7 @@ function CampaignList({ onSelect, userChar, onHome }) {
                 {c.description && <div style={{ fontFamily: 'Georgia, serif', fontSize: 11, color: 'rgba(26,23,20,0.55)', lineHeight: 1.55 }}>{c.description}</div>}
                 {c.setting && <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.14em', color: 'rgba(26,23,20,0.28)', marginTop: 8, textTransform: 'uppercase' }}>{c.setting}</div>}
               </div>
-             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginLeft: 16, flexShrink: 0 }}>
+             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginLeft: isMobile ? 0 : 16, flexShrink: 0 }}>
   {dmUnlocked ? (
     <>
       <button onClick={e => { e.stopPropagation(); setEditTarget(c); setDraft({ name: c.name, subtitle: c.subtitle, type: c.type || 'Campaign', description: c.description || '', setting: c.setting || 'Soteria · 178 E.U.', max_players: c.max_players || 6, suggested_level: c.suggested_level || '' }); setShowCreate(true); }}
@@ -2093,11 +2095,42 @@ useEffect(() => {
     }
   };
 
+  const activeToolIds = [
+    showAstragal && 'astragal',
+    showHercules && 'hercules',
+    showArgus && 'argus',
+    showCastor && 'castor',
+    showScribeCV && 'scribe',
+    showWorldMap && 'worldmap',
+    showIntent && 'intent',
+    showProximity && 'proximity',
+    showBazaar && 'bazaar',
+    showQuestor && 'questor',
+    showGrimoire && 'grimoire',
+    showLark && 'lark',
+  ].filter(Boolean);
+  const [topToolId, setTopToolId] = useState(null);
+  const previousToolIds = useRef([]);
+
+  useEffect(() => {
+    const previous = previousToolIds.current;
+    const newlyOpened = activeToolIds.filter(id => !previous.includes(id));
+    if (newlyOpened.length > 0) setTopToolId(newlyOpened[newlyOpened.length - 1]);
+    else if (activeToolIds.length && !activeToolIds.includes(topToolId)) setTopToolId(activeToolIds[activeToolIds.length - 1]);
+    else if (!activeToolIds.length && topToolId) setTopToolId(null);
+    previousToolIds.current = activeToolIds;
+  }, [activeToolIds.join('|'), topToolId]);
+
+  const panelPriority = (id) => {
+    const isTop = activeToolIds.length < 2 || topToolId === id;
+    return { isTop, onFocus: () => setTopToolId(id), zIndex: 200000 + (isTop ? 1000 : Math.max(0, activeToolIds.indexOf(id))) };
+  };
+
   return (
-    <div style={{ minHeight: '100vh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text, position: 'relative' }}>
+    <div style={{ minHeight: '100svh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text, position: 'relative', overflowX: 'hidden' }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap'); * { box-sizing: border-box; } body { margin: 0; }`}</style>
 
-      <FloatToolbar buttons={[
+      <FloatToolbar activeIds={activeToolIds} buttons={[
         {
           id: 'astragal',
           title: 'Astragal — Roll the dice',
@@ -2219,19 +2252,19 @@ useEffect(() => {
           children: <img src="/Larkicon.png" alt="Lark" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
       ]} />
             {showGrimoire && (
-        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowGrimoire(false)} title="GRIMOIRE · Adventure Journal" width={400} accentColor="rgba(121,245,167,0.35)">
+        <DraggablePanel {...panelPriority('grimoire')} defaultX={108} defaultY={80} onClose={() => setShowGrimoire(false)} title="GRIMOIRE · Adventure Journal" width={400} accentColor="rgba(121,245,167,0.35)">
           <GrimoirePanel char={userChar} campaignId={String(campaign.id)} isDM={false} embedded />
         </DraggablePanel>
       )}
       {showLark && (
-        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowLark(false)} title="LARK · Letters & Correspondence" width={400} accentColor="rgba(200,168,74,0.35)">
+        <DraggablePanel {...panelPriority('lark')} defaultX={108} defaultY={80} onClose={() => setShowLark(false)} title="LARK · Letters & Correspondence" width={400} accentColor="rgba(200,168,74,0.35)">
           <LarkPanel char={userChar} campaignId={String(campaign.id)} isDM={false} embedded />
         </DraggablePanel>
       )}
 
       {/* Astragal panel */}
       {showAstragal && (
-        <DraggablePanel defaultX={108} defaultY={300} onClose={() => setShowAstragal(false)} title="Astragal — Fate Cast in Bone" width={320} accentColor="rgba(240,238,235,0.12)">
+        <DraggablePanel {...panelPriority('astragal')} defaultX={108} defaultY={300} onClose={() => setShowAstragal(false)} title="Astragal — Fate Cast in Bone" width={320} accentColor="rgba(240,238,235,0.12)">
           <div style={{ padding: 14 }}>
             <Astragal character={userChar} actionName="Astragal Roll" statKey="will" onResult={logRoll} />
           </div>
@@ -2240,42 +2273,44 @@ useEffect(() => {
 
       {/* HERCULES lite panel */}
       {showHercules && (
-        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowHercules(false)} title="HERCULES" width={340} accentColor="rgba(200,168,74,0.35)">
+        <DraggablePanel {...panelPriority('hercules')} defaultX={108} defaultY={80} onClose={() => setShowHercules(false)} title="HERCULES" width={340} accentColor="rgba(200,168,74,0.35)">
           <HerculesPlayer campaignId={String(campaign.id)} char={userChar} />
         </DraggablePanel>
       )}
 
       {showCastor && (
-        <DraggablePanel defaultX={108} defaultY={160} onClose={() => setShowCastor(false)} title="CASTOR · Spell-Casting & Schematics" width={360} accentColor="rgba(56,189,248,0.35)">
+        <DraggablePanel {...panelPriority('castor')} defaultX={108} defaultY={160} onClose={() => setShowCastor(false)} title="CASTOR · Spell-Casting & Schematics" width={360} accentColor="rgba(56,189,248,0.35)">
           <CastorPanel char={userChar} campaignId={String(campaign.id)} onClose={() => setShowCastor(false)} onBadgeChange={setCastorBadge} embedded />
         </DraggablePanel>
       )}
 
       {showArgus && (
-        <ArgusPlayerPanel char={userChar} onClose={() => setShowArgus(false)} />
+        <DraggablePanel {...panelPriority('argus')} defaultX={108} defaultY={80} onClose={() => setShowArgus(false)} title="ARGUS - Pack and Equipment" width={380} accentColor="rgba(200,168,74,0.35)">
+          <ArgusPlayerPanel char={userChar} onClose={() => setShowArgus(false)} embedded />
+        </DraggablePanel>
       )}
 
       {showBestiary && (
-        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowBestiary(false)} title="BESTIARY · Creatures of Soteria" width={380} accentColor="rgba(168,230,163,0.3)">
+        <DraggablePanel {...panelPriority('bestiary')} defaultX={108} defaultY={80} onClose={() => setShowBestiary(false)} title="BESTIARY · Creatures of Soteria" width={380} accentColor="rgba(168,230,163,0.3)">
           <BestiaryPanel isDM={false} campaignId={String(campaign.id)} embedded />
         </DraggablePanel>
       )}
 
       {showScribeCV && (
-        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribeCV(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
+        <DraggablePanel {...panelPriority('scribe')} defaultX={108} defaultY={80} onClose={() => setShowScribeCV(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
           <ScribePlayerPanel char={userChar} campaignId={String(campaign.id)} onUpdateChar={onUpdateChar} embedded />
         </DraggablePanel>
       )}
 
       {showBazaar && (
-        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowBazaar(false)} title="BAZAAR · Trade & Loot" width={420} accentColor="rgba(180,122,58,0.5)">
+        <DraggablePanel {...panelPriority('bazaar')} defaultX={108} defaultY={80} onClose={() => setShowBazaar(false)} title="BAZAAR · Trade & Loot" width={420} accentColor="rgba(180,122,58,0.5)">
           <div style={{ padding: 14, height: '100%', overflowY: 'auto' }}>
             <BazaarPlayerPanel char={userChar} campaignId={String(campaign.id)} embedded />
           </div>
         </DraggablePanel>
       )}
       {showQuestor && (
-        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowQuestor(false)} title="QUESTOR · Quest Board" width={420} accentColor="rgba(200,168,74,0.4)">
+        <DraggablePanel {...panelPriority('questor')} defaultX={108} defaultY={80} onClose={() => setShowQuestor(false)} title="QUESTOR · Quest Board" width={420} accentColor="rgba(200,168,74,0.4)">
           <div style={{ padding: 14, height: '100%', overflowY: 'auto' }}>
             <QuestorPlayerPanel char={userChar} campaignId={String(campaign.id)} embedded />
           </div>
@@ -2283,7 +2318,7 @@ useEffect(() => {
       )}
 
       {showWorldMap && (
-  <DraggablePanel defaultX={120} defaultY={40} onClose={() => setShowWorldMap(false)} title="WORLD MAP · Soteria" width={Math.min(window.innerWidth - 140, 900)} accentColor="rgba(200,168,74,0.4)">
+  <DraggablePanel {...panelPriority('worldmap')} defaultX={120} defaultY={40} onClose={() => setShowWorldMap(false)} title="WORLD MAP · Soteria" width={Math.min(window.innerWidth - 140, 900)} accentColor="rgba(200,168,74,0.4)">
     <div style={{ height: '70vh' }}>
       <WorldMapPanel campaignId={String(campaign.id)} isDM={false} characters={[userChar].filter(Boolean)} />
     </div>
@@ -2295,7 +2330,7 @@ useEffect(() => {
         )}
 
       {showProximity && (
-        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowProximity(false)} title="PARTY · Who's Nearby" width={340} accentColor="rgba(121,245,167,0.35)">
+        <DraggablePanel {...panelPriority('proximity')} defaultX={108} defaultY={80} onClose={() => setShowProximity(false)} title="PARTY · Who's Nearby" width={340} accentColor="rgba(121,245,167,0.35)">
           <PartyProximityPanel campaignId={String(campaign.id)} isDM={false} char={userChar} />
         </DraggablePanel>
       )}
@@ -2363,8 +2398,8 @@ useEffect(() => {
         
       </div>
 
-      <div style={{ flex: 1, overflowY: activeTab === 'Map' ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: activeTab === 'Map' ? 0 : (isMobile ? '20px 16px' : '28px 32px'), maxWidth: activeTab === 'Map' ? '100%' : 680, width: '100%', margin: '0 auto', height: activeTab === 'Map' ? '100%' : 'auto', flex: activeTab === 'Map' ? 1 : 'none', display: activeTab === 'Map' ? 'flex' : 'block', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflowY: activeTab === 'Map' ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ padding: activeTab === 'Map' ? 0 : (isMobile ? '20px 16px calc(24px + env(safe-area-inset-bottom, 0px))' : '28px 32px'), maxWidth: activeTab === 'Map' ? '100%' : 680, width: '100%', margin: '0 auto', height: activeTab === 'Map' ? '100%' : 'auto', flex: activeTab === 'Map' ? 1 : 'none', display: activeTab === 'Map' ? 'flex' : 'block', flexDirection: 'column' }}>
           {false && !isAssigned && userChar && (
             <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '16px 20px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Assign your character to this campaign</div>

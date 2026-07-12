@@ -3,11 +3,13 @@ import { useEffect, useRef, useState } from 'react';
 export default function CornerLoadingStinger({ enabled = true }) {
   const videoRef = useRef(null);
   const [visible, setVisible] = useState(false);
+  const [videoSrc, setVideoSrc] = useState('/faviconloadingtransparent.mp4');
 
   useEffect(() => {
     if (!enabled) return;
 
     const playStinger = () => {
+      setVideoSrc('/faviconloadingtransparent.mp4?t=' + Date.now());
       setVisible(true);
 
       requestAnimationFrame(() => {
@@ -46,8 +48,9 @@ export default function CornerLoadingStinger({ enabled = true }) {
       }}
     >
       <video
+        key={videoSrc}
         ref={videoRef}
-        src="/faviconloadingtransparent.mp4"
+        src={videoSrc}
         muted
         playsInline
         preload="auto"

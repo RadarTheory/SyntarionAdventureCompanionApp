@@ -176,7 +176,7 @@ function VitalsPanel({ row, onClose, campaignId }) {
   );
 }
 
-export default function HerculesCombat({ defaultCampaignId, darkMode = true, onPlaceToken, onRegisterAddCreature }) {
+export default function HerculesCombat({ defaultCampaignId, darkMode = true, onPlaceToken, onRegisterAddCreature, embedded = false }) {
    const [campaignList, setCampaignList] = useState([]);
    const [campaignId, setCampaignId] = useState(defaultCampaignId || '');
   const [creatureNames, setCreatureNames] = useState([]);
@@ -245,9 +245,11 @@ useEffect(() => {
   const windowDragOffset = useRef({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [hovered, setHovered] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(embedded);
   const [mobileTab, setMobileTab] = useState('scribe');
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 700);
+
+  useEffect(() => { if (embedded) setOpen(true); }, [embedded]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 700);
@@ -1290,6 +1292,7 @@ const denyEvent = async event => {
 
   return (
     <>
+      {!embedded && (
       <button
         type="button"
         onMouseDown={startDrag}
@@ -1329,21 +1332,22 @@ const denyEvent = async event => {
       >
         <HerculesLogoImage hovered={hovered} darkMode={darkMode} size={135} />
       </button>
+      )}
 
       {open && (
         <div
            className="hercules-shell combat-shell"
           style={{
-            position: 'fixed',
-            left: isMobile ? 0 : windowPos.x,
-            top: isMobile ? 0 : windowPos.y,
-            width: isMobile ? '100vw' : 'min(1400px, calc(100vw - 24px))',
-            height: isMobile ? '100dvh' : 'min(820px, calc(100vh - 60px))',
+            position: embedded ? 'relative' : 'fixed',
+            left: embedded ? 0 : (isMobile ? 0 : windowPos.x),
+            top: embedded ? 0 : (isMobile ? 0 : windowPos.y),
+            width: embedded ? '100%' : (isMobile ? '100vw' : 'min(1400px, calc(100vw - 24px))'),
+            height: embedded ? '100%' : (isMobile ? '100dvh' : 'min(820px, calc(100vh - 60px))'),
             background: '#100d0a',
             border: '1px solid rgba(200,168,74,0.35)',
-            borderRadius: isMobile ? 0 : 16,
+            borderRadius: embedded || isMobile ? 0 : 16,
             boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
-            zIndex: 100000,
+            zIndex: embedded ? 'auto' : 100000,
             display: 'grid',
             gridTemplateRows: 'auto 1fr',
             overflow: 'hidden',
@@ -1351,12 +1355,12 @@ const denyEvent = async event => {
         >
           <div
             onMouseDown={e => {
-              if (isMobile) return;
+              if (embedded || isMobile) return;
               if (['BUTTON', 'SELECT', 'INPUT', 'OPTION'].includes(e.target.tagName)) return;
               startWindowDrag(e);
             }}
             onTouchStart={e => {
-              if (isMobile) return;
+              if (embedded || isMobile) return;
               if (['BUTTON', 'SELECT', 'INPUT', 'OPTION'].includes(e.target.tagName)) return;
               startWindowDrag(e);
             }}
@@ -1367,7 +1371,7 @@ const denyEvent = async event => {
               alignItems: 'center',
               gap: isMobile ? 6 : 12,
               flexWrap: isMobile ? 'wrap' : 'nowrap',
-              cursor: isWindowDragging ? 'grabbing' : 'grab',
+              cursor: embedded || isMobile ? 'default' : (isWindowDragging ? 'grabbing' : 'grab'),
               userSelect: 'none',
               boxSizing: 'border-box',
               width: '100%',
@@ -1478,7 +1482,7 @@ const denyEvent = async event => {
                 End
               </button>
             )}
-            <button type="button" onClick={() => setOpen(false)} style={plainButton()}>
+            <button type="button" onClick={() => embedded ? null : setOpen(false)} style={{ ...plainButton(), display: embedded ? 'none' : 'inline-flex' }}>
               {isMobile ? '✕' : 'Close'}
             </button>
           </div>

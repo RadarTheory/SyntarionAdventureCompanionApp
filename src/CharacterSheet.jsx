@@ -136,6 +136,7 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
   const { isMobile } = useDevice();
   const [activeTab, setActiveTab] = useState('identity');
   const isDM = user?.id === import.meta.env.VITE_DM_USER_ID;
+  const detailGridCols = isMobile ? '1fr' : '1fr 1fr';
 
   if (!char) {
     return (
@@ -154,7 +155,7 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
 
       case 'identity': return (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 10 : 0, justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'flex-start', marginBottom: 24 }}>
             <div>
               <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 22 : 28, fontWeight: 700, color: COLORS.text, letterSpacing: '0.04em', lineHeight: 1.1 }}>{char.name || 'Unnamed'}</div>
               <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 4 }}>{raceDisplay}{cls ? ` · ${cls.name}` : ''}</div>
@@ -162,7 +163,7 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
             <StatusBadge status={char.status || 'draft'} />
           </div>
 
-          <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginBottom: 24 }}>
             {[{ label: 'Level', value: char.charLevel || 1 }, { label: 'AP Current', value: char.apCurrent || 0 }, { label: 'AP Total', value: char.apTotal || 0 }].map(({ label, value }) => (
               <div key={label} style={{ flex: 1, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px', textAlign: 'center' }}>
                 <div style={{ ...label8(), marginBottom: 4 }}>{label}</div>
@@ -175,7 +176,7 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
           <SessionCheckin char={char} user={user} />
 
           <SectionHead>Personal</SectionHead>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: detailGridCols, gap: '0 24px' }}>
             <Field label="First Name" value={char.fn} />
             <Field label="Last Name" value={char.ln} />
             <Field label="Age" value={char.age} />
@@ -183,19 +184,19 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
           </div>
 
           <SectionHead>Heritage</SectionHead>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: detailGridCols, gap: '0 24px' }}>
             <Field label="Race" value={raceDisplay} />
             <Field label="Campaign" value={char.campaign} />
           </div>
 
           <SectionHead>Belief</SectionHead>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: detailGridCols, gap: '0 24px' }}>
             <Field label="Affiliation" value={char.beliefType ? char.beliefType.charAt(0).toUpperCase() + char.beliefType.slice(1) : null} />
             <Field label="Deity / Spirit" value={char.deity || char.spirit || char.beliefSub} />
           </div>
 
           <SectionHead>Class</SectionHead>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: detailGridCols, gap: '0 24px' }}>
             <Field label="Path" value={char.cp ? char.cp.charAt(0).toUpperCase() + char.cp.slice(1) : null} />
             <Field label="Class" value={cls?.name} />
             <Field label="Discipline" value={cls?.disc} />
@@ -296,7 +297,7 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
           <SectionHead>Accessories</SectionHead>
           <div style={{ marginBottom: 20 }}>{ACCESSORY_SLOTS.map(slot => <EquipRow key={slot} slot={slot} value={char.accessories?.[slot]} />)}</div>
           <SectionHead>Pack</SectionHead>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px', marginBottom: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: detailGridCols, gap: '0 24px', marginBottom: 20 }}>
             <Field label="Consumables" value={char.inventory?.consumables} />
             <Field label="Coin" value={char.inventory?.coin} />
             <Field label="Weight" value={char.inventory?.weight} />
@@ -345,8 +346,8 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
         })}
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto' }}>
-        <div style={{ padding: isMobile ? '20px 16px' : '28px 32px', maxWidth: 680, width: '100%', margin: '0 auto' }}>
+      <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ padding: isMobile ? '18px 14px calc(72px + env(safe-area-inset-bottom))' : '28px 32px', maxWidth: 680, width: '100%', margin: '0 auto' }}>
           {renderTab()}
         </div>
       </div>

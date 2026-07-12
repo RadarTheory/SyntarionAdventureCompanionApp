@@ -8,7 +8,7 @@ import { SOTERIA_LORE } from './soteria-lore';
 import { SOTERIA_MECHANICS } from './soteria-mechanics';
 import { SOTERIA_BESTIARY } from './soteria-bestiary';
 import PlayersPanel from './PlayersPanel';
-import AstragalButton from './AstragalButton';
+import Astragal from './Astragal';
 import SessionManager from './SessionManager';
 import { WorldMapPanel } from './WorldMapPanel';
 import VTTCanvas from './VTTCanvas';
@@ -75,29 +75,31 @@ function StatusBadge({ status }) {
   );
 }
 
-function DraggablePanel({ defaultX, defaultY, onClose, title, width, accentColor, children }) {
+function DraggablePanel({ defaultX, defaultY, onClose, title, width, accentColor, children, zIndex = 200000, isTop = true, onFocus }) {
   const [pos, setPos] = useState({ x: defaultX, y: defaultY });
   const dragging = useRef(false);
   const offset = useRef({ x: 0, y: 0 });
-  const onMouseDown = (e) => { dragging.current = true; offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }; e.preventDefault(); };
-  const onTouchStart = (e) => { dragging.current = true; const t = e.touches[0]; offset.current = { x: t.clientX - pos.x, y: t.clientY - pos.y }; };
+  const panelWidth = Math.min(width, Math.max(280, window.innerWidth - 24));
+  const focusPanel = () => onFocus?.();
+  const onMouseDown = (e) => { focusPanel(); dragging.current = true; offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }; e.preventDefault(); };
+  const onTouchStart = (e) => { focusPanel(); dragging.current = true; const t = e.touches[0]; offset.current = { x: t.clientX - pos.x, y: t.clientY - pos.y }; };
+  useEffect(() => { focusPanel(); }, []);
   useEffect(() => {
-    const onMove = (e) => { if (!dragging.current) return; const p = e.touches ? e.touches[0] : e; setPos({ x: Math.max(0, Math.min(window.innerWidth - width - 8, p.clientX - offset.current.x)), y: Math.max(0, Math.min(window.innerHeight - 80, p.clientY - offset.current.y)) }); };
+    const onMove = (e) => { if (!dragging.current) return; const p = e.touches ? e.touches[0] : e; setPos({ x: Math.max(8, Math.min(window.innerWidth - panelWidth - 8, p.clientX - offset.current.x)), y: Math.max(8, Math.min(window.innerHeight - 80, p.clientY - offset.current.y)) }); };
     const onUp = () => { dragging.current = false; };
     window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp); window.addEventListener('touchmove', onMove, { passive: false }); window.addEventListener('touchend', onUp);
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onUp); };
-  }, [width]);
+  }, [panelWidth]);
   return (
-    <div style={{ position: 'fixed', left: pos.x, top: pos.y, width, height: '78vh', zIndex: 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: `1px solid ${accentColor}`, borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
-      <div onMouseDown={onMouseDown} onTouchStart={onTouchStart} style={{ padding: '10px 14px', borderBottom: `1px solid ${accentColor}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'grab', background: 'rgba(255,255,255,0.03)', flexShrink: 0, userSelect: 'none' }}>
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8d9a7', letterSpacing: '0.12em' }}>⠿ {title}</div>
-        <button onClick={onClose} style={{ background: 'transparent', border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 4, padding: '3px 7px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
+    <div onMouseDownCapture={focusPanel} onTouchStartCapture={focusPanel} style={{ position: 'fixed', left: Math.min(pos.x, window.innerWidth - panelWidth - 8), top: pos.y, width: panelWidth, maxWidth: 'calc(100vw - 16px)', height: 'min(78vh, calc(100svh - 24px))', zIndex, display: 'flex', flexDirection: 'column', background: isTop ? '#100d0a' : 'rgba(16,13,10,0.82)', border: `1px solid ${isTop ? accentColor : 'rgba(201,185,145,0.16)'}`, borderRadius: 14, boxShadow: isTop ? '0 28px 90px rgba(0,0,0,0.78)' : '0 10px 36px rgba(0,0,0,0.42)', overflow: 'hidden', opacity: isTop ? 1 : 0.46, filter: isTop ? 'none' : 'saturate(0.72) brightness(0.72)', transform: isTop ? 'scale(1)' : 'scale(0.985)', transformOrigin: 'top left', transition: dragging.current ? 'none' : 'opacity 0.16s ease, filter 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease' }}>
+      <div onMouseDown={onMouseDown} onTouchStart={onTouchStart} style={{ padding: '10px 14px', borderBottom: `1px solid ${isTop ? accentColor : 'rgba(201,185,145,0.14)'}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'grab', background: isTop ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.015)', flexShrink: 0, userSelect: 'none' }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: isTop ? '#e8d9a7' : 'rgba(232,217,167,0.52)', letterSpacing: '0.12em' }}>? {title}</div>
+        <button onClick={onClose} style={{ background: 'transparent', border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 4, padding: '3px 7px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>?</button>
       </div>
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>{children}</div>
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>{children}</div>
     </div>
   );
 }
-
 // ─── CHAT PANEL (Player ↔ DM) ─────────────────────────────────────────────────
 function ChatPanel({ session, onClose, isDM }) {
   const [messages, setMessages] = useState([]);
@@ -1324,8 +1326,43 @@ const renderTab = () => {
     }
   };
 
+  const activeToolIds = [
+    showAstragal && 'astragal',
+    showHercules && 'hercules',
+    showArgus && 'argus',
+    showCastor && 'castor',
+    showBestiary && 'bestiary',
+    showScribePanel && 'scribe',
+    showSolomon && 'solomon',
+    showWorldMap && 'worldmap',
+    showNPC && 'npc',
+    showLarks && 'lark',
+    showBazaar && 'bazaar',
+    showQuestor && 'questor',
+    showClock && 'clock',
+    showLore && 'lore',
+    showSpeak && 'speak',
+    showProximity && 'proximity',
+  ].filter(Boolean);
+  const [topToolId, setTopToolId] = useState(null);
+  const previousToolIds = useRef([]);
+
+  useEffect(() => {
+    const previous = previousToolIds.current;
+    const newlyOpened = activeToolIds.filter(id => !previous.includes(id));
+    if (newlyOpened.length > 0) setTopToolId(newlyOpened[newlyOpened.length - 1]);
+    else if (activeToolIds.length && !activeToolIds.includes(topToolId)) setTopToolId(activeToolIds[activeToolIds.length - 1]);
+    else if (!activeToolIds.length && topToolId) setTopToolId(null);
+    previousToolIds.current = activeToolIds;
+  }, [activeToolIds.join('|'), topToolId]);
+
+  const panelPriority = (id) => {
+    const isTop = activeToolIds.length < 2 || topToolId === id;
+    return { isTop, onFocus: () => setTopToolId(id), zIndex: 200000 + (isTop ? 1000 : Math.max(0, activeToolIds.indexOf(id))) };
+  };
+
   return (
-    <div style={{ minHeight: '100vh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text }}>
+    <div style={{ minHeight: '100svh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text, overflowX: 'hidden' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
         * { box-sizing: border-box; } body { margin: 0; }
@@ -1335,7 +1372,7 @@ const renderTab = () => {
       {editingChar && <CharacterEditor char={editingChar} campaigns={dbCampaigns} onSave={() => { setEditingChar(null); fetchCharacters(); }} onClose={() => setEditingChar(null)} />}
       {activeSession && <ChatPanel session={activeSession} onClose={() => setActiveSession(null)} isDM={true} />}
       {showScribePanel && (
-        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowScribePanel(false)} title="THE SCRIBE · Architect Access" width={420} accentColor={`${COLORS.deity}55`}>
+        <DraggablePanel {...panelPriority('scribe')} defaultX={108} defaultY={80} onClose={() => setShowScribePanel(false)} title="THE SCRIBE · Architect Access" width={420} accentColor={`${COLORS.deity}55`}>
           <ScribeDMPanel embedded activeCampaignId={activeCampaignTab} />
         </DraggablePanel>
       )}
@@ -1378,13 +1415,13 @@ const renderTab = () => {
       )}
 
       {showBestiary && (
-        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowBestiary(false)} title="BESTIARY · Creatures of Soteria" width={400} accentColor="rgba(168,230,163,0.3)">
+        <DraggablePanel {...panelPriority('bestiary')} defaultX={108} defaultY={80} onClose={() => setShowBestiary(false)} title="BESTIARY · Creatures of Soteria" width={400} accentColor="rgba(168,230,163,0.3)">
           <BestiaryPanel isDM={true} campaignId={activeCampaignTab} embedded />
         </DraggablePanel>
       )}
 
               {showNPC && (
-          <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowNPC(false)}
+          <DraggablePanel {...panelPriority('npc')} defaultX={108} defaultY={80} onClose={() => setShowNPC(false)}
             title="NPC TRACKER · People of Soteria" width={480} accentColor="rgba(200,168,74,0.4)">
             <div style={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
              <NPCPanel campaignId={activeCampaignTab} sessionId={activeGameSessionId} />
@@ -1393,19 +1430,19 @@ const renderTab = () => {
         )}
 
         {showLarks && (
-          <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowLarks(false)} title="LARK · Letters & Correspondence" width={400} accentColor="rgba(200,168,74,0.35)">
+          <DraggablePanel {...panelPriority('lark')} defaultX={108} defaultY={80} onClose={() => setShowLarks(false)} title="LARK · Letters & Correspondence" width={400} accentColor="rgba(200,168,74,0.35)">
             <LarkPanel char={null} campaignId={activeCampaignTab} isDM={true} embedded />
           </DraggablePanel>
         )}
 
         {showSpeak && (
-          <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowSpeak(false)} title="💬 DIALOGUE · Speak as Soteria" width={420} accentColor="rgba(96,150,224,0.4)">
+          <DraggablePanel {...panelPriority('speak')} defaultX={108} defaultY={80} onClose={() => setShowSpeak(false)} title="💬 DIALOGUE · Speak as Soteria" width={420} accentColor="rgba(96,150,224,0.4)">
             <DMSpeakPanel campaignId={activeCampaignTab} sessionId={activeGameSessionId} embedded />
           </DraggablePanel>
         )}
 
         {showProximity && (
-          <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowProximity(false)} title="PARTY · Proximity & Check-In" width={420} accentColor="rgba(121,245,167,0.35)">
+          <DraggablePanel {...panelPriority('proximity')} defaultX={108} defaultY={80} onClose={() => setShowProximity(false)} title="PARTY · Proximity & Check-In" width={420} accentColor="rgba(121,245,167,0.35)">
             <div style={{ overflowY: 'auto', height: '100%' }}>
               <PartyProximityPanel campaignId={activeCampaignTab} isDM={true} />
             </div>
@@ -1434,7 +1471,7 @@ const renderTab = () => {
         </div>
 
        {showWorldMap && (
-  <DraggablePanel defaultX={120} defaultY={40} onClose={() => setShowWorldMap(false)} title="WORLD MAP · Soteria" width={Math.min(window.innerWidth - 140, 900)} accentColor="rgba(200,168,74,0.4)">
+  <DraggablePanel {...panelPriority('worldmap')} defaultX={120} defaultY={40} onClose={() => setShowWorldMap(false)} title="WORLD MAP · Soteria" width={Math.min(window.innerWidth - 140, 900)} accentColor="rgba(200,168,74,0.4)">
     <div style={{ height: '70vh' }}>
       <WorldMapPanel campaignId={activeCampaignTab} isDM={true} characters={characters} />
     </div>
@@ -1442,7 +1479,7 @@ const renderTab = () => {
 )}
 
 {showLore && (
-  <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowLore(false)} title="⟦ LORE ⟧ World Announcement" width={440} accentColor="rgba(200,168,74,0.5)">
+  <DraggablePanel {...panelPriority('lore')} defaultX={108} defaultY={80} onClose={() => setShowLore(false)} title="⟦ LORE ⟧ World Announcement" width={440} accentColor="rgba(200,168,74,0.5)">
     <LoreAnnouncePanel campaignId={activeSession?.campaign_id || activeCampaignTab} embedded />
   </DraggablePanel>
 )}
@@ -1467,45 +1504,55 @@ const renderTab = () => {
           {loading ? <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 13 }}>Consulting the archives…</div> : renderTab()}
         </div>
       </div>
-      {showArgus && <ArgusDMPanel onClose={() => setShowArgus(false)} />}
-      {showHercules && <HerculesCombat defaultCampaignId={activeCampaignTab} onClose={() => setShowHercules(false)} />}
-      {showAstragal && <AstragalButton character={characters?.[0]} onResult={logDmAstragalToHercules} onClose={() => setShowAstragal(false)} />}
+      {showArgus && (
+        <DraggablePanel {...panelPriority('argus')} defaultX={108} defaultY={80} onClose={() => setShowArgus(false)} title="ARGUS - Inventory Oversight" width={480} accentColor="rgba(200,168,74,0.35)">
+          <ArgusDMPanel onClose={() => setShowArgus(false)} embedded />
+        </DraggablePanel>
+      )}
+      {showHercules && (
+        <DraggablePanel {...panelPriority('hercules')} defaultX={72} defaultY={40} onClose={() => setShowHercules(false)} title="HERCULES - Combat Tracker" width={920} accentColor="rgba(200,168,74,0.35)">
+          <HerculesCombat defaultCampaignId={activeCampaignTab} embedded />
+        </DraggablePanel>
+      )}
+      {showAstragal && (
+        <DraggablePanel {...panelPriority('astragal')} defaultX={108} defaultY={80} onClose={() => setShowAstragal(false)} title="ASTRAGAL - Fate Cast in Bone" width={380} accentColor="rgba(240,238,235,0.18)">
+          <div style={{ padding: 14 }}>
+            <Astragal character={characters?.[0]} actionName="Astragal" statKey="will" notation="1d20" onResult={logDmAstragalToHercules} />
+          </div>
+        </DraggablePanel>
+      )}
       {showSolomon && (
-        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowSolomon(false)} title="SOLOMON · Loot Governance" width={400} accentColor="rgba(180,122,58,0.5)">
+        <DraggablePanel {...panelPriority('solomon')} defaultX={108} defaultY={80} onClose={() => setShowSolomon(false)} title="SOLOMON · Loot Governance" width={400} accentColor="rgba(180,122,58,0.5)">
           <Solomon campaignId={activeCampaignTab} />
         </DraggablePanel>
       )}
       {showCastor && (
-        <div style={{ position: 'fixed', bottom: 24, left: 108, width: 400, maxHeight: '80vh', zIndex: 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: '1px solid rgba(56,189,248,0.3)', borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(56,189,248,0.14)', background: 'rgba(56,189,248,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#7dd3fc', letterSpacing: '0.18em', fontWeight: 700 }}>CASTOR</div>
-            <button onClick={() => setShowCastor(false)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
-          </div>
+        <DraggablePanel {...panelPriority('castor')} defaultX={108} defaultY={80} onClose={() => setShowCastor(false)} title="CASTOR - Cast Requests" width={420} accentColor="rgba(56,189,248,0.35)">
           <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
             <CastorDMPanel onPendingChange={setCastorBadge} />
           </div>
-        </div>
+        </DraggablePanel>
       )}
       {showBazaar && (
-        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowBazaar(false)} title="BAZAAR · Trade & Loot" width={420} accentColor="rgba(180,122,58,0.5)">
+        <DraggablePanel {...panelPriority('bazaar')} defaultX={108} defaultY={80} onClose={() => setShowBazaar(false)} title="BAZAAR · Trade & Loot" width={420} accentColor="rgba(180,122,58,0.5)">
           <div style={{ padding: 14, height: '100%', overflowY: 'auto' }}>
             <BazaarDMPanel campaignId={activeCampaignTab} onClose={() => setShowBazaar(false)} />
           </div>
         </DraggablePanel>
       )}
       {showQuestor && (
-        <DraggablePanel defaultX={108} defaultY={80} onClose={() => setShowQuestor(false)} title="QUESTOR · Quest Board" width={420} accentColor="rgba(200,168,74,0.4)">
+        <DraggablePanel {...panelPriority('questor')} defaultX={108} defaultY={80} onClose={() => setShowQuestor(false)} title="QUESTOR · Quest Board" width={420} accentColor="rgba(200,168,74,0.4)">
           <QuestorDMPanel campaignId={activeCampaignTab} onClose={() => setShowQuestor(false)} />
         </DraggablePanel>
       )}
       {showClock && (
-    <DraggablePanel defaultX={120} defaultY={80} onClose={() => setShowClock(false)} title="SOTERIA · World Clock" width={320} accentColor="rgba(201,185,145,0.3)">
+    <DraggablePanel {...panelPriority('clock')} defaultX={120} defaultY={80} onClose={() => setShowClock(false)} title="SOTERIA · World Clock" width={320} accentColor="rgba(201,185,145,0.3)">
       <div style={{ padding: 14 }}>
         <SoteriaClockPanel key={activeCampaignTab} campaignId={activeCampaignTab} />
       </div>
     </DraggablePanel>
   )}
-      <FloatToolbar buttons={[
+      <FloatToolbar activeIds={activeToolIds} buttons={[
         {
           id: 'astragal',
           title: 'Astragal — Roll the dice',

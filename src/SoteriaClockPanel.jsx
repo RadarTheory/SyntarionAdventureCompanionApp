@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
 import {
   PASSES, getCycleName, getPassInfo, advanceFragments, getLiveClock, getClockTime,
@@ -6,7 +6,7 @@ import {
   getLesserCycleName
 } from "./lib/soteriaclock";
 
-// ─── ORBITAL CELESTIAL DISPLAY ─────────────────────────────────────────────────
+// â”€â”€â”€ ORBITAL CELESTIAL DISPLAY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // The Major Sun sits fixed at center by day; orbiting bodies (Green/White Suns,
 // or by night the Yellow/Blue Moons) actually circle around it via CSS animation,
 // appearing/disappearing exactly as the Sovereign Calendar describes per pass.
@@ -46,7 +46,7 @@ export function CelestialOrbit({ clock, size = 36 }) {
           transform: 'translate(-50%, -50%)',
         }} />
       )}
-      {/* Orbiting bodies — each on its own ring, own speed, own starting angle */}
+      {/* Orbiting bodies â€” each on its own ring, own speed, own starting angle */}
       {orbiters.map((b, i) => (
         <div key={b.name} style={{
           position: 'absolute', top: center, left: center, width: 0, height: 0,
@@ -65,7 +65,7 @@ export function CelestialOrbit({ clock, size = 36 }) {
 }
 // A rounded track showing the 13 passes in order. The bodies actually visible at
 // the current pass (per the Sovereign Calendar) render as small glowing dots that
-// slide smoothly across as fragments tick by — Major/Green/White Suns by day,
+// slide smoothly across as fragments tick by â€” Major/Green/White Suns by day,
 // Yellow/Blue Moons by night.
 export function SunMoonCycleBar({ clock, width = 280, showBodyLabels = true }) {
   if (!clock) return null;
@@ -114,13 +114,23 @@ export function SunMoonCycleBar({ clock, width = 280, showBodyLabels = true }) {
   );
 }
 
-// ─── DISPLAY (player-facing, also used inside DM panel) ──────────────────────
+const TURN_NAMES = [
+  'Inamturn', 'Ixturn', 'Silturn', 'Halusturn', 'Dinturn', 'Ifuturn', 'Sevaxturn',
+  'Octurn', 'Novturn', 'Decturn', 'Elturn', 'Doturn', 'Triturn', 'Quaturn',
+  'Quinturn', 'Sexturn', 'Septturn', 'Octavturn', 'Nonturn', 'Vigturn', 'Unvigturn',
+  'Duovigturn', 'Tresvigturn', 'Quatvigturn', 'Quinvigturn', 'Sexvigturn', 'Septvigturn', 'Finalturn',
+];
+
+function getTurnName(turn) {
+  return TURN_NAMES[((Number(turn) || 1) - 1) % TURN_NAMES.length] || `Turn ${turn}`;
+}
+// â”€â”€â”€ DISPLAY (player-facing, also used inside DM panel) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function SoteriaClockDisplay({ clock, compact = false }) {
   const [, forceTick] = useState(0);
 
   useEffect(() => {
     if (!clock?.session_anchor_at) return;
-    const id = setInterval(() => forceTick(t => t + 1), 5000);
+    const id = setInterval(() => forceTick(t => t + 1), 1000);
     return () => clearInterval(id);
   }, [clock?.session_anchor_at]);
 
@@ -145,9 +155,7 @@ export function SoteriaClockDisplay({ clock, compact = false }) {
         <span style={{ fontFamily: 'monospace', opacity: 0.85 }}>{getClockTime(live.pass, live.fragment)}</span>
         <SunMoonCycleBar clock={clock} width={110} showBodyLabels={false} />
         <span style={{ opacity: 0.5 }}>·</span>
-                <span> of {getLesserCycleName(live.lesser_cycle || Math.floor((live.turn - 1) / 7) + 1)}</span>
-        <span style={{ opacity: 0.5 }}>·</span>
-        <span>{live.anui} {live.era === 'EU' ? 'E.U.' : 'E.D.'}</span>
+        <span>{getTurnName(live.turn)} of {cycleName}</span>
         
         {clock.session_anchor_at && (
           <span style={{ fontSize: 9, color: '#9fe0aa', background: 'rgba(121,245,167,0.1)', padding: '1px 6px', borderRadius: 8, border: '1px solid rgba(121,245,167,0.3)' }}>
@@ -174,27 +182,27 @@ export function SoteriaClockDisplay({ clock, compact = false }) {
         {passInfo.name} <span style={{ fontFamily: 'monospace', fontSize: 16, opacity: 0.8 }}>{getClockTime(live.pass, live.fragment)}</span>
       </div>
       <div style={{ fontSize: 12, opacity: 0.75, marginTop: 2 }}>
-        {passInfo.label}  ·  Fragment {Math.floor(live.fragment)}/119
+        {passInfo.label}  Â·  Fragment {Math.floor(live.fragment)}/119
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
         <SunMoonCycleBar clock={clock} />
       </div>
       <div style={{ marginTop: 10, fontSize: 12, opacity: 0.8 }}>
-        Turn {live.turn} of {getLesserCycleName(live.lesser_cycle || Math.floor((live.turn - 1) / 7) + 1)} • {cycleName}
+        Turn {live.turn} of {getLesserCycleName(live.lesser_cycle || Math.floor((live.turn - 1) / 7) + 1)} â€¢ {cycleName}
       </div>
       <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>
         Anui {live.anui} {live.era === 'EU' ? 'E.U.' : 'E.D.'}
       </div>
       {clock.session_anchor_at && (
         <div style={{ marginTop: 8, fontSize: 10, color: '#9fe0aa', background: 'rgba(121,245,167,0.08)', padding: '3px 10px', borderRadius: 10, border: '1px solid rgba(121,245,167,0.25)', display: 'inline-block' }}>
-          LIVE — advancing with the session
+          LIVE â€” advancing with the session
         </div>
       )}
     </div>
   );
 }
 
-// ─── DM CONTROL PANEL ────────────────────────────────────────────────────────
+// â”€â”€â”€ DM CONTROL PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function SoteriaClockPanel({ campaignId }) {
   const [clock, setClock]     = useState(null);
   const [editing, setEditing] = useState(false);
@@ -273,7 +281,7 @@ export default function SoteriaClockPanel({ campaignId }) {
 
   useEffect(() => {
     if (!clock?.session_anchor_at) return;
-    const id = setInterval(() => forceTick(t => t + 1), 5000);
+    const id = setInterval(() => forceTick(t => t + 1), 1000);
     return () => clearInterval(id);
   }, [clock?.session_anchor_at]);
 
@@ -306,7 +314,7 @@ const save = async (patch) => {
     });
   };
 
-  // Pause always wins — available regardless of session state, never gated
+  // Pause always wins â€” available regardless of session state, never gated
   const togglePause = () => {
     const next = !clock.paused;
     save({ paused: next });
@@ -363,7 +371,7 @@ const save = async (patch) => {
 
   if (!clock) return (
     <div style={{ color: 'rgba(201,185,145,0.4)', fontFamily: "'Cinzel', serif", fontSize: 12, padding: 16 }}>
-      Loading world clock…
+      Loading world clockâ€¦
     </div>
   );
 
@@ -415,13 +423,13 @@ const save = async (patch) => {
       minWidth: 280,
     }}>
       <div style={{ fontSize: 10, color: 'rgba(201,185,145,0.5)', letterSpacing: '0.18em', marginBottom: 12 }}>
-        SOTERIA · WORLD CLOCK (26HR DAY)
+        SOTERIA Â· WORLD CLOCK (26HR DAY)
       </div>
 
       <SoteriaClockDisplay clock={clock} />
 
       <div style={{ marginTop: 8, fontSize: 9, color: clock.session_anchor_at ? '#9fe0aa' : 'rgba(201,185,145,0.4)', letterSpacing: '0.08em' }}>
-        {clock.session_anchor_at ? 'Advancing live with the active session.' : 'No active session — time is holding still.'}
+        {clock.session_anchor_at ? 'Advancing live with the active session.' : 'No active session â€” time is holding still.'}
       </div>
 
       {/* Pause is always available, regardless of session state */}
@@ -472,7 +480,7 @@ const save = async (patch) => {
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
               {dmBtn('Cancel', () => { setShowTravel(false); setTravelMiles(''); })}
-              {dmBtn(saving ? 'Logging…' : 'Apply', logTravel, 'rgba(100,160,120,0.2)', false, !travelMiles || parseFloat(travelMiles) <= 0)}
+              {dmBtn(saving ? 'Loggingâ€¦' : 'Apply', logTravel, 'rgba(100,160,120,0.2)', false, !travelMiles || parseFloat(travelMiles) <= 0)}
             </div>
           </div>
         </div>
@@ -507,7 +515,7 @@ const save = async (patch) => {
               </div>
 
               <div>
-                {label('GREATER CYCLE (1–13)')}
+                {label('GREATER CYCLE (1â€“13)')}
                 <select value={draft.greater_cycle} onChange={e => setDraft(d => ({ ...d, greater_cycle: parseInt(e.target.value) }))}
                   style={{ background: 'rgba(14,10,7,0.8)', border: '1px solid rgba(201,185,145,0.25)', borderRadius: 6, color: '#e6d2a0', fontFamily: "'Cinzel', serif", fontSize: 11, padding: '4px 8px', width: '100%' }}>
                   {(draft.era === 'EU' ? GREATER_CYCLES_EU : GREATER_CYCLES_ED).map((name, i) => (
@@ -517,7 +525,7 @@ const save = async (patch) => {
               </div>
 
               <div>
-                {label('LESSER CYCLE (1–4)')}
+                {label('LESSER CYCLE (1â€“4)')}
                 <select value={draft.lesser_cycle || 1} onChange={e => setDraft(d => ({ ...d, lesser_cycle: parseInt(e.target.value) }))}
                   style={{ background: 'rgba(14,10,7,0.8)', border: '1px solid rgba(201,185,145,0.25)', borderRadius: 6, color: '#e6d2a0', fontFamily: "'Cinzel', serif", fontSize: 11, padding: '4px 8px', width: '100%' }}>
                   <option value="1">1. Isain</option>
@@ -531,7 +539,7 @@ const save = async (patch) => {
                 {label('TURN (NAMED)')}
                 <select value={draft.turn} onChange={e => setDraft(d => ({ ...d, turn: parseInt(e.target.value) }))}
                   style={{ background: 'rgba(14,10,7,0.8)', border: '1px solid rgba(201,185,145,0.25)', borderRadius: 6, color: '#e6d2a0', fontFamily: "'Cinzel', serif", fontSize: 11, padding: '4px 8px', width: '100%' }}>
-                  <option value="1">1. Ínanmturn</option>
+                  <option value="1">1. Ãnanmturn</option>
                   <option value="2">2. Ixturn</option>
                   <option value="3">3. Silturn</option>
                   <option value="4">4. Halusturn</option>
@@ -542,7 +550,7 @@ const save = async (patch) => {
               </div>
 
               <div>
-                {label('PASS (1–13)')}
+                {label('PASS (1â€“13)')}
                 <select value={draft.pass} onChange={e => setDraft(d => ({ ...d, pass: parseInt(e.target.value) }))}
                   style={{ background: 'rgba(14,10,7,0.8)', border: '1px solid rgba(201,185,145,0.25)', borderRadius: 6, color: '#e6d2a0', fontFamily: "'Cinzel', serif", fontSize: 11, padding: '4px 8px', width: '100%' }}>
                   {PASSES.map(p => (
@@ -552,14 +560,14 @@ const save = async (patch) => {
               </div>
 
               <div>
-                {label('FRAGMENT (0–119)')}
+                {label('FRAGMENT (0â€“119)')}
                 {numInput('fragment', 0, 119)}
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: 8, marginTop: 20, justifyContent: 'flex-end' }}>
               {dmBtn('Cancel', () => setEditing(false))}
-              {dmBtn(saving ? 'Saving…' : 'Apply', applyEdit, 'rgba(100,160,120,0.2)')}
+              {dmBtn(saving ? 'Savingâ€¦' : 'Apply', applyEdit, 'rgba(100,160,120,0.2)')}
             </div>
           </div>
         </div>

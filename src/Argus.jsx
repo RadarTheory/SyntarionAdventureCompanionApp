@@ -444,7 +444,7 @@ async function loadCharInventory(charId) {
 // Shows own equipped + pack. Read-only.
 // ═════════════════════════════════════════════════════════════════════════════
 
-export function ArgusPlayerPanel({ char, onClose }) {
+export function ArgusPlayerPanel({ char, onClose, embedded = false }) {
   const [equipped, setEquipped] = useState({});
   const [pack, setPack]         = useState([]);
   const [loading, setLoading]   = useState(true);
@@ -466,7 +466,7 @@ export function ArgusPlayerPanel({ char, onClose }) {
   const equippedCount = Object.values(equipped).filter(i => i?.name).length;
 
   return (
-    <div style={{ position: 'fixed', bottom: 24, left: 108, width: 360, maxHeight: '80vh', zIndex: 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
+    <div style={{ position: embedded ? 'relative' : 'fixed', bottom: embedded ? 'auto' : 24, left: embedded ? 'auto' : 108, width: embedded ? '100%' : 360, maxHeight: embedded ? 'none' : '80vh', height: embedded ? '100%' : 'auto', zIndex: embedded ? 'auto' : 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: embedded ? 'none' : '1px solid rgba(200,168,74,0.3)', borderRadius: embedded ? 0 : 14, boxShadow: embedded ? 'none' : '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
 
       {/* Header */}
       <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(200,168,74,0.15)', background: 'rgba(200,168,74,0.04)', flexShrink: 0 }}>
@@ -521,7 +521,7 @@ export function ArgusPlayerPanel({ char, onClose }) {
 // Three sections: full catalog, all characters' equipped, all characters' packs
 // ═════════════════════════════════════════════════════════════════════════════
 
-export function ArgusDMPanel({ onClose }) {
+export function ArgusDMPanel({ onClose, embedded = false }) {
   const [section, setSection]     = useState('catalog'); // 'catalog' | 'equipped' | 'packs'
   const [search, setSearch]       = useState('');
   const [activeCat, setActiveCat] = useState(null);
@@ -582,7 +582,7 @@ export function ArgusDMPanel({ onClose }) {
   }, [section]);
 
   return (
-    <div style={{ position: 'fixed', bottom: 24, left: 108, width: 480, maxHeight: '85vh', zIndex: 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
+    <div style={{ position: embedded ? 'relative' : 'fixed', bottom: embedded ? 'auto' : 24, left: embedded ? 'auto' : 108, width: embedded ? '100%' : 480, maxHeight: embedded ? 'none' : '85vh', height: embedded ? '100%' : 'auto', zIndex: embedded ? 'auto' : 200000, display: 'flex', flexDirection: 'column', background: '#100d0a', border: embedded ? 'none' : '1px solid rgba(200,168,74,0.3)', borderRadius: embedded ? 0 : 14, boxShadow: embedded ? 'none' : '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
 
       {grantItem && <GrantModal item={grantItem} onClose={() => setGrantItem(null)} />}
       {showNewItem && <NewItemModal onClose={() => setShowNewItem(false)} onCreated={item => { setAllItems(prev => [item, ...prev]); setShowNewItem(false); }} />}

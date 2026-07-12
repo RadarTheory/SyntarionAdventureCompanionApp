@@ -32,7 +32,7 @@ export default function CharacterSelect({ savedChars = [], onSelect, onCreate, o
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100svh',
       background: bg,
       display: 'flex',
       flexDirection: 'column',
@@ -42,7 +42,7 @@ export default function CharacterSelect({ savedChars = [], onSelect, onCreate, o
 
       {/* ── HEADER ── */}
       <div style={{
-        padding: isMobile ? '20px 20px 0' : '28px 40px 0',
+        padding: isMobile ? 'calc(16px + env(safe-area-inset-top)) 18px 0' : '28px 40px 0',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -62,7 +62,7 @@ export default function CharacterSelect({ savedChars = [], onSelect, onCreate, o
 
       {/* ── TITLE ── */}
       <div style={{
-        padding: isMobile ? '32px 20px 24px' : '40px 40px 28px',
+        padding: isMobile ? '28px 18px 22px' : '40px 40px 28px',
         borderBottom: '1px solid rgba(26,23,20,0.08)',
       }}>
         <div style={{
@@ -92,10 +92,10 @@ export default function CharacterSelect({ savedChars = [], onSelect, onCreate, o
       {/* ── CHARACTER LIST ── */}
       <div style={{
         flex: 1,
-        padding: isMobile ? '20px 20px' : '28px 40px',
+        padding: isMobile ? '18px 18px calc(28px + env(safe-area-inset-bottom))' : '28px 40px',
         display: 'flex',
         flexDirection: 'column',
-        gap: 10,
+        gap: isMobile ? 9 : 10,
       }}>
 
         {hasChars ? (
