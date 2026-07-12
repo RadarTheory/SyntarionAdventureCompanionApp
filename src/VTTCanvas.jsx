@@ -44,6 +44,7 @@ function getRawIcon(src, onReady) {
   if (rawIconCache[src] === undefined) {
     rawIconCache[src] = null;
     const img = new Image();
+    img.crossOrigin = 'anonymous';
     img.onload = () => { rawIconCache[src] = img; onReady?.(); };
     img.onerror = () => { rawIconCache[src] = false; };
     img.src = src;
@@ -198,16 +199,27 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Icon or label
-    const icon = tok.race ? getRaceIcon(tok.race, onIconReady) : null;
-    if (icon) {
-      const iconSize = r * 1.3;
-      ctx.drawImage(icon, tx - iconSize / 2, ty - iconSize / 2, iconSize, iconSize);
+    // Sprite, icon, or label
+    const tokenArt = tok.sprite_url || tok.portrait_url || null;
+    const tokenImg = tokenArt ? getRawIcon(tokenArt, onIconReady) : null;
+    if (tokenImg) {
+      ctx.save();
+      if (tok.type === 'player') { ctx.beginPath(); ctx.roundRect(tx - r + 2, ty - r + 2, r * 2 - 4, r * 2 - 4, 4); }
+      else { ctx.beginPath(); ctx.arc(tx, ty, r - 2, 0, Math.PI * 2); }
+      ctx.clip();
+      ctx.drawImage(tokenImg, tx - r, ty - r, r * 2, r * 2);
+      ctx.restore();
     } else {
-      ctx.fillStyle = '#fff';
-      ctx.font = `bold ${isHovered ? 12 : 9}px sans-serif`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
+      const icon = tok.race ? getRaceIcon(tok.race, onIconReady) : null;
+      if (icon) {
+        const iconSize = r * 1.3;
+        ctx.drawImage(icon, tx - iconSize / 2, ty - iconSize / 2, iconSize, iconSize);
+      } else {
+        ctx.fillStyle = '#fff';
+        ctx.font = `bold ${isHovered ? 12 : 9}px sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
+      }
     }
 
     // Death overlay (enemies only)
@@ -380,7 +392,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
           characterId: tokenData.characterId || null, creatureName: tokenData.creatureName || null,
           fullName: tokenData.fullName || tokenData.name || tokenData.creatureName || tokenData.label || null,
           name: tokenData.fullName || tokenData.name || tokenData.creatureName || tokenData.label || null,
-          race: tokenData.race || null, portrait_url: tokenData.portrait_url || null, x, y,
+          race: tokenData.race || null, sprite_url: tokenData.sprite_url || null, portrait_url: tokenData.portrait_url || null, x, y,
         }];
         if (vttSession?.id) {
           supabase.from('vtt_sessions').update({ tokens: next, updated_at: new Date().toISOString() }).eq('id', vttSession.id)
@@ -419,8 +431,15 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
     if (charIds.length === 0) return toks || [];
     const { data: chars } = await supabase.from('characters').select('id, data').in('id', charIds);
     if (!chars) return toks;
-    const map = Object.fromEntries(chars.map(c => [String(c.id), (typeof c.data === 'string' ? JSON.parse(c.data) : c.data)?.portrait_url || null]));
-    return toks.map(t => t.characterId && map[String(t.characterId)] ? { ...t, portrait_url: map[String(t.characterId)] } : t);
+    const map = Object.fromEntries(chars.map(c => {
+      const data = typeof c.data === 'string' ? JSON.parse(c.data) : c.data || {};
+      return [String(c.id), { sprite_url: data.sprite_url || data.token?.sprite_url || null, portrait_url: data.portrait_url || null }];
+    }));
+    return toks.map(t => {
+      if (!t.characterId || !map[String(t.characterId)]) return t;
+      const art = map[String(t.characterId)];
+      return { ...t, sprite_url: art.sprite_url || t.sprite_url || null, portrait_url: art.portrait_url || t.portrait_url || null };
+    });
   };
 
   const loadSession = async () => {
@@ -751,11 +770,11 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
       </div>
 
       {hoveredToken && (
-        <div style={{ position: 'fixed', left: hoveredToken.clientX, top: hoveredToken.clientY - 160, transform: 'translateX(-50%)', background: 'rgba(8,6,4,0.82)', backdropFilter: 'blur(10px)', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 10, padding: 10, pointerEvents: hoveredToken.portrait_url ? 'auto' : 'none', zIndex: 500, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: 110, boxShadow: '0 8px 32px rgba(0,0,0,0.6)', cursor: hoveredToken.portrait_url ? 'pointer' : 'default' }}
-          onClick={() => hoveredToken.portrait_url && setPortraitFullscreen(hoveredToken)}>
-          {hoveredToken.portrait_url ? (
+        <div style={{ position: 'fixed', left: hoveredToken.clientX, top: hoveredToken.clientY - 160, transform: 'translateX(-50%)', background: 'rgba(8,6,4,0.82)', backdropFilter: 'blur(10px)', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 10, padding: 10, pointerEvents: (hoveredToken.sprite_url || hoveredToken.portrait_url) ? 'auto' : 'none', zIndex: 500, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: 110, boxShadow: '0 8px 32px rgba(0,0,0,0.6)', cursor: hoveredToken.portrait_url ? 'pointer' : 'default' }}
+          onClick={() => (hoveredToken.sprite_url || hoveredToken.portrait_url) && setPortraitFullscreen(hoveredToken)}>
+          {(hoveredToken.sprite_url || hoveredToken.portrait_url) ? (
             <div style={{ width: 72, height: 96, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(200,168,74,0.4)', flexShrink: 0 }}>
-              <img src={hoveredToken.portrait_url} alt={hoveredToken.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+              <img src={hoveredToken.sprite_url || hoveredToken.portrait_url} alt={hoveredToken.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
             </div>
           ) : (
             <div style={{ width: 72, height: 96, borderRadius: 6, background: 'rgba(200,168,74,0.08)', border: '1px solid rgba(200,168,74,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: 'rgba(200,168,74,0.3)' }}>⚔</div>
@@ -768,7 +787,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         <div onClick={() => setPortraitFullscreen(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <button onClick={() => setPortraitFullscreen(null)} style={{ position: 'absolute', top: 20, right: 24, background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', color: 'rgba(255,255,255,0.6)', fontSize: 16, fontFamily: "'Cinzel', serif" }}>✕</button>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-            <img src={portraitFullscreen.portrait_url} alt={portraitFullscreen.name} style={{ maxHeight: '80vh', maxWidth: '80vw', borderRadius: 10, border: '1px solid rgba(200,168,74,0.3)', boxShadow: '0 24px 80px rgba(0,0,0,0.8)', objectFit: 'contain' }} />
+            <img src={portraitFullscreen.sprite_url || portraitFullscreen.portrait_url} alt={portraitFullscreen.name} style={{ maxHeight: '80vh', maxWidth: '80vw', borderRadius: 10, border: '1px solid rgba(200,168,74,0.3)', boxShadow: '0 24px 80px rgba(0,0,0,0.8)', objectFit: 'contain' }} />
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#e8d9a7', letterSpacing: '0.12em' }}>{portraitFullscreen.name}</div>
           </div>
         </div>

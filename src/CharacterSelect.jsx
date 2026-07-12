@@ -1,6 +1,5 @@
 import { useDevice } from './useDevice';
 
-// ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const CAMPAIGNS = [
   { id: 'I',   name: 'Campaign I',   subtitle: 'Veinrunner'          },
   { id: 'II',  name: 'Campaign II',  subtitle: 'The Keys of Aerithos' },
@@ -8,39 +7,113 @@ const CAMPAIGNS = [
   { id: 'IV',  name: 'Campaign IV',  subtitle: 'Veyline'              },
 ];
 
-// ═════════════════════════════════════════════════════════════════════════════
-// CHARACTER SELECT
-//
-// Props:
-//   savedChars  — array of character objects from Supabase
-//   onSelect    — fn(char) called when player picks a character
-//   onCreate    — fn() called when player wants to create a new character
-//   onHome      — fn() back to Landing
-// ═════════════════════════════════════════════════════════════════════════════
-export default function CharacterSelect({ savedChars = [], onSelect, onCreate, onHome, onClaim }) {
-  const { isMobile } = useDevice();
+function playTheme(darkMode) {
+  return darkMode ? {
+    bg: '#14110c',
+    ink: '#f0eeeb',
+    title: '#f7efe0',
+    muted: 'rgba(240,238,235,0.66)',
+    faint: 'rgba(240,238,235,0.44)',
+    line: 'rgba(240,238,235,0.16)',
+    card: '#1b1712',
+    cardAlt: 'rgba(31,26,19,0.92)',
+    cardBorder: 'rgba(200,168,74,0.25)',
+    cardHover: 'rgba(200,168,74,0.08)',
+    shadow: '0 8px 24px rgba(0,0,0,0.32)',
+    shadowHover: '0 12px 32px rgba(0,0,0,0.42)',
+    primaryBg: '#1f1a13',
+    primaryHover: '#2d261c',
+    primaryBorder: 'rgba(200,168,74,0.64)',
+    primarySub: 'rgba(226,207,145,0.72)',
+    arrow: 'rgba(226,207,145,0.74)',
+  } : {
+    bg: '#e4e0da',
+    ink: '#171310',
+    title: '#1a1714',
+    muted: 'rgba(26,23,20,0.72)',
+    faint: 'rgba(26,23,20,0.56)',
+    line: 'rgba(26,23,20,0.18)',
+    card: '#fbfaf7',
+    cardAlt: '#f4f1eb',
+    cardBorder: 'rgba(26,23,20,0.18)',
+    cardHover: 'rgba(26,23,20,0.035)',
+    shadow: '0 2px 10px rgba(26,23,20,0.05)',
+    shadowHover: '0 8px 24px rgba(26,23,20,0.14)',
+    primaryBg: '#1a1714',
+    primaryHover: '#100d0b',
+    primaryBorder: 'rgba(26,23,20,0.3)',
+    primarySub: 'rgba(240,238,235,0.58)',
+    arrow: 'rgba(26,23,20,0.52)',
+  };
+}
 
-  const ink = '#1a1714';
-  const bg  = '#f0eeeb';
+export default function CharacterSelect({ savedChars = [], onSelect, onCreate, onHome, onClaim, darkMode = false }) {
+  const { isMobile } = useDevice();
+  const theme = playTheme(darkMode);
+  const hasChars = savedChars.length > 0;
 
   const getCampaignLabel = (campId) => {
     const c = CAMPAIGNS.find(x => x.id === campId);
-    return c ? `${c.name} · ${c.subtitle}` : null;
+    return c ? `${c.name} - ${c.subtitle}` : null;
   };
 
-  const hasChars = savedChars.length > 0;
+  const actionButton = (label, sub, onClick, primary = false) => (
+    <button
+      onClick={onClick}
+      style={{
+        width: '100%',
+        background: primary ? theme.primaryBg : 'transparent',
+        border: `1px solid ${primary ? theme.primaryBorder : theme.cardBorder}`,
+        borderRadius: 8,
+        padding: primary ? (isMobile ? '16px 18px' : '18px 28px') : (isMobile ? '13px 16px' : '14px 24px'),
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        transition: 'all 0.18s ease',
+        textAlign: 'left',
+        boxShadow: primary ? theme.shadow : 'none',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.background = primary ? theme.primaryHover : theme.cardHover;
+        e.currentTarget.style.transform = 'translateY(-1px)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.background = primary ? theme.primaryBg : 'transparent';
+        e.currentTarget.style.transform = 'none';
+      }}
+    >
+      <div style={{ minWidth: 0 }}>
+        <div style={{
+          fontFamily: "'Cinzel', serif",
+          fontSize: primary ? (isMobile ? 13 : 15) : (isMobile ? 11 : 12),
+          fontWeight: 700,
+          letterSpacing: '0.22em',
+          color: primary ? '#f0eeeb' : theme.title,
+          marginBottom: 2,
+        }}>{label}</div>
+        <div style={{
+          fontFamily: 'Georgia, serif',
+          fontStyle: 'italic',
+          fontSize: 10,
+          color: primary ? theme.primarySub : theme.faint,
+        }}>{sub}</div>
+      </div>
+      <div style={{ fontSize: 14, color: primary ? theme.primarySub : theme.arrow, marginLeft: 16 }}>&rarr;</div>
+    </button>
+  );
 
   return (
     <div style={{
       minHeight: '100svh',
-      background: bg,
+      background: theme.bg,
+      color: theme.ink,
       display: 'flex',
       flexDirection: 'column',
       fontFamily: 'Georgia, serif',
       position: 'relative',
+      overflowX: 'hidden',
     }}>
-
-      {/* ── HEADER ── */}
       <div style={{
         padding: isMobile ? 'calc(16px + env(safe-area-inset-top)) 18px 0' : '28px 40px 0',
         display: 'flex',
@@ -55,22 +128,21 @@ export default function CharacterSelect({ savedChars = [], onSelect, onCreate, o
           fontSize: 10,
           letterSpacing: '0.16em',
           textTransform: 'uppercase',
-          color: 'rgba(26,23,20,0.35)',
+          color: theme.muted,
           padding: '4px 0',
-        }}>← Home</button>
+        }}>&larr; Home</button>
       </div>
 
-      {/* ── TITLE ── */}
       <div style={{
         padding: isMobile ? '28px 18px 22px' : '40px 40px 28px',
-        borderBottom: '1px solid rgba(26,23,20,0.08)',
+        borderBottom: `1px solid ${theme.line}`,
       }}>
         <div style={{
           fontFamily: "'Cinzel', serif",
           fontSize: 9,
           letterSpacing: '0.22em',
           textTransform: 'uppercase',
-          color: 'rgba(26,23,20,0.35)',
+          color: theme.faint,
           marginBottom: 10,
         }}>
           {hasChars ? 'Your adventurers' : 'No adventurers found'}
@@ -80,7 +152,7 @@ export default function CharacterSelect({ savedChars = [], onSelect, onCreate, o
           fontSize: isMobile ? 22 : 28,
           fontWeight: 700,
           letterSpacing: '0.04em',
-          color: ink,
+          color: theme.title,
           lineHeight: 1.1,
         }}>
           {hasChars ? 'ADVENTURER' : 'CREATE AN'}
@@ -89,15 +161,13 @@ export default function CharacterSelect({ savedChars = [], onSelect, onCreate, o
         </div>
       </div>
 
-      {/* ── CHARACTER LIST ── */}
       <div style={{
         flex: 1,
-        padding: isMobile ? '18px 18px calc(28px + env(safe-area-inset-bottom))' : '28px 40px',
+        padding: isMobile ? '18px 18px calc(104px + env(safe-area-inset-bottom))' : '28px 40px 112px',
         display: 'flex',
         flexDirection: 'column',
-        gap: isMobile ? 9 : 10,
+        gap: isMobile ? 9 : 12,
       }}>
-
         {hasChars ? (
           <>
             {savedChars.map((char, i) => (
@@ -107,143 +177,22 @@ export default function CharacterSelect({ savedChars = [], onSelect, onCreate, o
                 isMobile={isMobile}
                 getCampaignLabel={getCampaignLabel}
                 onSelect={onSelect}
+                theme={theme}
               />
             ))}
-
-            {/* Claim or Create — secondary, at the bottom */}
             <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button onClick={onClaim || onCreate} style={{
-                width: '100%',
-                background: 'transparent',
-                border: '1px solid rgba(26,23,20,0.18)',
-                borderRadius: 4,
-                padding: isMobile ? '13px 20px' : '14px 24px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                transition: 'all 0.18s ease',
-              }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(26,23,20,0.04)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 11 : 12, fontWeight: 700, letterSpacing: '0.22em', color: '#1a1714', marginBottom: 2 }}>CLAIM AN ADVENTURER</div>
-                  <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 10, color: 'rgba(26,23,20,0.4)' }}>Join an existing character in the world</div>
-                </div>
-                <div style={{ fontSize: 14, color: 'rgba(26,23,20,0.22)' }}>→</div>
-              </button>
-              <button onClick={onCreate} style={{
-                width: '100%',
-                background: 'transparent',
-                border: '1px solid rgba(26,23,20,0.18)',
-                borderRadius: 4,
-                padding: isMobile ? '13px 20px' : '14px 24px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                transition: 'all 0.18s ease',
-              }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(26,23,20,0.04)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <div style={{ textAlign: 'left' }}>
-                  <div style={{
-                    fontFamily: "'Cinzel', serif",
-                    fontSize: isMobile ? 11 : 12,
-                    fontWeight: 700,
-                    letterSpacing: '0.22em',
-                    color: ink,
-                    marginBottom: 2,
-                  }}>CREATE AN ADVENTURER</div>
-                  <div style={{
-                    fontFamily: 'Georgia, serif',
-                    fontStyle: 'italic',
-                    fontSize: 10,
-                    color: 'rgba(26,23,20,0.4)',
-                  }}>Begin a new character</div>
-                </div>
-                <div style={{ fontSize: 14, color: 'rgba(26,23,20,0.22)' }}>→</div>
-              </button>
+              {actionButton('CLAIM AN ADVENTURER', 'Join an existing character in the world', onClaim || onCreate)}
+              {actionButton('CREATE AN ADVENTURER', 'Begin a new character', onCreate)}
             </div>
           </>
         ) : (
-          /* No characters — create or claim */
           <>
-          <button onClick={onCreate} style={{
-            width: '100%',
-            background: '#2a2420',
-            border: '1px solid #2a2420',
-            borderRadius: 4,
-            padding: isMobile ? '18px 20px' : '20px 24px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxShadow: '0 4px 12px rgba(26,23,20,0.12)',
-            transition: 'all 0.18s ease',
-          }}
-            onMouseEnter={e => e.currentTarget.style.background = '#1a1714'}
-            onMouseLeave={e => e.currentTarget.style.background = '#2a2420'}
-          >
-            <div style={{ textAlign: 'left' }}>
-              <div style={{
-                fontFamily: "'Cinzel', serif",
-                fontSize: isMobile ? 13 : 15,
-                fontWeight: 700,
-                letterSpacing: '0.22em',
-                color: '#f0eeeb',
-                marginBottom: 2,
-              }}>CREATE AN ADVENTURER</div>
-              <div style={{
-                fontFamily: 'Georgia, serif',
-                fontStyle: 'italic',
-                fontSize: 10,
-                color: 'rgba(240,238,235,0.45)',
-              }}>Your journey in Soteria begins here</div>
-            </div>
-            <div style={{ fontSize: 14, color: 'rgba(240,238,235,0.35)' }}>→</div>
-          </button>
-
-          <button onClick={onClaim} style={{
-            width: '100%',
-            background: 'transparent',
-            border: '1px solid rgba(26,23,20,0.18)',
-            borderRadius: 4,
-            padding: isMobile ? '13px 20px' : '14px 24px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            transition: 'all 0.18s ease',
-          }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(26,23,20,0.04)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-          >
-            <div style={{ textAlign: 'left' }}>
-              <div style={{
-                fontFamily: "'Cinzel', serif",
-                fontSize: isMobile ? 11 : 12,
-                fontWeight: 700,
-                letterSpacing: '0.22em',
-                color: ink,
-                marginBottom: 2,
-              }}>CLAIM AN ADVENTURER</div>
-              <div style={{
-                fontFamily: 'Georgia, serif',
-                fontStyle: 'italic',
-                fontSize: 10,
-                color: 'rgba(26,23,20,0.4)',
-              }}>Join an existing character in the world</div>
-            </div>
-            <div style={{ fontSize: 14, color: 'rgba(26,23,20,0.22)' }}>→</div>
-          </button>
-        </>
+            {actionButton('CREATE AN ADVENTURER', 'Your journey in Soteria begins here', onCreate, true)}
+            {actionButton('CLAIM AN ADVENTURER', 'Join an existing character in the world', onClaim)}
+          </>
         )}
       </div>
 
-      {/* Cinzel font */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
         * { box-sizing: border-box; }
@@ -253,15 +202,10 @@ export default function CharacterSelect({ savedChars = [], onSelect, onCreate, o
   );
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// CHARACTER CARD
-// ═════════════════════════════════════════════════════════════════════════════
-function CharCard({ char, isMobile, getCampaignLabel, onSelect }) {
-  const ink = '#1a1714';
-  const campLabel = char.campaign ? getCampaignLabel(char.campaign) : null;
-
-  // Build the meta line: Race · Class
-  const raceLine = [char.race, char.cls || char.cid].filter(Boolean).join(' · ');
+function CharCard({ char, isMobile, getCampaignLabel, onSelect, theme }) {
+  const campId = char.campaign || char.campaign_id;
+  const campLabel = campId ? getCampaignLabel(campId) : null;
+  const raceLine = [char.race, char.cls || char.cid].filter(Boolean).join(' - ');
 
   return (
     <button
@@ -269,36 +213,36 @@ function CharCard({ char, isMobile, getCampaignLabel, onSelect }) {
       disabled={char.status === 'rejected'}
       style={{
         width: '100%',
-        background: '#ffffff',
-        border: '1px solid rgba(26,23,20,0.1)',
-        borderRadius: 6,
-        padding: isMobile ? '16px 18px' : '18px 22px',
-        cursor: 'pointer',
+        background: theme.card,
+        border: `1px solid ${theme.cardBorder}`,
+        borderRadius: 8,
+        padding: isMobile ? '16px 16px' : '20px 28px',
+        cursor: char.status === 'rejected' ? 'default' : 'pointer',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        boxShadow: '0 1px 4px rgba(26,23,20,0.06)',
+        boxShadow: theme.shadow,
         transition: 'all 0.18s ease',
         textAlign: 'left',
+        opacity: char.status === 'rejected' ? 0.55 : 1,
       }}
       onMouseEnter={e => {
-        e.currentTarget.style.boxShadow = '0 4px 16px rgba(26,23,20,0.10)';
+        if (char.status === 'rejected') return;
+        e.currentTarget.style.boxShadow = theme.shadowHover;
         e.currentTarget.style.transform = 'translateY(-1px)';
       }}
       onMouseLeave={e => {
-        e.currentTarget.style.boxShadow = '0 1px 4px rgba(26,23,20,0.06)';
+        e.currentTarget.style.boxShadow = theme.shadow;
         e.currentTarget.style.transform = 'none';
       }}
     >
       <div style={{ flex: 1, minWidth: 0 }}>
-
-        {/* NAME */}
         <div style={{
           fontFamily: "'Cinzel', serif",
-          fontSize: isMobile ? 15 : 17,
+          fontSize: isMobile ? 16 : 19,
           fontWeight: 700,
           letterSpacing: '0.04em',
-          color: ink,
+          color: theme.title,
           marginBottom: 6,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -307,13 +251,12 @@ function CharCard({ char, isMobile, getCampaignLabel, onSelect }) {
           {char.name || `${char.fn || ''} ${char.ln || ''}`.trim() || 'Unnamed'}
         </div>
 
-        {/* RACE · CLASS */}
         {raceLine && (
           <div style={{
             fontFamily: 'Georgia, serif',
             fontStyle: 'italic',
             fontSize: isMobile ? 11 : 12,
-            color: 'rgba(26,23,20,0.5)',
+            color: theme.muted,
             marginBottom: campLabel ? 4 : 0,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -323,29 +266,26 @@ function CharCard({ char, isMobile, getCampaignLabel, onSelect }) {
           </div>
         )}
 
-        {/* CAMPAIGN */}
         {campLabel && (
           <div style={{
             fontFamily: "'Cinzel', serif",
             fontSize: 9,
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
-            color: 'rgba(26,23,20,0.35)',
+            color: theme.faint,
             marginTop: 2,
           }}>
             {campLabel}
           </div>
         )}
-
       </div>
 
-      {/* ARROW */}
       <div style={{
         fontSize: 14,
-        color: 'rgba(26,23,20,0.2)',
+        color: theme.arrow,
         marginLeft: 16,
         flexShrink: 0,
-      }}>→</div>
+      }}>&rarr;</div>
     </button>
   );
 }

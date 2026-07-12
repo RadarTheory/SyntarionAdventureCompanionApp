@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import supabase from './lib/supabase';
+import { buildScribeContext } from './scribe-context';
+import { useDisplayName } from './lib/displayName';
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   SCRIBE LITE — site-wide FAQ chat, zero API
+   SCRIBE LITE - site-wide archive chat
    ───────────────────────────────────────────────────────────────────────────
    Emotion videos live in /public/scribe/ (LOWERCASE filenames).
    Full state machine — all fourteen clips in play:
@@ -287,8 +290,16 @@ function scoreIntent(intent, tokens, normText) {
 const ANSWER_THRESHOLD = 3;   // ≥ this → confident answer
 const SUGGEST_THRESHOLD = 1.5; // ≥ this → "did you mean" suggestions
 
+function shouldAskArchiveFirst(normText) {
+  const asksSpecificLore = /\b(who|where|when|which|why|name|named)\b/.test(normText);
+  const asksAuthority = /\b(king|queen|ruler|monarch|emperor|empress|leader|lord|lady|sovereign|prince|princess|throne)\b/.test(normText);
+  return asksAuthority || (/\bsoteria\b/.test(normText) && asksSpecificLore);
+}
+
 function matchQuery(rawText) {
   const normText = normalize(rawText);
+
+  if (shouldAskArchiveFirst(normText)) return { type: 'nomatch' };
 
   for (const st of SMALL_TALK) {
     if (st.test(normText)) return { type: 'smalltalk', ...st };
@@ -334,6 +345,55 @@ const INTENT_LABELS = {
 };
 
 /* ─── 3. EMOTION VIDEO PLAYER ─────────────────────────────────────────── */
+const SCRIBE_LITE_SYSTEM = (worldContext, displayName) => `
+You are The Scribe, the site-wide archival guide for Syntarion and the world of Soteria.
+
+The person speaking to you is ${displayName || 'the traveler'}. Address them by that display name naturally when it fits, especially in greetings, clarifications, and direct guidance.
+
+Use the provided WORLD KNOWLEDGE first. It includes uploaded admin scribe_context rows, Soteria lore, mechanics, bestiary material, and live reference data when available.
+
+VOICE:
+- Speak as The Scribe: warm, archival, concise, and useful.
+- Never say you are an AI or mention implementation details.
+- For app-help questions, answer directly and practically.
+- For lore questions, ground the answer in Soteria and avoid inventing contradictions.
+- Keep answers concise: usually 2-4 short sentences unless the user asks for a list.
+- If the archives do not contain enough certainty, say what is known and what remains for the Architect to decide.
+
+WORLD KNOWLEDGE:
+${worldContext}
+`.trim();
+
+function emotionForText(text, fallback = 'helpful') {
+  const norm = normalize(text || '');
+  if (/\b(spell|magic|race|class|soteria|lore|god|spirit|bestiary|creature|history|world|king|queen|ruler|monarch|leader|throne)\b/.test(norm)) return 'spell';
+  if (/\b(vtt|bug|broken|glitch|map|token|fog|technical|error|admin|upload)\b/.test(norm)) return 'tinker';
+  if (/\b(thanks|thank you|great|awesome|hello|hi|hey)\b/.test(norm)) return 'happy';
+  return fallback;
+}
+
+async function askArchive(question, priorMessages, displayName) {
+  const worldContext = await buildScribeContext(question, 12000, null);
+  const history = priorMessages
+    .slice(-6)
+    .filter(m => m.from === 'user' || m.from === 'scribe')
+    .map(m => ({ role: m.from === 'user' ? 'user' : 'assistant', content: m.text }));
+
+  const { data, error } = await supabase.functions.invoke('scribe', {
+    body: {
+      system: SCRIBE_LITE_SYSTEM(worldContext, displayName),
+      messages: [...history, { role: 'user', content: question }],
+      max_tokens: 450,
+    },
+  });
+
+  if (error) throw new Error(error.message || 'The Scribe relay failed.');
+  if (data?.error) throw new Error(data.error.message || JSON.stringify(data.error).slice(0, 200));
+  const answer = data?.choices?.[0]?.message?.content;
+  if (!answer) throw new Error('The archives returned no answer.');
+  return answer.trim();
+}
+
 const IDLE_POOL = ['idle', 'waiting'];       // resting rotation
 const THINKING_POOL = ['thinking', 'study'];       // researching rotation
 const LOOPING = new Set(THINKING_POOL);               // these loop until answered
@@ -365,15 +425,20 @@ const randomFrom = (arr, not) => {
 
 function ScribeFace({ emotion, size = 84, stage = false, forceLoop = false, onEnded }) {
   const [failed, setFailed] = useState(false);
-  const [fadeIn, setFadeIn] = useState(true);
   const videoRef = useRef(null);
+  const file = EMOTION_FILE[emotion] || EMOTION_FILE.idle;
+  const src = `/scribe/${file}.mp4`;
 
   useEffect(() => {
     setFailed(false);
-    setFadeIn(false);
-    const id = requestAnimationFrame(() => requestAnimationFrame(() => setFadeIn(true)));
-    return () => cancelAnimationFrame(id);
-  }, [emotion]);
+    const video = videoRef.current;
+    if (!video) return;
+    video.load();
+    const play = () => video.play().catch(() => {});
+    if (video.readyState >= 2) play();
+    else video.addEventListener('canplay', play, { once: true });
+    return () => video.removeEventListener('canplay', play);
+  }, [src]);
 
   return (
     <div style={{
@@ -382,27 +447,28 @@ function ScribeFace({ emotion, size = 84, stage = false, forceLoop = false, onEn
       border: stage ? 'none' : '1px solid rgba(200,168,74,0.35)',
       background: stage ? 'transparent' : '#1c1815',
       flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      mixBlendMode: stage ? 'screen' : 'normal',
     }}>
       {!failed ? (
         <video
           ref={videoRef}
-          key={emotion}
-          src={`/scribe/${EMOTION_FILE[emotion] || 'scribe-idle-transp'}.mp4`}
+          src={src}
+          preload="auto"
           autoPlay muted playsInline
           loop={forceLoop || LOOPING.has(emotion)}
           onEnded={onEnded}
           onError={() => setFailed(true)}
           onContextMenu={e => e.preventDefault()}
-          style={{ width: '100%', height: '100%', objectFit: stage ? 'contain' : 'cover', pointerEvents: 'none', mixBlendMode: 'screen', opacity: fadeIn ? 1 : 0, transition: 'opacity 0.35s ease' }}
+          style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none', display: 'block', opacity: 1, mixBlendMode: 'screen' }}
         />
       ) : (
-        <span style={{ fontSize: size * 0.45 }} role="img" aria-label="Scribe">🖋️</span>
+        <img src="/scribe/scribeicon.png" alt="The Scribe" style={{ width: '82%', height: '82%', objectFit: 'contain' }} />
       )}
     </div>
   );
 }
 
-/* ─── 4. THE WIDGET ─────────────────────────────────────────────────────── */
+/* --- 4. THE WIDGET ─────────────────────────────────────────────────────── */
 export default function ScribeLite({ dismiss = false }) {
   const [open, setOpen] = useState(false);
   const [gone, setGone] = useState(false);
@@ -410,6 +476,7 @@ export default function ScribeLite({ dismiss = false }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const displayName = useDisplayName('traveler');
   const scrollRef = useRef(null);
   const emotionTimer = useRef(null);
 
@@ -419,6 +486,20 @@ export default function ScribeLite({ dismiss = false }) {
   const pendingRef = useRef(null);
 
   useEffect(() => { emotionRef.current = emotion; }, [emotion]);
+
+  // Preload every Scribe clip once so emotion changes do not flash blank frames.
+  useEffect(() => {
+    const videos = Object.values(EMOTION_FILE).map(file => {
+      const video = document.createElement('video');
+      video.preload = 'auto';
+      video.muted = true;
+      video.playsInline = true;
+      video.src = `/scribe/${file}.mp4`;
+      video.load();
+      return video;
+    });
+    return () => videos.forEach(video => { video.src = ''; });
+  }, []);
 
   /* Return to rest: pick a different resting clip than the current one */
   const goIdle = useCallback(() => {
@@ -486,56 +567,74 @@ export default function ScribeLite({ dismiss = false }) {
     if (messages.length === 0) {
       setMessages([{
         from: 'scribe',
-        text: "Hail! I am the Scribe. Ask me anything about Syntarion — or pick a scroll below.",
+        text: `Hail, ${displayName}. I am the Scribe. Ask me anything about Syntarion - or pick a scroll below.`,
         chips: ['What is Syntarion?', 'How do I create a character?', 'How to play', 'How does combat work?'],
       }]);
     }
   };
 
-  const pushScribe = (text, chips = []) => {
+  const pushScribe = (text, chips = [], feedback = true) => {
     const parts = Array.isArray(text) ? text : [text];
     setMessages(prev => [
       ...prev,
       ...parts.map((p, i) => ({
         from: 'scribe', text: p,
         chips: i === parts.length - 1 ? chips : [],
+        feedback: feedback && i === parts.length - 1,
+        feedbackValue: null,
       })),
     ]);
   };
 
-  const ask = (rawText) => {
+  const rateAnswer = (index, value) => {
+    setMessages(prev => prev.map((msg, i) => i === index ? { ...msg, feedbackValue: value } : msg));
+    playEmotion(value === 'up' ? 'happy' : 'sad');
+  };
+
+  const ask = async (rawText) => {
     const text = rawText.trim();
     if (!text || busy) return;
+    const priorMessages = messages;
     setInput('');
     setMessages(prev => [...prev, { from: 'user', text }]);
+
+    const result = matchQuery(text);
+    if (result.type === 'smalltalk') {
+      playEmotion(result.emotion);
+      const namedAnswer = result.answer.replace(/^Hail, adventurer!/, `Hail, ${displayName}!`);
+      pushScribe(namedAnswer, result.chips);
+      return;
+    }
+    if (result.type === 'answer') {
+      playEmotion(result.intent.emotion || 'helpful');
+      pushScribe(result.intent.answer, result.intent.chips);
+      return;
+    }
+    if (result.type === 'suggest') {
+      playEmotion('ok');
+      pushScribe(
+        "Hmm - the archives hold a few scrolls that might be what you seek:",
+        result.suggestions.map(s => INTENT_LABELS[s.id]).filter(Boolean)
+      );
+      return;
+    }
+
     setBusy(true);
     playEmotion(randomFrom(THINKING_POOL));
-
-    /* The "researching" pause — sells the character, debounces spam */
-    setTimeout(() => {
-      const result = matchQuery(text);
+    try {
+      const answer = await askArchive(text, priorMessages, displayName);
+      playEmotion(emotionForText(`${text} ${answer}`));
+      pushScribe(answer, ['What is Soteria?', 'How do I create a character?', 'What is the VTT?', 'Found a bug']);
+    } catch (err) {
+      console.warn('Scribe-Lite archive fallback:', err);
+      playEmotion('sad');
+      pushScribe(
+        "I searched the archives, but found no scroll on that. Try asking another way - or pick from what I do know:",
+        ['What is Syntarion?', 'How do I create a character?', 'What is the VTT?', 'Found a bug']
+      );
+    } finally {
       setBusy(false);
-
-      if (result.type === 'smalltalk') {
-        playEmotion(result.emotion);
-        pushScribe(result.answer, result.chips);
-      } else if (result.type === 'answer') {
-        playEmotion(result.intent.emotion || 'helpful');
-        pushScribe(result.intent.answer, result.intent.chips);
-      } else if (result.type === 'suggest') {
-        playEmotion('ok');
-        pushScribe(
-          "Hmm — the archives hold a few scrolls that might be what you seek:",
-          result.suggestions.map(s => INTENT_LABELS[s.id]).filter(Boolean)
-        );
-      } else {
-        playEmotion('sad');
-        pushScribe(
-          "I searched the archives, but found no scroll on that. Try asking another way — or pick from what I do know:",
-          ['What is Syntarion?', 'How do I create a character?', 'What is the VTT?', 'Found a bug']
-        );
-      }
-    }, 700 + Math.random() * 500);
+    }
   };
 
   /* Close with a disappearing act, then hide the panel */
@@ -595,7 +694,7 @@ export default function ScribeLite({ dismiss = false }) {
         padding: '12px 14px 10px', borderBottom: '1px solid rgba(200,168,74,0.18)',
         background: '#171310',
       }}>
-        <ScribeFace emotion={emotion} size={isMobile ? 220 : 280} stage onEnded={handleClipEnd} />
+        <ScribeFace emotion={emotion} size={isMobile ? 180 : 220} stage onEnded={handleClipEnd} />
         <div style={{ textAlign: 'center' }}>
           <div style={{
             fontFamily: "'Cinzel', serif", fontSize: 14, fontWeight: 700,
@@ -644,6 +743,13 @@ export default function ScribeLite({ dismiss = false }) {
                     fontFamily: 'Georgia, serif',
                   }}>{chip}</button>
                 ))}
+              </div>
+            )}
+            {m.feedback && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 7, color: 'rgba(240,238,235,0.42)', fontSize: 11, fontStyle: 'italic' }}>
+                <span>Did that answer your question?</span>
+                <button type="button" aria-label="Yes" onClick={() => rateAnswer(i, 'up')} style={{ background: m.feedbackValue === 'up' ? 'rgba(200,168,74,0.18)' : 'transparent', border: '1px solid rgba(200,168,74,0.35)', borderRadius: 999, color: '#c8a84a', cursor: 'pointer', padding: '2px 8px', lineHeight: 1.2 }}>&#128077;</button>
+                <button type="button" aria-label="No" onClick={() => rateAnswer(i, 'down')} style={{ background: m.feedbackValue === 'down' ? 'rgba(224,90,90,0.14)' : 'transparent', border: '1px solid rgba(224,90,90,0.3)', borderRadius: 999, color: '#e05a5a', cursor: 'pointer', padding: '2px 8px', lineHeight: 1.2 }}>&#128078;</button>
               </div>
             )}
           </div>

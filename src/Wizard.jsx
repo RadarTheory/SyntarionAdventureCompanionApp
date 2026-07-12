@@ -312,6 +312,9 @@ export default function Wizard({ onComplete, onHome }) {
   const [disciplinePoints, setDisciplinePoints] = useState({});
   const [campaign, setCampaign]   = useState('');
   const [portraitUrl, setPortraitUrl] = useState('');
+  const [spriteDrafts, setSpriteDrafts] = useState([]);
+  const [selectedSpriteUrl, setSelectedSpriteUrl] = useState('');
+  const [spriteGenerationCount, setSpriteGenerationCount] = useState(0);
 
   // ── LIVE SLIDERS (read only for player) ──
   // Computed from choices, not manually set by player
@@ -417,6 +420,13 @@ export default function Wizard({ onComplete, onHome }) {
     classAbilities, heritageAbilities, disciplinePoints,
     campaign,
     savedAt: Date.now(),
+    portrait_url: portraitUrl || null,
+    sprite_url: selectedSpriteUrl || null,
+    token: {
+      sprite_url: selectedSpriteUrl || null,
+      generation_count: spriteGenerationCount,
+      status: selectedSpriteUrl ? 'selected' : 'not_selected',
+    },
     // Computed slider snapshots at save time
     sliders: { morality, magicTech, willWhim },
   });
@@ -448,6 +458,9 @@ export default function Wizard({ onComplete, onHome }) {
     morality, magicTech, willWhim,
     // Build char (for sheet step)
     buildChar,
+    spriteDrafts, setSpriteDrafts,
+    selectedSpriteUrl, setSelectedSpriteUrl,
+    spriteGenerationCount, setSpriteGenerationCount,
     onComplete,
   };
 

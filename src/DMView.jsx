@@ -29,6 +29,7 @@ import PartyProximityPanel from './PartyProximityPanel';
 import MapPanel from './MapPanel';
 import DMSpeakPanel from './DMSpeakPanel';
 import PortraitUpload from './PortraitUpload';
+import CharacterTokenForge from './CharacterTokenForge';
 import AssetsPanel from './AssetsPanel';
 import ChroniclePanel from './ChroniclePanel';
 
@@ -376,11 +377,14 @@ function AssignOwnerPanel({ char }) {
 
 // ─── CHARACTER EDITOR ─────────────────────────────────────────────────────────
 function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
-  const [data, setData] = useState({ portrait_url: char.portrait_url || char.data?.portrait_url || null, ...char });
+  const [data, setData] = useState({ portrait_url: char.portrait_url || char.data?.portrait_url || null, sprite_url: char.sprite_url || char.data?.sprite_url || char.data?.token?.sprite_url || null, ...char });
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [spriteDrafts, setSpriteDrafts] = useState([]);
+  const [selectedSpriteUrl, setSelectedSpriteUrl] = useState(data.sprite_url || '');
+  const [spriteGenerationCount, setSpriteGenerationCount] = useState(data.token?.generation_count || 0);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -393,7 +397,7 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
   const handleSave = async (newStatus) => {
     setSaving(true);
     const { id, status, campaign_id, user_id, ...blob } = data;
-    await supabase.from('characters').update({ data: { ...blob, portrait_url: data.portrait_url || null }, status: newStatus || data.status, campaign_id: data.campaign || null }).eq('id', char.id);
+    await supabase.from('characters').update({ data: { ...blob, portrait_url: data.portrait_url || null, sprite_url: selectedSpriteUrl || data.sprite_url || null, token: { ...(data.token || {}), sprite_url: selectedSpriteUrl || data.sprite_url || null, generation_count: spriteGenerationCount, status: (selectedSpriteUrl || data.sprite_url) ? 'selected' : 'not_selected' } }, status: newStatus || data.status, campaign_id: data.campaign || null }).eq('id', char.id);
     if (note && (newStatus === 'rejected' || newStatus === 'approved')) {
       await supabase.from('messages').insert({ character_id: char.id, campaign_id: data.campaign, type: 'dm_reply', content: note, sender_name: 'The Architect', is_dm: true });
     }
@@ -402,6 +406,32 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
 
   const set = (key, val) => setData(prev => ({ ...prev, [key]: val }));
   const setStat = (key, val) => setData(prev => ({ ...prev, stats: { ...prev.stats, [key]: parseInt(val) || 8 } }));
+
+  const syncSpriteToVttSessions = async (url) => {
+    const { data: sessions } = await supabase.from('vtt_sessions').select('id,tokens,map_states');
+    await Promise.all((sessions || []).map(async (session) => {
+      let changed = false;
+      const tokens = Array.isArray(session.tokens) ? session.tokens.map(token => {
+        if (String(token.characterId || token.character_id || '') !== String(char.id)) return token;
+        changed = true;
+        return { ...token, sprite_url: url };
+      }) : session.tokens;
+      const mapStates = { ...(session.map_states || {}) };
+      Object.keys(mapStates).forEach(key => {
+        const state = mapStates[key];
+        if (!Array.isArray(state?.tokens)) return;
+        mapStates[key] = {
+          ...state,
+          tokens: state.tokens.map(token => {
+            if (String(token.characterId || token.character_id || '') !== String(char.id)) return token;
+            changed = true;
+            return { ...token, sprite_url: url };
+          }),
+        };
+      });
+      if (changed) await supabase.from('vtt_sessions').update({ tokens, map_states: mapStates, updated_at: new Date().toISOString() }).eq('id', session.id);
+    }));
+  };
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,8,6,0.8)', backdropFilter: 'blur(6px)', zIndex: 150, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={onClose}>
@@ -421,6 +451,23 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
             }}
           />
         </div>
+        <CharacterTokenForge
+          char={data}
+          portraitUrl={data.portrait_url}
+          drafts={spriteDrafts}
+          setDrafts={setSpriteDrafts}
+          selectedUrl={selectedSpriteUrl}
+          setSelectedUrl={(url) => { setSelectedSpriteUrl(url); set('sprite_url', url); }}
+          generationCount={spriteGenerationCount}
+          setGenerationCount={setSpriteGenerationCount}
+          onSelectedUrl={async (url) => {
+            const nextToken = { ...(data.token || {}), sprite_url: url, generation_count: spriteGenerationCount, status: 'selected' };
+            setData(prev => ({ ...prev, sprite_url: url, token: nextToken }));
+            await supabase.from('characters').update({ data: { ...data, sprite_url: url, token: nextToken } }).eq('id', char.id);
+            await syncSpriteToVttSessions(url);
+            onSave?.();
+          }}
+        />
         <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
           <button onClick={() => handleSave('approved')} style={{ flex: 1, background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText, fontFamily: "'Cinzel', serif", fontWeight: 700 }}>✓ Approve</button>
           <button onClick={() => handleSave('rejected')} style={{ flex: 1, background: COLORS.warnBg, border: `1px solid ${COLORS.warn}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.warn, fontFamily: "'Cinzel', serif", fontWeight: 700 }}>✕ Reject</button>
@@ -698,32 +745,73 @@ function SessionLogEditor({ campaign }) {
   );
 }
 
+function normalizeMapUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  if (/^(https?:|data:|blob:|\/)/i.test(raw)) return raw;
+  return `/Maps/${raw.replace(/^Maps[\\/]/i, '')}`;
+}
+
 // ─── MAP MANAGER ─────────────────────────────────────────────────────────────
 function MapManager({ campaign }) {
   const [url, setUrl] = useState('');
   const [current, setCurrent] = useState('');
+  const [previewFailed, setPreviewFailed] = useState(false);
   const [saving, setSaving] = useState(false);
+  const previewUrl = normalizeMapUrl(current || url);
 
   useEffect(() => {
     supabase.from('campaigns').select('map_url').eq('id', campaign.id).single().then(({ data }) => {
       if (data?.map_url) { setUrl(data.map_url); setCurrent(data.map_url); }
+      else { setUrl(''); setCurrent(''); }
     });
   }, [campaign.id]);
 
-  const save = async () => { setSaving(true); await supabase.from('campaigns').update({ map_url: url }).eq('id', campaign.id); setCurrent(url); setSaving(false); };
+  useEffect(() => { setPreviewFailed(false); }, [previewUrl]);
+
+  const save = async () => {
+    const next = normalizeMapUrl(url);
+    setSaving(true);
+    await supabase.from('campaigns').update({ map_url: next }).eq('id', campaign.id);
+    setUrl(next);
+    setCurrent(next);
+    setSaving(false);
+  };
 
   return (
     <div>
       <div style={{ ...label8(), marginBottom: 12 }}>Map — {campaign.subtitle}</div>
-      {current && <img src={current} alt="map" style={{ width: '100%', borderRadius: 8, border: `1px solid ${COLORS.border}`, marginBottom: 12 }} />}
-      <div style={{ display: 'flex', gap: 8 }}>
-        <input value={url} onChange={e => setUrl(e.target.value)} placeholder="Paste image URL…" style={{ flex: 1, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '9px 12px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none' }} />
+      <div style={{ minHeight: 280, border: `1px solid ${COLORS.border}`, borderRadius: 10, background: 'rgba(240,238,235,0.025)', overflow: 'hidden', marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {previewUrl && !previewFailed ? (
+          <img
+            src={previewUrl}
+            alt={`${campaign.subtitle || 'Campaign'} map`}
+            onError={() => setPreviewFailed(true)}
+            style={{ width: '100%', maxHeight: 560, objectFit: 'contain', display: 'block' }}
+          />
+        ) : (
+          <div style={{ padding: 24, textAlign: 'center' }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, letterSpacing: '0.12em', color: COLORS.text, marginBottom: 8 }}>
+              {previewUrl ? 'Map image not found' : 'No map selected'}
+            </div>
+            <div style={{ fontSize: 12, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+              Use a full URL or a file name from public/Maps, such as Avalora.png.
+            </div>
+          </div>
+        )}
+      </div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
+        <input value={url} onChange={e => { setUrl(e.target.value); setCurrent(''); }} placeholder="Paste image URL or Maps file name..." style={{ flex: 1, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '9px 12px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none' }} />
         <button onClick={save} disabled={saving} style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '9px 16px', cursor: saving ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText, fontWeight: 700 }}>{saving ? 'Saving…' : 'Set Map'}</button>
       </div>
+      {previewUrl && (
+        <div style={{ marginTop: 8, fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+          Previewing {previewUrl}
+        </div>
+      )}
     </div>
   );
 }
-
 // ─── MUSIC PANEL ─────────────────────────────────────────────────────────────
 function MusicPanel() {
   const [tracks, setTracks] = useState([]);
@@ -888,7 +976,7 @@ function VitalsPanel({ row, onClose, campaignId }) {
 // ═════════════════════════════════════════════════════════════════════════════
 const DM_TABS = ['Inbox', 'Characters', 'Campaigns', 'Chronicle', 'Scribe', 'Memory', 'Catalog', 'VTT'];
 
-export default function DMView({ user, session, onHome }) {
+export default function DMView({ user, session, onHome, darkMode = true }) {
   const { isMobile } = useDevice();
   const [activeTab, setActiveTab] = useState('Inbox');
   const [characters, setCharacters] = useState([]);
@@ -1174,7 +1262,7 @@ const renderTab = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {filtered.map(char => (
             <div key={char.id} onClick={() => setEditingChar(char)} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
-              {(char.portrait_url || char.data?.portrait_url) && <img src={char.portrait_url || char.data?.portrait_url} alt="" style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover', flexShrink: 0, border: `1px solid ${COLORS.border}` }} />}
+              {(char.sprite_url || char.token?.sprite_url || char.portrait_url || char.data?.sprite_url || char.data?.token?.sprite_url || char.data?.portrait_url) && <img src={char.sprite_url || char.token?.sprite_url || char.portrait_url || char.data?.sprite_url || char.data?.token?.sprite_url || char.data?.portrait_url} alt="" style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover', flexShrink: 0, border: `1px solid ${COLORS.border}` }} />}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                   <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: COLORS.text }}>{char.name}</div>
@@ -1384,6 +1472,7 @@ const renderTab = () => {
         onPlaceOnVTT={async (char) => {
           if (vttPlaceTokenRef.current) {
             const { data: fresh } = await supabase.from('characters').select('data').eq('id', char.id).maybeSingle();
+            const spriteUrl = fresh?.data?.sprite_url || fresh?.data?.token?.sprite_url || char.sprite_url || char.token?.sprite_url || null;
             const portraitUrl = fresh?.data?.portrait_url || char.portrait_url || null;
             vttPlaceTokenRef.current({
               label: (char.name || 'PC').slice(0, 3),
@@ -1392,6 +1481,7 @@ const renderTab = () => {
               type: 'player',
               characterId: char.id,
               race: char.race || null,
+              sprite_url: spriteUrl,
               portrait_url: portraitUrl,
             });
           }

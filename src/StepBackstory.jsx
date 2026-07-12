@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
+import CharacterTokenForge from './CharacterTokenForge';
 import { useDevice } from './useDevice';
 import {
   COLORS, BS_COMPLICATIONS, pick,
@@ -17,6 +18,7 @@ export default function StepBackstory({
   beliefType, beliefSub, deity, spirit,
   cp, cid,
   stats,
+  portraitUrl,
   // Boon state (generated, read only)
   boonOrigin, boonRole, boonPersonality,
   // Backstory
@@ -25,6 +27,9 @@ export default function StepBackstory({
   campaign, setCampaign,
   // Build char fn
   buildChar,
+  spriteDrafts, setSpriteDrafts,
+  selectedSpriteUrl, setSelectedSpriteUrl,
+  spriteGenerationCount, setSpriteGenerationCount,
   // Navigation
   goNext, goBack,
   onComplete,
@@ -371,6 +376,17 @@ const handleSubmit = async (type) => {
           )}
         </div>
       )}
+
+      <CharacterTokenForge
+        char={buildChar()}
+        portraitUrl={portraitUrl}
+        drafts={spriteDrafts}
+        setDrafts={setSpriteDrafts}
+        selectedUrl={selectedSpriteUrl}
+        setSelectedUrl={setSelectedSpriteUrl}
+        generationCount={spriteGenerationCount}
+        setGenerationCount={setSpriteGenerationCount}
+      />
 
       {/* ── SUBMIT ERROR ── */}
       {submitError && (

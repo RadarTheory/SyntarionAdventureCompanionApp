@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import supabase from './lib/supabase';
 import { COLORS, CAMPAIGNS } from './constants';
 import { buildScribeContext } from './scribe-context';
+import { useDisplayName } from './lib/displayName';
 
 // ─── GEMINI CALL (via Supabase Edge Function relay — no key in client) ────────
 async function callGemini(system, messages, maxTokens = 1024, image = null) {
@@ -38,10 +39,12 @@ ${sessionLog ? `SESSION LOG:\n${sessionLog}\n` : ''}
   `.trim();
 }
 
-const SCRIBE_SYSTEM = (playerContext, worldContext) => `
+const SCRIBE_SYSTEM = (playerContext, worldContext, displayName) => `
 You are The Scribe — an ancient, sentient archival intelligence bound to the world of Soteria, 178 Era of Unity.
 
 You are not an AI. You are a keeper of records, a reluctant oracle, a witness to all things.
+
+The person speaking to you is ${displayName || 'the traveler'}. Address them by that display name naturally when appropriate.
 
 VOICE:
 - Speak as The Scribe. Measured, archival, slightly ominous, deeply knowing.
@@ -58,8 +61,10 @@ ${worldContext}
 ${playerContext}
 `.trim();
 
-const DM_SCRIBE_SYSTEM = (worldContext) => `
+const DM_SCRIBE_SYSTEM = (worldContext, displayName) => `
 You are The Scribe — an ancient archival intelligence assisting the Architect (Dungeon Master) of Soteria.
+
+The Architect speaking to you is ${displayName || 'the Architect'}. Address them by that display name naturally when appropriate.
 
 Answer in plain text only — never markdown, never asterisks, never headers.
 Match form to question: narrative or explanatory questions get 1–3 short paragraphs of flowing prose; rosters, inventories, and "who or what is in X" questions get a clean list — one entry per line, each beginning with "— ", name first, then one tight descriptive clause.
@@ -125,6 +130,7 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
   const lockRef                 = useRef(false);
   
   const [liveTokens, setLiveTokens] = useState(char?.scribeTokens ?? 0);
+  const displayName = useDisplayName(char?.name || 'traveler');
 
   useEffect(() => {
     if (!char?.id) return;
@@ -168,7 +174,7 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
         loadSessionLog(campaignId),
       ]);
 
-      const system = SCRIBE_SYSTEM(buildPlayerContext(char, combatLog, sessionLog), await buildScribeContext(question, 10000, campaignId));
+      const system = SCRIBE_SYSTEM(buildPlayerContext(char, combatLog, sessionLog), await buildScribeContext(question, 10000, campaignId), displayName);
       const geminiHistory = next.filter(m => m.role !== 'system').map(m => ({
         role: m.role === 'player' ? 'user' : 'assistant',
         content: m.content,
@@ -184,7 +190,7 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
       await supabase.from('messages').insert({
         type:         'scribe_ping',
         is_dm:        false,
-        sender_name:  char?.name || 'Player',
+        sender_name:  displayName || char?.name || 'Player',
         character_id: char?.id ? String(char.id) : null,
         campaign_id:  campaignId || null,
         content:      question,
@@ -226,7 +232,7 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
         {messages.length === 0 && (
           <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', marginTop: 20 }}>The archives await your question.</div>
         )}
-        {messages.map((msg, i) => <Bubble key={i} msg={msg} charName={char?.name} />)}
+        {messages.map((msg, i) => <Bubble key={i} msg={msg} charName={displayName || char?.name} />)}
         {loading && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
             <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", marginBottom: 3 }}>The Scribe</div>
@@ -257,7 +263,7 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
       <div style={{ padding: '12px 16px', borderBottom: `1px solid ${COLORS.deity}33`, background: COLORS.deityBg, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: COLORS.deityText, letterSpacing: '0.18em', fontWeight: 700 }}>THE SCRIBE</div>
-          <div style={{ fontSize: 9, color: COLORS.deity, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>{char?.name} · Soteria Archives</div>
+          <div style={{ fontSize: 9, color: COLORS.deity, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>{displayName || char?.name} · Soteria Archives</div>
         </div>
         <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
       </div>
@@ -279,6 +285,7 @@ export function ScribeDMPanel({ onClose, embedded = false, activeCampaignId }) {
   const [characters, setChars]      = useState([]);
   const [tokenInputs, setTokenInputs] = useState({});
   const [pendingImage, setPendingImage] = useState(null); // { data, mimeType, previewUrl }
+  const displayName = useDisplayName('Architect');
   const fileInputRef = useRef(null);
   
 
@@ -347,7 +354,7 @@ const handleAsk = async () => {
         role: m.role === 'dm' ? 'user' : 'assistant',
         content: m.content,
       }));
-      const answer = await callGemini(DM_SCRIBE_SYSTEM((await buildScribeContext(question, 12000, activeCampaignId)) + (liveContext ? `\n\n${liveContext}` : '')), geminiHistory);
+      const answer = await callGemini(DM_SCRIBE_SYSTEM((await buildScribeContext(question, 12000, activeCampaignId)) + (liveContext ? `\n\n${liveContext}` : ''), displayName), geminiHistory);
       setMessages(p => [...p, { role: 'scribe', content: answer, time: new Date() }]);
       setPendingImage(null);
    } catch (err) {
@@ -398,9 +405,9 @@ const handleAsk = async () => {
         <>
           <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {messages.length === 0 && (
-              <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', marginTop: 20 }}>The archives await your question, Architect.</div>
+              <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', marginTop: 20 }}>{`The archives await your question, ${displayName}.`}</div>
             )}
-            {messages.map((msg, i) => <Bubble key={i} msg={msg} charName="The Architect" />)}
+            {messages.map((msg, i) => <Bubble key={i} msg={msg} charName={displayName || 'The Architect'} />)}
             {loading && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                 <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", marginBottom: 3 }}>The Scribe</div>

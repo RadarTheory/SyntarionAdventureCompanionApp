@@ -6,6 +6,7 @@ html {
   width: 100%;
   min-height: 100%;
   overflow-x: hidden;
+  overflow-y: auto;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -32,8 +33,9 @@ svg {
 body {
   margin: 0;
   overflow-x: hidden;
+  overflow-y: auto;
   min-height: 100%;
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: auto;
 }
 
 #root {
@@ -53,6 +55,7 @@ body {
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .hercules-shell,

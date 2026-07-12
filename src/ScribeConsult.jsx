@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { SOTERIA_LORE } from './soteria-lore';
+import { buildScribeContext } from './scribe-context';
+import { useDisplayName } from './lib/displayName';
 
 const SOTERIA_CONTEXT = `
 You are The Scribe — an ancient, sentient archival intelligence bound to the city of Ashendell in the world of Soteria, 178 Era of Unity.
@@ -70,6 +72,7 @@ export function ScribeConsult({ char, onUpdateChar }) {
   const [ended, setEnded] = useState(false);
   const bottomRef = useRef(null);
   const lockRef = useRef(false);
+  const displayName = useDisplayName(char?.name || 'traveler');
 
   const apCurrent = char?.apCurrent || 0;
 
@@ -79,7 +82,7 @@ export function ScribeConsult({ char, onUpdateChar }) {
     const { error } = await supabase.from('messages').insert({
       session_id: char.user_id || char.id,
       sender_id: char.user_id || null,
-      sender_name: char.name || 'Unknown',
+      sender_name: displayName || char.name || 'Unknown',
       character_id: char.id,
       campaign_id: char.campaign || char.campaign_id || null,
       type: 'scribe',
@@ -115,7 +118,7 @@ export function ScribeConsult({ char, onUpdateChar }) {
 
     try {
       const worldContext = await buildScribeContext(userMsg, 10000, char?.campaign || char?.campaign_id || null);
-      const systemPrompt = `${SOTERIA_CONTEXT}\n\nWORLD KNOWLEDGE (relevant excerpts):\n${worldContext}\n\n${buildCharacterContext(char)}\n\nThis response costs the adventurer 1 AP. Make the answer useful, specific, and worthy of the cost.`.trim();
+      const systemPrompt = `${SOTERIA_CONTEXT}\n\nWORLD KNOWLEDGE (relevant excerpts):\n${worldContext}\n\n${buildCharacterContext(char)}\n\nThe person speaking to you is ${displayName || 'the traveler'}. Address them by that display name naturally when appropriate.\n\nThis response costs the adventurer 1 AP. Make the answer useful, specific, and worthy of the cost.`.trim();
       const geminiHistory = nextMessages.map(m => ({ role: m.role === 'player' ? 'user' : 'assistant', content: m.content }));
       const answer = await callGemini(systemPrompt, geminiHistory);
 
@@ -158,7 +161,7 @@ export function ScribeConsult({ char, onUpdateChar }) {
               const isPlayer = msg.role === 'player';
               return (
                 <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: isPlayer ? 'flex-end' : 'flex-start' }}>
-                  <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginBottom: 3 }}>{isPlayer ? char.name || 'You' : 'The Scribe'}</div>
+                  <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginBottom: 3 }}>{isPlayer ? displayName || char.name || 'You' : 'The Scribe'}</div>
                   <div style={{ maxWidth: '82%', background: isPlayer ? 'rgba(121,245,167,0.08)' : COLORS.deityBg, border: `1px solid ${isPlayer ? COLORS.magic + '33' : COLORS.deity + '44'}`, borderRadius: isPlayer ? '12px 12px 2px 12px' : '12px 12px 12px 2px', padding: '8px 12px', fontSize: 12, color: isPlayer ? COLORS.text : COLORS.deityText, fontFamily: 'Georgia, serif', lineHeight: 1.6, fontStyle: isPlayer ? 'normal' : 'italic' }}>{msg.content}</div>
                   <div style={{ fontSize: 7, color: COLORS.dim, marginTop: 2 }}>{msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                 </div>
@@ -201,6 +204,7 @@ export function DMConsult({ char, user }) {
   const [error, setError] = useState(null);
   const [thread, setThread] = useState([]);
   const bottomRef = useRef(null);
+  const displayName = useDisplayName(char?.name || 'traveler');
 
  const sessionId = `char_${char.id}`;
 
@@ -228,7 +232,7 @@ export function DMConsult({ char, user }) {
     const { error } = await supabase.from('messages').insert({
       session_id: sessionId,
       sender_id: user?.id || null,
-      sender_name: char.name || 'Unknown',
+      sender_name: displayName || char.name || 'Unknown',
       character_id: char.id,
       campaign_id: char.campaign || char.campaign_id || null,
       type: 'player_message',
@@ -269,7 +273,7 @@ export function DMConsult({ char, user }) {
             )}
             {thread.filter(m => m.type !== 'dm_system').map(msg => {
               const isMe = !msg.is_dm;
-              const name = msg.is_dm ? 'The Architect' : (char.name || 'You');
+              const name = msg.is_dm ? 'The Architect' : (displayName || char.name || 'You');
               return (
                 <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
                   <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginBottom: 3 }}>{name}</div>

@@ -180,7 +180,7 @@ function DMSigilModal({ onSuccess, onCancel }) {
   return (
     <div onClick={onCancel} style={{ position: 'fixed', inset: 0, background: 'rgba(10,8,6,0.72)', backdropFilter: 'blur(6px)', zIndex: 300100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#13100d', border: `1px solid ${error ? '#7f1d1d' : 'rgba(240,238,235,0.12)'}`, borderRadius: 14, padding: '32px 36px', maxWidth: 340, width: '100%', textAlign: 'center', boxShadow: '0 24px 64px rgba(0,0,0,0.6)', transform: shake ? 'translateX(-8px)' : 'none', transition: 'transform 0.08s, border-color 0.2s' }}>
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 14, fontWeight: 700, color: '#f0eeeb', letterSpacing: '0.06em', marginBottom: 6 }}>Enter the Sigil</div>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 14, fontWeight: 700, color: page.buttonText, letterSpacing: '0.06em', marginBottom: 6 }}>Enter the Sigil</div>
         <div style={{ fontSize: 11, color: 'rgba(240,238,235,0.32)', marginBottom: 20, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>The archives are sealed.</div>
         <input autoFocus type="password" value={input} onChange={e => { setInput(e.target.value); setError(false); }} onKeyDown={e => e.key === 'Enter' && attempt()} placeholder="···"
           style={{ width: '100%', background: 'rgba(240,238,235,0.06)', border: `1px solid ${error ? '#ef4444' : 'rgba(240,238,235,0.14)'}`, borderRadius: 8, padding: '10px 14px', fontSize: 16, letterSpacing: '0.3em', color: '#f0eeeb', textAlign: 'center', outline: 'none', boxSizing: 'border-box', marginBottom: 12, fontFamily: 'Georgia, serif', transition: 'border-color 0.2s' }} />
@@ -299,7 +299,7 @@ function HerculesLite({ campaignId, char, onClose }) {
             ) : (
               <div style={{ fontSize: 10, color: COLORS.magic, fontFamily: "'Cinzel', serif", textAlign: 'center' }}>
                 ✓ Initiative submitted
-                {submittedRoll && <span style={{ color: '#e8c84a' }}> — {submittedRoll.total} ({submittedRoll.roll}{submittedRoll.modifier ? ` + ${submittedRoll.modifier}` : ''})</span>}
+                {submittedRoll && <span style={{ color: '#6f5512' }}> — {submittedRoll.total} ({submittedRoll.roll}{submittedRoll.modifier ? ` + ${submittedRoll.modifier}` : ''})</span>}
               </div>
             )}
             {initiative.length > 0 && (
@@ -308,7 +308,7 @@ function HerculesLite({ campaignId, char, onClose }) {
                 {initiative.map((row, i) => (
                   <div key={row.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 6px', background: row.character_id === char?.id ? 'rgba(200,168,74,0.1)' : 'transparent', borderRadius: 4, marginBottom: 2 }}>
                     <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color: row.character_id === char?.id ? '#e8c84a' : COLORS.text }}>{i + 1}. {row.character_name}</div>
-                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, color: '#e8c84a' }}>{row.turn_order || row.roll}</div>
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, color: '#6f5512' }}>{row.turn_order || row.roll}</div>
                   </div>
                 ))}
               </div>
@@ -336,7 +336,7 @@ function HerculesLite({ campaignId, char, onClose }) {
   );
 }
 
-function CampaignList({ onSelect, userChar, onHome }) {
+function CampaignList({ onSelect, userChar, onHome, darkMode = false }) {
   const { isMobile } = useDevice();
   const [campaigns, setCampaigns] = useState([]);
   const [modules, setModules] = useState([]);
@@ -398,8 +398,21 @@ function CampaignList({ onSelect, userChar, onHome }) {
     textTransform: 'uppercase', color: 'rgba(240,238,235,0.4)', display: 'block', marginBottom: 5,
   };
 
+
+  const page = darkMode ? {
+    bg: '#14110c', text: '#f0eeeb', title: '#f7efe0', muted: 'rgba(240,238,235,0.68)', faint: 'rgba(240,238,235,0.48)',
+    line: 'rgba(240,238,235,0.16)', card: '#1b1712', cardAssigned: '#211c14', cardBorder: 'rgba(200,168,74,0.24)',
+    assignedBorder: 'rgba(200,168,74,0.66)', chipBg: 'rgba(240,238,235,0.06)', chipBorder: 'rgba(240,238,235,0.14)',
+    shadow: '0 8px 24px rgba(0,0,0,0.32)', shadowHover: '0 12px 32px rgba(0,0,0,0.42)', buttonBg: '#1f1a13', buttonText: '#f0eeeb', arrow: 'rgba(226,207,145,0.74)', backText: 'rgba(240,238,235,0.78)'
+  } : {
+    bg: '#e4e0da', text: '#171310', title: '#1a1714', muted: 'rgba(26,23,20,0.72)', faint: 'rgba(26,23,20,0.58)',
+    line: 'rgba(26,23,20,0.18)', card: '#fbfaf7', cardAssigned: '#eee9df', cardBorder: 'rgba(26,23,20,0.18)',
+    assignedBorder: 'rgba(84,68,38,0.58)', chipBg: 'rgba(26,23,20,0.08)', chipBorder: 'rgba(26,23,20,0.12)',
+    shadow: '0 2px 10px rgba(26,23,20,0.05)', shadowHover: '0 8px 24px rgba(26,23,20,0.14)', buttonBg: '#1a1714', buttonText: '#f0eeeb', arrow: 'rgba(26,23,20,0.52)', backText: 'rgba(26,23,20,0.72)'
+  };
+
   return (
-    <div style={{ minHeight: '100svh', background: '#f0eeeb', fontFamily: 'Georgia, serif', overflowX: 'hidden' }}>
+    <div style={{ minHeight: '100svh', background: page.bg, fontFamily: 'Georgia, serif', overflowX: 'hidden', color: page.text }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap'); * { box-sizing: border-box; } body { margin: 0; }`}</style>
 
       {showSigil && (
@@ -442,7 +455,7 @@ function CampaignList({ onSelect, userChar, onHome }) {
   <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,8,6,0.8)', backdropFilter: 'blur(8px)', zIndex: 300100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
     <div style={{ background: '#13100d', border: '1px solid rgba(240,238,235,0.14)', borderRadius: 16, padding: '32px 36px', maxWidth: 480, width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: '#f0eeeb', letterSpacing: '0.14em' }}>{editTarget ? 'EDIT MODULE' : 'NEW MODULE'}</div>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: page.buttonText, letterSpacing: '0.14em' }}>{editTarget ? 'EDIT MODULE' : 'NEW MODULE'}</div>
         <button onClick={() => { setShowCreate(false); setEditTarget(null); }} style={{ background: 'transparent', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 5, padding: '4px 9px', cursor: 'pointer', color: 'rgba(240,238,235,0.4)', fontSize: 11, fontFamily: "'Cinzel', serif" }}>✕</button>
       </div>
 
@@ -502,7 +515,7 @@ function CampaignList({ onSelect, userChar, onHome }) {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,8,6,0.8)', backdropFilter: 'blur(8px)', zIndex: 300100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ background: '#13100d', border: '1px solid rgba(240,238,235,0.14)', borderRadius: 16, padding: '32px 36px', maxWidth: 480, width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: '#f0eeeb', letterSpacing: '0.14em' }}>NEW MODULE</div>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: page.buttonText, letterSpacing: '0.14em' }}>NEW MODULE</div>
               <button onClick={() => setShowCreate(false)} style={{ background: 'transparent', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 5, padding: '4px 9px', cursor: 'pointer', color: 'rgba(240,238,235,0.4)', fontSize: 11, fontFamily: "'Cinzel', serif" }}>✕</button>
             </div>
 
@@ -565,27 +578,27 @@ function CampaignList({ onSelect, userChar, onHome }) {
 
       {/* ── HEADER ── */}
       <div style={{ padding: isMobile ? 'calc(20px + env(safe-area-inset-top, 0px)) 20px 0' : '28px 40px 0' }}>
-        <button onClick={onHome} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(26,23,20,0.4)', padding: 0 }}>← Home</button>
+        <button onClick={onHome} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: page.backText, padding: 0 }}>← Home</button>
       </div>
-      <div style={{ padding: isMobile ? '28px 20px 20px' : '36px 40px 24px', borderBottom: '1px solid rgba(26,23,20,0.08)', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-end', justifyContent: 'space-between', gap: isMobile ? 16 : 0 }}>
+      <div style={{ padding: isMobile ? '28px 20px 20px' : '36px 40px 24px', borderBottom: `1px solid ${page.line}`, display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-end', justifyContent: 'space-between', gap: isMobile ? 16 : 0 }}>
         <div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(26,23,20,0.35)', marginBottom: 8 }}>Soteria · 178 E.U.</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 24 : 32, fontWeight: 700, color: '#1a1714' }}>CAMPAIGNS</div>
-          <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,23,20,0.45)', marginTop: 8 }}>Select a campaign to enter the world.</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: page.faint, marginBottom: 8 }}>Soteria · 178 E.U.</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 24 : 32, fontWeight: 700, color: page.title }}>CAMPAIGNS</div>
+          <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: page.muted, marginTop: 8 }}>Select a campaign to enter the world.</div>
         </div>
        <button onClick={() => dmUnlocked ? setShowCreate(true) : setShowSigil(true)}
-          style={{ background: '#1a1714', border: '1px solid rgba(26,23,20,0.3)', borderRadius: 8, padding: isMobile ? '12px 14px' : '11px 18px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: '#f0eeeb', letterSpacing: '0.12em', whiteSpace: 'nowrap', flexShrink: 0, marginLeft: isMobile ? 0 : 16, width: isMobile ? '100%' : 'auto' }}>
+          style={{ background: page.buttonBg, border: `1px solid ${darkMode ? 'rgba(200,168,74,0.54)' : 'rgba(26,23,20,0.3)'}`, borderRadius: 8, padding: isMobile ? '12px 14px' : '11px 18px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: page.buttonText, letterSpacing: '0.12em', whiteSpace: 'nowrap', flexShrink: 0, marginLeft: isMobile ? 0 : 16, width: isMobile ? '100%' : 'auto' }}>
           + Add Adventure
         </button>
       </div>
 
       {/* ── LIST ── */}
-      <div style={{ padding: isMobile ? '20px 16px calc(24px + env(safe-area-inset-bottom, 0px))' : '28px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ padding: isMobile ? '20px 16px calc(104px + env(safe-area-inset-bottom, 0px))' : '28px 40px 112px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {loading && (
-          <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,23,20,0.4)', textAlign: 'center', padding: '40px 0' }}>Consulting the archives…</div>
+          <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: page.muted, textAlign: 'center', padding: '40px 0' }}>Consulting the archives…</div>
         )}
         {!loading && campaigns.length === 0 && (
-          <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,23,20,0.4)', textAlign: 'center', padding: '40px 0' }}>No campaigns yet. The Architect will open the world.</div>
+          <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: page.muted, textAlign: 'center', padding: '40px 0' }}>No campaigns yet. The Architect will open the world.</div>
         )}
         {modules.map((mod) => {
           const modCampaigns = campaigns.filter(c => c.module_id === mod.id);
@@ -593,43 +606,43 @@ function CampaignList({ onSelect, userChar, onHome }) {
           return (
             <div key={`module-${mod.id}`} style={{ marginBottom: 8 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, margin: '10px 2px 12px' }}>
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#1a1714' }}>✦ {mod.name}</div>
-                <div style={{ flex: 1, height: '1px', background: 'rgba(26,23,20,0.12)' }} />
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(26,23,20,0.35)' }}>Module · {modCampaigns.length} campaign{modCampaigns.length === 1 ? '' : 's'}</div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: page.title }}>✦ {mod.name}</div>
+                <div style={{ flex: 1, height: '1px', background: page.line }} />
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: page.faint }}>Module · {modCampaigns.length} campaign{modCampaigns.length === 1 ? '' : 's'}</div>
               </div>
               {mod.description && (
-                <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 11, color: 'rgba(26,23,20,0.4)', margin: '0 2px 12px' }}>{mod.description}</div>
+                <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 11, color: page.muted, margin: '0 2px 14px' }}>{mod.description}</div>
               )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {modCampaigns.map((c) => {
           const isAssigned = userChar?.campaign_id === String(c.id);
           return (
             <button key={c.id} onClick={() => onSelect(c)}
-              style={{ background: isAssigned ? 'rgba(26,23,20,0.04)' : '#fff', border: `1px solid ${isAssigned ? 'rgba(26,23,20,0.25)' : 'rgba(26,23,20,0.1)'}`, borderRadius: 8, padding: isMobile ? '16px 16px' : '20px 28px', cursor: 'pointer', display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', textAlign: 'left', width: '100%', gap: isMobile ? 12 : 0, transition: 'all 0.18s ease' }}
-              onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(26,23,20,0.10)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.boxShadow = ''; e.currentTarget.style.transform = 'none'; }}>
+              style={{ background: isAssigned ? page.cardAssigned : page.card, border: `1px solid ${isAssigned ? page.assignedBorder : page.cardBorder}`, borderRadius: 8, padding: isMobile ? '16px 16px' : '20px 28px', cursor: 'pointer', display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', textAlign: 'left', width: '100%', gap: isMobile ? 12 : 0, transition: 'all 0.18s ease', boxShadow: isAssigned ? `0 0 0 1px rgba(200,168,74,${darkMode ? 0.28 : 0.2}), ${page.shadow}` : page.shadow }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = page.shadowHover; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = isAssigned ? `0 0 0 1px rgba(200,168,74,${darkMode ? 0.28 : 0.2}), ${page.shadow}` : page.shadow; e.currentTarget.style.transform = 'none'; }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
-                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(26,23,20,0.35)' }}>{c.type || 'Campaign'}</div>
-                  {isAssigned && <div style={{ fontSize: 8, fontFamily: "'Cinzel', serif", color: COLORS.magic, background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 4, padding: '1px 6px' }}>✓ Your Campaign</div>}
-                  {c.suggested_level && <div style={{ fontSize: 8, fontFamily: "'Cinzel', serif", color: 'rgba(26,23,20,0.4)', background: 'rgba(26,23,20,0.05)', border: '1px solid rgba(26,23,20,0.12)', borderRadius: 4, padding: '1px 6px' }}>Lvl {c.suggested_level}</div>}
-                  {c.max_players && <div style={{ fontSize: 8, fontFamily: "'Cinzel', serif", color: 'rgba(26,23,20,0.4)' }}>· {c.max_players} players</div>}
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: page.faint }}>{c.type || 'Campaign'}</div>
+                  {isAssigned && <div style={{ fontSize: 8, fontFamily: "'Cinzel', serif", color: '#11623b', background: 'rgba(55,150,92,0.14)', border: `1px solid ${COLORS.magic}`, borderRadius: 4, padding: '1px 6px' }}>✓ Your Campaign</div>}
+                  {c.suggested_level && <div style={{ fontSize: 8, fontFamily: "'Cinzel', serif", color: page.muted, background: page.chipBg, border: `1px solid ${page.chipBorder}`, borderRadius: 4, padding: '1px 6px' }}>Lvl {c.suggested_level}</div>}
+                  {c.max_players && <div style={{ fontSize: 8, fontFamily: "'Cinzel', serif", color: page.muted }}>· {c.max_players} players</div>}
                 </div>
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 16 : 19, fontWeight: 700, color: '#1a1714', marginBottom: 4 }}>{c.subtitle}</div>
-                <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 11, color: 'rgba(26,23,20,0.4)', marginBottom: c.description ? 6 : 0 }}>{c.name}</div>
-                {c.description && <div style={{ fontFamily: 'Georgia, serif', fontSize: 11, color: 'rgba(26,23,20,0.55)', lineHeight: 1.55 }}>{c.description}</div>}
-                {c.setting && <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.14em', color: 'rgba(26,23,20,0.28)', marginTop: 8, textTransform: 'uppercase' }}>{c.setting}</div>}
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 16 : 19, fontWeight: 700, color: page.title, marginBottom: 4 }}>{c.subtitle}</div>
+                <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 11, color: page.muted, marginBottom: c.description ? 6 : 0 }}>{c.name}</div>
+                {c.description && <div style={{ fontFamily: 'Georgia, serif', fontSize: 11, color: page.muted, lineHeight: 1.55 }}>{c.description}</div>}
+                {c.setting && <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.14em', color: page.faint, marginTop: 8, textTransform: 'uppercase' }}>{c.setting}</div>}
               </div>
              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginLeft: isMobile ? 0 : 16, flexShrink: 0 }}>
   {dmUnlocked ? (
     <>
       <button onClick={e => { e.stopPropagation(); setEditTarget(c); setDraft({ name: c.name, subtitle: c.subtitle, type: c.type || 'Campaign', description: c.description || '', setting: c.setting || 'Soteria · 178 E.U.', max_players: c.max_players || 6, suggested_level: c.suggested_level || '' }); setShowCreate(true); }}
-        style={{ background: 'rgba(200,168,74,0.1)', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: '#e8c84a' }}>✎</button>
+        style={{ background: 'rgba(122,95,20,0.12)', border: '1px solid rgba(122,95,20,0.34)', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: '#6f5512' }}>✎</button>
       <button onClick={e => { e.stopPropagation(); setShowDelete(c); }}
-        style={{ background: 'rgba(224,90,90,0.08)', border: '1px solid rgba(224,90,90,0.25)', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: '#ef4444' }}>✕</button>
+        style={{ background: 'rgba(150,40,40,0.1)', border: '1px solid rgba(150,40,40,0.28)', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: '#9b2525' }}>✕</button>
     </>
   ) : (
-    <div style={{ fontSize: 16, color: 'rgba(26,23,20,0.2)' }}>→</div>
+    <div style={{ fontSize: 16, color: page.arrow }}>→</div>
   )}
 </div>
             </button>
@@ -935,7 +948,7 @@ function CharacterSheetInline({ char, effectiveStats, onUpdateChar }) {
         </div>
         <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px' }}>
           <div style={{ ...label8(), marginBottom: 6 }}>Coin</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, fontWeight: 800, color: '#e8c84a' }}>{coin || '—'}</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, fontWeight: 800, color: '#6f5512' }}>{coin || '—'}</div>
           <div style={{ fontSize: 8, color: COLORS.dim }}>edit in Inventory · Pack</div>
         </div>
       </div>
@@ -2416,12 +2429,12 @@ useEffect(() => {
   );
 }
 
-export default function CampaignView({ campaignChars = [], onHome, onAssign, onUpdateChar }) {
+export default function CampaignView({ campaignChars = [], onHome, onAssign, onUpdateChar, darkMode = false }) {
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   if (selectedCampaign) {
     const userChar = campaignChars.find(c => c.campaign_id === String(selectedCampaign.id)) || null;
-    return <CampaignDashboard campaign={selectedCampaign} userChar={userChar} onBack={() => setSelectedCampaign(null)} onAssign={onAssign} onUpdateChar={onUpdateChar} />;
+    return <CampaignDashboard campaign={selectedCampaign} userChar={userChar} onBack={() => setSelectedCampaign(null)} onAssign={onAssign} onUpdateChar={onUpdateChar} darkMode={darkMode} />;
   }
-  return <CampaignList onSelect={setSelectedCampaign} userChar={campaignChars[0] || null} onHome={onHome} />;
+  return <CampaignList onSelect={setSelectedCampaign} userChar={campaignChars[0] || null} onHome={onHome} darkMode={darkMode} />;
 }
 
