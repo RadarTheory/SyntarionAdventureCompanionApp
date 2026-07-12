@@ -575,7 +575,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   // â”€â”€ Home screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const landingDarkMode = false;
   const ink = '#1a1714';
-  const bg = '#f0eeeb';
+  const bg = '#dbdcdf';
 
   const buttons = [
     {

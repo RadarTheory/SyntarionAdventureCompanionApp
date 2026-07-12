@@ -16,7 +16,7 @@ export default function App() {
   const [view, setView] = useState(() => localStorage.getItem('syntarion_view') || 'landing');
 
   useEffect(() => {
-    document.body.style.background = darkMode ? '#14110c' : '#f0eeeb';
+    document.body.style.background = darkMode ? '#14110c' : '#dbdcdf';
   }, [darkMode]);
 
   useEffect(() => {
@@ -165,7 +165,8 @@ function LoginScreen() {
     <div
       style={{
         minHeight: '100svh',
-        background: '#f0eeeb',
+        background: '#dbdcdf',
+        backgroundImage: `radial-gradient(circle at 50% 20%, rgba(255, 250, 240, 0.65) 0%, transparent 70%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
