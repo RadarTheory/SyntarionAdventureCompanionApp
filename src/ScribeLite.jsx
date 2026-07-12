@@ -335,7 +335,7 @@ const INTENT_LABELS = {
 
 /* ─── 3. EMOTION VIDEO PLAYER ─────────────────────────────────────────── */
 const IDLE_POOL = ['idle', 'waiting', 'study'];       // resting rotation
-const THINKING_POOL = ['thinking', 'loading'];        // researching rotation
+const THINKING_POOL = ['thinking'];        // researching rotation
 const LOOPING = new Set(THINKING_POOL);               // these loop until answered
 const RESTING = new Set(IDLE_POOL);                   // these chain into each other
 
@@ -355,7 +355,7 @@ const EMOTION_FILE = {
   tinker: 'scribe-tinker-transp',
   sad: 'scribe-sad-transp',
   mad: 'scribe-angry-transp',
-  glitch: 'scribe-glitch-transp',
+  glitch: 'scribe-loading-transp',
 };
 
 const randomFrom = (arr, not) => {
