@@ -338,7 +338,7 @@ const EMOTION_FILE = {
   mad: 'scribe-angry-transp',
 };
 
-function ScribeFace({ emotion, size = 84 }) {
+function ScribeFace({ emotion, size = 84, stage = false }) {
   const [failed, setFailed] = useState(false);
   const videoRef = useRef(null);
 
@@ -346,8 +346,10 @@ function ScribeFace({ emotion, size = 84 }) {
 
   return (
     <div style={{
-      width: size, height: size, borderRadius: '50%', overflow: 'hidden',
-      border: '1px solid rgba(200,168,74,0.35)', background: '#1c1815',
+      width: size, height: size,
+      borderRadius: stage ? 0 : '50%', overflow: 'hidden',
+      border: stage ? 'none' : '1px solid rgba(200,168,74,0.35)',
+      background: stage ? 'transparent' : '#1c1815',
       flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       {!failed ? (
@@ -359,16 +361,10 @@ function ScribeFace({ emotion, size = 84 }) {
           loop={LOOPING.has(emotion)}
           onError={() => setFailed(true)}
           onContextMenu={e => e.preventDefault()}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
+          style={{ width: '100%', height: '100%', objectFit: stage ? 'contain' : 'cover', pointerEvents: 'none' }}
         />
-     ) : (
-        <img
-          src="/scribe/scribe.jpg"
-          alt="The Scribe"
-          draggable={false}
-          onContextMenu={e => e.preventDefault()}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
-        />
+      ) : (
+        <span style={{ fontSize: size * 0.45 }} role="img" aria-label="Scribe">🖋️</span>
       )}
     </div>
   );
@@ -486,8 +482,8 @@ export default function ScribeLite() {
       bottom: isMobile ? 0 : 24, right: isMobile ? 0 : 24,
       left: isMobile ? 0 : 'auto',
       width: isMobile ? '100%' : 380,
-      height: isMobile ? '72svh' : 520,
-      maxHeight: isMobile ? '72svh' : 'calc(100svh - 48px)',
+      height: isMobile ? '85svh' : 640,
+      maxHeight: isMobile ? '85svh' : 'calc(100svh - 48px)',
       background: '#13100d',
       border: '1px solid rgba(200,168,74,0.3)',
       borderRadius: isMobile ? '14px 14px 0 0' : 14,
@@ -496,14 +492,15 @@ export default function ScribeLite() {
       fontFamily: 'Georgia, serif',
       paddingBottom: isMobile ? 'env(safe-area-inset-bottom)' : 0,
     }}>
-      {/* Header */}
+      {/* Header — the Scribe takes the stage */}
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: '12px 14px', borderBottom: '1px solid rgba(200,168,74,0.18)',
+        position: 'relative',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+        padding: '12px 14px 10px', borderBottom: '1px solid rgba(200,168,74,0.18)',
         background: '#171310',
       }}>
-        <ScribeFace emotion={emotion} size={52} />
-        <div style={{ flex: 1 }}>
+        <ScribeFace emotion={emotion} size={isMobile ? 130 : 160} stage />
+        <div style={{ textAlign: 'center' }}>
           <div style={{
             fontFamily: "'Cinzel', serif", fontSize: 14, fontWeight: 700,
             letterSpacing: '0.14em', color: '#f0eeeb',
@@ -520,8 +517,9 @@ export default function ScribeLite() {
           onClick={() => { setOpen(false); setEmotion('idle'); }}
           aria-label="Close"
           style={{
+            position: 'absolute', top: 8, right: 10,
             background: 'transparent', border: 'none', cursor: 'pointer',
-            color: 'rgba(240,238,235,0.45)', fontSize: 20, lineHeight: 1, padding: 6,
+            color: 'rgba(240,238,235,0.45)', fontSize: 22, lineHeight: 1, padding: 6,
           }}
         >×</button>
       </div>
