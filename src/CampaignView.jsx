@@ -2208,7 +2208,7 @@ useEffect(() => {
           id: 'scribe',
           title: 'The Scribe — Archives',
           onClick: () => setShowScribeCV(o => !o),
-          children: <img src="/scribeicon.png" alt="Scribe" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+          children: <img src="/scribe-emblem.png" alt="Scribe" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
         {
           id: 'worldmap',
