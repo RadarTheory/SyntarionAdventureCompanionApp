@@ -10,7 +10,7 @@ const TABLES = [
   'lootboxes', 'lootbox_items', 'messages', 'sessions', 'session_checkins',
   'session_logs', 'vtt_sessions', 'hercules_sessions', 'hercules_events',
   'hercules_initiative', 'world_clock', 'npcs', 'beasts', 'grimoire_entries',
-  'larks', 'dm_memory', 'legal_acceptances',
+  'larks', 'dm_memory', 'legal_acceptances', 'scribe_context',
 ];
 
 const PAGE_SIZE = 50;
