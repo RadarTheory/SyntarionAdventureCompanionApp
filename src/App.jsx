@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
 import Landing from './Landing';
 import ScribeLite from './ScribeLite';
-import ScribeLite from './ScribeLite';
 import LoadingScreen from './LoadingScreen';
 import CornerLoadingStinger from './CornerLoadingStinger';
 import LotjarrsBag from './LotjarrsBag';
@@ -73,8 +72,9 @@ export default function App() {
         user={session.user}
         darkMode={darkMode}
         setDarkMode={setDarkMode}
-        onOpenBag={() => { setView('bag'); localStorage.setItem('syntarion_view', 'bag'); }}
+    onOpenBag={() => { setView('bag'); localStorage.setItem('syntarion_view', 'bag'); }}
       />
+      <ScribeLite />
     </>
   );
 }
