@@ -129,11 +129,16 @@ export default function CompendiumUpload() {
     setBusy(true);
     setStatus('Parsing…');
     try {
-      const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: 'array' });
-      const sections = kind === 'dictionary'
-        ? parseDictionary(wb, sourceLabel.trim() || 'DICTIONARY')
-        : parseCompendium(wb, sourceLabel.trim() || 'COMPENDIUM');
+      let sections;
+      if (kind === 'poi') {
+        sections = await parseDocxPOI(file, sourceLabel.trim() || 'POI');
+      } else {
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, { type: 'array' });
+        sections = kind === 'dictionary'
+          ? parseDictionary(wb, sourceLabel.trim() || 'DICTIONARY')
+          : parseCompendium(wb, sourceLabel.trim() || 'COMPENDIUM');
+      }
       const entryCount = sections.reduce((n, s) => n + s.body.split('\n').length, 0);
       setPreview({ sections, entryCount });
       setStatus(`Parsed: ${wb.SheetNames.length} sheets → ${sections.length} sections → ${entryCount} entries. Review below, then Commit.`);
@@ -186,6 +191,7 @@ export default function CompendiumUpload() {
         <select value={kind} onChange={e => setKind(e.target.value)} style={{ ...S.input, fontSize: 11 }}>
           <option value="compendium">Compendium (column = category)</option>
           <option value="dictionary">Dictionary (word / translation)</option>
+          <option value="poi">POI Reference (Word doc — region/place/NPCs)</option>
           <option value="skip">Skip (ignore this file)</option>
         </select>
 
