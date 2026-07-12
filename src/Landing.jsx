@@ -461,7 +461,9 @@ function DMSigilModal({ onSuccess, onCancel }) {
 // â”€â”€â”€ MAIN LANDING COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   const { isMobile } = useDevice();
-  const [appView, setAppView] = useState(() => localStorage.getItem('syn_view') || 'home');
+  useEffect(() => {
+    onViewChange?.(appView === 'campaigns' || appView === 'dm');
+  }, [appView, onViewChange]);() => localStorage.getItem('syn_view') || 'home');
   const [savedChars, setSavedChars] = useState([]);
   const campaignChars = savedChars.filter(c => c.status === 'approved' && c.campaign_id);
   const [loading, setLoading] = useState(true);

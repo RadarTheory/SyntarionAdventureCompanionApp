@@ -403,8 +403,9 @@ function ScribeFace({ emotion, size = 84, stage = false, forceLoop = false, onEn
 }
 
 /* ─── 4. THE WIDGET ─────────────────────────────────────────────────────── */
-export default function ScribeLite() {
+export default function ScribeLite({ dismiss = false }) {
   const [open, setOpen] = useState(false);
+  const [gone, setGone] = useState(false);
   const [emotion, setEmotion] = useState('idle');
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -456,6 +457,24 @@ export default function ScribeLite() {
   }, [handlePending]);
 
   useEffect(() => () => clearTimeout(emotionTimer.current), []);
+
+  /* Asked to leave (e.g. CampaignView): wave goodbye, then vanish entirely */
+  useEffect(() => {
+    if (dismiss) {
+      if (gone) return;
+      clearTimeout(emotionTimer.current);
+      pendingRef.current = null;
+      setOpen(false);            // close any open panel
+      setEmotion('goodbye');     // wave from the launcher
+      const id = setTimeout(() => setGone(true), 1600);
+      return () => clearTimeout(id);
+    }
+    // Left the campaign — Scribe returns
+    if (gone) {
+      setGone(false);
+      setEmotion('welcome');
+    }
+  }, [dismiss, gone]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -530,11 +549,15 @@ export default function ScribeLite() {
     }, 1100);
   };
 
+  /* Fully dismissed — Scribe is unavailable here */
+  if (gone) return null;
+
   /* ── Launcher (closed state) ── */
   if (!open) return (
     <button
-      onClick={openChat}
+      onClick={dismiss ? undefined : openChat}
       aria-label="Ask the Scribe"
+      disabled={dismiss}
       style={{
         position: 'fixed', bottom: isMobile ? 16 : 24, right: isMobile ? 16 : 24,
         zIndex: 1900, width: isMobile ? 68 : 84, height: isMobile ? 68 : 84,
@@ -544,7 +567,7 @@ export default function ScribeLite() {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
     >
-      <ScribeFace emotion="idle" size={isMobile ? 64 : 80} forceLoop />
+      <ScribeFace emotion={dismiss ? 'goodbye' : 'idle'} size={isMobile ? 64 : 80} forceLoop={!dismiss} />
     </button>
   );
 

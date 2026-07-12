@@ -15,6 +15,7 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('syn_dark') === '1');
   useEffect(() => { localStorage.setItem('syn_dark', darkMode ? '1' : '0'); }, [darkMode]);
   const [view, setView] = useState(() => localStorage.getItem('syntarion_view') || 'landing');
+  const [inCampaign, setInCampaign] = useState(false);
 
   useEffect(() => {
     document.body.style.background = darkMode ? '#14110c' : '#dbdcdf';
@@ -73,8 +74,9 @@ export default function App() {
         darkMode={darkMode}
         setDarkMode={setDarkMode}
     onOpenBag={() => { setView('bag'); localStorage.setItem('syntarion_view', 'bag'); }}
+        onViewChange={setInCampaign}
       />
-      <ScribeLite />
+      <ScribeLite dismiss={inCampaign} />
     </>
   );
 }
