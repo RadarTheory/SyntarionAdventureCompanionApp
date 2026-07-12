@@ -3,14 +3,21 @@ import { useState, useEffect, useRef, useCallback } from "react";
 /* ═══════════════════════════════════════════════════════════════════════════
    SCRIBE LITE — site-wide FAQ chat, zero API
    ───────────────────────────────────────────────────────────────────────────
-   Emotion videos live in /public/scribe/ (LOWERCASE filenames):
-     scribe-idle-transp.mp4      (loops — default)
-     scribe-happy-transp.mp4     (one-shot — open, greeting, thanks)
-     scribe-thinking-transp.mp4  (loops — while "researching")
-     scribe-helpful-transp.mp4   (one-shot — delivering an answer)
-     scribe-sad-transp.mp4       (one-shot — no match found)
-     scribe-angry-transp.mp4     (one-shot — rudeness/spam, mapped to 'mad')
-   Mapping lives in EMOTION_FILE below.
+   Emotion videos live in /public/scribe/ (LOWERCASE filenames).
+   Full state machine — all fourteen clips in play:
+     RESTING (rotate, one finishes → another begins):  idle, waiting, study
+     RESEARCHING (loop while matching):                 thinking, loading
+     welcome      — chat opens
+     disappearing — chat closes (plays out, then hides)
+     happy        — greetings, who-are-you
+     ok           — thanks, "did you mean" suggestions
+     goodbye      — farewells
+     helpful      — standard answers
+     spell        — lore & magic answers (Soteria, races, stats...)
+     tinker       — technical answers (bugs, VTT, wrong character)
+     sad          — no match found
+     mad          — rudeness/spam (file: scribe-angry-transp)
+   Mapping lives in EMOTION_FILE / IDLE_POOL / THINKING_POOL below.
    Missing videos fail gracefully: the quill glyph shows instead.
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -67,7 +74,7 @@ const INTENTS = [
   },
   {
     id: 'vtt',
-    emotion: 'helpful',
+    emotion: 'tinker',
     keywords: { vtt: 3, map: 2, tabletop: 2, token: 2, fog: 2, move: 1, board: 1, grid: 1 },
     phrases: ['virtual tabletop', 'what is the vtt', 'move my token'],
     answer: [
@@ -78,7 +85,7 @@ const INTENTS = [
   },
   {
     id: 'fog',
-    emotion: 'helpful',
+    emotion: 'tinker',
     keywords: { fog: 3, war: 1, hidden: 2, reveal: 2, dark: 1, see: 1, covered: 1 },
     phrases: ['fog of war', "can't see the map"],
     answer: "The fog of war hides what your party hasn't discovered yet. As your DM reveals zones, the map opens up. If the whole map is dark, your party simply hasn't ventured there — or the session hasn't begun.",
@@ -102,7 +109,7 @@ const INTENTS = [
   },
   {
     id: 'stats',
-    emotion: 'helpful',
+    emotion: 'spell',
     keywords: { stats: 3, stat: 3, magic: 2, tech: 2, attributes: 2, eight: 1, axes: 1 },
     phrases: ['what are the stats', 'magic and tech'],
     answer: "Syntarion runs on 8 stats split across two great axes: Magic and Tech. Where your adventurer falls between the arcane and the mechanical defines what they can do — and who they are in Soteria.",
@@ -110,7 +117,7 @@ const INTENTS = [
   },
   {
     id: 'races',
-    emotion: 'helpful',
+    emotion: 'spell',
     keywords: { races: 3, race: 3, species: 2, pamorph: 2, bloodline: 2, kind: 1 },
     phrases: ['what are the races', "pa'morph"],
     answer: "Soteria is home to 15 playable races, including the shapeshifting Pa'morph bloodlines. Each race carries its own history in the world — you'll meet them all in the Forge when creating an adventurer.",
@@ -118,7 +125,7 @@ const INTENTS = [
   },
   {
     id: 'classes',
-    emotion: 'helpful',
+    emotion: 'spell',
     keywords: { classes: 3, class: 3, job: 1, role: 1, sixteen: 1 },
     phrases: ['what are the classes'],
     answer: "There are 16 classes spanning the Magic–Tech spectrum. The Forge shows you each one during character creation, with their icons, roles, and leanings.",
@@ -126,7 +133,7 @@ const INTENTS = [
   },
   {
     id: 'soteria',
-    emotion: 'helpful',
+    emotion: 'spell',
     keywords: { soteria: 3, world: 2, lore: 2, setting: 2, lockcaste: 2, veinrunner: 2, novel: 1 },
     phrases: ['what is soteria'],
     answer: "Soteria is the world all of this lives in — a disc-world where magic and machinery collide, chronicled in the novels of Theonhex Media & Publishing and played out at this very table. Your campaigns are written into its history.",
@@ -134,7 +141,7 @@ const INTENTS = [
   },
   {
     id: 'dm-mode',
-    emotion: 'helpful',
+    emotion: 'spell',
     keywords: { dm: 3, sigil: 3, architect: 2, dungeon: 1, master: 1, mode: 1, password: 1 },
     phrases: ['dm mode', 'what is the sigil', 'become a dm'],
     answer: "DM Mode is the Architect's seat — module management, campaign control, the DM side of the VTT. It's sealed behind a sigil (a passphrase). If you're meant to hold the key, you already know it.",
@@ -174,7 +181,7 @@ const INTENTS = [
   },
   {
     id: 'bug-report',
-    emotion: 'helpful',
+    emotion: 'tinker',
     keywords: { bug: 3, broken: 3, error: 2, wrong: 2, issue: 2, crash: 2, problem: 2, glitch: 2, report: 1 },
     phrases: ['found a bug', 'something is broken', 'not working'],
     answer: "A crack in the archive! Tell your DM directly — describe what you were doing, what you expected, and what happened instead. The Architect maintains these halls personally.",
@@ -182,7 +189,7 @@ const INTENTS = [
   },
   {
     id: 'wrong-character',
-    emotion: 'helpful',
+    emotion: 'tinker',
     keywords: { wrong: 3, character: 2, someone: 2, elses: 2, not: 1, mine: 2, showing: 1 },
     phrases: ['wrong character', 'not my character', "someone else's character"],
     answer: "Seeing an adventurer that isn't yours usually means a claim mix-up. Tell your DM which character you should see and which one appears — they can rebind it on their end.",
@@ -200,13 +207,13 @@ const SMALL_TALK = [
   },
   {
     test: t => /\b(thanks|thank you|thx|ty|appreciated|cheers)\b/.test(t),
-    emotion: 'happy',
+    emotion: 'ok',
     answer: "The archive is always open to you. Anything else?",
     chips: [],
   },
   {
     test: t => /\b(bye|goodbye|farewell|later|cya)\b/.test(t),
-    emotion: 'happy',
+    emotion: 'goodbye',
     answer: "May your rolls be high. Farewell!",
     chips: [],
   },
@@ -327,18 +334,35 @@ const INTENT_LABELS = {
 };
 
 /* ─── 3. EMOTION VIDEO PLAYER ─────────────────────────────────────────── */
-const LOOPING = new Set(['idle', 'thinking']);
+const IDLE_POOL = ['idle', 'waiting', 'study'];       // resting rotation
+const THINKING_POOL = ['thinking', 'loading'];        // researching rotation
+const LOOPING = new Set(THINKING_POOL);               // these loop until answered
+const RESTING = new Set(IDLE_POOL);                   // these chain into each other
 
 const EMOTION_FILE = {
   idle: 'scribe-idle-transp',
-  happy: 'scribe-happy-transp',
+  waiting: 'scribe-waiting-transp',
+  study: 'scribe-study-transp',
   thinking: 'scribe-thinking-transp',
+  loading: 'scribe-loading-transp',
+  welcome: 'scribe-welcome-transp',
+  disappearing: 'scribe-disappearing-transp',
+  happy: 'scribe-happy-transp',
+  ok: 'scribe-ok-transp',
+  goodbye: 'scribe-goodbye-transp',
   helpful: 'scribe-helpful-transp',
+  spell: 'scribe-spell-transp',
+  tinker: 'scribe-tinker-transp',
   sad: 'scribe-sad-transp',
   mad: 'scribe-angry-transp',
 };
 
-function ScribeFace({ emotion, size = 84, stage = false }) {
+const randomFrom = (arr, not) => {
+  const pool = arr.filter(e => e !== not);
+  return pool[Math.floor(Math.random() * pool.length)] || arr[0];
+};
+
+function ScribeFace({ emotion, size = 84, stage = false, forceLoop = false, onEnded }) {
   const [failed, setFailed] = useState(false);
   const videoRef = useRef(null);
 
@@ -358,7 +382,8 @@ function ScribeFace({ emotion, size = 84, stage = false }) {
           key={emotion}
           src={`/scribe/${EMOTION_FILE[emotion] || 'scribe-idle-transp'}.mp4`}
           autoPlay muted playsInline
-          loop={LOOPING.has(emotion)}
+          loop={forceLoop || LOOPING.has(emotion)}
+          onEnded={onEnded}
           onError={() => setFailed(true)}
           onContextMenu={e => e.preventDefault()}
           style={{ width: '100%', height: '100%', objectFit: stage ? 'contain' : 'cover', pointerEvents: 'none' }}
@@ -382,14 +407,26 @@ export default function ScribeLite() {
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
 
-  /* One-shot emotions return to idle after their moment */
-  const playEmotion = useCallback((emo, holdMs = 3200) => {
+  /* Return to rest: pick a different resting clip than the current one */
+  const goIdle = useCallback(() => {
+    setEmotion(prev => randomFrom(IDLE_POOL, prev));
+  }, []);
+
+  /* One-shots return to rest via onEnded; this timer is the fallback
+     (e.g. video missing → static emblem → no 'ended' event ever fires) */
+  const playEmotion = useCallback((emo, holdMs = 8000) => {
     clearTimeout(emotionTimer.current);
     setEmotion(emo);
-    if (!LOOPING.has(emo)) {
-      emotionTimer.current = setTimeout(() => setEmotion('idle'), holdMs);
+    if (!LOOPING.has(emo) && !RESTING.has(emo)) {
+      emotionTimer.current = setTimeout(goIdle, holdMs);
     }
-  }, []);
+  }, [goIdle]);
+
+  /* A clip finished: resting clips chain onward, one-shots return to rest */
+  const handleClipEnd = useCallback(() => {
+    clearTimeout(emotionTimer.current);
+    goIdle();
+  }, [goIdle]);
 
   useEffect(() => () => clearTimeout(emotionTimer.current), []);
 
@@ -399,7 +436,7 @@ export default function ScribeLite() {
 
   const openChat = () => {
     setOpen(true);
-    playEmotion('happy');
+    playEmotion('welcome');
     if (messages.length === 0) {
       setMessages([{
         from: 'scribe',
@@ -426,7 +463,7 @@ export default function ScribeLite() {
     setInput('');
     setMessages(prev => [...prev, { from: 'user', text }]);
     setBusy(true);
-    playEmotion('thinking');
+    playEmotion(randomFrom(THINKING_POOL));
 
     /* The "researching" pause — sells the character, debounces spam */
     setTimeout(() => {
@@ -440,9 +477,7 @@ export default function ScribeLite() {
         playEmotion(result.intent.emotion || 'helpful');
         pushScribe(result.intent.answer, result.intent.chips);
       } else if (result.type === 'suggest') {
-        playEmotion('thinking', 0);
-        setEmotion('helpful');
-        emotionTimer.current = setTimeout(() => setEmotion('idle'), 3200);
+        playEmotion('ok');
         pushScribe(
           "Hmm — the archives hold a few scrolls that might be what you seek:",
           result.suggestions.map(s => INTENT_LABELS[s.id]).filter(Boolean)
@@ -455,6 +490,16 @@ export default function ScribeLite() {
         );
       }
     }, 700 + Math.random() * 500);
+  };
+
+  /* Close with a disappearing act, then hide the panel */
+  const closeChat = () => {
+    clearTimeout(emotionTimer.current);
+    setEmotion('disappearing');
+    emotionTimer.current = setTimeout(() => {
+      setOpen(false);
+      goIdle();
+    }, 1100);
   };
 
   /* ── Launcher (closed state) ── */
@@ -471,7 +516,7 @@ export default function ScribeLite() {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
     >
-      <ScribeFace emotion="idle" size={isMobile ? 56 : 68} />
+      <ScribeFace emotion="idle" size={isMobile ? 56 : 68} forceLoop />
     </button>
   );
 
@@ -499,12 +544,12 @@ export default function ScribeLite() {
         padding: '12px 14px 10px', borderBottom: '1px solid rgba(200,168,74,0.18)',
         background: '#171310',
       }}>
-        <ScribeFace emotion={emotion} size={isMobile ? 130 : 160} stage />
+        <ScribeFace emotion={emotion} size={isMobile ? 130 : 160} stage onEnded={handleClipEnd} />
         <div style={{ textAlign: 'center' }}>
           <div style={{
             fontFamily: "'Cinzel', serif", fontSize: 14, fontWeight: 700,
             letterSpacing: '0.14em', color: '#f0eeeb',
-          }}>SCRIBE LITE</div>
+          }}>THE SCRIBE</div>
           <div style={{
             fontSize: 11, fontStyle: 'italic',
             color: busy ? '#c8a84a' : 'rgba(240,238,235,0.4)',
@@ -514,7 +559,7 @@ export default function ScribeLite() {
           </div>
         </div>
         <button
-          onClick={() => { setOpen(false); setEmotion('idle'); }}
+          onClick={closeChat}
           aria-label="Close"
           style={{
             position: 'absolute', top: 8, right: 10,
