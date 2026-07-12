@@ -619,12 +619,12 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
 
   return (
     <div style={{
-      minHeight: '100svh',
+      height: '100svh',
       background: bg,
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: isMobile ? 'flex-start' : 'center',
+      justifyContent: 'flex-start',
       fontFamily: 'Georgia, serif',
       position: 'relative',
       overflowX: 'hidden',
@@ -766,8 +766,8 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
 
       {/* Footer */}
       <div style={{
-        position: isMobile ? 'static' : 'absolute', bottom: 24,
-        marginTop: isMobile ? 26 : 0,
+      position: 'static',
+        marginTop: 26,
         maxWidth: isMobile ? 'min(100%, 360px)' : 'none',
         textAlign: 'center',
         fontFamily: "'Cinzel', serif", fontSize: 9,
