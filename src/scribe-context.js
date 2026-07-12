@@ -72,9 +72,22 @@ async function loadLiveBeastSections(campaignId) {
   }));
 }
 
+async function loadDbContextSections(campaignId) {
+  let query = supabase.from('scribe_context').select('source, title, body, campaign_id');
+  query = campaignId
+    ? query.or(`campaign_id.is.null,campaign_id.eq.${campaignId}`)
+    : query.is('campaign_id', null);
+  const { data, error } = await query;
+  if (error || !data) return [];
+  return data.map(r => ({ source: r.source || 'UPLOAD', title: r.title, body: r.body }));
+}
+
 export async function buildScribeContext(question, budget = 10000, campaignId = null) {
-  const liveBeasts = await loadLiveBeastSections(campaignId);
-  const allSections = [...SECTIONS, ...liveBeasts];
+  const [liveBeasts, dbSections] = await Promise.all([
+    loadLiveBeastSections(campaignId),
+    loadDbContextSections(campaignId),
+  ]);
+  const allSections = [...SECTIONS, ...liveBeasts, ...dbSections];
 
   const queryTerms = terms(question || '');
   const primer = SECTIONS[0]; // SOTERIA — WORLD PRIMER

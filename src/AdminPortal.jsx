@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
 import supabase from './lib/supabase';
+import CompendiumUpload from './CompendiumUpload';
 
 const ADMIN_UUID = import.meta.env.VITE_DM_USER_ID || 'fd2b5a52-e179-4234-9265-9b5ab36d6ace';
 
@@ -259,7 +260,7 @@ export default function AdminPortal() {
     <div style={{ minHeight: '100vh', background: '#0a0806', color: '#f0eeeb', fontFamily: 'monospace', display: 'flex' }}>
       <div style={{ width: 200, borderRight: '1px solid #2a251e', padding: 12, display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, height: '100vh', overflowY: 'auto', position: 'sticky', top: 0 }}>
         <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
-          {[[ 'tables', 'Tables' ], [ 'timeline', 'Timeline' ]].map(([v, l]) => (
+          {[[ 'tables', 'Tables' ], [ 'timeline', 'Timeline' ], [ 'upload', 'Scribe' ]].map(([v, l]) => (
             <button key={v} onClick={() => setView(v)}
               style={{ flex: 1, background: view === v ? 'rgba(200,168,74,0.14)' : 'transparent', border: `1px solid ${view === v ? 'rgba(200,168,74,0.5)' : '#3a352e'}`, borderRadius: 5, padding: '5px 0', color: view === v ? '#e8c84a' : '#8a8378', fontSize: 10, cursor: 'pointer', fontFamily: 'monospace' }}>{l}</button>
           ))}
@@ -274,6 +275,8 @@ export default function AdminPortal() {
       </div>
 
       <div style={{ flex: 1, padding: 16, minWidth: 0 }}>
+        {view === 'upload' && <CompendiumUpload />}
+
         {view === 'timeline' && (
           <div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
