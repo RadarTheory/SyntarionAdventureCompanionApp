@@ -361,8 +361,14 @@ function ScribeFace({ emotion, size = 84 }) {
           onContextMenu={e => e.preventDefault()}
           style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
         />
-      ) : (
-        <span style={{ fontSize: size * 0.45 }} role="img" aria-label="Scribe">🖋️</span>
+     ) : (
+        <img
+          src="/scribe/scribe.jpg"
+          alt="The Scribe"
+          draggable={false}
+          onContextMenu={e => e.preventDefault()}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
+        />
       )}
     </div>
   );

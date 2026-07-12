@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
 import Landing from './Landing';
+import ScribeLite from './ScribeLite';
+import ScribeLite from './ScribeLite';
 import LoadingScreen from './LoadingScreen';
 import CornerLoadingStinger from './CornerLoadingStinger';
 import LotjarrsBag from './LotjarrsBag';
@@ -76,6 +78,7 @@ export default function App() {
     </>
   );
 }
+
 
 function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -174,6 +177,8 @@ function LoginScreen() {
         fontFamily: 'Georgia, serif',
         padding: 'calc(24px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom))',
       }}
+
+      
     >
       <style>
         {`
