@@ -459,11 +459,9 @@ function DMSigilModal({ onSuccess, onCancel }) {
 }
 
 // â”€â”€â”€ MAIN LANDING COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
+export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onViewChange }) {
   const { isMobile } = useDevice();
-  useEffect(() => {
-    onViewChange?.(appView === 'campaigns' || appView === 'dm');
-  }, [appView, onViewChange]);() => localStorage.getItem('syn_view') || 'home');
+  const [appView, setAppView] = useState(() => localStorage.getItem('syn_view') || 'home');
   const [savedChars, setSavedChars] = useState([]);
   const campaignChars = savedChars.filter(c => c.status === 'approved' && c.campaign_id);
   const [loading, setLoading] = useState(true);
@@ -474,6 +472,10 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag }) {
   const [selectedChar, setSelectedChar] = useState(() => { try { const c = localStorage.getItem('syn_char'); return c ? JSON.parse(c) : null; } catch { return null; } });
   const [legalStatus, setLegalStatus] = useState('checking'); // 'checking' | 'needed' | 'accepted'
   const [showTour, setShowTour] = useState(() => !hasSeenTour());
+
+  useEffect(() => {
+    onViewChange?.(appView !== 'home');
+  }, [appView, onViewChange]);
 
   useEffect(() => {
     if (!user?.id) { setLegalStatus('needed'); return; }
