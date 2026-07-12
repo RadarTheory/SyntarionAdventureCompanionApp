@@ -334,8 +334,8 @@ const INTENT_LABELS = {
 };
 
 /* ─── 3. EMOTION VIDEO PLAYER ─────────────────────────────────────────── */
-const IDLE_POOL = ['idle', 'waiting', 'study'];       // resting rotation
-const THINKING_POOL = ['thinking'];        // researching rotation
+const IDLE_POOL = ['idle', 'waiting'];       // resting rotation
+const THINKING_POOL = ['thinking', 'study'];       // researching rotation
 const LOOPING = new Set(THINKING_POOL);               // these loop until answered
 const RESTING = new Set(IDLE_POOL);                   // these chain into each other
 
@@ -365,9 +365,15 @@ const randomFrom = (arr, not) => {
 
 function ScribeFace({ emotion, size = 84, stage = false, forceLoop = false, onEnded }) {
   const [failed, setFailed] = useState(false);
+  const [fadeIn, setFadeIn] = useState(true);
   const videoRef = useRef(null);
 
-  useEffect(() => { setFailed(false); }, [emotion]);
+  useEffect(() => {
+    setFailed(false);
+    setFadeIn(false);
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setFadeIn(true)));
+    return () => cancelAnimationFrame(id);
+  }, [emotion]);
 
   return (
     <div style={{
@@ -387,7 +393,7 @@ function ScribeFace({ emotion, size = 84, stage = false, forceLoop = false, onEn
           onEnded={onEnded}
           onError={() => setFailed(true)}
           onContextMenu={e => e.preventDefault()}
-          style={{ width: '100%', height: '100%', objectFit: stage ? 'contain' : 'cover', pointerEvents: 'none', mixBlendMode: 'screen' }}
+          style={{ width: '100%', height: '100%', objectFit: stage ? 'contain' : 'cover', pointerEvents: 'none', mixBlendMode: 'screen', opacity: fadeIn ? 1 : 0, transition: 'opacity 0.35s ease' }}
         />
       ) : (
         <span style={{ fontSize: size * 0.45 }} role="img" aria-label="Scribe">🖋️</span>
@@ -566,7 +572,7 @@ export default function ScribeLite() {
         padding: '12px 14px 10px', borderBottom: '1px solid rgba(200,168,74,0.18)',
         background: '#171310',
       }}>
-        <ScribeFace emotion={emotion} size={isMobile ? 180 : 220} stage onEnded={handleClipEnd} />
+        <ScribeFace emotion={emotion} size={isMobile ? 220 : 280} stage onEnded={handleClipEnd} />
         <div style={{ textAlign: 'center' }}>
           <div style={{
             fontFamily: "'Cinzel', serif", fontSize: 14, fontWeight: 700,
