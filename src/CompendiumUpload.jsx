@@ -141,7 +141,7 @@ export default function CompendiumUpload() {
       }
       const entryCount = sections.reduce((n, s) => n + s.body.split('\n').length, 0);
       setPreview({ sections, entryCount });
-      setStatus(`Parsed: ${wb.SheetNames.length} sheets → ${sections.length} sections → ${entryCount} entries. Review below, then Commit.`);
+      setStatus(`Parsed: ${sections.length} sections → ${entryCount} entries. Review below, then Commit.`);
     } catch (err) {
       setStatus(`Parse error: ${err.message}`);
       setPreview(null);
