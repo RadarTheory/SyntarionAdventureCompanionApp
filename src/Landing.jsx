@@ -97,7 +97,7 @@ function DriftstoneButton({ onClick, isMobile }) {
 // â”€â”€â”€ SYNTARION LOGO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false }) {
   const ink = darkMode ? '#f0eeeb' : '#1a1714';
-  const logoMediaSize = useHeroVideo ? size * 1.28 : size;
+   const logoMediaSize = useHeroVideo ? size * 2 : size;
   const landingBg = '#f0eeeb';
   const [heroVideoSrc] = useState(() => '/landing-creatures.mp4?t=' + Date.now());
   const [videoReady, setVideoReady] = useState(useHeroVideo);
@@ -120,7 +120,6 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false }) {
             id="syn-hero-reel"
             src={heroVideoSrc}
             width={logoMediaSize}
-            height={logoMediaSize}
             autoPlay
             muted
             loop
@@ -132,15 +131,14 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false }) {
             onEnded={() => setLoopBlink(false)}
             onError={() => setVideoReady(false)}
             style={{
-              display: 'block',
+        display: 'block',
               width: logoMediaSize,
-              height: logoMediaSize,
-              background: landingBg,
-              objectFit: 'cover',
+              height: 'auto',
+              background: 'transparent',
               opacity: loopBlink ? 0.78 : 1,
               transition: 'opacity 180ms ease',
-              WebkitMaskImage: 'radial-gradient(ellipse at center, #000 56%, rgba(0,0,0,0.82) 70%, transparent 100%)',
-              maskImage: 'radial-gradient(ellipse at center, #000 56%, rgba(0,0,0,0.82) 70%, transparent 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 75% 60% at center, #000 28%, rgba(0,0,0,0.5) 52%, transparent 88%)',
+              maskImage: 'radial-gradient(ellipse 75% 60% at center, #000 28%, rgba(0,0,0,0.5) 52%, transparent 88%)',
               mixBlendMode: 'normal',
               filter: darkMode ? 'brightness(1.05)' : 'contrast(1.04)',
               pointerEvents: 'none',
