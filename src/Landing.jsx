@@ -98,10 +98,10 @@ function DriftstoneButton({ onClick, isMobile }) {
 // ─── SYNTARION LOGO ──────────────────────────────────────────────────────────
 function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isMobile = false }) {
   const ink = darkMode ? '#f0eeeb' : '#1a1714';
-   const logoMediaSize = useHeroVideo ? size * 2.6 : size;
+   const logoMediaSize = useHeroVideo ? size * (isMobile ? 2.18 : 2.32) : size;
   const heroMask = isMobile
-    ? 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.16) 5%, rgba(0,0,0,0.86) 13%, #000 23%, #000 64%, rgba(0,0,0,0.7) 80%, transparent 100%)'
-    : 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.18) 5%, rgba(0,0,0,0.88) 12%, #000 22%, #000 64%, rgba(0,0,0,0.68) 80%, transparent 100%)';
+    ? 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.34) 5%, rgba(0,0,0,0.9) 12%, #000 22%, #000 70%, rgba(0,0,0,0.72) 84%, transparent 100%)'
+    : 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.34) 5%, rgba(0,0,0,0.9) 12%, #000 20%, #000 70%, rgba(0,0,0,0.72) 84%, transparent 100%)';
   const landingBg = '#f0eeeb';
   const [heroVideoSrc] = useState(() => '/landing-creatures.mp4?t=' + Date.now());
   const [videoReady, setVideoReady] = useState(useHeroVideo);
@@ -137,7 +137,7 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
             style={{
         display: 'block',
               width: logoMediaSize,
-              maxWidth: isMobile ? '118vw' : '96vw',
+              maxWidth: isMobile ? '108vw' : 'min(90vw, 790px)',
               height: 'auto',
               background: 'transparent',
               opacity: loopBlink ? 0.78 : 1,
@@ -167,7 +167,7 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
               height: 2,
               background: darkMode ? 'rgba(200,168,74,0.34)' : 'rgba(26,23,20,0.14)',
               borderRadius: 999,
-              margin: `${isMobile ? -6 : -12}px 0 ${size * 0.052}px`,
+              margin: `${isMobile ? 0 : -2}px 0 ${size * 0.075}px`,
               boxShadow: 'none',
             }}
           />
@@ -180,6 +180,7 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
           color: ink,
           marginTop: useHeroVideo ? 0 : size * 0.04,
           lineHeight: 1,
+          textShadow: darkMode ? '0 2px 18px rgba(0,0,0,0.92), 0 0 30px rgba(200,168,74,0.12)' : '0 1px 14px rgba(255,255,255,0.65)',
         }}>
           SYNTARION
         </div>
@@ -620,8 +621,8 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
       sub: loading
         ? 'Consulting the archives...'
         : savedChars.length > 0
-          ? `${savedChars.length} character${savedChars.length > 1 ? 's' : ''} saved`
-          : 'Begin your journey',
+          ? 'Choose your adventurer'
+          : 'Create your first adventurer',
       onClick: handlePlay,
     },
     ...(campaignChars.length > 0 ? [{
@@ -668,9 +669,28 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
       padding: isMobile ? 'calc(18px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom))' : '34px 24px 28px',
     }}>
 
+      {/* World map atmosphere */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 0,
+          pointerEvents: 'none',
+          backgroundImage: `url('/SoteriaMap.jpg')`,
+          backgroundSize: isMobile ? 'auto 115%' : 'cover',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          opacity: landingDarkMode ? 0.08 : 0.105,
+          filter: landingDarkMode ? 'sepia(0.34) saturate(0.66) contrast(1.06) brightness(0.62)' : 'sepia(0.14) saturate(0.56) contrast(0.96) brightness(1.02)',
+          mixBlendMode: landingDarkMode ? 'screen' : 'multiply',
+        }}
+      />
+
       {/* Vignette */}
       <div style={{
         position: 'fixed', inset: 0,
+        zIndex: 0,
         background: pageVignette,
         pointerEvents: 'none',
       }} />
@@ -712,120 +732,193 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
       />
     )}
 
-      {/* Logo */}
-      <div style={{ animation: 'fadeUp 1.1s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '0.1s' }}>
-        <SyntarionLogo size={isMobile ? 238 : 360} darkMode={landingDarkMode} useHeroVideo isMobile={isMobile} />
-      </div>
-
-      {/* Tagline */}
       <div style={{
-        marginTop: 8,
-        marginBottom: isMobile ? 24 : 44,
-        textAlign: 'center',
-        animation: 'fadeUp 1.1s cubic-bezier(0.16,1,0.3,1) both',
-        animationDelay: '0.3s',
-      }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 12,
-          justifyContent: isMobile ? 'flex-start' : 'center', marginBottom: 16,
-        }}>
-          <div style={{ width: 40, height: '0.5px', background: lineInk }} />
-          <div style={{ width: 4, height: 4, background: ink, transform: 'rotate(45deg)', opacity: landingDarkMode ? 0.45 : 0.25 }} />
-          <div style={{ width: 40, height: '0.5px', background: lineInk }} />
-        </div>
-        </div>
-
-      {/* Buttons */}
-      <div style={{
+        position: 'relative',
+        zIndex: 1,
+        width: '100%',
+        maxWidth: isMobile ? 420 : 1040,
+        minHeight: isMobile ? 'auto' : 'calc(100svh - 146px)',
         display: 'flex',
         flexDirection: 'column',
-        gap: 9,
-        width: '100%',
-        maxWidth: isMobile ? 360 : 320,
-        animation: 'fadeUp 1.1s cubic-bezier(0.16,1,0.3,1) both',
-        animationDelay: '0.5s',
+        alignItems: 'center',
+        justifyContent: isMobile ? 'flex-start' : 'center',
+        marginTop: isMobile ? 18 : 6,
       }}>
-        {buttons.map(btn => {
-          const isHovered = hoveredBtn === btn.id;
-          const isPrimary = btn.primary;
+        <div style={{
+          width: '100%',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          animation: 'fadeUp 1.1s cubic-bezier(0.16,1,0.3,1) both',
+          animationDelay: '0.1s',
+        }}>
+          <div aria-hidden="true" style={{
+            position: 'absolute',
+            left: isMobile ? -24 : -52,
+            right: isMobile ? -24 : -52,
+            top: isMobile ? 28 : 36,
+            bottom: isMobile ? 54 : 48,
+            background: landingDarkMode
+              ? 'radial-gradient(ellipse at center, rgba(200,168,74,0.08) 0%, rgba(20,17,12,0.22) 42%, rgba(5,4,3,0.50) 82%, transparent 100%)'
+              : 'radial-gradient(ellipse at center, rgba(255,255,255,0.54) 0%, rgba(219,220,223,0.26) 48%, transparent 82%)',
+            pointerEvents: 'none',
+          }} />
 
-          const bgColor = isPrimary
-            ? (isHovered ? (landingDarkMode ? 'rgba(45,38,28,0.96)' : '#1a1714') : (landingDarkMode ? 'rgba(31,26,19,0.94)' : '#2a2420'))
-            : (isHovered ? (landingDarkMode ? 'rgba(240,238,235,0.08)' : 'rgba(26,23,20,0.07)') : 'transparent');
+          <div style={{
+            position: 'relative',
+            width: '100%',
+            maxWidth: isMobile ? 'min(100%, 390px)' : 900,
+            minHeight: isMobile ? 430 : 570,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+          }}>
+            <div aria-hidden="true" style={{
+              position: 'absolute',
+              left: isMobile ? -8 : 8,
+              right: isMobile ? -8 : 8,
+              top: isMobile ? 48 : 56,
+              bottom: isMobile ? 174 : 192,
+              background: landingDarkMode
+                ? 'linear-gradient(to bottom, rgba(9,8,7,0) 0%, rgba(13,12,10,0.88) 10%, rgba(22,20,17,0.78) 50%, rgba(13,12,10,0.88) 90%, rgba(9,8,7,0) 100%)'
+                : 'linear-gradient(to bottom, rgba(240,238,235,0) 0%, rgba(238,237,235,0.9) 10%, rgba(243,242,239,0.82) 50%, rgba(238,237,235,0.9) 90%, rgba(240,238,235,0) 100%)',
+              boxShadow: landingDarkMode
+                ? '0 18px 58px rgba(0,0,0,0.34)'
+                : '0 16px 48px rgba(26,23,20,0.10)',
+              pointerEvents: 'none',
+            }} />
+            <div aria-hidden="true" style={{
+              position: 'absolute',
+              left: isMobile ? 10 : 24,
+              right: isMobile ? 10 : 24,
+              top: isMobile ? 44 : 52,
+              height: 1,
+              background: 'linear-gradient(90deg, transparent, rgba(200,168,74,0.44), transparent)',
+            }} />
+            <div aria-hidden="true" style={{
+              position: 'absolute',
+              left: isMobile ? 10 : 24,
+              right: isMobile ? 10 : 24,
+              bottom: isMobile ? 96 : 116,
+              height: 1,
+              background: 'linear-gradient(90deg, transparent, rgba(200,168,74,0.30), transparent)',
+            }} />
+            <SyntarionLogo size={isMobile ? 204 : 318} darkMode={landingDarkMode} useHeroVideo isMobile={isMobile} />
+          </div>
 
-          const borderColor = isPrimary
-            ? (landingDarkMode ? 'rgba(200,168,74,0.68)' : '#2a2420')
-            : lineInk;
+          <div style={{
+            marginTop: isMobile ? -8 : -12,
+            marginBottom: isMobile ? 22 : 30,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            color: mutedInk,
+            fontFamily: "'Cinzel', serif",
+            fontSize: isMobile ? 8 : 9,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            opacity: 0.78,
+          }}>
+            <span>Soteria</span>
+            <span style={{ width: 4, height: 4, border: `1px solid ${lineInk}`, transform: 'rotate(45deg)' }} />
+            <span>178 E.U.</span>
+          </div>
+        </div>
 
-          const labelColor = isPrimary ? '#f0eeeb' : ink;
-          const subColor = isPrimary ? (landingDarkMode ? 'rgba(226,207,145,0.72)' : 'rgba(240,238,235,0.5)') : mutedInk;
+        <div style={{
+          position: 'relative',
+          zIndex: 2,
+          width: '100%',
+          maxWidth: isMobile ? 360 : 680,
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, minmax(0, 1fr))',
+          gap: isMobile ? 9 : 8,
+          animation: 'fadeUp 1.1s cubic-bezier(0.16,1,0.3,1) both',
+          animationDelay: '0.45s',
+        }}>
+          {buttons.map(btn => {
+            const isHovered = hoveredBtn === btn.id;
+            const isPrimary = btn.primary;
+            const bgColor = isPrimary
+              ? (isHovered ? (landingDarkMode ? 'rgba(45,38,28,0.96)' : '#1a1714') : (landingDarkMode ? 'rgba(31,26,19,0.94)' : '#2a2420'))
+              : (isHovered ? (landingDarkMode ? 'rgba(240,238,235,0.075)' : 'rgba(26,23,20,0.07)') : (landingDarkMode ? 'rgba(20,17,12,0.62)' : 'rgba(255,255,255,0.36)'));
+            const borderColor = isPrimary
+              ? (landingDarkMode ? 'rgba(200,168,74,0.72)' : '#2a2420')
+              : (isHovered ? (landingDarkMode ? 'rgba(200,168,74,0.38)' : 'rgba(26,23,20,0.24)') : lineInk);
+            const labelColor = isPrimary ? '#f0eeeb' : ink;
+            const subColor = isPrimary ? (landingDarkMode ? 'rgba(226,207,145,0.72)' : 'rgba(240,238,235,0.5)') : mutedInk;
 
-          return (
-            <button
-              key={btn.id}
-              onClick={btn.onClick}
-              onMouseEnter={() => setHoveredBtn(btn.id)}
-              onMouseLeave={() => setHoveredBtn(null)}
-              style={{
-                background: bgColor,
-                border: `1px solid ${borderColor}`,
-                borderRadius: 4,
-                padding: isPrimary
-                  ? (isMobile ? '14px 20px' : '16px 24px')
-                  : (isMobile ? '11px 20px' : '13px 24px'),
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                transition: 'all 0.18s ease',
-                boxShadow: isPrimary
-                  ? (isHovered ? (landingDarkMode ? '0 10px 28px rgba(0,0,0,0.34)' : '0 8px 24px rgba(26,23,20,0.18)') : (landingDarkMode ? '0 6px 20px rgba(0,0,0,0.28)' : '0 4px 12px rgba(26,23,20,0.10)'))
-                  : 'none',
-                transform: isHovered ? 'translateY(-1px)' : 'none',
-                width: '100%',
-              }}
-            >
-              <div style={{ textAlign: 'left' }}>
-                <div style={{
-                  fontFamily: "'Cinzel', serif",
-                  fontSize: isPrimary ? (isMobile ? 13 : 15) : (isMobile ? 11 : 12),
-                  fontWeight: 700,
-                  letterSpacing: '0.22em',
-                  color: labelColor,
-                  marginBottom: 2,
-                }}>{btn.label}</div>
-                <div style={{
-                  fontFamily: 'Georgia, serif',
-                  fontStyle: 'italic',
-                  fontSize: isMobile ? 9 : 10,
-                  color: subColor,
-                  letterSpacing: '0.03em',
-                }}>
-                  {btn.id === 'play' && loading ? (
-                     <div className="loader" style={{ width: 12, height: 12, display: 'inline-block', verticalAlign: 'middle' }}></div>
-                  ) : btn.sub}
+            return (
+              <button
+                key={btn.id}
+                onClick={btn.onClick}
+                onMouseEnter={() => setHoveredBtn(btn.id)}
+                onMouseLeave={() => setHoveredBtn(null)}
+                style={{
+                  position: 'relative',
+                  overflow: 'hidden',
+                  background: bgColor,
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: 3,
+                  padding: isMobile ? '12px 18px' : '12px 14px',
+                  minHeight: isMobile ? (isPrimary ? 62 : 54) : 70,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: isMobile ? 'row' : 'column',
+                  alignItems: isMobile ? 'center' : 'flex-start',
+                  justifyContent: isMobile ? 'space-between' : 'center',
+                  gap: 6,
+                  transition: 'all 0.18s ease',
+                  boxShadow: isPrimary ? '0 10px 28px rgba(0,0,0,0.28)' : 'none',
+                  transform: isHovered ? 'translateY(-2px)' : 'none',
+                  width: '100%',
+                }}
+              >
+                {isHovered && <span aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(200,168,74,0.16), transparent 56%)', pointerEvents: 'none' }} />}
+                <div style={{ textAlign: isMobile ? 'left' : 'center', width: '100%', position: 'relative', zIndex: 1 }}>
+                  <div style={{
+                    fontFamily: "'Cinzel', serif",
+                    fontSize: isMobile ? 11 : 10,
+                    fontWeight: 700,
+                    letterSpacing: isMobile ? '0.20em' : '0.16em',
+                    color: labelColor,
+                    marginBottom: 3,
+                    whiteSpace: 'nowrap',
+                  }}>{btn.label}</div>
+                  <div style={{
+                    fontFamily: 'Georgia, serif',
+                    fontStyle: 'italic',
+                    fontSize: isMobile ? 9 : 8,
+                    color: subColor,
+                    letterSpacing: '0.02em',
+                    whiteSpace: isMobile ? 'normal' : 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}>
+                    {btn.id === 'play' && loading ? (
+                       <div className="loader" style={{ width: 12, height: 12, display: 'inline-block', verticalAlign: 'middle' }}></div>
+                    ) : btn.sub}
+                  </div>
                 </div>
-              </div>
-              <div style={{
-                fontSize: 14,
-                color: isPrimary ? (landingDarkMode ? 'rgba(226,207,145,0.76)' : 'rgba(240,238,235,0.5)') : mutedInk,
-                transform: isHovered ? 'translateX(3px)' : 'none',
-                transition: 'transform 0.18s ease',
-              }}>&rarr;</div>
-            </button>
-          );
-        })}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Footer */}
       <div style={{
         position: 'relative',
         zIndex: 1,
-        marginTop: isMobile ? 26 : 34,
-        maxWidth: isMobile ? 'min(100%, 360px)' : 620,
+        marginTop: isMobile ? 22 : 22,
+        maxWidth: isMobile ? 'min(100%, 360px)' : 760,
         textAlign: 'center',
-        fontFamily: "'Cinzel', serif", fontSize: 9,
-        letterSpacing: '0.28em',
+        fontFamily: "'Cinzel', serif", fontSize: 8,
+        letterSpacing: '0.24em',
         color: faintInk,
         textTransform: 'uppercase',
         animation: 'fadeUp 1.2s cubic-bezier(0.16,1,0.3,1) both',

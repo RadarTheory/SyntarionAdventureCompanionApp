@@ -41,6 +41,72 @@ const tagColor = (tag) => {
   return { bg: 'rgba(160,160,160,0.12)', color: '#b0b0b0', border: 'rgba(160,160,160,0.3)' };
 };
 
+const raceIconSrc = (raceId) => raceId ? `/RaceIcons/${String(raceId).toLowerCase().replace(/[^a-z]/g, '')}.png` : null;
+
+function RaceSigil({ raceDef, selected = false, expanded = false, watermark = false }) {
+  const [failed, setFailed] = useState(false);
+  const tc = tagColor(raceDef?.tag);
+  const src = raceIconSrc(raceDef?.id);
+  const size = expanded ? 118 : watermark ? 58 : 42;
+  const initials = (raceDef?.name || '?').replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || '?';
+
+  const background = watermark
+    ? `radial-gradient(circle at center, ${tc.bg} 0%, rgba(240,238,235,0.045) 48%, transparent 76%)`
+    : expanded
+      ? `radial-gradient(circle at center, ${tc.bg} 0%, rgba(44,36,25,0.94) 56%, rgba(20,17,12,0.78) 100%)`
+      : tc.bg;
+
+  return (
+    <div
+      aria-hidden={watermark ? 'true' : undefined}
+      title={raceDef?.name}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: expanded ? 8 : 4,
+        border: watermark ? 'none' : `1px solid ${selected ? tc.border : COLORS.border}`,
+        background,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: expanded ? 16 : 7,
+        boxSizing: 'border-box',
+        flexShrink: 0,
+        opacity: watermark ? (selected ? 0.34 : 0.24) : 1,
+        position: watermark ? 'absolute' : 'relative',
+        right: watermark ? 12 : undefined,
+        top: watermark ? '50%' : undefined,
+        transform: watermark ? 'translateY(-50%)' : undefined,
+        pointerEvents: watermark ? 'none' : 'auto',
+        overflow: 'hidden',
+        boxShadow: expanded ? `inset 0 0 32px rgba(0,0,0,0.35), 0 0 18px ${tc.bg}` : 'none',
+      }}
+    >
+      {src && !failed ? (
+        <img
+          src={src}
+          alt=""
+          onError={() => setFailed(true)}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            filter: expanded
+              ? 'invert(1) sepia(0.28) saturate(0.75) brightness(0.92) contrast(0.9) drop-shadow(0 0 10px rgba(200,168,74,0.18))'
+              : 'invert(1) sepia(0.22) saturate(0.65) brightness(0.86) contrast(0.92)',
+            mixBlendMode: 'screen',
+            opacity: expanded ? 0.82 : 0.68,
+          }}
+        />
+      ) : (
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: expanded ? 28 : 16, color: tc.color, letterSpacing: '0.08em', fontWeight: 700, opacity: expanded ? 0.85 : 0.68 }}>
+          {initials}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── RACE DISPLAY HELPER ──────────────────────────────────────────────────────
 export function getRaceDisplay(race, rv, pmV) {
   if (!race) return '';
@@ -296,14 +362,18 @@ export default function StepRace({
                   border: `1.5px solid ${isSelected ? COLORS.borderMid : COLORS.border}`,
                   borderRadius: 3,
                   height: '100%',
-                  padding: '11px 13px',
+                  padding: isExpanded ? '11px 13px' : '11px 76px 11px 13px',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
                   boxShadow: isSelected ? `0 0 0 1px ${COLORS.borderMid}` : 'none',
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
               >
+                {!isExpanded && <RaceSigil raceDef={r} selected={isSelected} watermark />}
+
                 {/* Card header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
                       fontSize: 12,
@@ -344,17 +414,25 @@ export default function StepRace({
                     onClick={e => e.stopPropagation()}
                     style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${COLORS.border}` }}
                   >
-                    {/* Description — resolveDesc handles Pa'morph lore + all other races */}
-                    <p style={{
-                      fontSize: 12,
-                      color: COLORS.textSub,
-                      fontFamily: 'Georgia, serif',
-                      fontStyle: 'italic',
-                      lineHeight: 1.75,
-                      margin: '0 0 14px',
-                    }}>
-                      {resolveDesc(r, rv, pmV)}
-                    </p>
+                    {/* Description - resolveDesc handles Pa'morph lore + all other races */}
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(118px, 150px) 1fr', gap: 18, alignItems: 'start', marginBottom: 14 }}>
+                      <RaceSigil raceDef={r} selected expanded />
+                      <div>
+                        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: tc.color, marginBottom: 8, opacity: 0.82 }}>
+                          {r.name} Sigil
+                        </div>
+                        <p style={{
+                          fontSize: 12,
+                          color: COLORS.textSub,
+                          fontFamily: 'Georgia, serif',
+                          fontStyle: 'italic',
+                          lineHeight: 1.75,
+                          margin: 0,
+                        }}>
+                          {resolveDesc(r, rv, pmV)}
+                        </p>
+                      </div>
+                    </div>
                     <TraitBlock raceId={r.id} rv={rv} pmV={pmV} />
         
                     {/* Variants (non-Pa'morph) */}

@@ -3,13 +3,13 @@ import { useEffect, useRef, useState } from 'react';
 export default function CornerLoadingStinger({ enabled = true }) {
   const videoRef = useRef(null);
   const [visible, setVisible] = useState(false);
-  const [videoSrc, setVideoSrc] = useState('/faviconloadingtransparent.mp4');
+  const [videoSrc, setVideoSrc] = useState('/loading-stinger-20260712.mp4');
 
   useEffect(() => {
     if (!enabled) return;
 
     const playStinger = () => {
-      setVideoSrc('/faviconloadingtransparent.mp4?t=' + Date.now());
+      setVideoSrc('/loading-stinger-20260712.mp4?t=' + Date.now());
       setVisible(true);
 
       requestAnimationFrame(() => {

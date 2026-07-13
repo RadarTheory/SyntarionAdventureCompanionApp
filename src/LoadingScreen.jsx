@@ -1,6 +1,6 @@
 export default function LoadingScreen() {
   // Force fresh video load by adding timestamp
-  const videoSrc = `/faviconloadingtransparent.mp4?t=${Date.now()}`;
+  const videoSrc = `/loading-stinger-20260712.mp4?t=${Date.now()}`;
 
   return (
     <div
