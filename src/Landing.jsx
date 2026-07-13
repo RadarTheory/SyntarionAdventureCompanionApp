@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
 import medallion from './assets/medallion.png';
+import worldDiscBackground from './assets/tour/world-disc-ss.png';
 import CharacterSelect from './CharacterSelect';
 import Wizard from './Wizard';
 import CharacterSheet from './CharacterSheet';
@@ -574,6 +575,8 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
   if (appView === 'campaigns') return (
     <CampaignView
       darkMode={darkMode}
+      user={user}
+      onOpenDM={handleDMSuccess}
       campaignChars={campaignChars}
       onHome={goHome}
       onUpdateChar={(updated) => setSavedChars(prev => prev.map(c => c.id === updated.id ? updated : c))}
@@ -587,7 +590,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
     <Settings user={user} darkMode={darkMode} setDarkMode={setDarkMode} onHome={goHome} />
   );
 
-  if (appView === 'dm') return <DMView darkMode={darkMode} onHome={goHome} module={dmModule} />;
+  if (appView === 'dm') return <DMView darkMode={darkMode} onHome={goHome} module={dmModule} user={user} />;
 
   if (appView === 'sheet') return (
     <CharacterSheet
@@ -677,7 +680,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
           inset: 0,
           zIndex: 0,
           pointerEvents: 'none',
-          backgroundImage: `url('/SoteriaMap.jpg')`,
+          backgroundImage: `url(${worldDiscBackground})`,
           backgroundSize: isMobile ? 'auto 115%' : 'cover',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',

@@ -1,0 +1,260 @@
+// ─── THE SCRIBE'S TALE ────────────────────────────────────────────────────────
+// Player-facing AI DM panel. The Scribe narrates, players act, dice are real.
+// Usage: <ScribeTale char={char} campaignId={campaignId} />
+// ──────────────────────────────────────────────────────────────────────────────
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { COLORS } from './constants';
+import { useActiveGameSession } from './lib/session';
+import {
+  loadOrCreateTale, loadTurns, saveTurn, updateTale,
+  runDMTurn, statModifier,
+} from './lib/scribeDM';
+
+const STAT_AXIS = { spirit: 'magic', soul: 'magic', body: 'magic', essence: 'magic', will: 'tech', whim: 'tech', mind: 'tech', dream: 'tech' };
+
+const TENSION_LABELS = ['', 'Calm', 'Stirring', 'Rising', 'Perilous', 'Climax'];
+
+export default function ScribeTale({ char, campaignId }) {
+  const [tale, setTale] = useState(null);
+  const [turns, setTurns] = useState([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [pendingRoll, setPendingRoll] = useState(null);   // { stat, dc, reason }
+  const [rollState, setRollState] = useState(null);        // { spinning, die, total, success }
+  const [error, setError] = useState(null);
+  const bottomRef = useRef(null);
+  const lockRef = useRef(false);
+  const sessionId = useActiveGameSession(campaignId);
+
+  const cid = campaignId ? String(campaignId) : null;
+
+  // ── Load or open the tale ──
+  useEffect(() => {
+    if (!cid || !char?.id) return;
+    let alive = true;
+    (async () => {
+      try {
+        const t = await loadOrCreateTale(cid, char.id);
+        if (!alive) return;
+        setTale(t);
+        const tt = await loadTurns(t.id);
+        if (!alive) return;
+        setTurns(tt);
+        // Restore an unanswered roll request from the last scribe turn
+        const last = [...tt].reverse().find(x => x.role === 'scribe');
+        const lastIdx = tt.lastIndexOf(last);
+        const answered = tt.slice(lastIdx + 1).some(x => x.role === 'roll');
+        if (last?.actions?.roll_request && !answered) setPendingRoll(last.actions.roll_request);
+      } catch (e) { setError(e.message); }
+    })();
+    return () => { alive = false; };
+  }, [cid, char?.id]);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [turns, loading, pendingRoll, rollState]);
+
+  // ── Core: send a turn to the Scribe ──
+  const sendTurn = useCallback(async (content, role = 'player') => {
+    if (lockRef.current || !tale) return;
+    lockRef.current = true;
+    setLoading(true);
+    setError(null);
+    const optimistic = { id: `tmp_${Date.now()}`, role, content, created_at: new Date().toISOString() };
+    setTurns(prev => [...prev, optimistic]);
+
+    try {
+      const { turn, tale: updated } = await runDMTurn({
+        tale, char, campaignId: cid, sessionId,
+        recentTurns: turns, playerInput: { role, content },
+      });
+      setTale(updated);
+      setTurns(prev => [...prev, {
+        id: `s_${Date.now()}`, role: 'scribe', content: turn.narration,
+        actions: { roll_request: turn.rollRequest, executed: turn.actions }, created_at: new Date().toISOString(),
+      }]);
+      setPendingRoll(turn.rollRequest || null);
+      setRollState(null);
+    } catch (e) {
+      setError(e?.message || 'The archives resisted.');
+      setTurns(prev => prev.filter(t => t.id !== optimistic.id));
+    } finally {
+      setLoading(false);
+      lockRef.current = false;
+    }
+  }, [tale, char, cid, sessionId, turns]);
+
+  const handleSend = () => {
+    const text = input.trim();
+    if (!text || loading || pendingRoll) return;
+    setInput('');
+    sendTurn(text, 'player');
+  };
+
+  // ── Dice: the player rolls; the Scribe obeys the result ──
+  const handleRoll = () => {
+    if (!pendingRoll || rollState?.spinning || loading) return;
+    setRollState({ spinning: true });
+    const die = 1 + Math.floor(Math.random() * 20);
+    const mod = statModifier(char?.stats?.[pendingRoll.stat] ?? 8);
+    const total = die + mod;
+    const success = die === 20 ? true : die === 1 ? false : total >= pendingRoll.dc;
+
+    setTimeout(async () => {
+      setRollState({ spinning: false, die, mod, total, success });
+      const label = `${pendingRoll.stat.toUpperCase()} check vs DC ${pendingRoll.dc}: d20=${die}${mod ? ` ${mod > 0 ? '+' : ''}${mod}` : ''} → ${total} — ${die === 20 ? 'CRITICAL SUCCESS' : die === 1 ? 'CRITICAL FAILURE' : success ? 'SUCCESS' : 'FAILURE'}`;
+      const rr = pendingRoll;
+      setPendingRoll(null);
+      // Give the player a beat to see the result, then feed it to the Scribe
+      setTimeout(() => sendTurn(`${label} (${rr.reason})`, 'roll'), 900);
+    }, 1100);
+  };
+
+  const beginTale = () => sendTurn(
+    `[The tale begins. ${char?.name} steps forward. Open the story: set the scene from my backstory and current campaign, and give me a hook.]`,
+    'player',
+  );
+
+  const concludeTale = async () => {
+    if (!tale || !window.confirm('Conclude this tale? The Scribe will close the record.')) return;
+    await updateTale(tale.id, { status: 'concluded' });
+    await saveTurn(tale.id, 'system', 'The tale was concluded.');
+    const fresh = await loadOrCreateTale(cid, char.id);
+    setTale(fresh);
+    setTurns(await loadTurns(fresh.id));
+    setPendingRoll(null);
+    setRollState(null);
+  };
+
+  if (!char?.id || !cid) return null;
+
+  const axis = pendingRoll ? STAT_AXIS[pendingRoll.stat] : 'magic';
+  const axisColor = axis === 'magic' ? COLORS.magic : COLORS.tech;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 420, background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, overflow: 'hidden' }}>
+
+      {/* ── Scene header ── */}
+      <div style={{ padding: '10px 14px', borderBottom: `1px solid ${COLORS.borderMid}`, background: COLORS.card, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: 160 }}>
+          <div style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: COLORS.magicText, opacity: 0.7 }}>The Scribe's Tale</div>
+          <div style={{ fontSize: 15, color: COLORS.landing, fontWeight: 600 }}>{tale?.title || '…'}</div>
+          <div style={{ fontSize: 12, color: COLORS.magicText, opacity: 0.85, fontStyle: 'italic' }}>{tale?.scene}</div>
+        </div>
+        {/* Tension meter */}
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: COLORS.landing, opacity: 0.5, marginBottom: 3 }}>
+            {TENSION_LABELS[tale?.tension || 1]}
+          </div>
+          <div style={{ display: 'flex', gap: 3 }}>
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} style={{
+                width: 16, height: 5, borderRadius: 2,
+                background: i <= (tale?.tension || 1)
+                  ? (i >= 4 ? '#b8574a' : COLORS.magic)
+                  : 'rgba(240,238,235,0.1)',
+                transition: 'background 0.4s',
+              }} />
+            ))}
+          </div>
+        </div>
+        {turns.length > 0 && (
+          <button onClick={concludeTale} title="Conclude tale"
+            style={{ background: 'none', border: `1px solid ${COLORS.borderMid}`, color: COLORS.landing, opacity: 0.6, borderRadius: 8, padding: '4px 10px', fontSize: 11, cursor: 'pointer' }}>
+            Conclude
+          </button>
+        )}
+      </div>
+
+      {/* ── Transcript ── */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {turns.length === 0 && !loading && (
+          <div style={{ margin: 'auto', textAlign: 'center', maxWidth: 380 }}>
+            <div style={{ fontSize: 40, marginBottom: 8 }}>🖋️</div>
+            <div style={{ color: COLORS.magicText, fontStyle: 'italic', fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>
+              "You wish me to <b>weave</b> a fate rather than record one? …Very well, {char?.name}. Sit. The ink is patient. You will not be."
+            </div>
+            <button onClick={beginTale} disabled={loading}
+              style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, color: COLORS.magicText, borderRadius: 10, padding: '10px 22px', fontSize: 14, cursor: 'pointer', fontWeight: 600 }}>
+              Begin the Tale
+            </button>
+          </div>
+        )}
+
+        {turns.filter(t => t.role !== 'system').map(t => (
+          <div key={t.id} style={{
+            alignSelf: t.role === 'scribe' ? 'flex-start' : 'flex-end',
+            maxWidth: '86%',
+            background: t.role === 'scribe' ? COLORS.card : t.role === 'roll' ? COLORS.techBg : COLORS.magicBg,
+            border: `1px solid ${t.role === 'scribe' ? COLORS.borderMid : t.role === 'roll' ? COLORS.techDim : COLORS.magicDim}`,
+            borderRadius: t.role === 'scribe' ? '12px 12px 12px 3px' : '12px 12px 3px 12px',
+            padding: '9px 13px',
+          }}>
+            <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', opacity: 0.55, marginBottom: 3, color: t.role === 'scribe' ? COLORS.magicText : t.role === 'roll' ? COLORS.techText : COLORS.landing }}>
+              {t.role === 'scribe' ? 'The Scribe' : t.role === 'roll' ? 'The Dice' : char?.name || 'You'}
+            </div>
+            <div style={{ fontSize: 14, lineHeight: 1.55, color: COLORS.landing, whiteSpace: 'pre-wrap' }}>{t.content}</div>
+          </div>
+        ))}
+
+        {loading && (
+          <div style={{ alignSelf: 'flex-start', color: COLORS.magicText, fontStyle: 'italic', fontSize: 13, opacity: 0.8, padding: '4px 8px' }}>
+            The quill moves<span className="tale-dots">…</span>
+          </div>
+        )}
+
+        {/* ── Roll card ── */}
+        {pendingRoll && !loading && (
+          <div style={{ alignSelf: 'center', width: '100%', maxWidth: 380, background: COLORS.card, border: `1px solid ${axisColor}`, borderRadius: 12, padding: 14, textAlign: 'center', boxShadow: `0 0 24px ${axis === 'magic' ? 'rgba(111,158,120,0.15)' : 'rgba(74,136,184,0.15)'}` }}>
+            <div style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: axisColor, marginBottom: 4 }}>The Scribe demands proof</div>
+            <div style={{ fontSize: 15, color: COLORS.landing, fontWeight: 700, marginBottom: 2 }}>
+              {pendingRoll.stat.toUpperCase()} · DC {pendingRoll.dc}
+            </div>
+            <div style={{ fontSize: 12.5, color: COLORS.landing, opacity: 0.7, fontStyle: 'italic', marginBottom: 10 }}>{pendingRoll.reason}</div>
+            {!rollState && (
+              <button onClick={handleRoll}
+                style={{ background: axis === 'magic' ? COLORS.magicBg : COLORS.techBg, border: `1px solid ${axisColor}`, color: axis === 'magic' ? COLORS.magicText : COLORS.techText, borderRadius: 10, padding: '9px 26px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                Roll d20 {statModifier(char?.stats?.[pendingRoll.stat] ?? 8) !== 0 && `(${statModifier(char?.stats?.[pendingRoll.stat] ?? 8) > 0 ? '+' : ''}${statModifier(char?.stats?.[pendingRoll.stat] ?? 8)})`}
+              </button>
+            )}
+            {rollState?.spinning && <div style={{ fontSize: 30, animation: 'tale-spin 0.5s linear infinite', display: 'inline-block' }}>⬡</div>}
+            {rollState && !rollState.spinning && (
+              <div>
+                <div style={{ fontSize: 34, fontWeight: 800, color: rollState.success ? COLORS.magic : '#b8574a' }}>{rollState.total}</div>
+                <div style={{ fontSize: 12, color: COLORS.landing, opacity: 0.7 }}>
+                  d20 {rollState.die}{rollState.mod ? ` ${rollState.mod > 0 ? '+' : ''}${rollState.mod}` : ''} — {rollState.die === 20 ? 'CRITICAL!' : rollState.die === 1 ? 'CATASTROPHE' : rollState.success ? 'Success' : 'Failure'}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {error && (
+          <div style={{ alignSelf: 'center', color: '#b8574a', fontSize: 12.5, background: 'rgba(184,87,74,0.1)', border: '1px solid rgba(184,87,74,0.3)', borderRadius: 8, padding: '6px 12px' }}>
+            {error}
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* ── Input ── */}
+      <div style={{ display: 'flex', gap: 8, padding: 10, borderTop: `1px solid ${COLORS.borderMid}`, background: COLORS.card }}>
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleSend(); }}
+          placeholder={pendingRoll ? 'The Scribe awaits your roll…' : turns.length === 0 ? 'Or begin with your own words…' : 'What do you do?'}
+          disabled={loading || !!pendingRoll}
+          style={{ flex: 1, background: COLORS.wizard, border: `1px solid ${COLORS.borderMid}`, borderRadius: 10, padding: '10px 13px', color: COLORS.landing, fontSize: 14, outline: 'none', opacity: pendingRoll ? 0.5 : 1 }}
+        />
+        <button onClick={handleSend} disabled={loading || !input.trim() || !!pendingRoll}
+          style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, color: COLORS.magicText, borderRadius: 10, padding: '0 18px', fontSize: 14, fontWeight: 600, cursor: loading || pendingRoll ? 'default' : 'pointer', opacity: loading || !input.trim() || pendingRoll ? 0.5 : 1 }}>
+          Act
+        </button>
+      </div>
+
+      <style>{`
+        @keyframes tale-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
+    </div>
+  );
+}

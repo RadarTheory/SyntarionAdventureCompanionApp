@@ -33,7 +33,7 @@ const markSeen = () => {
 const TOUR_ICONS = import.meta.glob('./assets/tour/*.png', { eager: true, import: 'default' });
 const tourIcon = (name) => (name ? TOUR_ICONS[`./assets/tour/${name}.png`] : null);
 
-function TourScreenshot({ src, title, mobile, icon }) {
+function TourScreenshot({ src, title, mobile, icon, onPreview, onClear }) {
   const [size, setSize] = useState(null);
   if (!src) return null;
 
@@ -46,6 +46,25 @@ function TourScreenshot({ src, title, mobile, icon }) {
 
   return (
     <figure
+      role="button"
+      tabIndex={0}
+      aria-label={`Enlarge ${title} screenshot`}
+      onClick={(event) => event.stopPropagation()}
+      onPointerUp={(event) => {
+        if (event.pointerType !== 'mouse') {
+          event.stopPropagation();
+          onPreview?.({ src, title, icon, pinned: true });
+        }
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onPreview?.({ src, title, icon, pinned: true });
+        }
+      }}
+      title="Preview screenshot"
+      onPointerEnter={(event) => { if (event.pointerType === 'mouse') onPreview?.({ src, title, icon, pinned: false }); }}
+      onPointerLeave={(event) => { if (event.pointerType === 'mouse') onClear?.(); }}
       style={{
         margin: mobile ? '0 0 18px' : '4px 0 0',
         width: mobile ? '100%' : desktopMaxWidth,
@@ -58,6 +77,8 @@ function TourScreenshot({ src, title, mobile, icon }) {
         boxShadow: isWorldDisc
           ? '0 14px 34px rgba(0,0,0,0.34), inset 0 0 0 1px rgba(240,238,235,0.035)'
           : '0 14px 34px rgba(0,0,0,0.28)',
+        cursor: 'zoom-in',
+        outline: 'none',
       }}
     >
       <img
@@ -77,6 +98,23 @@ function TourScreenshot({ src, title, mobile, icon }) {
           filter: isWorldDisc ? 'sepia(0.42) saturate(0.72) hue-rotate(-8deg) brightness(0.72) contrast(1.13)' : 'none',
         }}
       />
+      <div aria-hidden="true" style={{
+        position: 'absolute',
+        right: 8,
+        bottom: 8,
+        width: 26,
+        height: 26,
+        borderRadius: '50%',
+        display: 'grid',
+        placeItems: 'center',
+        background: 'rgba(10,8,5,0.72)',
+        border: '1px solid rgba(240,238,235,0.22)',
+        color: C.parchment,
+        fontSize: 13,
+        lineHeight: 1,
+        pointerEvents: 'none',
+        boxShadow: '0 4px 14px rgba(0,0,0,0.32)',
+      }}>+</div>
       {isWorldDisc && (
         <>
           <div aria-hidden="true" style={{
@@ -293,7 +331,8 @@ export default function Tour({ isDM = false, onClose }) {
     typeof window !== 'undefined' && window.innerWidth < 640
   );
  const [iconHover, setIconHover] = useState(false);
-  useEffect(() => { setIconHover(false); }, [i]);
+  const [previewShot, setPreviewShot] = useState(null);
+  useEffect(() => { setIconHover(false); setPreviewShot(null); }, [i]);
 
   const last = i === steps.length - 1;  const step = steps[i];
   const chapter = CHAPTERS[step.ch];
@@ -314,9 +353,12 @@ export default function Tour({ isDM = false, onClose }) {
   useEffect(() => {
     const onResize = () => setMobile(window.innerWidth < 640);
     const onKey = (e) => {
-      if (e.key === 'Escape') finish();
-      if (e.key === 'ArrowRight' || e.key === 'Enter') next();
-      if (e.key === 'ArrowLeft') back();
+      if (e.key === 'Escape') {
+        if (previewShot?.pinned) setPreviewShot(null);
+        else finish();
+      }
+      if (!previewShot?.pinned && (e.key === 'ArrowRight' || e.key === 'Enter')) next();
+      if (!previewShot?.pinned && e.key === 'ArrowLeft') back();
     };
     window.addEventListener('resize', onResize);
     window.addEventListener('keydown', onKey);
@@ -324,7 +366,7 @@ export default function Tour({ isDM = false, onClose }) {
       window.removeEventListener('resize', onResize);
       window.removeEventListener('keydown', onKey);
     };
-  }, [next, back, finish]);
+  }, [next, back, finish, previewShot]);
 
   const progress = ((i + 1) / steps.length) * 100;
 
@@ -423,7 +465,7 @@ export default function Tour({ isDM = false, onClose }) {
             {step.body}
           </p>
 
-          <TourScreenshot src={shot} title={step.title} mobile={mobile} icon={step.icon} />
+          <TourScreenshot src={shot} title={step.title} mobile={mobile} icon={step.icon} onPreview={setPreviewShot} onClear={() => setPreviewShot(current => current?.pinned ? current : null)} />
         </div>
 
         {/* Progress rail — styled like the alignment sliders */}
@@ -462,6 +504,63 @@ export default function Tour({ isDM = false, onClose }) {
             />
           ))}
         </div>
+
+        {previewShot && (
+          <div
+            role="dialog"
+            aria-label={`${previewShot.title} screenshot preview`}
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              position: 'fixed',
+              zIndex: 10001,
+              right: mobile ? 14 : 34,
+              top: '50%',
+              width: mobile ? 'calc(100vw - 28px)' : 'min(760px, 58vw)',
+              maxHeight: mobile ? '50svh' : '72vh',
+              transform: 'translateY(-50%)',
+              pointerEvents: previewShot.pinned ? 'auto' : 'none',
+              padding: mobile ? 8 : 10,
+              background: 'rgba(16,13,10,0.96)',
+              border: `1px solid ${previewShot.icon === 'world-disc' ? 'rgba(212,164,55,0.52)' : C.cardEdge}`,
+              borderRadius: 12,
+              boxShadow: '0 22px 70px rgba(0,0,0,0.62)',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setPreviewShot(null)}
+              aria-label="Close screenshot preview"
+              style={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                zIndex: 2,
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                border: '1px solid rgba(240,238,235,0.24)',
+                background: 'rgba(10,8,5,0.78)',
+                color: C.parchment,
+                cursor: 'pointer',
+                fontSize: 14,
+                lineHeight: 1,
+              }}
+            >X</button>
+            <img
+              src={previewShot.src}
+              alt={`${previewShot.title} screenshot preview`}
+              draggable={false}
+              style={{
+                display: 'block',
+                width: '100%',
+                maxHeight: mobile ? 'calc(50svh - 18px)' : 'calc(72vh - 20px)',
+                objectFit: 'contain',
+                borderRadius: 8,
+                filter: previewShot.icon === 'world-disc' ? 'sepia(0.42) saturate(0.72) hue-rotate(-8deg) brightness(0.72) contrast(1.13)' : 'none',
+              }}
+            />
+          </div>
+        )}
 
         {/* Controls */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

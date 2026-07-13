@@ -12,14 +12,14 @@ export function useActiveGameSession(campaignId) {
     const uid = `ags_${cid}_${Math.random().toString(36).slice(2, 7)}`;
 
     supabase.from('sessions').select('id')
-      .eq('campaign_id', cid).eq('status', 'active')
+      .eq('campaign_id', cid).in('status', ['active', 'lobby'])
       .order('created_at', { ascending: false }).limit(1).maybeSingle()
       .then(({ data }) => setSessionId(data?.id || null));
 
     const ch = supabase.channel(uid)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' },
         ({ new: row }) => {
-          if (row && String(row.campaign_id) === cid && row.status === 'active') {
+          if (row && String(row.campaign_id) === cid && ['active', 'lobby'].includes(row.status)) {
             setSessionId(row.id);
           }
         })

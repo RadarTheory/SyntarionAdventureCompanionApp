@@ -169,7 +169,19 @@ function FloatButton({ storageKey, defaultPos, children, onClick, title, hovered
 }
 
 // ─── DM SIGIL MODAL (inline) ─────────────────────────────────────────────────
-function DMSigilModal({ onSuccess, onCancel }) {
+const CUSTOM_ADVENTURE_NEEDS = [
+  'Races and variants',
+  'Classes and stat paths',
+  'Gods, faiths, and factions',
+  'NPCs and bestiary',
+  'World map pins',
+  'VTT maps and encounters',
+  'Items, loot, and shops',
+  'Scribe lore context',
+];
+
+function DMSigilModal({ onSuccess, onCancel, onCreateOwn }) {
+  const { isMobile } = useDevice();
   const [input, setInput] = useState('');
   const [error, setError] = useState(false);
   const [shake, setShake] = useState(false);
@@ -177,18 +189,58 @@ function DMSigilModal({ onSuccess, onCancel }) {
     if (input === import.meta.env.VITE_DM_PASSWORD) { onSuccess(); }
     else { setError(true); setShake(true); setTimeout(() => setShake(false), 500); setTimeout(() => setError(false), 2000); }
   };
+  const cardStyle = {
+    background: 'rgba(240,238,235,0.045)',
+    border: '1px solid rgba(240,238,235,0.12)',
+    borderRadius: 12,
+    padding: isMobile ? '14px' : '16px',
+    textAlign: 'left',
+  };
+  const sectionLabelStyle = {
+    fontFamily: "'Cinzel', serif",
+    fontSize: 10,
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase',
+    color: 'rgba(232,200,74,0.86)',
+    marginBottom: 6,
+  };
   return (
-    <div onClick={onCancel} style={{ position: 'fixed', inset: 0, background: 'rgba(10,8,6,0.72)', backdropFilter: 'blur(6px)', zIndex: 300100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#13100d', border: `1px solid ${error ? '#7f1d1d' : 'rgba(240,238,235,0.12)'}`, borderRadius: 14, padding: '32px 36px', maxWidth: 340, width: '100%', textAlign: 'center', boxShadow: '0 24px 64px rgba(0,0,0,0.6)', transform: shake ? 'translateX(-8px)' : 'none', transition: 'transform 0.08s, border-color 0.2s' }}>
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 14, fontWeight: 700, color: page.buttonText, letterSpacing: '0.06em', marginBottom: 6 }}>Enter the Sigil</div>
-        <div style={{ fontSize: 11, color: 'rgba(240,238,235,0.32)', marginBottom: 20, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>The archives are sealed.</div>
-        <input autoFocus type="password" value={input} onChange={e => { setInput(e.target.value); setError(false); }} onKeyDown={e => e.key === 'Enter' && attempt()} placeholder="···"
-          style={{ width: '100%', background: 'rgba(240,238,235,0.06)', border: `1px solid ${error ? '#ef4444' : 'rgba(240,238,235,0.14)'}`, borderRadius: 8, padding: '10px 14px', fontSize: 16, letterSpacing: '0.3em', color: '#f0eeeb', textAlign: 'center', outline: 'none', boxSizing: 'border-box', marginBottom: 12, fontFamily: 'Georgia, serif', transition: 'border-color 0.2s' }} />
-        {error && <div style={{ fontSize: 11, color: '#ef4444', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10, fontFamily: "'Cinzel', serif" }}>The archives remain sealed.</div>}
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={onCancel} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 8, padding: '9px 0', color: 'rgba(240,238,235,0.32)', fontSize: 11, cursor: 'pointer', fontFamily: "'Cinzel', serif" }}>Retreat</button>
-          <button onClick={attempt} style={{ flex: 2, background: 'rgba(240,238,235,0.06)', border: '1px solid rgba(240,238,235,0.18)', borderRadius: 8, padding: '9px 0', color: '#f0eeeb', fontSize: 11, cursor: 'pointer', fontFamily: "'Cinzel', serif", fontWeight: 700 }}>Enter</button>
+    <div onClick={onCancel} style={{ position: 'fixed', inset: 0, background: 'rgba(10,8,6,0.72)', backdropFilter: 'blur(6px)', zIndex: 300100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? 14 : 24 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#13100d', border: `1px solid ${error ? '#7f1d1d' : 'rgba(240,238,235,0.12)'}`, borderRadius: 16, padding: isMobile ? '22px 18px' : '30px 32px', maxWidth: 720, width: '100%', textAlign: 'center', boxShadow: '0 24px 64px rgba(0,0,0,0.62)', transform: shake ? 'translateX(-8px)' : 'none', transition: 'transform 0.08s, border-color 0.2s' }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 15, fontWeight: 700, color: '#f0eeeb', letterSpacing: '0.08em', marginBottom: 6 }}>Enter the Sigil</div>
+        <div style={{ fontSize: 12, color: 'rgba(240,238,235,0.46)', marginBottom: 20, fontFamily: 'Georgia, serif', fontStyle: 'italic', lineHeight: 1.45 }}>
+          The Soteria archives are sealed. Or create your own adventure.
         </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '0.82fr 1.18fr', gap: 14 }}>
+          <div style={cardStyle}>
+            <div style={sectionLabelStyle}>Soteria Access</div>
+            <div style={{ fontSize: 12, color: 'rgba(240,238,235,0.62)', fontFamily: 'Georgia, serif', lineHeight: 1.45, marginBottom: 12 }}>
+              Use this only for your private Soteria module controls.
+            </div>
+            <input autoFocus type="password" value={input} onChange={e => { setInput(e.target.value); setError(false); }} onKeyDown={e => e.key === 'Enter' && attempt()} placeholder="..."
+              style={{ width: '100%', background: 'rgba(240,238,235,0.06)', border: `1px solid ${error ? '#ef4444' : 'rgba(240,238,235,0.14)'}`, borderRadius: 8, padding: '10px 14px', fontSize: 16, letterSpacing: '0.3em', color: '#f0eeeb', textAlign: 'center', outline: 'none', boxSizing: 'border-box', marginBottom: 12, fontFamily: 'Georgia, serif', transition: 'border-color 0.2s' }} />
+            {error && <div style={{ fontSize: 10, color: '#ef4444', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10, fontFamily: "'Cinzel', serif" }}>The archives remain sealed.</div>}
+            <button onClick={attempt} style={{ width: '100%', background: 'rgba(240,238,235,0.08)', border: '1px solid rgba(240,238,235,0.18)', borderRadius: 8, padding: '10px 0', color: '#f0eeeb', fontSize: 11, cursor: 'pointer', fontFamily: "'Cinzel', serif", fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Enter Soteria</button>
+          </div>
+
+          <div style={{ ...cardStyle, borderColor: 'rgba(200,168,74,0.32)', background: 'rgba(200,168,74,0.055)' }}>
+            <div style={sectionLabelStyle}>Create Your Own Adventure</div>
+            <div style={{ fontSize: 12, color: 'rgba(240,238,235,0.68)', fontFamily: 'Georgia, serif', lineHeight: 1.5, marginBottom: 12 }}>
+              Start a separate module for your table. DMView will open to that module's campaign-scoped workspace instead of the Soteria campaigns.
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 14 }}>
+              {CUSTOM_ADVENTURE_NEEDS.map(item => (
+                <div key={item} style={{ border: '1px solid rgba(240,238,235,0.1)', borderRadius: 7, padding: '6px 8px', color: 'rgba(240,238,235,0.58)', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.08em', textTransform: 'uppercase', lineHeight: 1.3 }}>
+                  {item}
+                </div>
+              ))}
+            </div>
+            <button onClick={onCreateOwn} style={{ width: '100%', background: 'rgba(200,168,74,0.16)', border: '1px solid rgba(200,168,74,0.52)', borderRadius: 8, padding: '11px 0', color: '#e8c84a', fontSize: 11, cursor: 'pointer', fontFamily: "'Cinzel', serif", fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Create Own Adventure</button>
+          </div>
+        </div>
+
+        <button onClick={onCancel} style={{ marginTop: 14, background: 'transparent', border: 'none', color: 'rgba(240,238,235,0.34)', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', cursor: 'pointer' }}>Retreat</button>
       </div>
     </div>
   );
@@ -336,7 +388,7 @@ function HerculesLite({ campaignId, char, onClose }) {
   );
 }
 
-function CampaignList({ onSelect, userChar, onHome, darkMode = false }) {
+function CampaignList({ onSelect, userChar, onHome, darkMode = false, user = null, onOpenDM }) {
   const { isMobile } = useDevice();
   const [campaigns, setCampaigns] = useState([]);
   const [modules, setModules] = useState([]);
@@ -455,7 +507,7 @@ function CampaignList({ onSelect, userChar, onHome, darkMode = false }) {
   <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,8,6,0.8)', backdropFilter: 'blur(8px)', zIndex: 300100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
     <div style={{ background: '#13100d', border: '1px solid rgba(240,238,235,0.14)', borderRadius: 16, padding: '32px 36px', maxWidth: 480, width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: page.buttonText, letterSpacing: '0.14em' }}>{editTarget ? 'EDIT MODULE' : 'NEW MODULE'}</div>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: page.buttonText, letterSpacing: '0.14em' }}>{editTarget ? 'EDIT MODULE' : createOwnAdventure ? 'CREATE YOUR OWN ADVENTURE' : 'NEW MODULE'}</div>
         <button onClick={() => { setShowCreate(false); setEditTarget(null); }} style={{ background: 'transparent', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 5, padding: '4px 9px', cursor: 'pointer', color: 'rgba(240,238,235,0.4)', fontSize: 11, fontFamily: "'Cinzel', serif" }}>✕</button>
       </div>
 
@@ -586,7 +638,7 @@ function CampaignList({ onSelect, userChar, onHome, darkMode = false }) {
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 24 : 32, fontWeight: 700, color: page.title }}>CAMPAIGNS</div>
           <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: page.muted, marginTop: 8 }}>Select a campaign to enter the world.</div>
         </div>
-       <button onClick={() => dmUnlocked ? setShowCreate(true) : setShowSigil(true)}
+       <button onClick={() => { setCreateOwnAdventure(false); dmUnlocked ? setShowCreate(true) : setShowSigil(true); }}
           style={{ background: page.buttonBg, border: `1px solid ${darkMode ? 'rgba(200,168,74,0.54)' : 'rgba(26,23,20,0.3)'}`, borderRadius: 8, padding: isMobile ? '12px 14px' : '11px 18px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: page.buttonText, letterSpacing: '0.12em', whiteSpace: 'nowrap', flexShrink: 0, marginLeft: isMobile ? 0 : 16, width: isMobile ? '100%' : 'auto' }}>
           + Add Adventure
         </button>
@@ -2429,12 +2481,12 @@ useEffect(() => {
   );
 }
 
-export default function CampaignView({ campaignChars = [], onHome, onAssign, onUpdateChar, darkMode = false }) {
+export default function CampaignView({ campaignChars = [], onHome, onAssign, onUpdateChar, darkMode = false, user = null, onOpenDM }) {
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   if (selectedCampaign) {
     const userChar = campaignChars.find(c => c.campaign_id === String(selectedCampaign.id)) || null;
     return <CampaignDashboard campaign={selectedCampaign} userChar={userChar} onBack={() => setSelectedCampaign(null)} onAssign={onAssign} onUpdateChar={onUpdateChar} darkMode={darkMode} />;
   }
-  return <CampaignList onSelect={setSelectedCampaign} userChar={campaignChars[0] || null} onHome={onHome} darkMode={darkMode} />;
+  return <CampaignList onSelect={setSelectedCampaign} userChar={campaignChars[0] || null} onHome={onHome} darkMode={darkMode} user={user} onOpenDM={onOpenDM} />;
 }
 

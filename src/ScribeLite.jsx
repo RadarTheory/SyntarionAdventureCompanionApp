@@ -428,6 +428,7 @@ function ScribeFace({ emotion, size = 84, stage = false, forceLoop = false, onEn
   const videoRef = useRef(null);
   const file = EMOTION_FILE[emotion] || EMOTION_FILE.idle;
   const src = `/scribe/${file}.mp4`;
+  const isGlitch = emotion === 'glitch';
 
   useEffect(() => {
     setFailed(false);
@@ -448,6 +449,9 @@ function ScribeFace({ emotion, size = 84, stage = false, forceLoop = false, onEn
       background: stage ? 'transparent' : '#1c1815',
       flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
       mixBlendMode: stage ? 'screen' : 'normal',
+      position: 'relative',
+      isolation: 'isolate',
+      filter: isGlitch ? 'contrast(1.22) saturate(0.75)' : 'none',
     }}>
       {!failed ? (
         <video
@@ -459,10 +463,41 @@ function ScribeFace({ emotion, size = 84, stage = false, forceLoop = false, onEn
           onEnded={onEnded}
           onError={() => setFailed(true)}
           onContextMenu={e => e.preventDefault()}
-          style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none', display: 'block', opacity: 1, mixBlendMode: 'screen' }}
+          style={{
+            width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none', display: 'block',
+            opacity: 1,
+            mixBlendMode: 'screen',
+            transform: isGlitch ? 'translateX(-1px) skewX(-0.6deg)' : 'none',
+            filter: isGlitch ? 'contrast(1.16) saturate(0.82)' : 'none',
+          }}
         />
       ) : (
         <img src="/scribe/scribeicon.png" alt="The Scribe" style={{ width: '82%', height: '82%', objectFit: 'contain' }} />
+      )}
+      {isGlitch && !failed && (
+        <>
+          <video
+            src={src}
+            preload="auto"
+            autoPlay muted playsInline
+            aria-hidden="true"
+            className="scribe-glitch-copy scribe-glitch-copy-cyan"
+          />
+          <video
+            src={src}
+            preload="auto"
+            autoPlay muted playsInline
+            aria-hidden="true"
+            className="scribe-glitch-copy scribe-glitch-copy-red"
+          />
+          <video
+            src={src}
+            preload="auto"
+            autoPlay muted playsInline
+            aria-hidden="true"
+            className="scribe-glitch-copy scribe-glitch-copy-tear"
+          />
+        </>
       )}
     </div>
   );
@@ -524,8 +559,8 @@ export default function ScribeLite({ dismiss = false }) {
     if (emotionRef.current === emo) return;
     pendingRef.current = { emo, holdMs };
     setEmotion('glitch');
-    /* fallback: if glitch video is missing, onEnded never fires */
-    emotionTimer.current = setTimeout(handlePending, 900);
+    /* CSS static hides the seam; timeout resolves even if the clip stalls. */
+    emotionTimer.current = setTimeout(handlePending, 520);
   }, [handlePending]);
 
   /* A clip finished: glitch resolves its target, others glitch to rest */
@@ -534,7 +569,7 @@ export default function ScribeLite({ dismiss = false }) {
     if (emotionRef.current === 'glitch') { handlePending(); return; }
     pendingRef.current = { emo: randomFrom(IDLE_POOL, emotionRef.current) };
     setEmotion('glitch');
-    emotionTimer.current = setTimeout(handlePending, 900);
+    emotionTimer.current = setTimeout(handlePending, 520);
   }, [handlePending]);
 
   useEffect(() => () => clearTimeout(emotionTimer.current), []);
@@ -788,6 +823,54 @@ export default function ScribeLite({ dismiss = false }) {
       </div>
 
       <style>{`
+        .scribe-glitch-copy {
+          position: absolute;
+          inset: 0;
+          z-index: 2;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          pointer-events: none;
+          mix-blend-mode: screen;
+          opacity: 0;
+        }
+        .scribe-glitch-copy-cyan {
+          opacity: 0.58;
+          filter: brightness(1.28) sepia(1) saturate(2.2) hue-rotate(145deg);
+          clip-path: inset(8% 0 34% 0);
+          animation: scribeMouseGhostCyan 0.52s steps(4, end) both;
+        }
+        .scribe-glitch-copy-red {
+          opacity: 0.48;
+          filter: brightness(1.22) sepia(1) saturate(2.4) hue-rotate(300deg);
+          clip-path: inset(32% 0 8% 0);
+          animation: scribeMouseGhostRed 0.52s steps(4, end) both;
+        }
+        .scribe-glitch-copy-tear {
+          opacity: 0.72;
+          filter: contrast(1.35) brightness(1.18);
+          clip-path: inset(44% 0 28% 0);
+          animation: scribeMouseTear 0.52s steps(5, end) both;
+        }
+        @keyframes scribeMouseGhostCyan {
+          0% { transform: translate3d(-8px, 0, 0) skewX(-3deg); opacity: 0; }
+          18% { opacity: 0.68; }
+          54% { transform: translate3d(7px, -2px, 0) skewX(4deg); opacity: 0.46; }
+          100% { transform: translate3d(0, 0, 0); opacity: 0; }
+        }
+        @keyframes scribeMouseGhostRed {
+          0% { transform: translate3d(7px, 1px, 0) skewX(3deg); opacity: 0; }
+          22% { opacity: 0.62; }
+          64% { transform: translate3d(-6px, 2px, 0) skewX(-4deg); opacity: 0.38; }
+          100% { transform: translate3d(0, 0, 0); opacity: 0; }
+        }
+        @keyframes scribeMouseTear {
+          0% { transform: translateX(-14px) scaleX(1.08); opacity: 0; }
+          18% { opacity: 0.78; }
+          42% { transform: translateX(12px) scaleX(0.94); opacity: 0.66; }
+          70% { transform: translateX(-5px) scaleX(1.04); opacity: 0.36; }
+          100% { transform: translateX(0) scaleX(1); opacity: 0; }
+        }
         .scribe-dots::after {
           content: '';
           animation: scribeDots 1.4s steps(4, end) infinite;

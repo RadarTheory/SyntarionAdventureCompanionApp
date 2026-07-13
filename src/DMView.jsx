@@ -976,7 +976,7 @@ function VitalsPanel({ row, onClose, campaignId }) {
 // ═════════════════════════════════════════════════════════════════════════════
 const DM_TABS = ['Inbox', 'Characters', 'Campaigns', 'Chronicle', 'Scribe', 'Memory', 'Catalog', 'VTT'];
 
-export default function DMView({ user, session, onHome, darkMode = true }) {
+export default function DMView({ user, session, onHome, darkMode = true, module = null }) {
   const { isMobile } = useDevice();
   const [activeTab, setActiveTab] = useState('Inbox');
   const [characters, setCharacters] = useState([]);
@@ -1169,7 +1169,9 @@ useEffect(() => {
 
   const fetchAll = async () => {
   setLoading(true);
-  const { data: campData } = await supabase.from('campaigns').select('*').order('created_at', { ascending: true });
+  let campaignQuery = supabase.from('campaigns').select('*').order('created_at', { ascending: true });
+  if (module?.id) campaignQuery = campaignQuery.eq('module_id', module.id);
+  const { data: campData } = await campaignQuery;
   if (campData && campData.length > 0) {
     setDbCampaigns(campData);
     setActiveCampaignTab(prev => prev ?? campData[0].id);
