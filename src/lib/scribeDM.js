@@ -269,10 +269,11 @@ export async function foldMemory(tale, memoryUpdate) {
 // ─── PERSISTENCE ──────────────────────────────────────────────────────────────
 
 export async function loadOrCreateTale(campaignId, characterId) {
-  const { data: existing } = await supabase.from('scribe_tales').select('*')
+  const { data: existing, error: existingError } = await supabase.from('scribe_tales').select('*')
     .eq('campaign_id', String(campaignId)).eq('character_id', String(characterId))
     .eq('status', 'active')
     .order('created_at', { ascending: false }).limit(1).maybeSingle();
+  if (existingError) throw new Error(`Could not load Tales: ${existingError.message}`);
   if (existing) return existing;
 
   const { data: created, error } = await supabase.from('scribe_tales')
@@ -283,22 +284,25 @@ export async function loadOrCreateTale(campaignId, characterId) {
 }
 
 export async function loadTurns(taleId, limit = 200) {
-  const { data } = await supabase.from('scribe_tale_turns').select('*')
+  const { data, error } = await supabase.from('scribe_tale_turns').select('*')
     .eq('tale_id', taleId).order('created_at', { ascending: true }).limit(limit);
+  if (error) throw new Error(`Could not load Tale turns: ${error.message}`);
   return data || [];
 }
 
 export async function saveTurn(taleId, role, content, actions = null) {
-  const { data } = await supabase.from('scribe_tale_turns')
+  const { data, error } = await supabase.from('scribe_tale_turns')
     .insert({ tale_id: taleId, role, content, actions })
     .select().single();
+  if (error) throw new Error(`Could not save Tale turn: ${error.message}`);
   return data;
 }
 
 export async function updateTale(taleId, patch) {
-  const { data } = await supabase.from('scribe_tales')
+  const { data, error } = await supabase.from('scribe_tales')
     .update({ ...patch, updated_at: new Date().toISOString() })
     .eq('id', taleId).select().single();
+  if (error) throw new Error(`Could not update Tale: ${error.message}`);
   return data;
 }
 
@@ -406,6 +410,9 @@ export async function runDMTurn({ tale, char, campaignId, sessionId, recentTurns
   if (turn.tension) patch.tension = turn.tension;
   if (turn.taleTitle && (!tale.title || tale.title === 'An Untitled Tale')) patch.title = turn.taleTitle;
   let updatedTale = await updateTale(tale.id, patch) || { ...tale, ...patch };
+  if (turn.conclude && turn.epilogue) {
+    turn.narration = `${turn.narration}\n\n${turn.epilogue}`;
+  }
 
   // 6. Persist the Scribe's turn
   await saveTurn(tale.id, 'scribe', turn.narration, {

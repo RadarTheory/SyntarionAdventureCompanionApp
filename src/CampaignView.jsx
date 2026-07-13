@@ -22,6 +22,7 @@ import SessionCheckin from './SessionCheckin';
 import IntentDeclare from "./IntentDeclare";
 import PartyProximityPanel from './PartyProximityPanel';
 import PortraitUpload from "./PortraitUpload";
+import ScribeTale from './ScribeTale';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -180,67 +181,95 @@ const CUSTOM_ADVENTURE_NEEDS = [
   'Scribe lore context',
 ];
 
-function DMSigilModal({ onSuccess, onCancel, onCreateOwn }) {
-  const { isMobile } = useDevice();
+function DMSigilModal({ onSuccess, onCancel }) {
+  const [modules, setModules] = useState([]);
+  const [moduleId, setModuleId] = useState(null);
+  const [mode, setMode] = useState('create');
+  const [newName, setNewName] = useState('');
   const [input, setInput] = useState('');
-  const [error, setError] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   const [shake, setShake] = useState(false);
-  const attempt = () => {
-    if (input === import.meta.env.VITE_DM_PASSWORD) { onSuccess(); }
-    else { setError(true); setShake(true); setTimeout(() => setShake(false), 500); setTimeout(() => setError(false), 2000); }
+
+  useEffect(() => {
+    supabase.from('modules').select('id, name').order('created_at', { ascending: true })
+      .then(({ data }) => {
+        setModules(data || []);
+        if (data?.length) setModuleId(data[0].id);
+      });
+  }, []);
+
+  const fail = (msg) => {
+    setError(msg);
+    setShake(true);
+    setTimeout(() => setShake(false), 500);
+    setTimeout(() => setError(''), 2500);
   };
-  const cardStyle = {
-    background: 'rgba(240,238,235,0.045)',
-    border: '1px solid rgba(240,238,235,0.12)',
-    borderRadius: 12,
-    padding: isMobile ? '14px' : '16px',
-    textAlign: 'left',
+
+  const attempt = async () => {
+    if (busy) return;
+    setBusy(true);
+    if (mode === 'create') {
+      const { data, error: err } = await supabase.rpc('create_module', {
+        p_name: newName,
+        p_description: null,
+        p_password: input,
+      });
+      setBusy(false);
+      if (err) return fail(err.message);
+      onSuccess({ id: data, name: newName.trim(), created: true });
+      return;
+    }
+    if (!moduleId) { setBusy(false); return fail('No module selected.'); }
+    const { data, error: err } = await supabase.rpc('verify_module_dm', {
+      p_module_id: moduleId,
+      p_password: input,
+    });
+    setBusy(false);
+    if (err) return fail(err.message);
+    if (data === true) onSuccess(modules.find(m => m.id === moduleId));
+    else fail('The archives remain sealed.');
   };
-  const sectionLabelStyle = {
-    fontFamily: "'Cinzel', serif",
-    fontSize: 10,
-    letterSpacing: '0.16em',
-    textTransform: 'uppercase',
-    color: 'rgba(232,200,74,0.86)',
-    marginBottom: 6,
+
+  const inputBase = {
+    width: '100%',
+    background: 'rgba(240,238,235,0.06)',
+    border: '1px solid rgba(240,238,235,0.14)',
+    borderRadius: 8,
+    padding: '11px 14px',
+    color: '#f0eeeb',
+    outline: 'none',
+    boxSizing: 'border-box',
+    marginBottom: 12,
+    fontFamily: 'Georgia, serif',
   };
+
   return (
-    <div onClick={onCancel} style={{ position: 'fixed', inset: 0, background: 'rgba(10,8,6,0.72)', backdropFilter: 'blur(6px)', zIndex: 300100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? 14 : 24 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#13100d', border: `1px solid ${error ? '#7f1d1d' : 'rgba(240,238,235,0.12)'}`, borderRadius: 16, padding: isMobile ? '22px 18px' : '30px 32px', maxWidth: 720, width: '100%', textAlign: 'center', boxShadow: '0 24px 64px rgba(0,0,0,0.62)', transform: shake ? 'translateX(-8px)' : 'none', transition: 'transform 0.08s, border-color 0.2s' }}>
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 15, fontWeight: 700, color: '#f0eeeb', letterSpacing: '0.08em', marginBottom: 6 }}>Enter the Sigil</div>
-        <div style={{ fontSize: 12, color: 'rgba(240,238,235,0.46)', marginBottom: 20, fontFamily: 'Georgia, serif', fontStyle: 'italic', lineHeight: 1.45 }}>
-          The Soteria archives are sealed. Or create your own adventure.
+    <div onClick={onCancel} style={{ position: 'fixed', inset: 0, background: 'rgba(10,8,6,0.72)', backdropFilter: 'blur(6px)', zIndex: 300100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#13100d', border: error ? '1px solid #7f1d1d' : '1px solid rgba(240,238,235,0.12)', borderRadius: 14, padding: '36px 40px', maxWidth: 360, width: '100%', textAlign: 'center', boxShadow: '0 24px 64px rgba(0,0,0,0.6)', transform: shake ? 'translateX(-8px)' : 'none', transition: 'transform 0.08s, border-color 0.2s' }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.28em', color: 'rgba(240,238,235,0.4)', textTransform: 'uppercase', marginBottom: 8 }}>DM Mode</div>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 20, fontWeight: 700, color: '#f0eeeb', letterSpacing: '0.06em', marginBottom: 6 }}>Enter the Sigil</div>
+        <div style={{ fontSize: 12, color: 'rgba(240,238,235,0.32)', marginBottom: 18, lineHeight: 1.65, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+          {mode === 'create' ? <>Forge a new module.<br />Name it, and set its sigil.</> : <>The archives are sealed.<br />Prove you hold the key.</>}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '0.82fr 1.18fr', gap: 14 }}>
-          <div style={cardStyle}>
-            <div style={sectionLabelStyle}>Soteria Access</div>
-            <div style={{ fontSize: 12, color: 'rgba(240,238,235,0.62)', fontFamily: 'Georgia, serif', lineHeight: 1.45, marginBottom: 12 }}>
-              Use this only for your private Soteria module controls.
-            </div>
-            <input autoFocus type="password" value={input} onChange={e => { setInput(e.target.value); setError(false); }} onKeyDown={e => e.key === 'Enter' && attempt()} placeholder="..."
-              style={{ width: '100%', background: 'rgba(240,238,235,0.06)', border: `1px solid ${error ? '#ef4444' : 'rgba(240,238,235,0.14)'}`, borderRadius: 8, padding: '10px 14px', fontSize: 16, letterSpacing: '0.3em', color: '#f0eeeb', textAlign: 'center', outline: 'none', boxSizing: 'border-box', marginBottom: 12, fontFamily: 'Georgia, serif', transition: 'border-color 0.2s' }} />
-            {error && <div style={{ fontSize: 10, color: '#ef4444', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10, fontFamily: "'Cinzel', serif" }}>The archives remain sealed.</div>}
-            <button onClick={attempt} style={{ width: '100%', background: 'rgba(240,238,235,0.08)', border: '1px solid rgba(240,238,235,0.18)', borderRadius: 8, padding: '10px 0', color: '#f0eeeb', fontSize: 11, cursor: 'pointer', fontFamily: "'Cinzel', serif", fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Enter Soteria</button>
-          </div>
-
-          <div style={{ ...cardStyle, borderColor: 'rgba(200,168,74,0.32)', background: 'rgba(200,168,74,0.055)' }}>
-            <div style={sectionLabelStyle}>Create Your Own Adventure</div>
-            <div style={{ fontSize: 12, color: 'rgba(240,238,235,0.68)', fontFamily: 'Georgia, serif', lineHeight: 1.5, marginBottom: 12 }}>
-              Start a separate module for your table. DMView will open to that module's campaign-scoped workspace instead of the Soteria campaigns.
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 14 }}>
-              {CUSTOM_ADVENTURE_NEEDS.map(item => (
-                <div key={item} style={{ border: '1px solid rgba(240,238,235,0.1)', borderRadius: 7, padding: '6px 8px', color: 'rgba(240,238,235,0.58)', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.08em', textTransform: 'uppercase', lineHeight: 1.3 }}>
-                  {item}
-                </div>
-              ))}
-            </div>
-            <button onClick={onCreateOwn} style={{ width: '100%', background: 'rgba(200,168,74,0.16)', border: '1px solid rgba(200,168,74,0.52)', borderRadius: 8, padding: '11px 0', color: '#e8c84a', fontSize: 11, cursor: 'pointer', fontFamily: "'Cinzel', serif", fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Create Own Adventure</button>
-          </div>
+        {mode === 'unlock' ? (
+          <select value={moduleId ?? ''} onChange={e => setModuleId(Number(e.target.value))} style={{ ...inputBase, background: '#1c1815', fontSize: 13 }}>
+            {modules.length === 0 && <option value="">No modules yet</option>}
+            {modules.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
+        ) : (
+          <input value={newName} onChange={e => { setNewName(e.target.value); setError(''); }} placeholder="Module name" style={{ ...inputBase, fontSize: 13 }} />
+        )}
+        <input autoFocus type="password" value={input} onChange={e => { setInput(e.target.value); setError(''); }} onKeyDown={e => e.key === 'Enter' && attempt()} placeholder={mode === 'create' ? 'Set the sigil (min 6 chars)' : '...'} style={{ ...inputBase, border: error ? '1px solid #ef4444' : '1px solid rgba(240,238,235,0.14)', fontSize: 16, letterSpacing: '0.3em', textAlign: 'center', marginBottom: 14 }} />
+        {error && <div style={{ fontSize: 11, color: '#ef4444', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12, fontFamily: "'Cinzel', serif" }}>{error}</div>}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={onCancel} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 8, padding: '10px 0', color: 'rgba(240,238,235,0.32)', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', fontFamily: "'Cinzel', serif" }}>Retreat</button>
+          <button onClick={attempt} disabled={busy || (mode === 'create' && !newName.trim()) || !input.trim()} style={{ flex: 2, background: 'rgba(240,238,235,0.06)', border: '1px solid rgba(240,238,235,0.18)', borderRadius: 8, padding: '10px 0', color: '#f0eeeb', fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1, fontFamily: "'Cinzel', serif", fontWeight: 700 }}>{busy ? '...' : mode === 'create' ? 'Forge' : 'Enter'}</button>
         </div>
-
-        <button onClick={onCancel} style={{ marginTop: 14, background: 'transparent', border: 'none', color: 'rgba(240,238,235,0.34)', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', cursor: 'pointer' }}>Retreat</button>
+        <button onClick={() => { setMode(mode === 'create' ? 'unlock' : 'create'); setError(''); setInput(''); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', marginTop: 14, color: 'rgba(240,238,235,0.35)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: "'Cinzel', serif", textDecoration: 'underline' }}>
+          {mode === 'create' ? 'Unlock an existing module' : 'Forge a new module'}
+        </button>
       </div>
     </div>
   );
@@ -388,7 +417,90 @@ function HerculesLite({ campaignId, char, onClose }) {
   );
 }
 
-function CampaignList({ onSelect, userChar, onHome, darkMode = false, user = null, onOpenDM }) {
+const TALES_SCRIBE_CLIPS = [
+  { key: 'welcome', file: 'scribe-welcome-transp', line: 'The Scribe opens the archive.' },
+  { key: 'study', file: 'scribe-study-transp', line: 'He weighs names, omens, and old debts.' },
+  { key: 'thinking', file: 'scribe-thinking-transp', line: 'A hook takes shape in the margins.' },
+  { key: 'spell', file: 'scribe-spell-transp', line: 'The first scene gathers a little magic.' },
+  { key: 'helpful', file: 'scribe-helpful-transp', line: 'He keeps the tale pointed at the table.' },
+  { key: 'tinker', file: 'scribe-tinker-transp', line: 'Encounters click into place.' },
+  { key: 'happy', file: 'scribe-happy-transp', line: 'A bright answer finds the party.' },
+  { key: 'ok', file: 'scribe-ok-transp', line: 'The road steadies underfoot.' },
+  { key: 'sad', file: 'scribe-sad-transp', line: 'Not every door opens kindly.' },
+  { key: 'angry', file: 'scribe-angry-transp', line: 'Danger learns the party name.' },
+  { key: 'waiting', file: 'scribe-waiting-transp', line: 'The next choice waits for you.' },
+  { key: 'loading', file: 'scribe-loading-transp', line: 'Static gathers between pages.' },
+  { key: 'disappearing', file: 'scribe-disappearing-transp', line: 'The scene folds into shadow.' },
+  { key: 'goodbye', file: 'scribe-goodbye-transp', line: 'The archive closes, for now.' },
+  { key: 'idle', file: 'scribe-idle-transp', line: 'The Scribe is ready.' },
+];
+
+function TalesPreviewModal({ module, campaigns, userChar, onClose, onStart, page, isMobile }) {
+  const [clipIndex, setClipIndex] = useState(0);
+  const clip = TALES_SCRIBE_CLIPS[clipIndex];
+  const canStart = Boolean(userChar);
+
+  useEffect(() => {
+    if (clipIndex >= TALES_SCRIBE_CLIPS.length - 1) return undefined;
+    const id = setTimeout(() => setClipIndex(i => Math.min(i + 1, TALES_SCRIBE_CLIPS.length - 1)), 2800);
+    return () => clearTimeout(id);
+  }, [clipIndex]);
+
+  useEffect(() => {
+    const cache = TALES_SCRIBE_CLIPS.map(({ file }) => {
+      const video = document.createElement('video');
+      video.preload = 'auto';
+      video.muted = true;
+      video.src = `/scribe/${file}.mp4`;
+      return video;
+    });
+    return () => cache.forEach(video => video.removeAttribute('src'));
+  }, []);
+
+  const isDark = page.bg === '#14110c';
+  const panelBg = isDark ? 'rgba(18,14,10,0.96)' : 'rgba(251,250,247,0.96)';
+  const border = isDark ? 'rgba(200,168,74,0.34)' : 'rgba(84,68,38,0.28)';
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 300200, background: 'rgba(7,6,5,0.72)', backdropFilter: 'blur(7px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? 16 : 28 }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: 'min(920px, 100%)', maxHeight: 'min(760px, 92svh)', overflow: 'hidden', background: panelBg, border: `1px solid ${border}`, borderRadius: 14, boxShadow: '0 34px 90px rgba(0,0,0,0.58)', color: page.title, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(260px, 0.88fr) minmax(320px, 1fr)' }}>
+        <div style={{ position: 'relative', minHeight: isMobile ? 250 : 520, background: isDark ? '#0f0c09' : '#eee9df', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRight: isMobile ? 'none' : `1px solid ${border}`, borderBottom: isMobile ? `1px solid ${border}` : 'none' }}>
+          <video src="/landing-creatures.mp4" autoPlay muted loop playsInline preload="metadata" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: isDark ? 0.16 : 0.2, filter: isDark ? 'saturate(0.75) brightness(0.72)' : 'saturate(0.82) brightness(1.08)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: isDark ? 'radial-gradient(circle at 50% 44%, rgba(200,168,74,0.1), rgba(15,12,9,0.76) 68%)' : 'radial-gradient(circle at 50% 44%, rgba(255,255,255,0.18), rgba(238,233,223,0.82) 70%)' }} />
+          <video key={clip.file} className="scribe-tales-glitch" src={`/scribe/${clip.file}.mp4`} autoPlay muted playsInline loop={clip.key === 'idle'} preload="auto" style={{ position: 'relative', width: isMobile ? 170 : 230, height: isMobile ? 170 : 230, objectFit: 'contain', mixBlendMode: 'screen', filter: isDark ? 'drop-shadow(0 16px 30px rgba(0,0,0,0.55))' : 'drop-shadow(0 14px 24px rgba(26,23,20,0.22))', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', left: 22, right: 22, bottom: 22, padding: '10px 12px', border: `1px solid ${border}`, background: isDark ? 'rgba(18,14,10,0.68)' : 'rgba(251,250,247,0.72)', borderRadius: 10, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: page.muted, textAlign: 'center' }}>{clip.line}</div>
+        </div>
+        <div style={{ padding: isMobile ? 22 : 32, display: 'flex', flexDirection: 'column', gap: 18, minWidth: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.24em', textTransform: 'uppercase', color: page.faint, marginBottom: 8 }}>{module?.name || 'Soteria'} Archives</div>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 24 : 32, fontWeight: 700, color: page.title, letterSpacing: '0.04em' }}>Tales</div>
+            </div>
+            <button onClick={onClose} aria-label="Close Tales" style={{ background: 'transparent', border: `1px solid ${border}`, color: page.muted, width: 36, height: 36, borderRadius: 8, cursor: 'pointer', fontSize: 18 }}>x</button>
+          </div>
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: isMobile ? 14 : 15, lineHeight: 1.75, color: page.muted }}>
+            Tales is a solo and separate Scribe-led story chamber: he draws from the module lore and your character, then performs a standalone tale with his full expression set.
+          </div>
+          <div style={{ border: `1px solid ${border}`, borderRadius: 10, padding: 14, background: isDark ? 'rgba(200,168,74,0.08)' : 'rgba(84,68,38,0.08)' }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: page.faint, marginBottom: 6 }}>Story Chamber</div>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 15, color: page.title, fontWeight: 700 }}>{module?.name || 'Soteria'} Tales</div>
+            <div style={{ fontFamily: 'Georgia, serif', fontSize: 12, color: page.muted, fontStyle: 'italic', marginTop: 4 }}>{canStart ? 'A standalone tale will open outside the campaign list.' : 'Create or claim a character first.'}</div>
+          </div>
+          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+            {TALES_SCRIBE_CLIPS.map((item, index) => <span key={item.key} style={{ width: 6, height: 6, borderRadius: 999, background: index === clipIndex ? '#c8a84a' : page.line, opacity: index === clipIndex ? 1 : 0.74 }} />)}
+          </div>
+          <div style={{ marginTop: 'auto', display: 'flex', gap: 10, flexDirection: isMobile ? 'column' : 'row' }}>
+            <button onClick={onClose} style={{ flex: 1, background: 'transparent', border: `1px solid ${border}`, color: page.muted, borderRadius: 8, padding: '12px 14px', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.12em', cursor: 'pointer' }}>Back</button>
+            <button disabled={!canStart} onClick={() => canStart && onStart(module)} style={{ flex: 1.6, background: canStart ? '#1f1a13' : 'rgba(31,26,19,0.38)', border: `1px solid ${canStart ? 'rgba(200,168,74,0.6)' : border}`, color: canStart ? '#f0eeeb' : page.faint, borderRadius: 8, padding: '12px 14px', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.12em', cursor: canStart ? 'pointer' : 'default' }}>Begin Tale</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function CampaignList({ onSelect, userChar, onHome, darkMode = false, user = null, onOpenDM, onOpenTales }) {
   const { isMobile } = useDevice();
   const [campaigns, setCampaigns] = useState([]);
   const [modules, setModules] = useState([]);
@@ -396,6 +508,7 @@ function CampaignList({ onSelect, userChar, onHome, darkMode = false, user = nul
   const [showSigil, setShowSigil] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);   // ADD THIS
+  const [createOwnAdventure, setCreateOwnAdventure] = useState(false);
   const [draft, setDraft] = useState({               // ADD THIS
     name: '', subtitle: '', type: 'Campaign',
     description: '', setting: 'Soteria · 178 E.U.',
@@ -404,6 +517,8 @@ function CampaignList({ onSelect, userChar, onHome, darkMode = false, user = nul
   const [editTarget, setEditTarget] = useState(null);
   const [showDelete, setShowDelete] = useState(null);
   const [dmUnlocked, setDmUnlocked] = useState(false);
+  const [openModules, setOpenModules] = useState({});
+  const [talesModule, setTalesModule] = useState(null);
   const load = async () => {
     setLoading(true);
     const [{ data: mods }, { data }] = await Promise.all([
@@ -465,17 +580,29 @@ function CampaignList({ onSelect, userChar, onHome, darkMode = false, user = nul
 
   return (
     <div style={{ minHeight: '100svh', background: page.bg, fontFamily: 'Georgia, serif', overflowX: 'hidden', color: page.text }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap'); * { box-sizing: border-box; } body { margin: 0; }`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap'); * { box-sizing: border-box; } body { margin: 0; } @keyframes scribe-tales-glitch { 0% { opacity: 0; transform: translateX(-3px) scale(0.98); filter: hue-rotate(18deg) saturate(1.3); } 18% { opacity: 0.65; transform: translateX(3px) scale(1.01); clip-path: inset(12% 0 58% 0); } 34% { opacity: 0.42; transform: translateX(-2px); clip-path: inset(54% 0 18% 0); } 56% { opacity: 0.88; transform: translateX(1px); clip-path: inset(0); } 100% { opacity: 1; transform: none; filter: none; clip-path: inset(0); } } .scribe-tales-glitch { animation: scribe-tales-glitch 420ms steps(2, end); }`}</style>
 
       {showSigil && (
   <DMSigilModal
-    onSuccess={() => {
+    onSuccess={(module) => {
       setShowSigil(false);
       setDmUnlocked(true);
-      if (showDelete) { /* delete confirm will show */ }
-      else { setShowCreate(true); }
+      if (showDelete) return;
+      onOpenDM?.(module || null);
     }}
     onCancel={() => { setShowSigil(false); setEditTarget(null); setShowDelete(null); }}
+  />
+)}
+
+{talesModule && (
+  <TalesPreviewModal
+    module={talesModule.module}
+    campaigns={talesModule.campaigns}
+    userChar={userChar}
+    page={page}
+    isMobile={isMobile}
+    onClose={() => setTalesModule(null)}
+    onStart={(module) => { setTalesModule(null); onOpenTales?.(module); }}
   />
 )}
 
@@ -655,17 +782,28 @@ function CampaignList({ onSelect, userChar, onHome, darkMode = false, user = nul
         {modules.map((mod) => {
           const modCampaigns = campaigns.filter(c => String(c.module_id) === String(mod.id));
           if (!loading && modCampaigns.length === 0) return null;
+          const expanded = openModules[mod.id] !== false;
           return (
             <div key={`module-${mod.id}`} style={{ marginBottom: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, margin: '10px 2px 12px' }}>
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: page.title }}>✦ {mod.name}</div>
+              <button type="button" onClick={() => setOpenModules(prev => ({ ...prev, [mod.id]: !expanded }))} style={{ width: '100%', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'baseline', gap: 10, margin: '10px 2px 12px', textAlign: 'left' }}>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: page.title, whiteSpace: 'nowrap' }}>{expanded ? 'v' : '>'} {mod.name}</div>
                 <div style={{ flex: 1, height: '1px', background: page.line }} />
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: page.faint }}>Module · {modCampaigns.length} campaign{modCampaigns.length === 1 ? '' : 's'}</div>
-              </div>
-              {mod.description && (
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: page.faint, whiteSpace: 'nowrap' }}>Module - {modCampaigns.length} campaign{modCampaigns.length === 1 ? '' : 's'} - Tales</div>
+              </button>
+              {expanded && mod.description && (
                 <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 11, color: page.muted, margin: '0 2px 14px' }}>{mod.description}</div>
               )}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {expanded && <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <button type="button" onClick={() => setTalesModule({ module: mod, campaigns: modCampaigns })}
+          style={{ background: darkMode ? 'linear-gradient(135deg, rgba(200,168,74,0.16), rgba(27,23,18,0.95))' : 'linear-gradient(135deg, rgba(84,68,38,0.1), rgba(251,250,247,0.98))', border: `1px solid ${darkMode ? 'rgba(200,168,74,0.46)' : 'rgba(84,68,38,0.34)'}`, borderRadius: 8, padding: isMobile ? '16px 16px' : '18px 28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', width: '100%', gap: 14, boxShadow: page.shadow, overflow: 'hidden' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: page.faint, marginBottom: 5 }}>AI DM</div>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 17 : 20, fontWeight: 700, color: page.title, marginBottom: 4 }}>Tales</div>
+            <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 11, color: page.muted }}>The Scribe turns this module into a guided story.</div>
+          </div>
+          {!isMobile && <video src="/scribe/scribe-welcome-transp.mp4" autoPlay muted loop playsInline preload="metadata" style={{ width: 58, height: 58, objectFit: 'contain', mixBlendMode: 'screen', pointerEvents: 'none' }} />}
+          <div style={{ fontSize: 16, color: page.arrow, flexShrink: 0 }}>-&gt;</div>
+        </button>
         {modCampaigns.map((c) => {
           const isAssigned = userChar?.campaign_id === String(c.id);
           return (
@@ -700,7 +838,7 @@ function CampaignList({ onSelect, userChar, onHome, darkMode = false, user = nul
             </button>
           );
         })}
-              </div>
+              </div>}
             </div>
           );
         })}
@@ -1835,7 +1973,7 @@ function LootboxPanel({ campaignId, userChar, onClaimed }) {
 }
 
 // ─── CAMPAIGN DASHBOARD ───────────────────────────────────────────────────────
-const TABS = ['Map', 'Sheet', 'Scales', 'Actions', 'Abilities', 'Inventory', 'Loot', 'Log'];
+const TABS = ['Map', 'Sheet', 'Scales', 'Actions', 'Abilities', 'Inventory', 'Loot', 'Tales', 'Log'];
 function SessionLogTab({ campaignId }) {
   const [entries, setEntries] = useState(null);
 
@@ -1908,9 +2046,9 @@ function SessionLogTab({ campaignId }) {
   );
 }
 
-function CampaignDashboard({ campaign, userChar, onBack, onAssign, onUpdateChar }) {
+function CampaignDashboard({ campaign, userChar, onBack, onAssign, onUpdateChar, initialTab = 'Map' }) {
   const { isMobile } = useDevice();
-  const [activeTab, setActiveTab] = useState('Map');
+  const [activeTab, setActiveTab] = useState(initialTab || 'Map');
   const [assigning, setAssigning] = useState(false);
   const [astHovered, setAstHovered] = useState(false);
   const [hercHovered, setHercHovered] = useState(false);
@@ -2155,6 +2293,11 @@ useEffect(() => {
 
       case 'Log':
         return <SessionLogTab campaignId={String(campaign.id)} userChar={userChar} />;
+
+      case 'Tales':
+        return userChar
+          ? <ScribeTale char={userChar} campaignId={String(campaign.id)} />
+          : <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12 }}>No character loaded.</div>;
 
       default: return null;
     }
@@ -2463,8 +2606,8 @@ useEffect(() => {
         
       </div>
 
-      <div style={{ flex: 1, overflowY: activeTab === 'Map' ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column', WebkitOverflowScrolling: 'touch' }}>
-        <div style={{ padding: activeTab === 'Map' ? 0 : (isMobile ? '20px 16px calc(24px + env(safe-area-inset-bottom, 0px))' : '28px 32px'), maxWidth: activeTab === 'Map' ? '100%' : 680, width: '100%', margin: '0 auto', height: activeTab === 'Map' ? '100%' : 'auto', flex: activeTab === 'Map' ? 1 : 'none', display: activeTab === 'Map' ? 'flex' : 'block', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflowY: activeTab === 'Map' || activeTab === 'Tales' ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ padding: activeTab === 'Map' ? 0 : activeTab === 'Tales' ? (isMobile ? 10 : 16) : (isMobile ? '20px 16px calc(24px + env(safe-area-inset-bottom, 0px))' : '28px 32px'), maxWidth: activeTab === 'Map' ? '100%' : activeTab === 'Tales' ? 920 : 680, width: '100%', margin: '0 auto', height: activeTab === 'Map' || activeTab === 'Tales' ? '100%' : 'auto', flex: activeTab === 'Map' || activeTab === 'Tales' ? 1 : 'none', display: activeTab === 'Map' || activeTab === 'Tales' ? 'flex' : 'block', flexDirection: 'column' }}>
           {false && !isAssigned && userChar && (
             <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '16px 20px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Assign your character to this campaign</div>
@@ -2481,12 +2624,103 @@ useEffect(() => {
   );
 }
 
+function ModuleTalesView({ module, userChar, onBack, onUpdateChar, darkMode = false }) {
+  const { isMobile } = useDevice();
+  const [activeTool, setActiveTool] = useState('Map');
+  const [inventory, setInventory] = useState({});
+  const page = darkMode
+    ? { bg: '#14110c', panel: '#1b1712', title: '#f7efe0', muted: 'rgba(240,238,235,0.68)', faint: 'rgba(240,238,235,0.44)', line: 'rgba(240,238,235,0.16)', backText: 'rgba(240,238,235,0.78)', tab: 'rgba(240,238,235,0.06)' }
+    : { bg: '#e4e0da', panel: '#fbfaf7', title: '#1a1714', muted: 'rgba(26,23,20,0.72)', faint: 'rgba(26,23,20,0.52)', line: 'rgba(26,23,20,0.18)', backText: 'rgba(26,23,20,0.72)', tab: 'rgba(26,23,20,0.06)' };
+  const taleId = `tales:${module?.id || module?.name || 'soteria'}`;
+  const effectiveStats = (() => {
+    const base = userChar?.stats || {};
+    const itemBonuses = {};
+    Object.values(inventory).forEach(item => {
+      if (item?.attuned && item?.bonuses) {
+        Object.entries(item.bonuses).forEach(([k, v]) => { itemBonuses[k] = (itemBonuses[k] || 0) + Number(v); });
+      }
+    });
+    const effective = {};
+    ALL_EIGHT.forEach(stat => { effective[stat.key] = (base[stat.key] || 8) + (itemBonuses[stat.key] || 0); });
+    effective._itemBonuses = itemBonuses;
+    effective._conditionBonuses = {};
+    return effective;
+  })();
+  const rollAbility = async () => {};
+  const tools = ['Map', 'Battle Map', 'Sheet', 'Inventory', 'Abilities', 'Grimoire'];
+  const renderTool = () => {
+    if (!userChar) return <div style={{ border: `1px solid ${page.line}`, borderRadius: 12, padding: 22, color: page.muted, fontStyle: 'italic' }}>Create or claim a character before opening a Tale.</div>;
+    switch (activeTool) {
+      case 'Map':
+        return (
+          <div style={{ height: '100%', minHeight: isMobile ? 480 : 0, border: `1px solid ${page.line}`, borderRadius: 10, overflow: 'hidden', background: '#0f0c09' }}>
+            <WorldMapPanel campaignId={taleId} isDM={false} characters={[userChar].filter(Boolean)} />
+          </div>
+        );
+      case 'Battle Map':
+        return (
+          <div style={{ height: '100%', minHeight: isMobile ? 480 : 0, border: `1px solid ${page.line}`, borderRadius: 10, overflow: 'hidden', background: '#0f0c09' }}>
+            <VTTViewer campaignId={taleId} userChar={userChar} />
+          </div>
+        );
+      case 'Sheet':
+        return <CharacterSheetInline char={userChar} effectiveStats={effectiveStats} onUpdateChar={onUpdateChar} />;
+      case 'Inventory':
+        return <InventoryPanel char={userChar} onInventoryChange={setInventory} campaignId={taleId} />;
+      case 'Abilities':
+        return <AbilitiesPanel char={userChar} campaignId={taleId} onRoll={rollAbility} />;
+      case 'Grimoire':
+        return <GrimoirePanel char={userChar} campaignId={taleId} isDM={false} embedded />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div style={{ minHeight: '100svh', background: page.bg, color: page.title, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', overflow: 'hidden' }}>
+      <div style={{ padding: isMobile ? 'calc(16px + env(safe-area-inset-top, 0px)) 14px 12px' : '22px 28px 16px', borderBottom: `1px solid ${page.line}`, display: 'flex', alignItems: isMobile ? 'flex-start' : 'flex-end', justifyContent: 'space-between', gap: 14, flexDirection: isMobile ? 'column' : 'row' }}>
+        <div>
+          <button onClick={onBack} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: page.backText, padding: 0, marginBottom: 14 }}>&lt;- Campaigns</button>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: page.muted, marginBottom: 7 }}>{module?.name || 'Soteria'} Archives</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 25 : 34, fontWeight: 700, color: page.title, letterSpacing: '0.04em' }}>TALES</div>
+          <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: page.muted, marginTop: 7 }}>A separate Scribe-led table with map, sheet, inventory, and lore tools.</div>
+        </div>
+        <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end', width: isMobile ? '100%' : 'auto' }}>
+          {tools.map(tool => (
+            <button key={tool} onClick={() => setActiveTool(tool)} style={{ background: activeTool === tool ? 'rgba(200,168,74,0.18)' : page.tab, border: `1px solid ${activeTool === tool ? 'rgba(200,168,74,0.58)' : page.line}`, color: activeTool === tool ? page.title : page.muted, borderRadius: 8, padding: '8px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{tool}</button>
+          ))}
+        </div>
+      </div>
+      <div style={{ flex: 1, minHeight: 0, padding: isMobile ? 10 : 14, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(360px, 0.78fr) minmax(520px, 1.22fr)', gap: 12, overflow: 'hidden' }}>
+        <div style={{ minHeight: isMobile ? 430 : 0, overflow: 'hidden' }}>
+          {userChar ? <ScribeTale char={userChar} campaignId={taleId} taleScope={module?.name || 'Soteria'} /> : (
+            <div style={{ border: `1px solid ${page.line}`, borderRadius: 12, padding: 22, color: page.muted, fontStyle: 'italic' }}>Create or claim a character before opening a Tale.</div>
+          )}
+        </div>
+        <div style={{ minHeight: isMobile ? 520 : 0, overflow: activeTool === 'Map' || activeTool === 'Battle Map' ? 'hidden' : 'auto', background: page.panel, border: `1px solid ${page.line}`, borderRadius: 12, padding: activeTool === 'Map' || activeTool === 'Battle Map' ? 8 : 14, WebkitOverflowScrolling: 'touch' }}>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: page.faint, marginBottom: activeTool === 'Map' || activeTool === 'Battle Map' ? 8 : 12 }}>{activeTool}</div>
+          {renderTool()}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CampaignView({ campaignChars = [], onHome, onAssign, onUpdateChar, darkMode = false, user = null, onOpenDM }) {
   const [selectedCampaign, setSelectedCampaign] = useState(null);
+  const [selectedTalesModule, setSelectedTalesModule] = useState(null);
+  const [initialTab, setInitialTab] = useState('Map');
+  const openCampaign = (campaign, tab = 'Map') => {
+    setInitialTab(tab || 'Map');
+    setSelectedCampaign(campaign);
+  };
+  if (selectedTalesModule) {
+    return <ModuleTalesView module={selectedTalesModule} userChar={campaignChars[0] || null} onBack={() => setSelectedTalesModule(null)} onUpdateChar={onUpdateChar} darkMode={darkMode} />;
+  }
   if (selectedCampaign) {
     const userChar = campaignChars.find(c => c.campaign_id === String(selectedCampaign.id)) || null;
-    return <CampaignDashboard campaign={selectedCampaign} userChar={userChar} onBack={() => setSelectedCampaign(null)} onAssign={onAssign} onUpdateChar={onUpdateChar} darkMode={darkMode} />;
+    return <CampaignDashboard campaign={selectedCampaign} userChar={userChar} onBack={() => { setSelectedCampaign(null); setInitialTab('Map'); }} onAssign={onAssign} onUpdateChar={onUpdateChar} darkMode={darkMode} initialTab={initialTab} />;
   }
-  return <CampaignList onSelect={setSelectedCampaign} userChar={campaignChars[0] || null} onHome={onHome} darkMode={darkMode} user={user} onOpenDM={onOpenDM} />;
+  return <CampaignList onSelect={openCampaign} userChar={campaignChars[0] || null} onHome={onHome} darkMode={darkMode} user={user} onOpenDM={onOpenDM} onOpenTales={setSelectedTalesModule} />;
 }
 

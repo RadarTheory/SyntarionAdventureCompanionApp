@@ -11,8 +11,10 @@ create table if not exists scribe_tales (
   character_id text not null,          -- the tale's owner (solo play, Phase 1)
   title       text default 'An Untitled Tale',
   scene       text default 'The tale has not yet begun.',
+  act         int  default 1,
   tension     int  default 1,          -- 1 calm … 5 climax
   summary     text default '',         -- rolling compressed story memory
+  epilogue    text,
   status      text default 'active',   -- active | concluded | abandoned
   created_at  timestamptz default now(),
   updated_at  timestamptz default now()
@@ -31,6 +33,10 @@ create table if not exists scribe_tale_turns (
 
 create index if not exists idx_tale_turns_tale on scribe_tale_turns(tale_id, created_at);
 create index if not exists idx_tales_campaign on scribe_tales(campaign_id, character_id);
+
+-- Existing installs can run this file again safely.
+alter table scribe_tales add column if not exists act int default 1;
+alter table scribe_tales add column if not exists epilogue text;
 
 -- RLS: signed-in users can read/write their tales (matches your current
 -- permissive pattern; tighten to claimed_by later if desired)

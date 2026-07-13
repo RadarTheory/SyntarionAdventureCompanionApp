@@ -7,15 +7,15 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { COLORS } from './constants';
 import { useActiveGameSession } from './lib/session';
 import {
-  loadOrCreateTale, loadTurns, saveTurn, updateTale,
-  runDMTurn, statModifier,
+  loadOrCreateTale, loadTurns, saveTurn,
+  runDMTurn, statModifier, concludeTaleRecord,
 } from './lib/scribeDM';
 
 const STAT_AXIS = { spirit: 'magic', soul: 'magic', body: 'magic', essence: 'magic', will: 'tech', whim: 'tech', mind: 'tech', dream: 'tech' };
 
 const TENSION_LABELS = ['', 'Calm', 'Stirring', 'Rising', 'Perilous', 'Climax'];
 
-export default function ScribeTale({ char, campaignId }) {
+export default function ScribeTale({ char, campaignId, taleScope = 'this module' }) {
   const [tale, setTale] = useState(null);
   const [turns, setTurns] = useState([]);
   const [input, setInput] = useState('');
@@ -110,19 +110,28 @@ export default function ScribeTale({ char, campaignId }) {
   };
 
   const beginTale = () => sendTurn(
-    `[The tale begins. ${char?.name} steps forward. Open the story: set the scene from my backstory and current campaign, and give me a hook.]`,
+    `[The tale begins. ${char?.name} steps forward into ${taleScope}. Open a standalone story from my backstory, the module lore, and the tools available at the table. Give me a hook.]`,
     'player',
   );
 
   const concludeTale = async () => {
     if (!tale || !window.confirm('Conclude this tale? The Scribe will close the record.')) return;
-    await updateTale(tale.id, { status: 'concluded' });
-    await saveTurn(tale.id, 'system', 'The tale was concluded.');
-    const fresh = await loadOrCreateTale(cid, char.id);
-    setTale(fresh);
-    setTurns(await loadTurns(fresh.id));
-    setPendingRoll(null);
-    setRollState(null);
+    setLoading(true);
+    setError(null);
+    try {
+      const epilogue = "The tale was closed at the player's request and sealed into the archive before its final thread could fray.";
+      await saveTurn(tale.id, 'system', 'The tale was concluded by the player.');
+      await concludeTaleRecord({ tale, char, campaignId: cid, epilogue });
+      const fresh = await loadOrCreateTale(cid, char.id);
+      setTale(fresh);
+      setTurns(await loadTurns(fresh.id));
+      setPendingRoll(null);
+      setRollState(null);
+    } catch (e) {
+      setError(e?.message || 'The archives resisted the conclusion.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!char?.id || !cid) return null;
