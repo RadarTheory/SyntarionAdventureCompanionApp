@@ -653,7 +653,7 @@ function CampaignList({ onSelect, userChar, onHome, darkMode = false, user = nul
           <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: page.muted, textAlign: 'center', padding: '40px 0' }}>No campaigns yet. The Architect will open the world.</div>
         )}
         {modules.map((mod) => {
-          const modCampaigns = campaigns.filter(c => c.module_id === mod.id);
+          const modCampaigns = campaigns.filter(c => String(c.module_id) === String(mod.id));
           if (!loading && modCampaigns.length === 0) return null;
           return (
             <div key={`module-${mod.id}`} style={{ marginBottom: 8 }}>
