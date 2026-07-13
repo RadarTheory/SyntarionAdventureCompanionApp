@@ -105,6 +105,7 @@ function CropModal({ file, onCancel, onConfirm }) {
                 position: 'absolute',
                 left: '50%', top: '50%',
                 width: dispW, height: dispH,
+                maxWidth: 'none', maxHeight: 'none',
                 transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px))`,
                 userSelect: 'none', pointerEvents: 'none',
                 opacity: imgLoaded ? 1 : 0,

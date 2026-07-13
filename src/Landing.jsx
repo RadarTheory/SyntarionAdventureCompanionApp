@@ -97,7 +97,7 @@ function DriftstoneButton({ onClick, isMobile }) {
 
 // ─── SYNTARION LOGO ──────────────────────────────────────────────────────────
 function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isMobile = false }) {
-  const ink = darkMode ? '#f0eeeb' : '#1a1714';
+  const ink = darkMode ? '#f0eeeb' : '#050403';
    const logoMediaSize = useHeroVideo ? size * (isMobile ? 2.18 : 2.32) : size;
   const heroMask = isMobile
     ? 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.34) 5%, rgba(0,0,0,0.9) 12%, #000 22%, #000 70%, rgba(0,0,0,0.72) 84%, transparent 100%)'
@@ -180,7 +180,7 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
           color: ink,
           marginTop: useHeroVideo ? 0 : size * 0.04,
           lineHeight: 1,
-          textShadow: darkMode ? '0 2px 18px rgba(0,0,0,0.92), 0 0 30px rgba(200,168,74,0.12)' : '0 1px 14px rgba(255,255,255,0.65)',
+          textShadow: darkMode ? '0 2px 18px rgba(0,0,0,0.92), 0 0 30px rgba(200,168,74,0.12)' : '0 1px 0 rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.78)',
         }}>
           SYNTARION
         </div>
@@ -190,7 +190,7 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
           gap: size * 0.04,
           marginTop: size * 0.04,
         }}>
-          <div style={{ width: size * 0.12, height: '0.5px', background: ink, opacity: 0.3 }} />
+          <div style={{ width: size * 0.12, height: '0.5px', background: ink, opacity: 0.48 }} />
           <div style={{
             fontFamily: "'Cinzel', serif",
             fontSize: size * 0.036,
@@ -202,7 +202,7 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
           }}>
             ADVENTURE MODULE COMPANION
           </div>
-          <div style={{ width: size * 0.12, height: '0.5px', background: ink, opacity: 0.3 }} />
+          <div style={{ width: size * 0.12, height: '0.5px', background: ink, opacity: 0.48 }} />
         </div>
         <div id="syn-era" style={{
           fontFamily: "'Cinzel', serif",
@@ -603,7 +603,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
   );
 
   // ── Home screen ────────────────────────────────────────────────────────────
-  const landingDarkMode = darkMode;
+  const landingDarkMode = false;
   const ink = landingDarkMode ? '#f0eeeb' : '#1a1714';
   const mutedInk = landingDarkMode ? 'rgba(240,238,235,0.64)' : 'rgba(26,23,20,0.46)';
   const faintInk = landingDarkMode ? 'rgba(240,238,235,0.28)' : 'rgba(26,23,20,0.22)';
@@ -681,9 +681,9 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
           backgroundSize: isMobile ? 'auto 115%' : 'cover',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',
-          opacity: landingDarkMode ? 0.08 : 0.105,
-          filter: landingDarkMode ? 'sepia(0.34) saturate(0.66) contrast(1.06) brightness(0.62)' : 'sepia(0.14) saturate(0.56) contrast(0.96) brightness(1.02)',
-          mixBlendMode: landingDarkMode ? 'screen' : 'multiply',
+          opacity: 0.14,
+          filter: 'sepia(0.10) saturate(0.82) contrast(1.02) brightness(1.02)',
+          mixBlendMode: 'multiply',
         }}
       />
 
@@ -782,12 +782,11 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
               right: isMobile ? -8 : 8,
               top: isMobile ? 48 : 56,
               bottom: isMobile ? 174 : 192,
-              background: landingDarkMode
-                ? 'linear-gradient(to bottom, rgba(9,8,7,0) 0%, rgba(13,12,10,0.88) 10%, rgba(22,20,17,0.78) 50%, rgba(13,12,10,0.88) 90%, rgba(9,8,7,0) 100%)'
-                : 'linear-gradient(to bottom, rgba(240,238,235,0) 0%, rgba(238,237,235,0.9) 10%, rgba(243,242,239,0.82) 50%, rgba(238,237,235,0.9) 90%, rgba(240,238,235,0) 100%)',
-              boxShadow: landingDarkMode
-                ? '0 18px 58px rgba(0,0,0,0.34)'
-                : '0 16px 48px rgba(26,23,20,0.10)',
+              background: `
+                linear-gradient(90deg, transparent 0%, rgba(240,239,236,0.14) 8%, rgba(240,239,236,0.46) 20%, rgba(240,239,236,0.58) 50%, rgba(240,239,236,0.46) 80%, rgba(240,239,236,0.14) 92%, transparent 100%),
+                linear-gradient(to bottom, transparent 0%, rgba(238,238,237,0.20) 12%, rgba(242,241,238,0.50) 28%, rgba(242,241,238,0.44) 58%, rgba(235,236,236,0.18) 86%, transparent 100%)
+              `,
+              boxShadow: '0 14px 42px rgba(26,23,20,0.05)',
               pointerEvents: 'none',
             }} />
             <div aria-hidden="true" style={{
@@ -806,22 +805,27 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
               height: 1,
               background: 'linear-gradient(90deg, transparent, rgba(200,168,74,0.30), transparent)',
             }} />
-            <SyntarionLogo size={isMobile ? 204 : 318} darkMode={landingDarkMode} useHeroVideo isMobile={isMobile} />
+            <SyntarionLogo size={isMobile ? 204 : 318} darkMode={false} useHeroVideo isMobile={isMobile} />
           </div>
 
           <div style={{
-            marginTop: isMobile ? -8 : -12,
+            marginTop: isMobile ? -6 : -8,
             marginBottom: isMobile ? 22 : 30,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: 10,
-            color: mutedInk,
+            color: ink,
             fontFamily: "'Cinzel', serif",
-            fontSize: isMobile ? 8 : 9,
-            letterSpacing: '0.18em',
+            fontSize: isMobile ? 9 : 10,
+            fontWeight: 700,
+            letterSpacing: '0.16em',
             textTransform: 'uppercase',
-            opacity: 0.78,
+            opacity: 0.9,
+            padding: '5px 12px',
+            borderRadius: 999,
+            background: 'rgba(244,243,240,0.54)',
+            textShadow: '0 1px 8px rgba(255,255,255,0.92)',
           }}>
             <span>Soteria</span>
             <span style={{ width: 4, height: 4, border: `1px solid ${lineInk}`, transform: 'rotate(45deg)' }} />
@@ -915,12 +919,18 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
         position: 'relative',
         zIndex: 1,
         marginTop: isMobile ? 22 : 22,
-        maxWidth: isMobile ? 'min(100%, 360px)' : 760,
+        maxWidth: isMobile ? 'min(100%, 360px)' : 780,
         textAlign: 'center',
-        fontFamily: "'Cinzel', serif", fontSize: 8,
-        letterSpacing: '0.24em',
-        color: faintInk,
+        fontFamily: "'Cinzel', serif", fontSize: isMobile ? 8 : 9,
+        fontWeight: 700,
+        lineHeight: 1.55,
+        letterSpacing: isMobile ? '0.13em' : '0.18em',
+        color: 'rgba(5,4,3,0.62)',
         textTransform: 'uppercase',
+        padding: isMobile ? '6px 10px' : '7px 16px',
+        borderRadius: 999,
+        background: 'rgba(244,243,240,0.48)',
+        textShadow: '0 1px 8px rgba(255,255,255,0.9)',
         animation: 'fadeUp 1.2s cubic-bezier(0.16,1,0.3,1) both',
         animationDelay: '0.9s',
       }}>

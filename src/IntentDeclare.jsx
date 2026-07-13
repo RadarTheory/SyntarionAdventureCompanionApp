@@ -105,9 +105,12 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
   useEffect(() => {
     if (!campaignId) return;
     supabase.from('sessions')
-      .select('id').eq('campaign_id', String(campaignId))
-      .eq('status', 'active').order('created_at', { ascending: false })
-      .limit(1).maybeSingle()
+      .select('id')
+      .eq('campaign_id', String(campaignId))
+      .in('status', ['active', 'lobby'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
       .then(({ data }) => setSessionId(data?.id || null));
   }, [campaignId]);
 
@@ -198,11 +201,12 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
   const hasSpeech = !!speechText.trim();
   const hasIntent = !!intentText.trim();
   const hasTarget = !!targetId;
-  const canSend = active && !sending && (hasSpeech || (hasIntent && !hasSpeech));
+  const canSend = active && !sending && (hasSpeech || hasIntent);
 
-  // Plain intent only — no speech involved (same as the original Declare Intent flow)
-  const logPlainIntent = async (fromSpeech = false) => {
-    const text = fromSpeech ? speechText.trim() : intentText.trim();
+  // Plain intent only - no speech involved (same as the original Declare Intent flow)
+  const logPlainIntent = async (intentOverride = null) => {
+    const text = (intentOverride ?? intentText).trim();
+    if (!text) return;
     await supabase.from('grimoire_entries').insert({
       character_id: actorId, campaign_id: String(campaignId),
       type: 'event', title: 'Intent Declared',
@@ -295,16 +299,18 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
     if (!canSend) return;
     setSending(true);
 
+    const explicitIntent = intentText.trim();
+
     if (hasSpeech && hasTarget) {
       await logSpeech();
     } else if (hasSpeech) {
       await logAloud();
     }
 
-    // Every action carries an intent into the log — explicit if typed,
-    // otherwise the speech itself stands as the declared intent.
-    if (!hasSpeech && hasIntent) {
-      await logPlainIntent();
+    // Keep the DM-facing intent stream alive for every declared intent,
+    // even when the player also says something aloud.
+    if (explicitIntent) {
+      await logPlainIntent(explicitIntent);
     }
 
     setSpeechText('');
@@ -383,12 +389,12 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
         value={intentText}
         onChange={e => setIntentText(e.target.value)}
         disabled={!active || sending}
-        placeholder={active ? 'Declare your intent… (optional)' : 'No active session'}
+        placeholder={active ? 'Declare your intent... (optional)' : 'No active lobby or session'}
         style={{ background: 'rgba(200,168,74,0.05)', border: '1px solid rgba(200,168,74,0.25)', borderRadius: 6, padding: compact ? '5px 8px' : '7px 10px', color: active ? COLORS.text : COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: active ? 'normal' : 'italic', fontSize: compact ? 10 : 11, outline: 'none' }}
         onKeyDown={e => e.key === 'Enter' && submit()} />
 
       {hasSpeech && !hasTarget && (
-        <div style={{ fontSize: 9, color: '#e0a040', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Choose who you're speaking to.</div>
+        <div style={{ fontSize: 9, color: '#e0a040', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No direct target selected - this will be spoken aloud to the scene.</div>
       )}
       {hasSpeech && hasIntent && (
         <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>The DM alone will see your true intent behind these words.</div>

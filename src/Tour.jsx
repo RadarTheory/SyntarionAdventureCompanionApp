@@ -33,6 +33,74 @@ const markSeen = () => {
 const TOUR_ICONS = import.meta.glob('./assets/tour/*.png', { eager: true, import: 'default' });
 const tourIcon = (name) => (name ? TOUR_ICONS[`./assets/tour/${name}.png`] : null);
 
+function TourScreenshot({ src, title, mobile, icon }) {
+  const [size, setSize] = useState(null);
+  if (!src) return null;
+
+  const ratio = size ? size.width / size.height : 16 / 10;
+  const isPortrait = ratio < 0.86;
+  const isWide = ratio > 1.45;
+  const isWorldDisc = icon === 'world-disc';
+  const desktopMaxWidth = isPortrait ? 250 : isWide ? (isWorldDisc ? 420 : 420) : 340;
+  const maxHeight = mobile ? 210 : isPortrait ? 360 : 280;
+
+  return (
+    <figure
+      style={{
+        margin: mobile ? '0 0 18px' : '4px 0 0',
+        width: mobile ? '100%' : desktopMaxWidth,
+        maxWidth: '100%',
+        position: 'relative',
+        border: `1px solid ${isWorldDisc ? 'rgba(212,164,55,0.34)' : C.cardEdge}`,
+        borderRadius: 10,
+        overflow: 'hidden',
+        background: isWorldDisc ? '#141009' : 'rgba(240,238,235,0.04)',
+        boxShadow: isWorldDisc
+          ? '0 14px 34px rgba(0,0,0,0.34), inset 0 0 0 1px rgba(240,238,235,0.035)'
+          : '0 14px 34px rgba(0,0,0,0.28)',
+      }}
+    >
+      <img
+        src={src}
+        alt={`${title} screenshot`}
+        onLoad={(event) => {
+          const image = event.currentTarget;
+          setSize({ width: image.naturalWidth, height: image.naturalHeight });
+        }}
+        style={{
+          display: 'block',
+          width: '100%',
+          maxHeight,
+          aspectRatio: size ? `${size.width} / ${size.height}` : undefined,
+          objectFit: 'contain',
+          background: '#0f0c08',
+          filter: isWorldDisc ? 'sepia(0.42) saturate(0.72) hue-rotate(-8deg) brightness(0.72) contrast(1.13)' : 'none',
+        }}
+      />
+      {isWorldDisc && (
+        <>
+          <div aria-hidden="true" style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            background: 'radial-gradient(ellipse at center, transparent 46%, rgba(20,16,9,0.38) 100%), linear-gradient(180deg, rgba(212,164,55,0.12), transparent 28%, rgba(10,8,5,0.22))',
+            mixBlendMode: 'multiply',
+          }} />
+          <div aria-hidden="true" style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 0,
+            height: 1,
+            background: 'linear-gradient(90deg, transparent, rgba(212,164,55,0.52), transparent)',
+            pointerEvents: 'none',
+          }} />
+        </>
+      )}
+    </figure>
+  );
+}
+
 // ─── Palette (mirrors app constants — swap for COLORS imports if preferred) ──
 const C = {
   bg:        'rgba(10, 8, 5, 0.82)',
@@ -76,13 +144,6 @@ const PLAYER_STEPS = [
     body: 'Every soul in Soteria is pulled between two great forces. Magic flows from Simic; Tech radiates from Lorúk. Races lean one way by blood, classes lean by craft, and your choices lean by heart. The app tracks that pull constantly — you will see it move as you play.',
     accent: C.magic,
   },
-  {
-    ch: 'world', glyph: '✸', icon: 'stats',
-    title: 'The Eight Stats',
-    body: 'Four stats belong to the Magic axis: Spirit, Soul, Body, and Essence. Four belong to the Tech axis: Will, Whim, Mind, and Dream. Together they describe everything your adventurer can attempt — and where their nature truly lies.',
-    accent: C.tech,
-  },
-
   // ── FORGE AN ADVENTURER ────────────────────────────────────────────────────
   {
     ch: 'forge', glyph: 'Ⅰ', icon: 'race',
@@ -282,7 +343,7 @@ export default function Tour({ isDM = false, onClose }) {
     >
       <div
         style={{
-          width: '100%', maxWidth: 580,
+          width: '100%', maxWidth: shot && !mobile ? 780 : 580,
           maxHeight: '90vh', overflowY: 'auto',
           isolation: 'isolate',
           background: C.card,
@@ -316,18 +377,18 @@ export default function Tour({ isDM = false, onClose }) {
         </div>
 
         {/* Icon + title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: shot && !mobile ? 18 : 12 }}>
           <div
             onPointerEnter={(e) => { if (e.pointerType === 'mouse') setIconHover(true); }}
             onPointerLeave={(e) => { if (e.pointerType === 'mouse') setIconHover(false); }}
             onPointerUp={(e) => { if (e.pointerType !== 'mouse') setIconHover(v => !v); }}
             style={{
-              width: mobile ? 92 : 128, height: mobile ? 92 : 128,
+              width: mobile ? 92 : 104, height: mobile ? 92 : 104,
               background: C.card,
               borderRadius: art ? 0 : '50%',
               border: art ? 'none' : `1.5px solid ${step.accent}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: mobile ? 40 : 56, color: step.accent, flexShrink: 0,
+              fontSize: mobile ? 40 : 50, color: step.accent, flexShrink: 0,
               transform: iconHover ? 'scale(1.18)' : 'scale(1)',
               transformOrigin: 'center',
               transition: 'transform 220ms cubic-bezier(0.16, 1, 0.3, 1)',
@@ -338,33 +399,32 @@ export default function Tour({ isDM = false, onClose }) {
               : step.glyph}
           </div>
           <h2 style={{
-            margin: 0, fontSize: mobile ? 20 : 24, fontWeight: 700,
-            color: C.parchment, lineHeight: 1.2,
+            margin: 0, fontSize: mobile ? 20 : 27, fontWeight: 700,
+            color: C.parchment, lineHeight: 1.15,
           }}>
             {step.title}
           </h2>
         </div>
 
-        {/* Body */}
-        <p style={{
-          margin: '0 0 22px', fontSize: mobile ? 14.5 : 16,
-          lineHeight: 1.65, color: C.faded, minHeight: mobile ? 120 : 100,
+        <div style={{
+          display: shot && !mobile ? 'grid' : 'block',
+          gridTemplateColumns: shot && !mobile ? 'minmax(260px, 1fr) auto' : undefined,
+          alignItems: 'center',
+          gap: shot && !mobile ? 28 : 0,
+          marginBottom: 20,
         }}>
-          {step.body}
-         </p>
+          {/* Body */}
+          <p style={{
+            margin: shot && !mobile ? 0 : '0 0 22px',
+            fontSize: mobile ? 14.5 : 16,
+            lineHeight: 1.65, color: C.faded,
+            minHeight: mobile ? 120 : shot ? 0 : 100,
+          }}>
+            {step.body}
+          </p>
 
-        {shot && (
-          <img
-            src={shot}
-            alt={`${step.title} screenshot`}
-            style={{
-              display: 'block', width: '100%',
-              borderRadius: 8,
-              border: `1px solid ${C.cardEdge}`,
-              marginBottom: 18,
-            }}
-          />
-        )}
+          <TourScreenshot src={shot} title={step.title} mobile={mobile} icon={step.icon} />
+        </div>
 
         {/* Progress rail — styled like the alignment sliders */}
         <div style={{

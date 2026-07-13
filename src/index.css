@@ -30,6 +30,15 @@ svg {
   max-width: 100%;
 }
 
+img,
+svg,
+canvas,
+video {
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
 body {
   margin: 0;
   overflow-x: hidden;
