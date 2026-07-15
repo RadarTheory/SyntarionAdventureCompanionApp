@@ -2,6 +2,7 @@
 import supabase from './lib/supabase';
 import CompendiumUpload from './CompendiumUpload';
 import PlayersPanel from './PlayersPanel';
+import HandbookBookmark from './HandbookBookmark';
 
 const ADMIN_UUID = import.meta.env.VITE_DM_USER_ID || 'fd2b5a52-e179-4234-9265-9b5ab36d6ace';
 
@@ -258,7 +259,9 @@ export default function AdminPortal() {
   const statuses = [...new Set(rows.map((r) => r.status).filter(Boolean))];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0806', color: '#f0eeeb', fontFamily: 'monospace', display: 'flex' }}>
+    <>
+      <HandbookBookmark user={session.user} darkMode allowEdit />
+      <div style={{ minHeight: '100vh', background: '#0a0806', color: '#f0eeeb', fontFamily: 'monospace', display: 'flex' }}>
       <div style={{ width: 200, borderRight: '1px solid #2a251e', padding: 12, display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, height: '100vh', overflowY: 'auto', position: 'sticky', top: 0 }}>
         <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
           {[[ 'tables', 'Tables' ], [ 'players', 'Players' ], [ 'timeline', 'Timeline' ], [ 'upload', 'Scribe' ]].map(([v, l]) => (
@@ -400,9 +403,7 @@ export default function AdminPortal() {
           )}
         </>)}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
-
-
-

@@ -182,27 +182,27 @@ export function SoteriaClockDisplay({ clock, compact = false }) {
         {passInfo.name} <span style={{ fontFamily: 'monospace', fontSize: 16, opacity: 0.8 }}>{getClockTime(live.pass, live.fragment)}</span>
       </div>
       <div style={{ fontSize: 12, opacity: 0.75, marginTop: 2 }}>
-        {passInfo.label}  Â·  Fragment {Math.floor(live.fragment)}/119
+        {passInfo.label} | Fragment {Math.floor(live.fragment)}/119
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
         <SunMoonCycleBar clock={clock} />
       </div>
       <div style={{ marginTop: 10, fontSize: 12, opacity: 0.8 }}>
-        Turn {live.turn} of {getLesserCycleName(live.lesser_cycle || Math.floor((live.turn - 1) / 7) + 1)} â€¢ {cycleName}
+        Turn {live.turn} of {getLesserCycleName(live.lesser_cycle || Math.floor((live.turn - 1) / 7) + 1)} | {cycleName}
       </div>
       <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>
         Anui {live.anui} {live.era === 'EU' ? 'E.U.' : 'E.D.'}
       </div>
       {clock.session_anchor_at && (
         <div style={{ marginTop: 8, fontSize: 10, color: '#9fe0aa', background: 'rgba(121,245,167,0.08)', padding: '3px 10px', borderRadius: 10, border: '1px solid rgba(121,245,167,0.25)', display: 'inline-block' }}>
-          LIVE â€” advancing with the session
+          LIVE - advancing with the session
         </div>
       )}
     </div>
   );
 }
 
-// â”€â”€â”€ DM CONTROL PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// DM CONTROL PANEL
 export default function SoteriaClockPanel({ campaignId }) {
   const [clock, setClock]     = useState(null);
   const [editing, setEditing] = useState(false);
@@ -285,14 +285,14 @@ export default function SoteriaClockPanel({ campaignId }) {
     return () => clearInterval(id);
   }, [clock?.session_anchor_at]);
 
-const save = async (patch) => {
+  const save = async (patch) => {
     if (!clock) return;
     setSaving(true);
-    const updated = { ...clock, ...patch, updated_at: new Date().toISOString() };
-    const { id, campaign_id, created_at, ...safePayload } = updated;
+    const safePayload = { ...patch, updated_at: new Date().toISOString() };
+    const { id, campaign_id, created_at, ...cleanPayload } = safePayload;
     const { data, error } = await supabase
       .from('world_clock')
-      .update(safePayload)
+      .update(cleanPayload)
       .eq('id', clock.id)
       .select()
       .single();
@@ -301,12 +301,12 @@ const save = async (patch) => {
       setSaving(false);
       return;
     }
-    setClock(data);
+    if (data) setClock(data);
     setSaving(false);
   };
 
   const logClockEvent = async (message) => {
-    if (!campaignId) return;
+    if (!campaignId || !message) return;
     await supabase.from('dm_memory').insert({
       campaign_id: String(campaignId),
       category: 'clock',
@@ -314,7 +314,8 @@ const save = async (patch) => {
     });
   };
 
-  // Pause always wins â€” available regardless of session state, never gated
+  // Pause always wins - available regardless of session state, never gated
+
   const togglePause = () => {
     const next = !clock.paused;
     save({ paused: next });
@@ -371,13 +372,14 @@ const save = async (patch) => {
 
   if (!clock) return (
     <div style={{ color: 'rgba(201,185,145,0.4)', fontFamily: "'Cinzel', serif", fontSize: 12, padding: 16 }}>
-      Loading world clockâ€¦
+      Loading world clock...
     </div>
   );
 
-  const liveClock = getLiveClock(clock);
-  const passInfo  = getPassInfo(liveClock.pass);
-  const isNight   = passInfo.segment === 'night';
+  const live      = getLiveClock(clock);
+  const passInfo  = getPassInfo(live.pass);
+  const cycleName = getCycleName(live.greater_cycle);
+  const isNight   = passInfo.period === 'night';
   const accent    = isNight ? '#7aa8c4' : '#e6c96a';
 
   const label = (txt) => (
@@ -423,13 +425,13 @@ const save = async (patch) => {
       minWidth: 280,
     }}>
       <div style={{ fontSize: 10, color: 'rgba(201,185,145,0.5)', letterSpacing: '0.18em', marginBottom: 12 }}>
-        SOTERIA Â· WORLD CLOCK (26HR DAY)
+        SOTERIA | WORLD CLOCK (26HR DAY)
       </div>
 
       <SoteriaClockDisplay clock={clock} />
 
       <div style={{ marginTop: 8, fontSize: 9, color: clock.session_anchor_at ? '#9fe0aa' : 'rgba(201,185,145,0.4)', letterSpacing: '0.08em' }}>
-        {clock.session_anchor_at ? 'Advancing live with the active session.' : 'No active session â€” time is holding still.'}
+        {clock.session_anchor_at ? 'Advancing live with the active session.' : 'No active session - time is holding still.'}
       </div>
 
       {/* Pause is always available, regardless of session state */}
@@ -480,7 +482,7 @@ const save = async (patch) => {
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
               {dmBtn('Cancel', () => { setShowTravel(false); setTravelMiles(''); })}
-              {dmBtn(saving ? 'Loggingâ€¦' : 'Apply', logTravel, 'rgba(100,160,120,0.2)', false, !travelMiles || parseFloat(travelMiles) <= 0)}
+              {dmBtn(saving ? 'Logging...' : 'Apply', logTravel, 'rgba(100,160,120,0.2)', false, !travelMiles || parseFloat(travelMiles) <= 0)}
             </div>
           </div>
         </div>
@@ -515,7 +517,7 @@ const save = async (patch) => {
               </div>
 
               <div>
-                {label('GREATER CYCLE (1â€“13)')}
+                {label('GREATER CYCLE (1-13)')}
                 <select value={draft.greater_cycle} onChange={e => setDraft(d => ({ ...d, greater_cycle: parseInt(e.target.value) }))}
                   style={{ background: 'rgba(14,10,7,0.8)', border: '1px solid rgba(201,185,145,0.25)', borderRadius: 6, color: '#e6d2a0', fontFamily: "'Cinzel', serif", fontSize: 11, padding: '4px 8px', width: '100%' }}>
                   {(draft.era === 'EU' ? GREATER_CYCLES_EU : GREATER_CYCLES_ED).map((name, i) => (
@@ -525,7 +527,7 @@ const save = async (patch) => {
               </div>
 
               <div>
-                {label('LESSER CYCLE (1â€“4)')}
+                {label('LESSER CYCLE (1-4)')}
                 <select value={draft.lesser_cycle || 1} onChange={e => setDraft(d => ({ ...d, lesser_cycle: parseInt(e.target.value) }))}
                   style={{ background: 'rgba(14,10,7,0.8)', border: '1px solid rgba(201,185,145,0.25)', borderRadius: 6, color: '#e6d2a0', fontFamily: "'Cinzel', serif", fontSize: 11, padding: '4px 8px', width: '100%' }}>
                   <option value="1">1. Isain</option>
@@ -550,7 +552,7 @@ const save = async (patch) => {
               </div>
 
               <div>
-                {label('PASS (1â€“13)')}
+                {label('PASS (1-13)')}
                 <select value={draft.pass} onChange={e => setDraft(d => ({ ...d, pass: parseInt(e.target.value) }))}
                   style={{ background: 'rgba(14,10,7,0.8)', border: '1px solid rgba(201,185,145,0.25)', borderRadius: 6, color: '#e6d2a0', fontFamily: "'Cinzel', serif", fontSize: 11, padding: '4px 8px', width: '100%' }}>
                   {PASSES.map(p => (
@@ -560,14 +562,14 @@ const save = async (patch) => {
               </div>
 
               <div>
-                {label('FRAGMENT (0â€“119)')}
+                {label('FRAGMENT (0-119)')}
                 {numInput('fragment', 0, 119)}
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: 8, marginTop: 20, justifyContent: 'flex-end' }}>
               {dmBtn('Cancel', () => setEditing(false))}
-              {dmBtn(saving ? 'Savingâ€¦' : 'Apply', applyEdit, 'rgba(100,160,120,0.2)')}
+              {dmBtn(saving ? 'Saving...' : 'Apply', applyEdit, 'rgba(100,160,120,0.2)')}
             </div>
           </div>
         </div>

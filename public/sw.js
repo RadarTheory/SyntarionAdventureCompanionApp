@@ -1,11 +1,10 @@
-const CACHE_NAME = 'syntarion-shell-v1';
+const CACHE_NAME = 'syntarion-shell-v3';
 const APP_SHELL = [
   '/',
   '/site.webmanifest',
   '/pwa-icon-192.png',
   '/pwa-icon-512.png',
   '/apple-touch-icon.png',
-  '/favicon.svg',
 ];
 
 self.addEventListener('install', event => {

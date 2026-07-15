@@ -1,11 +1,180 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import mammoth from 'mammoth';
+import * as XLSX from 'xlsx';
 import remarkGfm from 'remark-gfm';
 import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
-import { COLORS } from './constants';
+import { COLORS, RACES, CLASSES, GODS, SPIRITS, UNAFFILIATED, PROGRESSION } from './constants';
 
-const DM_USER_ID = import.meta.env.VITE_DM_USER_ID;
+
+
+const LIVE_DIRECTIVE_RE = /^\s*\[\[(syntarion|supabase):([a-z_-]+)\]\]\s*$/i;
+
+function LiveMarkdown({ content, mdComponents, active, darkMode, isMobile, theme }) {
+  const parts = String(content || '').split(/(\[\[(?:syntarion|supabase):[a-z_-]+\]\])/gi);
+  const hasDirective = parts.some(part => LIVE_DIRECTIVE_RE.test(part));
+  const isGlossary = /glossary/i.test(active?.slug || '') || /glossary/i.test(active?.title || '');
+
+  if (isGlossary && !hasDirective) {
+    return <LiveReferenceBlock source="syntarion" kind="glossary" darkMode={darkMode} isMobile={isMobile} theme={theme} />;
+  }
+
+  return parts.map((part, index) => {
+    const match = part.match(LIVE_DIRECTIVE_RE);
+    if (match) {
+      return <LiveReferenceBlock key={index} source={match[1].toLowerCase()} kind={match[2].toLowerCase()} darkMode={darkMode} isMobile={isMobile} theme={theme} />;
+    }
+    if (!part.trim()) return null;
+    return (
+      <ReactMarkdown key={index} remarkPlugins={[remarkGfm]} components={mdComponents}>
+        {part}
+      </ReactMarkdown>
+    );
+  });
+}
+
+function LiveReferenceBlock({ source, kind, darkMode, isMobile, theme }) {
+  if (source === 'supabase') return <SupabaseReference kind={kind} isMobile={isMobile} theme={theme} />;
+  if (kind === 'races') return <RaceReference isMobile={isMobile} theme={theme} />;
+  if (kind === 'classes') return <ClassReference isMobile={isMobile} theme={theme} />;
+  if (kind === 'beliefs' || kind === 'elements') return <BeliefReference isMobile={isMobile} theme={theme} />;
+  if (kind === 'glossary') {
+    return (
+      <div style={{ display: 'grid', gap: 18, margin: '18px 0 34px' }}>
+        <LiveBlockHeader title="Live Glossary" subtitle="Generated from the same app data used by character creation and Supabase-backed catalogs." theme={theme} />
+        <RaceReference isMobile={isMobile} theme={theme} compact />
+        <ClassReference isMobile={isMobile} theme={theme} compact />
+        <BeliefReference isMobile={isMobile} theme={theme} compact />
+      </div>
+    );
+  }
+  return <LiveBlockHeader title="Unknown Live Block" subtitle="Supported blocks: [[syntarion:glossary]], [[syntarion:races]], [[syntarion:classes]], [[syntarion:beliefs]], [[supabase:items]], [[supabase:beasts]], [[supabase:npcs]]." theme={theme} warn />;
+}
+
+function LiveBlockHeader({ title, subtitle, theme, warn = false }) {
+  return (
+    <div style={{ border: '1px solid ' + (warn ? COLORS.warn : theme.borderMid), borderRadius: 8, padding: '12px 14px', background: theme.surface, margin: '14px 0' }}>
+      <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: warn ? COLORS.warn : theme.sectionColor, fontWeight: 700 }}>{title}</div>
+      {subtitle && <div style={{ marginTop: 5, fontSize: 12, color: theme.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', lineHeight: 1.55 }}>{subtitle}</div>}
+    </div>
+  );
+}
+
+function ReferenceGrid({ children, isMobile }) {
+  return <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 10 }}>{children}</div>;
+}
+
+function ReferenceCard({ title, meta, body, theme, children }) {
+  return (
+    <div style={{ border: '1px solid ' + theme.border, borderRadius: 8, padding: '12px 14px', background: theme.card }}>
+      <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, fontWeight: 700, letterSpacing: '0.05em', color: theme.ink }}>{title}</div>
+      {meta && <div style={{ marginTop: 3, fontSize: 10, color: theme.sectionColor, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', textTransform: 'uppercase' }}>{meta}</div>}
+      {body && <div style={{ marginTop: 8, fontSize: 12.5, lineHeight: 1.55, color: theme.muted }}>{body}</div>}
+      {children}
+    </div>
+  );
+}
+
+function RaceReference({ isMobile, theme, compact = false }) {
+  return (
+    <section style={{ display: 'grid', gap: 10 }}>
+      <LiveBlockHeader title="Races" subtitle="Live from src/constants.js, the same source used by character creation." theme={theme} />
+      <ReferenceGrid isMobile={isMobile}>
+        {RACES.map(race => (
+          <ReferenceCard key={race.id} title={race.name} meta={[race.sub, race.tag, race.sub2].filter(Boolean).join(' | ')} body={compact ? null : race.desc} theme={theme}>
+            {race.variants?.length > 0 && <div style={{ marginTop: 8, fontSize: 11, color: theme.muted }}>Variants: {race.variants.join(', ')}</div>}
+          </ReferenceCard>
+        ))}
+      </ReferenceGrid>
+    </section>
+  );
+}
+
+function ClassReference({ isMobile, theme, compact = false }) {
+  const classes = [...CLASSES.magic.map(c => ({ ...c, track: 'Magic' })), ...CLASSES.tech.map(c => ({ ...c, track: 'Tech' }))];
+  return (
+    <section style={{ display: 'grid', gap: 10 }}>
+      <LiveBlockHeader title="Classes" subtitle="Live from the character class constants, including current progressions where present." theme={theme} />
+      <ReferenceGrid isMobile={isMobile}>
+        {classes.map(cls => {
+          const prog = PROGRESSION[cls.name];
+          return (
+            <ReferenceCard key={cls.id} title={cls.name} meta={[cls.track, cls.path, cls.disc, cls.stats].filter(Boolean).join(' | ')} theme={theme}>
+              <div style={{ marginTop: 8, fontSize: 12, color: theme.muted, lineHeight: 1.55 }}>
+                Tier 2: {cls.t2 || 'Unlisted'}<br />Tier 3: {cls.t3 || 'Unlisted'}
+                {!compact && prog && <><br />Capstone: {prog.capstone}</>}
+              </div>
+            </ReferenceCard>
+          );
+        })}
+      </ReferenceGrid>
+    </section>
+  );
+}
+
+function BeliefReference({ isMobile, theme, compact = false }) {
+  const groups = [
+    ...GODS.map(group => ({ type: 'God', label: group.label, list: group.list })),
+    ...SPIRITS.map(group => ({ type: 'Spirit', label: group.label, list: group.list })),
+    { type: 'Unaffiliated', label: 'Unaffiliated', list: UNAFFILIATED.map(u => ({ name: u.label, domain: u.id, affil: 'No patron', desc: u.desc })) },
+  ];
+  return (
+    <section style={{ display: 'grid', gap: 10 }}>
+      <LiveBlockHeader title="Beliefs & Elements" subtitle="Live from the belief picker: gods, spirits, elemental pairs, and unaffiliated options." theme={theme} />
+      {groups.map(group => (
+        <div key={group.type + group.label} style={{ display: 'grid', gap: 8 }}>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: theme.sectionColor, marginTop: 6 }}>{group.type} | {group.label}</div>
+          <ReferenceGrid isMobile={isMobile}>
+            {group.list.map(entry => (
+              <ReferenceCard key={entry.name} title={entry.name} meta={[entry.domain, entry.affil].filter(Boolean).join(' | ')} body={compact ? null : entry.desc} theme={theme} />
+            ))}
+          </ReferenceGrid>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function SupabaseReference({ kind, isMobile, theme }) {
+  const [state, setState] = useState({ loading: true, rows: [], error: '' });
+  const allowed = {
+    items: { table: 'items', select: 'id,name,category,description,rarity', order: 'name' },
+    beasts: { table: 'beasts', select: 'id,name,category,description,threat_level,rarity', order: 'name' },
+    npcs: { table: 'npcs', select: 'id,name,role,city,category,description', order: 'name' },
+  };
+  const config = allowed[kind];
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      if (!config) { setState({ loading: false, rows: [], error: 'Unsupported Supabase handbook block.' }); return; }
+      setState({ loading: true, rows: [], error: '' });
+      const { data, error } = await supabase.from(config.table).select(config.select).order(config.order, { ascending: true }).limit(120);
+      if (cancelled) return;
+      if (error) setState({ loading: false, rows: [], error: error.message });
+      else setState({ loading: false, rows: data || [], error: '' });
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [kind]);
+
+  if (!config) return <LiveBlockHeader title="Unknown Supabase Block" subtitle="Supported Supabase blocks: [[supabase:items]], [[supabase:beasts]], [[supabase:npcs]]." theme={theme} warn />;
+  return (
+    <section style={{ display: 'grid', gap: 10 }}>
+      <LiveBlockHeader title={config.table} subtitle={'Live from Supabase table: ' + config.table} theme={theme} />
+      {state.loading && <div style={{ color: theme.muted, fontStyle: 'italic', fontSize: 13 }}>Reading Supabase...</div>}
+      {state.error && <div style={{ color: COLORS.warn, fontSize: 13 }}>Could not read {config.table}: {state.error}</div>}
+      {!state.loading && !state.error && (
+        <ReferenceGrid isMobile={isMobile}>
+          {state.rows.map(row => (
+            <ReferenceCard key={row.id || row.name} title={row.name || row.id || 'Unnamed'} meta={[row.category, row.rarity, row.threat_level, row.role, row.city].filter(Boolean).join(' | ')} body={row.description} theme={theme} />
+          ))}
+        </ReferenceGrid>
+      )}
+    </section>
+  );
+}
 
 export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark', openSignal = 0, allowEdit = false }) {
   const { isMobile } = useDevice();
@@ -22,7 +191,7 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
   const contentRef = useRef(null);
   const fileRef = useRef(null);
 
-  const isDM = allowEdit && user?.id === DM_USER_ID;
+  const canEdit = allowEdit === true;
 
   const ink = darkMode ? COLORS.text : '#1b130a';
   const card = darkMode ? COLORS.card : '#fffaf1';
@@ -40,7 +209,10 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
       .select('id, slug, title, subtitle, chapter_order, content, is_published')
       .order('chapter_order', { ascending: true });
     if (error) { setLoadError(error.message); return; }
-    const list = data || [];
+    const rows = data || [];
+    const list = canEdit
+      ? rows
+      : rows.filter(c => c.is_published && String(c.content || '').trim());
     setChapters(list);
     setActiveSlug(prev => (prev && list.some(c => c.slug === prev) ? prev : list[0]?.slug || null));
   };
@@ -85,7 +257,7 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
   };
 
   const startEdit = () => {
-    if (!active) return;
+    if (!canEdit || !active) return;
     setDraft({
       title: active.title,
       subtitle: active.subtitle || '',
@@ -148,7 +320,7 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
     setImportStatus('Imported into the chapter body. Save when ready.');
   };
   const saveEdit = async () => {
-    if (!active || !draft || saving) return;
+    if (!canEdit || !active || !draft || saving) return;
     setSaving(true);
     setSaveStatus('');
     const payload = {
@@ -306,7 +478,7 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 15 : 18, fontWeight: 700, color: ink, letterSpacing: '0.05em' }}>PLAYER HANDBOOK</div>
               </div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                {isDM && active && !editing && (
+                {canEdit && active && !editing && (
                   <button onClick={startEdit} style={{
                     background: 'transparent', border: `1px solid ${borderMid}`, borderRadius: 6,
                     padding: '7px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif",
@@ -361,9 +533,14 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
                       ))}
                     </div>
                   )}
-                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-                    {active.content}
-                  </ReactMarkdown>
+                  <LiveMarkdown
+                    content={active.content}
+                    mdComponents={mdComponents}
+                    active={active}
+                    darkMode={darkMode}
+                    isMobile={isMobile}
+                    theme={{ ink, card, surface, muted, border, borderMid, sectionColor }}
+                  />
                   {saveStatus === 'Saved.' && (
                     <div style={{ marginTop: 16, fontSize: 10, color: COLORS.magicText, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', textTransform: 'uppercase' }}>Saved.</div>
                   )}
