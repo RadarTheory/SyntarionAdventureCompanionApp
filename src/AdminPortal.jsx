@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
 import supabase from './lib/supabase';
 import CompendiumUpload from './CompendiumUpload';
+import PlayersPanel from './PlayersPanel';
 
 const ADMIN_UUID = import.meta.env.VITE_DM_USER_ID || 'fd2b5a52-e179-4234-9265-9b5ab36d6ace';
 
@@ -10,7 +11,7 @@ const TABLES = [
   'lootboxes', 'lootbox_items', 'messages', 'sessions', 'session_checkins',
   'session_logs', 'vtt_sessions', 'hercules_sessions', 'hercules_events',
   'hercules_initiative', 'world_clock', 'npcs', 'beasts', 'grimoire_entries',
-  'larks', 'dm_memory', 'legal_acceptances', 'scribe_context',
+  'larks', 'dm_memory', 'support_reports', 'legal_acceptances', 'scribe_context',
 ];
 
 const PAGE_SIZE = 50;
@@ -144,11 +145,11 @@ export default function AdminPortal() {
   }, []);
 
   useEffect(() => {
-    if (isAdmin && view === 'timeline') void loadTimeline(tlCampaign);
+    if (isAdmin && view === 'timeline') queueMicrotask(() => { void loadTimeline(tlCampaign); });
   }, [isAdmin, view, tlCampaign, loadTimeline]);
 
   useEffect(() => {
-    if (isAdmin && view === 'tables') void load();
+    if (isAdmin && view === 'tables') queueMicrotask(() => { void load(); });
   }, [isAdmin, view, load]);
 
   const login = async () => {
@@ -260,7 +261,7 @@ export default function AdminPortal() {
     <div style={{ minHeight: '100vh', background: '#0a0806', color: '#f0eeeb', fontFamily: 'monospace', display: 'flex' }}>
       <div style={{ width: 200, borderRight: '1px solid #2a251e', padding: 12, display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, height: '100vh', overflowY: 'auto', position: 'sticky', top: 0 }}>
         <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
-          {[[ 'tables', 'Tables' ], [ 'timeline', 'Timeline' ], [ 'upload', 'Scribe' ]].map(([v, l]) => (
+          {[[ 'tables', 'Tables' ], [ 'players', 'Players' ], [ 'timeline', 'Timeline' ], [ 'upload', 'Scribe' ]].map(([v, l]) => (
             <button key={v} onClick={() => setView(v)}
               style={{ flex: 1, background: view === v ? 'rgba(200,168,74,0.14)' : 'transparent', border: `1px solid ${view === v ? 'rgba(200,168,74,0.5)' : '#3a352e'}`, borderRadius: 5, padding: '5px 0', color: view === v ? '#e8c84a' : '#8a8378', fontSize: 10, cursor: 'pointer', fontFamily: 'monospace' }}>{l}</button>
           ))}
@@ -276,6 +277,13 @@ export default function AdminPortal() {
 
       <div style={{ flex: 1, padding: 16, minWidth: 0 }}>
         {view === 'upload' && <CompendiumUpload />}
+
+        {view === 'players' && (
+          <div>
+            <div style={{ color: '#e8c84a', fontSize: 13, marginBottom: 14 }}>PLAYERS</div>
+            <PlayersPanel embedded />
+          </div>
+        )}
 
         {view === 'timeline' && (
           <div>
@@ -395,3 +403,6 @@ export default function AdminPortal() {
     </div>
   );
 }
+
+
+

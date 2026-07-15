@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
 import { COLORS } from './constants';
@@ -14,13 +14,22 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
   const [installState, setInstallState] = useState(getPWAInstallState);
   const [showAppleInstall, setShowAppleInstall] = useState(false);
   const [installMessage, setInstallMessage] = useState('');
+  const [supportCategory, setSupportCategory] = useState('bug');
+  const [supportSubject, setSupportSubject] = useState('');
+  const [supportMessage, setSupportMessage] = useState('');
+  const [supportSending, setSupportSending] = useState(false);
+  const [supportStatus, setSupportStatus] = useState('');
 
-  const ink = darkMode ? COLORS.text : '#1a1714';
-  const bg = darkMode ? COLORS.wizard : '#f0eeeb';
-  const card = darkMode ? COLORS.card : '#ffffff';
-  const muted = darkMode ? COLORS.muted : 'rgba(26,23,20,0.45)';
-  const border = darkMode ? COLORS.border : 'rgba(26,23,20,0.1)';
-  const borderMid = darkMode ? COLORS.borderMid : 'rgba(26,23,20,0.25)';
+  const ink = darkMode ? COLORS.text : '#1b130a';
+  const bg = darkMode ? COLORS.wizard : '#e8e1d5';
+  const card = darkMode ? COLORS.card : '#fffaf1';
+  const muted = darkMode ? COLORS.muted : '#655848';
+  const border = darkMode ? COLORS.border : '#d0c0aa';
+  const borderMid = darkMode ? COLORS.borderMid : '#9c835e';
+  const fieldBg = darkMode ? COLORS.surface : '#f8f0e4';
+  const actionBg = darkMode ? COLORS.surface : '#efe2cf';
+  const sectionColor = darkMode ? COLORS.muted : '#7b5a24';
+  const cardShadow = darkMode ? 'none' : '0 10px 24px rgba(52, 35, 18, 0.08)';
 
   useEffect(() => subscribePWAInstall(setInstallState), []);
 
@@ -49,16 +58,49 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
     else setShowAppleInstall(true);
   };
 
-  const SectionHead = ({ children }) => (
+  const handleSupportSubmit = async () => {
+    const subject = supportSubject.trim();
+    const message = supportMessage.trim();
+    if (!subject || !message || supportSending) return;
+
+    setSupportSending(true);
+    setSupportStatus('');
+    const { error } = await supabase.from('support_reports').insert({
+      user_id: user?.id || null,
+      user_email: user?.email || null,
+      category: supportCategory,
+      subject,
+      message,
+      page_path: typeof window !== 'undefined' ? window.location.pathname : null,
+      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+      app_context: {
+        display_name: displayName || null,
+        install_platform: installState.platform || null,
+        installed: !!installState.isInstalled,
+      },
+    });
+
+    setSupportSending(false);
+    if (error) {
+      setSupportStatus(`Could not send: ${error.message}`);
+      return;
+    }
+
+    setSupportSubject('');
+    setSupportMessage('');
+    setSupportStatus('Report sent. Thank you.');
+  };
+
+  const sectionHead = (children) => (
     <div style={{
       fontFamily: "'Cinzel', serif",
       fontSize: 8,
       letterSpacing: '0.18em',
       textTransform: 'uppercase',
-      color: muted,
+      color: sectionColor,
       marginBottom: 12,
       paddingBottom: 8,
-      borderBottom: `1px solid ${border}`,
+      borderBottom: `1px solid ${borderMid}`,
     }}>{children}</div>
   );
 
@@ -75,11 +117,11 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap'); * { box-sizing: border-box; } body { margin: 0; }`}</style>
 
       <div style={{ padding: isMobile ? '20px 20px 0' : '28px 40px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button onClick={onHome} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: muted, padding: 0 }}>Back Home</button>
+        <button onClick={onHome} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: sectionColor, padding: 0 }}>Back Home</button>
       </div>
 
       <div style={{ padding: isMobile ? '24px 20px 20px' : '32px 40px 24px', borderBottom: `1px solid ${border}` }}>
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: muted, marginBottom: 8 }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: sectionColor, marginBottom: 8 }}>
           Syntarion
         </div>
         <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 24 : 32, fontWeight: 700, color: ink, letterSpacing: '0.04em', lineHeight: 1.1 }}>
@@ -89,9 +131,9 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
 
       <div style={{ padding: isMobile ? '24px 20px' : '32px 40px', maxWidth: 520 }}>
         <div style={{ marginBottom: 36 }}>
-          <SectionHead>Display</SectionHead>
+          {sectionHead('Display')}
 
-          <div style={{ background: card, border: `1px solid ${border}`, borderRadius: 10, padding: '16px 20px' }}>
+          <div style={{ background: card, border: `1px solid ${border}`, borderRadius: 10, padding: '16px 20px', boxShadow: cardShadow }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, fontWeight: 700, color: ink, letterSpacing: '0.04em', marginBottom: 3 }}>
@@ -108,7 +150,7 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
                   width: 48,
                   height: 26,
                   borderRadius: 13,
-                  background: darkMode ? COLORS.magic : 'rgba(26,23,20,0.15)',
+                  background: darkMode ? COLORS.magic : '#c9bca9',
                   position: 'relative',
                   cursor: 'pointer',
                   transition: 'background 0.25s ease',
@@ -132,9 +174,9 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
         </div>
 
         <div style={{ marginBottom: 36 }}>
-          <SectionHead>Install</SectionHead>
+          {sectionHead('Install')}
 
-          <div style={{ background: card, border: `1px solid ${border}`, borderRadius: 10, padding: '16px 20px' }}>
+          <div style={{ background: card, border: `1px solid ${border}`, borderRadius: 10, padding: '16px 20px', boxShadow: cardShadow }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 18, alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row' }}>
               <div>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, fontWeight: 700, color: ink, letterSpacing: '0.04em', marginBottom: 3 }}>
@@ -154,7 +196,7 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
                 onClick={handleInstall}
                 disabled={installState.isInstalled}
                 style={{
-                  background: installState.isInstalled ? COLORS.magicBg : darkMode ? COLORS.surface : 'rgba(26,23,20,0.06)',
+                  background: installState.isInstalled ? COLORS.magicBg : actionBg,
                   border: `1px solid ${installState.isInstalled ? COLORS.magic : borderMid}`,
                   borderRadius: 6,
                   padding: '10px 18px',
@@ -173,7 +215,7 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
 
             {showAppleInstall && !installState.isInstalled && (
               <div style={{ marginTop: 16, borderTop: `1px solid ${border}`, paddingTop: 14 }}>
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: muted, marginBottom: 8 }}>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: sectionColor, marginBottom: 8 }}>
                   Apple Install Steps
                 </div>
                 <div style={{ display: 'grid', gap: 7, fontSize: 12, color: muted, lineHeight: 1.45 }}>
@@ -188,9 +230,103 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
         </div>
 
         <div style={{ marginBottom: 36 }}>
-          <SectionHead>Account</SectionHead>
+          {sectionHead('Support')}
 
-          <div style={{ background: card, border: `1px solid ${border}`, borderRadius: 10, overflow: 'hidden' }}>
+          <div style={{ background: card, border: `1px solid ${border}`, borderRadius: 10, padding: '16px 20px', boxShadow: cardShadow }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 18, alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', marginBottom: 14 }}>
+              <div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, fontWeight: 700, color: ink, letterSpacing: '0.04em', marginBottom: 3 }}>
+                  Report an Issue
+                </div>
+                <div style={{ fontSize: 11, color: muted, fontStyle: 'italic', lineHeight: 1.45 }}>
+                  Send bugs, account issues, gameplay problems, or safety concerns to the admin queue.
+                </div>
+              </div>
+              <a
+                href="mailto:contact@theonhexmedia.com?subject=Syntarion%20Support"
+                style={{
+                  background: 'transparent',
+                  border: `1px solid ${borderMid}`,
+                  borderRadius: 6,
+                  padding: '10px 14px',
+                  fontFamily: "'Cinzel', serif",
+                  fontSize: 9,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: ink,
+                  textDecoration: 'none',
+                  flexShrink: 0,
+                }}
+              >
+                Email Support
+              </a>
+            </div>
+
+            <div style={{ display: 'grid', gap: 10 }}>
+              <select
+                value={supportCategory}
+                onChange={e => setSupportCategory(e.target.value)}
+                style={{ background: fieldBg, border: `1px solid ${border}`, borderRadius: 6, padding: '9px 12px', fontSize: 13, color: ink, fontFamily: 'Georgia, serif', outline: 'none' }}
+              >
+                <option value="bug">Bug or Glitch</option>
+                <option value="account">Account</option>
+                <option value="gameplay">Gameplay</option>
+                <option value="safety">Safety or Conduct</option>
+                <option value="billing">Billing or Access</option>
+                <option value="other">Other</option>
+              </select>
+              <input
+                value={supportSubject}
+                onChange={e => setSupportSubject(e.target.value)}
+                placeholder="Short summary"
+                maxLength={120}
+                style={{ background: fieldBg, border: `1px solid ${border}`, borderRadius: 6, padding: '9px 12px', fontSize: 13, color: ink, fontFamily: 'Georgia, serif', outline: 'none' }}
+              />
+              <textarea
+                value={supportMessage}
+                onChange={e => setSupportMessage(e.target.value)}
+                placeholder="What happened? Include steps, character/campaign names, or screenshots you can describe."
+                rows={5}
+                style={{ background: fieldBg, border: `1px solid ${border}`, borderRadius: 6, padding: '9px 12px', fontSize: 13, color: ink, fontFamily: 'Georgia, serif', outline: 'none', resize: 'vertical', lineHeight: 1.45 }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: isMobile ? 'stretch' : 'center', flexDirection: isMobile ? 'column' : 'row' }}>
+                <div style={{ fontSize: 10, color: muted, fontStyle: 'italic', lineHeight: 1.4 }}>
+                  Reports may include your account email, page path, browser, and app context needed to investigate.
+                </div>
+                <button
+                  onClick={handleSupportSubmit}
+                  disabled={supportSending || !supportSubject.trim() || !supportMessage.trim()}
+                  style={{
+                    background: supportSubject.trim() && supportMessage.trim() ? COLORS.deityBg : 'transparent',
+                    border: `1px solid ${supportSubject.trim() && supportMessage.trim() ? COLORS.deity : border}`,
+                    borderRadius: 6,
+                    padding: '10px 18px',
+                    cursor: supportSending || !supportSubject.trim() || !supportMessage.trim() ? 'default' : 'pointer',
+                    fontFamily: "'Cinzel', serif",
+                    fontSize: 9,
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    color: supportSubject.trim() && supportMessage.trim() ? COLORS.deityText : muted,
+                    opacity: supportSending ? 0.6 : 1,
+                    flexShrink: 0,
+                  }}
+                >
+                  {supportSending ? 'Sending...' : 'Submit'}
+                </button>
+              </div>
+              {supportStatus && (
+                <div style={{ fontSize: 10, color: supportStatus.startsWith('Could not') ? COLORS.warn : COLORS.magicText, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  {supportStatus}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 36 }}>
+          {sectionHead('Account')}
+
+          <div style={{ background: card, border: `1px solid ${border}`, borderRadius: 10, overflow: 'hidden', boxShadow: cardShadow }}>
             <div style={{ padding: '16px 20px', borderBottom: `1px solid ${border}` }}>
               <div style={{ fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: muted, fontFamily: "'Cinzel', serif", marginBottom: 8 }}>
                 Display Name
@@ -202,7 +338,7 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
                   placeholder="Your name in Soteria"
                   style={{
                     flex: 1,
-                    background: darkMode ? COLORS.surface : 'rgba(26,23,20,0.04)',
+                    background: fieldBg,
                     border: `1px solid ${border}`,
                     borderRadius: 6,
                     padding: '9px 12px',
@@ -216,7 +352,7 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
                   onClick={handleSaveName}
                   disabled={saving || saved}
                   style={{
-                    background: saved ? COLORS.magicBg : darkMode ? COLORS.surface : 'rgba(26,23,20,0.06)',
+                    background: saved ? COLORS.magicBg : actionBg,
                     border: `1px solid ${saved ? COLORS.magic : borderMid}`,
                     borderRadius: 6,
                     padding: '9px 16px',
@@ -240,7 +376,7 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
               <div style={{ fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: muted, fontFamily: "'Cinzel', serif", marginBottom: 6 }}>
                 Email
               </div>
-              <div style={{ fontSize: 13, color: muted, fontFamily: 'Georgia, serif' }}>
+              <div style={{ fontSize: 13, color: ink, fontFamily: 'Georgia, serif' }}>
                 {user?.email || '-'}
               </div>
             </div>
@@ -249,7 +385,7 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
               <div style={{ fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: muted, fontFamily: "'Cinzel', serif", marginBottom: 6 }}>
                 Signed in with
               </div>
-              <div style={{ fontSize: 13, color: muted, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+              <div style={{ fontSize: 13, color: ink, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
                 Google
               </div>
             </div>
@@ -259,7 +395,7 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
                 onClick={handleSignOut}
                 style={{
                   background: 'transparent',
-                  border: `1px solid ${COLORS.warn}44`,
+                  border: `1px solid ${darkMode ? `${COLORS.warn}66` : '#d38d84'}`,
                   borderRadius: 6,
                   padding: '10px 20px',
                   cursor: 'pointer',
@@ -267,11 +403,11 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
                   fontSize: 9,
                   letterSpacing: '0.14em',
                   textTransform: 'uppercase',
-                  color: COLORS.warn,
+                  color: darkMode ? COLORS.warn : '#9e2f28',
                   transition: 'all 0.15s',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.background = COLORS.warnBg; e.currentTarget.style.borderColor = COLORS.warn; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = `${COLORS.warn}44`; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = darkMode ? `${COLORS.warn}44` : '#d38d84'; }}
               >
                 Sign Out
               </button>
@@ -280,8 +416,8 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
         </div>
 
         <div style={{ marginBottom: 36 }}>
-          <SectionHead>Legal</SectionHead>
-          <div style={{ background: card, border: `1px solid ${border}`, borderRadius: 10, overflow: 'hidden' }}>
+          {sectionHead('Legal')}
+          <div style={{ background: card, border: `1px solid ${border}`, borderRadius: 10, overflow: 'hidden', boxShadow: cardShadow }}>
             {[
               { id: 'tos', label: 'Terms of Service' },
               { id: 'eula', label: 'End User License Agreement' },
@@ -306,7 +442,7 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
                 }}
               >
                 <span style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: ink }}>{doc.label}</span>
-                <span style={{ fontSize: 13, color: muted }}>Open</span>
+                <span style={{ fontSize: 13, color: sectionColor }}>Open</span>
               </button>
             ))}
           </div>
@@ -319,3 +455,8 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
     </div>
   );
 }
+
+
+
+
+
