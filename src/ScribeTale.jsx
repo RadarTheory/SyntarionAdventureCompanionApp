@@ -15,6 +15,19 @@ const STAT_AXIS = { spirit: 'magic', soul: 'magic', body: 'magic', essence: 'mag
 
 const TENSION_LABELS = ['', 'Calm', 'Stirring', 'Rising', 'Perilous', 'Climax'];
 
+const STAT_HELP = {
+  will: 'resolve, discipline, courage, and pressure under command',
+  whim: 'finesse, timing, improvisation, stealth, and opportunistic motion',
+  body: 'strength, endurance, force, and physical control',
+  mind: 'logic, memory, tactics, and technical reasoning',
+  essence: 'presence, vitality, identity, and raw selfhood',
+  soul: 'empathy, desire, temptation, faith, and emotional truth',
+  spirit: 'magic, communion, supernatural perception, and sacred force',
+  dream: 'intuition, vision, imagination, omens, and unreal possibility',
+};
+
+const formatMod = (mod) => mod > 0 ? '+' + mod : String(mod);
+
 export default function ScribeTale({ char, campaignId, taleScope = 'this module' }) {
   const [tale, setTale] = useState(null);
   const [turns, setTurns] = useState([]);
@@ -95,22 +108,31 @@ export default function ScribeTale({ char, campaignId, taleScope = 'this module'
   // ── Dice: the player rolls; the Scribe obeys the result ──
   const handleRoll = () => {
     if (!pendingRoll || rollState?.spinning || loading) return;
+    const rr = pendingRoll;
     setRollState({ spinning: true });
     const die = 1 + Math.floor(Math.random() * 20);
-    const mod = statModifier(char?.stats?.[pendingRoll.stat] ?? 8);
+    const mod = statModifier(char?.stats?.[rr.stat] ?? 8);
     const total = die + mod;
-    const success = die === 20 ? true : die === 1 ? false : total >= pendingRoll.dc;
+    const success = die === 20 ? true : die === 1 ? false : total >= rr.dc;
+    const margin = total - rr.dc;
+    const statHelp = STAT_HELP[rr.stat] || 'the relevant stat for this risk';
 
     setTimeout(async () => {
-      setRollState({ spinning: false, die, mod, total, success });
-      const label = `${pendingRoll.stat.toUpperCase()} check vs DC ${pendingRoll.dc}: d20=${die}${mod ? ` ${mod > 0 ? '+' : ''}${mod}` : ''} → ${total} — ${die === 20 ? 'CRITICAL SUCCESS' : die === 1 ? 'CRITICAL FAILURE' : success ? 'SUCCESS' : 'FAILURE'}`;
-      const rr = pendingRoll;
+      setRollState({ spinning: false, die, mod, total, success, margin, stat: rr.stat, dc: rr.dc, reason: rr.reason, statHelp });
+      const outcome = die === 20
+        ? 'CRITICAL SUCCESS: natural 20 overrides the target.'
+        : die === 1
+          ? 'CRITICAL FAILURE: natural 1 fails regardless of the total.'
+          : success
+            ? 'SUCCESS: total meets or beats the DC.'
+            : 'FAILURE: total is below the DC.';
+      const marginText = die === 20 || die === 1 ? '' : ` Margin: ${Math.abs(margin)} ${success ? 'over' : 'short'}.`;
+      const label = `${rr.stat.toUpperCase()} check - ${statHelp}\nTarget DC ${rr.dc}; d20 ${die} ${formatMod(mod)} = ${total}. ${outcome}${marginText}\nStakes: ${rr.reason}`;
       setPendingRoll(null);
       // Give the player a beat to see the result, then feed it to the Scribe
-      setTimeout(() => sendTurn(`${label} (${rr.reason})`, 'roll'), 900);
+      setTimeout(() => sendTurn(label, 'roll'), 900);
     }, 1100);
   };
-
   const beginTale = () => sendTurn(
     `[The tale begins. ${char?.name} steps forward into ${taleScope}. Open a standalone story from my backstory and the module lore. Remember the player has World Map, Battle Map, Astragal dice, Declare/Speak, Hercules combat, Argus inventory, Castor abilities, Bazaar trade, Questor quests, Lark messages, Scribe, Grimoire, Bestiary, Party proximity, and Sheet tools available; the DM/backend handles hidden state. Give me a hook.]`,
     'player',
@@ -137,14 +159,17 @@ export default function ScribeTale({ char, campaignId, taleScope = 'this module'
 
   if (!char?.id || !cid) return null;
 
+  const activeRollStat = pendingRoll?.stat || null;
+  const activeRollMod = activeRollStat ? statModifier(char?.stats?.[activeRollStat] ?? 8) : 0;
+  const activeRollHelp = activeRollStat ? (STAT_HELP[activeRollStat] || 'the relevant stat for this risk') : '';
   const axis = pendingRoll ? STAT_AXIS[pendingRoll.stat] : 'magic';
   const axisColor = axis === 'magic' ? COLORS.magic : COLORS.tech;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 420, background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, overflow: 'hidden' }}>
 
       {/* ── Scene header ── */}
-      <div style={{ padding: '10px 14px', borderBottom: `1px solid ${COLORS.borderMid}`, background: COLORS.card, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+      <div style={{ padding: '10px 14px', borderBottom: `1px solid ${COLORS.borderMid}`, background: COLORS.card, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', flexShrink: 0 }}>
         <div style={{ flex: 1, minWidth: 160 }}>
           <div style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: COLORS.magicText, opacity: 0.7 }}>The Scribe's Tale</div>
           <div style={{ fontSize: 15, color: COLORS.landing, fontWeight: 600 }}>{tale?.title || '…'}</div>
@@ -181,7 +206,7 @@ export default function ScribeTale({ char, campaignId, taleScope = 'this module'
       </div>
 
       {/* ── Transcript ── */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 10, WebkitOverflowScrolling: 'touch' }}>
         {turns.length === 0 && !loading && (
           <div style={{ margin: 'auto', textAlign: 'center', maxWidth: 380 }}>
             <div style={{ width: 72, height: 72, margin: '0 auto 12px', borderRadius: '50%', border: `1px solid ${COLORS.magicDim}`, background: COLORS.wizard, display: 'grid', placeItems: 'center', boxShadow: '0 0 24px rgba(111,158,120,0.12)' }}>
@@ -226,19 +251,25 @@ export default function ScribeTale({ char, campaignId, taleScope = 'this module'
             <div style={{ fontSize: 15, color: COLORS.landing, fontWeight: 700, marginBottom: 2 }}>
               {pendingRoll.stat.toUpperCase()} · DC {pendingRoll.dc}
             </div>
-            <div style={{ fontSize: 12.5, color: COLORS.landing, opacity: 0.7, fontStyle: 'italic', marginBottom: 10 }}>{pendingRoll.reason}</div>
+            <div style={{ fontSize: 12.5, color: COLORS.landing, opacity: 0.76, fontStyle: 'italic', marginBottom: 8 }}>{pendingRoll.reason}</div>
+                        <div style={{ fontSize: 11.5, color: COLORS.landing, opacity: 0.58, lineHeight: 1.45, marginBottom: 10 }}>
+                          {pendingRoll.stat.toUpperCase()} measures {activeRollHelp}. Roll d20 {formatMod(activeRollMod)} against DC {pendingRoll.dc}; meet or beat the DC to succeed.
+                        </div>
             {!rollState && (
               <button onClick={handleRoll}
                 style={{ background: axis === 'magic' ? COLORS.magicBg : COLORS.techBg, border: `1px solid ${axisColor}`, color: axis === 'magic' ? COLORS.magicText : COLORS.techText, borderRadius: 10, padding: '9px 26px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-                Roll d20 {statModifier(char?.stats?.[pendingRoll.stat] ?? 8) !== 0 && `(${statModifier(char?.stats?.[pendingRoll.stat] ?? 8) > 0 ? '+' : ''}${statModifier(char?.stats?.[pendingRoll.stat] ?? 8)})`}
+                Roll d20 ({formatMod(activeRollMod)})
               </button>
             )}
             {rollState?.spinning && <div style={{ fontSize: 30, animation: 'tale-spin 0.5s linear infinite', display: 'inline-block' }}>⬡</div>}
             {rollState && !rollState.spinning && (
               <div>
                 <div style={{ fontSize: 34, fontWeight: 800, color: rollState.success ? COLORS.magic : '#b8574a' }}>{rollState.total}</div>
-                <div style={{ fontSize: 12, color: COLORS.landing, opacity: 0.7 }}>
-                  d20 {rollState.die}{rollState.mod ? ` ${rollState.mod > 0 ? '+' : ''}${rollState.mod}` : ''} — {rollState.die === 20 ? 'CRITICAL!' : rollState.die === 1 ? 'CATASTROPHE' : rollState.success ? 'Success' : 'Failure'}
+                <div style={{ fontSize: 12, color: COLORS.landing, opacity: 0.76, lineHeight: 1.45 }}>
+                  d20 {rollState.die} {formatMod(rollState.mod)} = {rollState.total}; DC {rollState.dc}. {rollState.die === 20 ? 'Natural 20: critical success.' : rollState.die === 1 ? 'Natural 1: critical failure.' : rollState.success ? `Success by ${rollState.margin}.` : `Short by ${Math.abs(rollState.margin)}.`}
+                </div>
+                <div style={{ fontSize: 11, color: COLORS.landing, opacity: 0.55, lineHeight: 1.45, marginTop: 4 }}>
+                  {rollState.stat.toUpperCase()} measured {rollState.statHelp}. Stakes: {rollState.reason}
                 </div>
               </div>
             )}
@@ -254,7 +285,7 @@ export default function ScribeTale({ char, campaignId, taleScope = 'this module'
       </div>
 
       {/* ── Input ── */}
-      <div style={{ display: 'flex', gap: 8, padding: 10, borderTop: `1px solid ${COLORS.borderMid}`, background: COLORS.card }}>
+      <div style={{ display: 'flex', gap: 8, padding: 10, borderTop: `1px solid ${COLORS.borderMid}`, background: COLORS.card, flexShrink: 0 }}>
         <input
           value={input}
           onChange={e => setInput(e.target.value)}

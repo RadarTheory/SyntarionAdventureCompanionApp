@@ -3022,7 +3022,7 @@ function ModuleTalesView({ module, userChar, onBack, onUpdateChar, darkMode = fa
       };
 
   return (
-    <div style={{ minHeight: '100svh', background: page.bg, color: page.title, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', overflow: 'hidden', paddingLeft: toolRailWidth, boxSizing: 'border-box', width: '100%' }}>
+    <div style={{ height: '100svh', minHeight: 0, background: page.bg, color: page.title, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', overflow: 'hidden', paddingLeft: toolRailWidth, boxSizing: 'border-box', width: '100%' }}>
       <FloatToolbar
         activeIds={[activeTool]}
         storageKey="syntarion_tales_toolbar_pos"
@@ -3045,7 +3045,7 @@ function ModuleTalesView({ module, userChar, onBack, onUpdateChar, darkMode = fa
         </div>
       </div>
       <div style={{ flex: 1, minHeight: 0, padding: isMobile ? '10px 10px calc(18px + env(safe-area-inset-bottom, 0px))' : '14px 18px 18px 92px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(320px, 0.76fr) minmax(460px, 1.24fr)', gap: 12, overflow: isMobile ? 'auto' : 'hidden', WebkitOverflowScrolling: 'touch' }}>
-        <div style={{ minHeight: isMobile ? 430 : 0, minWidth: 0, overflow: 'hidden' }}>
+        <div style={{ height: '100%', minHeight: isMobile ? 430 : 0, minWidth: 0, overflow: 'hidden' }}>
           {userChar ? <ScribeTale char={userChar} campaignId={taleId} taleScope={module?.name || 'Soteria'} /> : (
             <div style={{ border: `1px solid ${page.line}`, borderRadius: 12, padding: 22, color: page.muted, fontStyle: 'italic' }}>Create or claim a character before opening a Tale.</div>
           )}

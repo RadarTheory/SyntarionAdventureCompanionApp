@@ -2,6 +2,7 @@
   "name": "Syntarion",
   "short_name": "Syntarion",
   "description": "Syntarion Adventure Companion",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
