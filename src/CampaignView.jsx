@@ -23,6 +23,7 @@ import IntentDeclare from "./IntentDeclare";
 import PartyProximityPanel from './PartyProximityPanel';
 import PortraitUpload from "./PortraitUpload";
 import ScribeTale from './ScribeTale';
+import HandbookBookmark from './HandbookBookmark';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -3019,7 +3020,7 @@ function ModuleTalesView({ module, userChar, onBack, onUpdateChar, darkMode = fa
       default:
         return null;
     }
-  };
+      };
 
   return (
     <div style={{ minHeight: '100svh', background: page.bg, color: page.title, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', overflow: 'hidden', paddingLeft: toolRailWidth, boxSizing: 'border-box', width: '100%' }}>
@@ -3068,12 +3069,27 @@ export default function CampaignView({ campaignChars = [], onHome, onAssign, onU
     setSelectedCampaign(campaign);
   };
   if (selectedTalesModule) {
-    return <ModuleTalesView module={selectedTalesModule} userChar={campaignChars[0] || null} onBack={() => setSelectedTalesModule(null)} onUpdateChar={onUpdateChar} darkMode={darkMode} />;
+    return (
+      <>
+        <ModuleTalesView module={selectedTalesModule} userChar={campaignChars[0] || null} onBack={() => setSelectedTalesModule(null)} onUpdateChar={onUpdateChar} darkMode={darkMode} />
+        <HandbookBookmark user={user} darkMode={true} />
+      </>
+    );
   }
   if (selectedCampaign) {
     const userChar = campaignChars.find(c => c.campaign_id === String(selectedCampaign.id)) || null;
-    return <CampaignDashboard campaign={selectedCampaign} userChar={userChar} onBack={() => { setSelectedCampaign(null); setInitialTab('Map'); }} onAssign={onAssign} onUpdateChar={onUpdateChar} darkMode={darkMode} initialTab={initialTab} />;
+    return (
+      <>
+        <CampaignDashboard campaign={selectedCampaign} userChar={userChar} onBack={() => { setSelectedCampaign(null); setInitialTab('Map'); }} onAssign={onAssign} onUpdateChar={onUpdateChar} darkMode={darkMode} initialTab={initialTab} />
+        <HandbookBookmark user={user} darkMode={true} />
+      </>
+    );
   }
-  return <CampaignList onSelect={openCampaign} userChar={campaignChars[0] || null} onHome={onHome} darkMode={darkMode} user={user} onOpenDM={onOpenDM} onOpenTales={setSelectedTalesModule} />;
+  return (
+    <>
+      <CampaignList onSelect={openCampaign} userChar={campaignChars[0] || null} onHome={onHome} darkMode={darkMode} user={user} onOpenDM={onOpenDM} onOpenTales={setSelectedTalesModule} />
+      <HandbookBookmark user={user} darkMode={darkMode} />
+    </>
+  );
 }
 
