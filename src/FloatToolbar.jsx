@@ -175,12 +175,12 @@ function ToolbarButton({ children, onClick, title, badge, onDragOut, size = 56, 
   );
 }
 
-export default function FloatToolbar({ buttons, activeIds = [] }) {
+export default function FloatToolbar({ buttons, activeIds = [], storageKey = TOOLBAR_STORAGE_KEY, dockedStorageKey = DOCKED_STORAGE_KEY, defaultPos = null }) {
   const mobile = isMobileViewport();
-  const savedPos = (() => { try { return JSON.parse(localStorage.getItem(TOOLBAR_STORAGE_KEY)); } catch { return null; } })();
-  const savedDocked = (() => { try { return JSON.parse(localStorage.getItem(DOCKED_STORAGE_KEY)); } catch { return null; } })();
+  const savedPos = (() => { try { return JSON.parse(localStorage.getItem(storageKey)); } catch { return null; } })();
+  const savedDocked = (() => { try { return JSON.parse(localStorage.getItem(dockedStorageKey)); } catch { return null; } })();
 
-  const [pos, setPos] = useState(savedPos || getDefaultPos(mobile));
+  const [pos, setPos] = useState(savedPos || defaultPos || getDefaultPos(mobile));
   const [dragging, setDragging] = useState(false);
   const [undocked, setUndocked] = useState(savedDocked || {});
   const [hoveredBtn, setHoveredBtn] = useState(null);
@@ -193,8 +193,8 @@ export default function FloatToolbar({ buttons, activeIds = [] }) {
   const moved = useRef(false);
   const toolbarRef = useRef(null);
 
-  useEffect(() => { localStorage.setItem(TOOLBAR_STORAGE_KEY, JSON.stringify(pos)); }, [pos]);
-  useEffect(() => { localStorage.setItem(DOCKED_STORAGE_KEY, JSON.stringify(undocked)); }, [undocked]);
+  useEffect(() => { localStorage.setItem(storageKey, JSON.stringify(pos)); }, [pos, storageKey]);
+  useEffect(() => { localStorage.setItem(dockedStorageKey, JSON.stringify(undocked)); }, [undocked, dockedStorageKey]);
 
   const clampToolbar = useCallback((x, y) => {
     const el = toolbarRef.current;

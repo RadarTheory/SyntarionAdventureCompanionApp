@@ -83,9 +83,11 @@ export default function ScribeTale({ char, campaignId, taleScope = 'this module'
     }
   }, [tale, char, cid, sessionId, turns]);
 
+  const taleEnded = tale?.status === 'concluded';
+
   const handleSend = () => {
     const text = input.trim();
-    if (!text || loading || pendingRoll) return;
+    if (!text || loading || pendingRoll || taleEnded) return;
     setInput('');
     sendTurn(text, 'player');
   };
@@ -110,21 +112,20 @@ export default function ScribeTale({ char, campaignId, taleScope = 'this module'
   };
 
   const beginTale = () => sendTurn(
-    `[The tale begins. ${char?.name} steps forward into ${taleScope}. Open a standalone story from my backstory, the module lore, and the tools available at the table. Give me a hook.]`,
+    `[The tale begins. ${char?.name} steps forward into ${taleScope}. Open a standalone story from my backstory and the module lore. Remember the player has World Map, Battle Map, Astragal dice, Declare/Speak, Hercules combat, Argus inventory, Castor abilities, Bazaar trade, Questor quests, Lark messages, Scribe, Grimoire, Bestiary, Party proximity, and Sheet tools available; the DM/backend handles hidden state. Give me a hook.]`,
     'player',
   );
 
   const concludeTale = async () => {
-    if (!tale || !window.confirm('Conclude this tale? The Scribe will close the record.')) return;
+    if (!tale || !window.confirm('End this Tales session? The Scribe will commit the record to the timeline even if the story is unfinished.')) return;
     setLoading(true);
     setError(null);
     try {
-      const epilogue = "The tale was closed at the player's request and sealed into the archive before its final thread could fray.";
-      await saveTurn(tale.id, 'system', 'The tale was concluded by the player.');
-      await concludeTaleRecord({ tale, char, campaignId: cid, epilogue });
-      const fresh = await loadOrCreateTale(cid, char.id);
-      setTale(fresh);
-      setTurns(await loadTurns(fresh.id));
+      const epilogue = "The session ended at the player's request before every thread was resolved. The Scribe sealed the lore, choices, and unfinished paths into the archive for the timeline.";
+      const endedTurn = await saveTurn(tale.id, 'system', 'The Tales session was ended by the player and committed to the timeline.');
+      const { tale: sealed } = await concludeTaleRecord({ tale, char, campaignId: cid, epilogue });
+      setTale(sealed);
+      setTurns(prev => [...prev, endedTurn].filter(Boolean));
       setPendingRoll(null);
       setRollState(null);
     } catch (e) {
@@ -166,11 +167,16 @@ export default function ScribeTale({ char, campaignId, taleScope = 'this module'
             ))}
           </div>
         </div>
-        {turns.length > 0 && (
-          <button onClick={concludeTale} title="Conclude tale"
-            style={{ background: 'none', border: `1px solid ${COLORS.borderMid}`, color: COLORS.landing, opacity: 0.6, borderRadius: 8, padding: '4px 10px', fontSize: 11, cursor: 'pointer' }}>
-            Conclude
+        {turns.length > 0 && !taleEnded && (
+          <button onClick={concludeTale} title="End session and commit to timeline"
+            style={{ background: 'none', border: `1px solid ${COLORS.borderMid}`, color: COLORS.landing, opacity: 0.72, borderRadius: 8, padding: '4px 10px', fontSize: 11, cursor: 'pointer' }}>
+            End Session
           </button>
+        )}
+        {taleEnded && (
+          <div style={{ fontSize: 10, letterSpacing: 1.4, textTransform: 'uppercase', color: COLORS.magicText, opacity: 0.75 }}>
+            Session sealed
+          </div>
         )}
       </div>
 
@@ -178,7 +184,9 @@ export default function ScribeTale({ char, campaignId, taleScope = 'this module'
       <div style={{ flex: 1, overflowY: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
         {turns.length === 0 && !loading && (
           <div style={{ margin: 'auto', textAlign: 'center', maxWidth: 380 }}>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>🖋️</div>
+            <div style={{ width: 72, height: 72, margin: '0 auto 12px', borderRadius: '50%', border: `1px solid ${COLORS.magicDim}`, background: COLORS.wizard, display: 'grid', placeItems: 'center', boxShadow: '0 0 24px rgba(111,158,120,0.12)' }}>
+              <img src="/scribe-emblem.png" alt="The Scribe" draggable={false} style={{ width: '68%', height: '68%', objectFit: 'contain', pointerEvents: 'none' }} />
+            </div>
             <div style={{ color: COLORS.magicText, fontStyle: 'italic', fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>
               "You wish me to <b>weave</b> a fate rather than record one? …Very well, {char?.name}. Sit. The ink is patient. You will not be."
             </div>
@@ -251,12 +259,12 @@ export default function ScribeTale({ char, campaignId, taleScope = 'this module'
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') handleSend(); }}
-          placeholder={pendingRoll ? 'The Scribe awaits your roll…' : turns.length === 0 ? 'Or begin with your own words…' : 'What do you do?'}
-          disabled={loading || !!pendingRoll}
-          style={{ flex: 1, background: COLORS.wizard, border: `1px solid ${COLORS.borderMid}`, borderRadius: 10, padding: '10px 13px', color: COLORS.landing, fontSize: 14, outline: 'none', opacity: pendingRoll ? 0.5 : 1 }}
+          placeholder={taleEnded ? 'Session ended and committed to the timeline.' : pendingRoll ? 'The Scribe awaits your roll...' : turns.length === 0 ? 'Or begin with your own words...' : 'What do you do?'}
+          disabled={loading || !!pendingRoll || taleEnded}
+          style={{ flex: 1, background: COLORS.wizard, border: `1px solid ${COLORS.borderMid}`, borderRadius: 10, padding: '10px 13px', color: COLORS.landing, fontSize: 14, outline: 'none', opacity: pendingRoll || taleEnded ? 0.5 : 1 }}
         />
-        <button onClick={handleSend} disabled={loading || !input.trim() || !!pendingRoll}
-          style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, color: COLORS.magicText, borderRadius: 10, padding: '0 18px', fontSize: 14, fontWeight: 600, cursor: loading || pendingRoll ? 'default' : 'pointer', opacity: loading || !input.trim() || pendingRoll ? 0.5 : 1 }}>
+        <button onClick={handleSend} disabled={loading || !input.trim() || !!pendingRoll || taleEnded}
+          style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, color: COLORS.magicText, borderRadius: 10, padding: '0 18px', fontSize: 14, fontWeight: 600, cursor: loading || pendingRoll || taleEnded ? 'default' : 'pointer', opacity: loading || !input.trim() || pendingRoll || taleEnded ? 0.5 : 1 }}>
           Act
         </button>
       </div>

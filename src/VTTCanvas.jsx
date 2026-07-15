@@ -52,6 +52,24 @@ function getRawIcon(src, onReady) {
   return rawIconCache[src] || null;
 }
 
+function drawImageCover(ctx, img, x, y, w, h, alignY = 0.18) {
+  if (!img?.width || !img?.height || !w || !h) return;
+  const imgRatio = img.width / img.height;
+  const boxRatio = w / h;
+  let sx = 0;
+  let sy = 0;
+  let sw = img.width;
+  let sh = img.height;
+  if (imgRatio > boxRatio) {
+    sw = img.height * boxRatio;
+    sx = (img.width - sw) / 2;
+  } else {
+    sh = img.width / boxRatio;
+    sy = Math.max(0, Math.min(img.height - sh, (img.height - sh) * alignY));
+  }
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
 function getMapRect(canvas, mapImg) {
   const W = canvas.width;
   const H = canvas.height;
@@ -207,7 +225,7 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
       if (tok.type === 'player') { ctx.beginPath(); ctx.roundRect(tx - r + 2, ty - r + 2, r * 2 - 4, r * 2 - 4, 4); }
       else { ctx.beginPath(); ctx.arc(tx, ty, r - 2, 0, Math.PI * 2); }
       ctx.clip();
-      ctx.drawImage(tokenImg, tx - r, ty - r, r * 2, r * 2);
+      drawImageCover(ctx, tokenImg, tx - r, ty - r, r * 2, r * 2);
       ctx.restore();
     } else {
       const icon = tok.race ? getRaceIcon(tok.race, onIconReady) : null;

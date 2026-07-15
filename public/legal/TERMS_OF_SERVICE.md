@@ -1,7 +1,7 @@
 # Terms of Service
 
 **Syntarion Adventure Companion App**
-**Effective Date:** July 7, 2026
+**Effective Date:** July 14, 2026
 **Operator:** Adrian Gilmore, doing business as **Theonhex Media & Publishing** ("Operator," "we," "us")
 
 These Terms of Service ("Terms") govern your access to and use of the hosted Syntarion Adventure Companion App and related services (the "Service"). By creating an account or using the Service, you agree to these Terms and to the accompanying [End User License Agreement](./EULA.md), which is incorporated by reference. If you do not agree, do not use the Service.
@@ -12,7 +12,7 @@ Syntarion is a tabletop RPG companion platform providing character creation and 
 
 ## 2. Eligibility and Accounts
 
-You must be at least 13 years old to use the Service. If you are under 18, you must have permission from a parent or guardian.
+You must be at least 18 years old to use the Service. By creating an account, accepting these Terms, or using the Service, you certify that you are 18 years of age or older.
 
 You are responsible for your account credentials and all activity under your account. Accounts are personal and may not be shared or transferred. Notify us promptly of any unauthorized use. We may suspend or terminate accounts at our discretion, including for violations of these Terms.
 
@@ -59,34 +59,42 @@ We do not sell your personal information. Campaign participants can see content 
 
 Full details of what we collect, how it is used and shared, and your choices are set out in our **Privacy Policy**, available in the Service under Settings → Legal, which you should read together with these Terms.
 
-## 7. Fees
+## 7. Notifications and Session Reminders
+
+The Service may offer optional session reminders, early check-in notices, and similar tabletop scheduling notifications. These notifications are opt-in. You will only receive browser, device, or push notifications after you grant permission through your browser, device, or installed web app.
+
+You can disable notifications at any time through your browser, operating system, device settings, or any notification controls provided in the Service. We do not use session notifications for third-party advertising or unrelated marketing.
+
+Notification delivery depends on your browser, device, network connection, operating system settings, and third-party infrastructure. We do not guarantee that reminders will arrive on time or at all; DMs and players remain responsible for confirming session schedules directly when timing matters.
+
+## 8. Fees
 
 The Service is currently free. We may introduce paid tiers or subscriptions in the future; any paid features will be clearly identified, and continued use of paid features will be subject to additional terms presented at that time. We will not retroactively charge for past use.
 
-## 8. Intellectual Property
+## 9. Intellectual Property
 
 The Service, its software, and all Soteria Content (as defined in the EULA) are the property of the Operator and are protected by copyright and other intellectual property laws. Except for the limited rights expressly granted in these Terms and the EULA, all rights are reserved. Feedback and suggestions you provide may be used by the Operator without obligation or compensation.
 
-## 9. Termination
+## 10. Termination
 
-You may stop using the Service and request account deletion at any time. We may suspend or terminate your access at any time, with or without notice, for violation of these Terms, to protect the Service or its users, or upon discontinuation of the Service. Sections 3 (license to Your Content, as needed to wind down), 5, 8, 10, 11, and 12 survive termination.
+You may stop using the Service and request account deletion at any time. We may suspend or terminate your access at any time, with or without notice, for violation of these Terms, to protect the Service or its users, or upon discontinuation of the Service. Sections 3 (license to Your Content, as needed to wind down), 5, 9, 11, 12, and 13 survive termination.
 
-## 10. Disclaimers
+## 11. Disclaimers
 
 THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE," WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, SECURE, OR ERROR-FREE, OR THAT DATA (INCLUDING CHARACTERS, CAMPAIGNS, AND SESSION HISTORY) WILL NEVER BE LOST. BACK UP ANYTHING YOU CANNOT AFFORD TO LOSE.
 
-## 11. Limitation of Liability
+## 12. Limitation of Liability
 
 TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE OPERATOR SHALL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR FOR LOSS OF DATA, PROFITS, OR GOODWILL, ARISING FROM YOUR USE OF THE SERVICE. TOTAL AGGREGATE LIABILITY SHALL NOT EXCEED THE GREATER OF (A) AMOUNTS YOU PAID FOR THE SERVICE IN THE TWELVE MONTHS PRECEDING THE CLAIM, OR (B) FIFTY U.S. DOLLARS (US $50). Some jurisdictions do not allow certain limitations; in those jurisdictions, these limitations apply to the fullest extent permitted.
 
-## 12. Governing Law and Disputes
+## 13. Governing Law and Disputes
 
 These Terms are governed by the laws of the State of Texas, USA. Disputes shall be resolved exclusively in the state or federal courts located in Taylor County, Texas, and you consent to their jurisdiction. Before filing any claim, you agree to attempt informal resolution by contacting us and allowing 30 days to respond.
 
-## 13. Changes to These Terms
+## 14. Changes to These Terms
 
 We may update these Terms from time to time. Material changes will be announced through the Service or the repository, with an updated Effective Date. Continued use of the Service after changes take effect constitutes acceptance.
 
-## 14. Contact
+## 15. Contact
 
 Questions about these Terms: **contact@theonhexmedia.com**

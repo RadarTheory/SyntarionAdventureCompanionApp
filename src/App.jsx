@@ -14,9 +14,34 @@ export default function App() {
   const [splashLoading, setSplashLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('syn_dark') === '1');
   useEffect(() => { localStorage.setItem('syn_dark', darkMode ? '1' : '0'); }, [darkMode]);
-  const [view, setView] = useState(() => localStorage.getItem('syntarion_view') || 'landing');
+  const [view, setView] = useState(() => {
+    const saved = localStorage.getItem('syntarion_view');
+    return ['driftstone', 'fubin'].includes(saved) ? saved : 'landing';
+  });
   const [inSession, setInSession] = useState(false);
   const [inCampaign, setInCampaign] = useState(false);
+
+  const goLandingHome = () => {
+    localStorage.removeItem('syntarion_view');
+    localStorage.setItem('syn_view', 'home');
+    setView('landing');
+  };
+
+  const openBag = () => {
+    localStorage.removeItem('syntarion_view');
+    setView('bag');
+  };
+
+  const launchGame = (id) => {
+    if (!id) return;
+    localStorage.setItem('syntarion_view', id);
+    setView(id);
+  };
+
+  const returnToBag = () => {
+    localStorage.removeItem('syntarion_view');
+    setView('bag');
+  };
 
   useEffect(() => {
     document.body.style.background = darkMode ? '#14110c' : '#dbdcdf';
@@ -62,9 +87,9 @@ export default function App() {
   if (!session) return <LoginScreen />;
 
   // Bag / mini-game views (auth still required to reach these)
-  if (view === 'bag') return <LotjarrsBag onHome={() => setView('landing')} onLaunchGame={id => setView(id)} />;
-  if (view === 'driftstone') return <PlayDriftstone onHome={() => setView('bag')} />;
-  if (view === 'fubin') return <Fubin onHome={() => setView('bag')} />;
+  if (view === 'bag') return <LotjarrsBag onHome={goLandingHome} onLaunchGame={launchGame} />;
+  if (view === 'driftstone') return <PlayDriftstone onHome={returnToBag} />;
+  if (view === 'fubin') return <Fubin onHome={returnToBag} />;
 
   // Main app — pass real session user
   return (
@@ -74,7 +99,7 @@ export default function App() {
         user={session.user}
         darkMode={darkMode}
         setDarkMode={setDarkMode}
-    onOpenBag={() => { setView('bag'); localStorage.setItem('syntarion_view', 'bag'); }}
+        onOpenBag={openBag}
         onViewChange={setInCampaign}
       />
       <ScribeLite dismiss={inCampaign} />

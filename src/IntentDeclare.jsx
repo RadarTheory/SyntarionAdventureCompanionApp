@@ -192,11 +192,12 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
 
       setEntities(deduped);
     })();
-  }, [campaignId, char?.id]);
+  }, [campaignId, char?.id, proxRows]);
 
-  const active = !!sessionId;
   const actorName = char?.name || 'Player';
   const actorId = char?.id ? String(char.id) : null;
+  const active = !!campaignId && !!actorId;
+  const liveSessionActive = !!sessionId;
 
   const hasSpeech = !!speechText.trim();
   const hasIntent = !!intentText.trim();
@@ -337,8 +338,7 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
     <div style={{ padding: embedded ? 0 : 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
       {entities.length === 0 ? (
         <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', padding: '2px 2px 0' }}>
-          No one nearby to address directly yet — you can still speak aloud below.
-        </div>
+          No one nearby to address directly yet - you can still speak aloud below.</div>
       ) : (
         <div ref={targetRef} style={{ position: 'relative' }}>
           <button type="button" onClick={() => setTargetOpen(o => !o)}
@@ -389,12 +389,14 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
         value={intentText}
         onChange={e => setIntentText(e.target.value)}
         disabled={!active || sending}
-        placeholder={active ? 'Declare your intent... (optional)' : 'No active lobby or session'}
+        placeholder={active ? 'Declare your intent... (optional)' : 'Choose a character before declaring intent'}
         style={{ background: 'rgba(200,168,74,0.05)', border: '1px solid rgba(200,168,74,0.25)', borderRadius: 6, padding: compact ? '5px 8px' : '7px 10px', color: active ? COLORS.text : COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: active ? 'normal' : 'italic', fontSize: compact ? 10 : 11, outline: 'none' }}
         onKeyDown={e => e.key === 'Enter' && submit()} />
 
       {hasSpeech && !hasTarget && (
-        <div style={{ fontSize: 9, color: '#e0a040', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No direct target selected - this will be spoken aloud to the scene.</div>
+        <div style={{ fontSize: 9, color: liveSessionActive ? '#e0a040' : COLORS.magicText, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+          {liveSessionActive ? 'No direct target selected - this will be spoken aloud to the scene.' : 'No live DM session found - this will still be recorded for the scene.'}
+        </div>
       )}
       {hasSpeech && hasIntent && (
         <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>The DM alone will see your true intent behind these words.</div>

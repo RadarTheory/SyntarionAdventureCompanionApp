@@ -106,13 +106,6 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
   const landingBg = '#f0eeeb';
   const [heroVideoSrc] = useState(() => '/landing-creatures.mp4?t=' + Date.now());
   const [videoReady, setVideoReady] = useState(useHeroVideo);
-  const [loopBlink, setLoopBlink] = useState(false);
-
-  const handleHeroVideoTime = (event) => {
-    const video = event.currentTarget;
-    if (!video.duration || Number.isNaN(video.duration)) return;
-    setLoopBlink(video.duration - video.currentTime < 0.28);
-  };
 
   return (
     <>
@@ -132,8 +125,6 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
             preload="auto"
             aria-label="Syntarion creatures and characters"
             onCanPlay={() => setVideoReady(true)}
-            onTimeUpdate={handleHeroVideoTime}
-            onEnded={() => setLoopBlink(false)}
             onError={() => setVideoReady(false)}
             style={{
         display: 'block',
@@ -141,8 +132,7 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
               maxWidth: isMobile ? '108vw' : 'min(90vw, 790px)',
               height: 'auto',
               background: 'transparent',
-              opacity: loopBlink ? 0.78 : 1,
-              transition: 'opacity 180ms ease',
+              opacity: 1,
             WebkitMaskImage: heroMask,
               maskImage: heroMask,
               mixBlendMode: 'normal',
@@ -165,8 +155,8 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
             aria-hidden="true"
             style={{
               width: isMobile ? 'calc(100vw - 36px)' : 'min(92vw, 860px)',
-              height: 2,
-              background: darkMode ? 'rgba(200,168,74,0.34)' : 'rgba(26,23,20,0.14)',
+              height: 0,
+              background: 'transparent',
               borderRadius: 999,
               margin: `${isMobile ? 0 : -2}px 0 ${size * 0.075}px`,
               boxShadow: 'none',

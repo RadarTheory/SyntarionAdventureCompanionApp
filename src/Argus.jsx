@@ -424,6 +424,7 @@ async function loadCharInventory(charId) {
   const equipped = {};
   const pack = [];
   data.forEach(row => {
+    if (row.slot?.startsWith('tales_seed_') || row.description?.startsWith('System|')) return;
     if (row.slot?.startsWith('pack__')) {
       pack.push({
         id: row.id,

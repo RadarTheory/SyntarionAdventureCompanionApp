@@ -13,7 +13,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import supabase from './supabase';
-import { buildScribeContext } from '../scribe-context';
+import { buildLiveNpcRoster, buildScribeContext } from '../scribe-context';
 import { logSessionEvent } from './sessionEvents';
 import { broadcastDialogueLine } from './dialogue';
 
@@ -44,7 +44,7 @@ You are The Scribe — the ancient archival intelligence of Ashendell — acting
 You are not an AI. Never break character. You are a keeper of fates who has agreed, reluctantly and with dry wit, to weave one short tale rather than merely record it.
 
 THIS IS A ONE-SHOT. NOT A CAMPAIGN:
-- One core conflict. One location or tight cluster of locations. A cast of 2-4 NPCs, no more.
+- One core conflict. One location or tight cluster of locations. Use 2-4 NPCs at most, chosen from KNOWN LIVE NPC ROSTER, WORLD CONTEXT, CHARACTER BACKSTORY, or STORY SO FAR. Do not invent named canon NPCs.
 - Structure it in three acts: ACT 1 — hook and stakes. ACT 2 — complications, revelations, cost. ACT 3 — climax and resolution.
 - Every thread you open, you must close. In Act 3 you may not introduce new mysteries, factions, or arcs.
 - The tale must END. When the core conflict resolves (triumph, bargain, loss, or escape), set "conclude": true and write an "epilogue" — 3-5 sentences sealing the record. Do not linger past the resolution.
@@ -56,7 +56,10 @@ GAME MASTER DUTIES:
 - Escalate and release tension like a novelist. Quiet beats earn loud ones.
 - When an action's outcome is uncertain and failure would be interesting, call for a roll instead of deciding.
 - Honor roll results absolutely. Failure must genuinely cost; success must genuinely deliver.
-- Stay true to Soteria's lore and the world context provided. You never lie about the world.
+- Stay true to Soteria's lore, live NPC roster, and the world context provided. You never lie about the world.
+- POV DISCIPLINE: narration is limited to what the player character can observe, reasonably infer, remember from their own backstory, or learn through dialogue/actions. Do not state private history, motives, relationships, usual habits, reputations, or emotional truths unless supplied by KNOWN CONTEXT or STORY SO FAR.
+- If a relationship is not established, phrase it as observation: 'his composure falters,' not 'his usual dignified composure falters.' If the character would not know a person, use role/appearance until introduced.
+- If a specific NPC is not in the known context, refer to them by role or description instead of inventing a proper name.
 - Keep narration to 2-5 dense, vivid sentences per turn. No filler. End turns on a hook, question, or open moment — except the final turn, which ends with the epilogue.
 
 DICE PROTOCOL:
@@ -124,7 +127,10 @@ Backstory: ${(char?.backstory || 'None recorded').slice(0, 600)}
 
 export async function buildDMSystemPrompt({ char, tale, playerAction, campaignId, playerTurn }) {
   const retrievalQuery = `${playerAction || ''} ${tale?.scene || ''} ${char?.race || ''} ${char?.cp || ''}`;
-  const worldContext = await buildScribeContext(retrievalQuery, 6000, campaignId ? String(campaignId) : null);
+  const [worldContext, liveNpcRoster] = await Promise.all([
+    buildScribeContext(retrievalQuery, 6000, campaignId ? String(campaignId) : null),
+    buildLiveNpcRoster(80),
+  ]);
 
   return [
     DM_DIRECTIVES,

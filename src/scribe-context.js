@@ -58,6 +58,30 @@ function scoreSection(queryTerms, section) {
  * Always includes the WORLD PRIMER (first lore section) as grounding,
  * then fills the remaining budget with the highest-scoring sections.
  */
+async function loadLiveNpcSections() {
+  const { data, error } = await supabase
+    .from('npcs')
+    .select('name, role, notes, faction, active')
+    .order('name');
+  if (error || !data) return [];
+  return data
+    .filter(n => n.active !== false && n.name)
+    .map(n => ({
+      source: 'LIVE NPC ROSTER',
+      title: n.name,
+      body: [
+        n.role ? `Role: ${n.role}` : '',
+        n.faction ? `Faction: ${n.faction}` : '',
+        n.notes ? `Notes: ${String(n.notes).slice(0, 500)}` : '',
+      ].filter(Boolean).join('\n') || 'Known NPC.',
+    }));
+}
+
+export async function buildLiveNpcRoster(limit = 80) {
+  const rows = await loadLiveNpcSections();
+  return rows.slice(0, limit).map(r => `- ${r.title}: ${r.body.replace(/\n/g, '; ')}`).join('\n');
+}
+
 async function loadLiveBeastSections(campaignId) {
   let query = supabase.from('beasts').select('name, description, category, biome, disposition, source, campaign_id');
   query = campaignId
@@ -83,11 +107,12 @@ async function loadDbContextSections(campaignId) {
 }
 
 export async function buildScribeContext(question, budget = 10000, campaignId = null) {
-  const [liveBeasts, dbSections] = await Promise.all([
+  const [liveNpcs, liveBeasts, dbSections] = await Promise.all([
+    loadLiveNpcSections(),
     loadLiveBeastSections(campaignId),
     loadDbContextSections(campaignId),
   ]);
-  const allSections = [...SECTIONS, ...liveBeasts, ...dbSections];
+  const allSections = [...SECTIONS, ...liveNpcs, ...liveBeasts, ...dbSections];
 
   const queryTerms = terms(question || '');
   const primer = SECTIONS[0]; // SOTERIA — WORLD PRIMER

@@ -4,7 +4,7 @@ import supabase from './lib/supabase';
 // ─── LEGAL VERSION ───────────────────────────────────────────────────────────
 // Bump this string whenever TERMS_OF_SERVICE.md or EULA.md are materially
 // updated. Every user will be re-prompted to accept on their next visit.
-export const LEGAL_VERSION = '2026-07-07';
+export const LEGAL_VERSION = '2026-07-14';
 
 const DOCS = {
   tos:     { label: 'Terms of Service', path: `/legal/TERMS_OF_SERVICE.md?v=${LEGAL_VERSION}`, acceptance: true,  group: 'legal' },
@@ -66,6 +66,7 @@ const group = DOCS[initialTab]?.group || 'legal';
   }, [readOnly, user?.id]);
   const [docs, setDocs] = useState({ tos: null, eula: null, privacy: null, ai: null, credits: null });
   const [agreed, setAgreed] = useState({ tos: false, eula: false });
+  const [ageCertified, setAgeCertified] = useState(false);
  const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
   const scrollRef = useRef(null);
@@ -217,15 +218,36 @@ const group = DOCS[initialTab]?.group || 'legal';
             }}>Close</button>
           ) : (
             <>
-              <button onClick={agreeCurrent} disabled={saving || agreed[tab]} style={{
+              <label style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 10,
+                marginBottom: 12,
+                padding: '11px 12px',
+                background: 'rgba(240,238,235,0.035)',
+                border: `1px solid ${ageCertified ? 'rgba(212,185,78,0.38)' : 'rgba(240,238,235,0.10)'}`,
+                borderRadius: 8,
+                cursor: 'pointer',
+              }}>
+                <input
+                  type="checkbox"
+                  checked={ageCertified}
+                  onChange={e => setAgeCertified(e.target.checked)}
+                  style={{ marginTop: 2, accentColor: '#d4b94e' }}
+                />
+                <span style={{ fontSize: 11.5, color: 'rgba(240,238,235,0.66)', lineHeight: 1.45 }}>
+                  I certify I am 18 years of age or older.
+                </span>
+              </label>
+              <button onClick={agreeCurrent} disabled={saving || agreed[tab] || !ageCertified} style={{
                 width: '100%',
                 background: agreed[tab] ? 'rgba(212,185,78,0.10)' : 'rgba(240,238,235,0.09)',
                 border: `1px solid ${agreed[tab] ? 'rgba(212,185,78,0.55)' : 'rgba(240,238,235,0.25)'}`,
                 borderRadius: 8,
                 padding: '13px 0', color: agreed[tab] ? '#d4b94e' : '#f0eeeb', fontSize: 12,
                 letterSpacing: '0.16em', textTransform: 'uppercase',
-                cursor: saving || agreed[tab] ? 'default' : 'pointer',
-                opacity: saving ? 0.6 : 1,
+                cursor: saving || agreed[tab] || !ageCertified ? 'default' : 'pointer',
+                opacity: saving || !ageCertified ? 0.58 : 1,
                 fontFamily: "'Cinzel', serif", fontWeight: 700,
               }}>
                 {saving ? 'Sealing the pact…'

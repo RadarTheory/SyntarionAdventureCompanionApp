@@ -1,7 +1,7 @@
 # End User License Agreement (EULA)
 
 **Syntarion Adventure Companion App**
-**Effective Date:** July 6, 2026
+**Effective Date:** July 14, 2026
 **Licensor:** Adrian Gilmore, doing business as **Theonhex Media & Publishing** ("Licensor," "we," "us")
 
 This End User License Agreement ("Agreement") is a legal agreement between you ("User," "you") and the Licensor governing your use of the Syntarion Adventure Companion App, including its software, source code, and all associated creative content (collectively, the "Software").

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import AdminPortal from './AdminPortal.jsx'
+import { registerServiceWorker, setupPWAInstallPrompt } from './pwaInstall.js'
 
 const isAdminRoute = window.location.pathname.startsWith('/architect-vault-7x2k')
 
@@ -15,6 +16,8 @@ const disableMediaContextMenu = (event) => {
 
 document.addEventListener('contextmenu', disableMediaContextMenu, { capture: true });
 document.addEventListener('dragstart', disableMediaContextMenu, { capture: true });
+setupPWAInstallPrompt();
+registerServiceWorker();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

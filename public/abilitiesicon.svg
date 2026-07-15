@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Abilities icon">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="58%">
+      <stop offset="0" stop-color="#f4d76a" stop-opacity="0.95"/>
+      <stop offset="0.46" stop-color="#c8a84a" stop-opacity="0.56"/>
+      <stop offset="1" stop-color="#120e08" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="line" x1="28" y1="28" x2="228" y2="228">
+      <stop offset="0" stop-color="#fff0a8"/>
+      <stop offset="0.52" stop-color="#d6ae38"/>
+      <stop offset="1" stop-color="#7fe2ff"/>
+    </linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2.4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="256" height="256" rx="46" fill="#100c08"/>
+  <circle cx="128" cy="128" r="108" fill="url(#glow)" opacity="0.55"/>
+  <circle cx="128" cy="128" r="82" fill="none" stroke="#453714" stroke-width="6"/>
+  <circle cx="128" cy="128" r="58" fill="none" stroke="url(#line)" stroke-width="5" filter="url(#soft)"/>
+  <path d="M128 44 L146 101 L207 101 L158 136 L177 194 L128 158 L79 194 L98 136 L49 101 L110 101 Z" fill="none" stroke="url(#line)" stroke-width="7" stroke-linejoin="round" filter="url(#soft)"/>
+  <path d="M128 74 v108 M78 128 h100 M92 92 l72 72 M164 92 l-72 72" stroke="#ffe88f" stroke-width="4" stroke-linecap="round" opacity="0.68"/>
+  <circle cx="128" cy="128" r="12" fill="#120e08" stroke="#f7d75f" stroke-width="5"/>
+</svg>

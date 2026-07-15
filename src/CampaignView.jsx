@@ -439,6 +439,12 @@ function TalesPreviewModal({ module, campaigns, userChar, onClose, onStart, page
   const [clipIndex, setClipIndex] = useState(0);
   const clip = TALES_SCRIBE_CLIPS[clipIndex];
   const canStart = Boolean(userChar);
+  page = {
+    title: '#f7efe0',
+    muted: 'rgba(240,238,235,0.72)',
+    faint: 'rgba(240,238,235,0.44)',
+    line: 'rgba(200,168,74,0.18)',
+  };
 
   useEffect(() => {
     if (clipIndex >= TALES_SCRIBE_CLIPS.length - 1) return undefined;
@@ -457,18 +463,18 @@ function TalesPreviewModal({ module, campaigns, userChar, onClose, onStart, page
     return () => cache.forEach(video => video.removeAttribute('src'));
   }, []);
 
-  const isDark = page.bg === '#14110c';
-  const panelBg = isDark ? 'rgba(18,14,10,0.96)' : 'rgba(251,250,247,0.96)';
-  const border = isDark ? 'rgba(200,168,74,0.34)' : 'rgba(84,68,38,0.28)';
+  const isDark = true;
+  const panelBg = 'rgba(18,14,10,0.97)';
+  const border = 'rgba(200,168,74,0.34)';
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 300200, background: 'rgba(7,6,5,0.72)', backdropFilter: 'blur(7px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? 16 : 28 }}>
       <div onClick={e => e.stopPropagation()} style={{ width: 'min(920px, 100%)', maxHeight: 'min(760px, 92svh)', overflow: 'hidden', background: panelBg, border: `1px solid ${border}`, borderRadius: 14, boxShadow: '0 34px 90px rgba(0,0,0,0.58)', color: page.title, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(260px, 0.88fr) minmax(320px, 1fr)' }}>
-        <div style={{ position: 'relative', minHeight: isMobile ? 250 : 520, background: isDark ? '#0f0c09' : '#eee9df', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRight: isMobile ? 'none' : `1px solid ${border}`, borderBottom: isMobile ? `1px solid ${border}` : 'none' }}>
-          <video src="/landing-creatures.mp4" autoPlay muted loop playsInline preload="metadata" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: isDark ? 0.16 : 0.2, filter: isDark ? 'saturate(0.75) brightness(0.72)' : 'saturate(0.82) brightness(1.08)' }} />
-          <div style={{ position: 'absolute', inset: 0, background: isDark ? 'radial-gradient(circle at 50% 44%, rgba(200,168,74,0.1), rgba(15,12,9,0.76) 68%)' : 'radial-gradient(circle at 50% 44%, rgba(255,255,255,0.18), rgba(238,233,223,0.82) 70%)' }} />
-          <video key={clip.file} className="scribe-tales-glitch" src={`/scribe/${clip.file}.mp4`} autoPlay muted playsInline loop={clip.key === 'idle'} preload="auto" style={{ position: 'relative', width: isMobile ? 170 : 230, height: isMobile ? 170 : 230, objectFit: 'contain', mixBlendMode: 'screen', filter: isDark ? 'drop-shadow(0 16px 30px rgba(0,0,0,0.55))' : 'drop-shadow(0 14px 24px rgba(26,23,20,0.22))', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', left: 22, right: 22, bottom: 22, padding: '10px 12px', border: `1px solid ${border}`, background: isDark ? 'rgba(18,14,10,0.68)' : 'rgba(251,250,247,0.72)', borderRadius: 10, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: page.muted, textAlign: 'center' }}>{clip.line}</div>
+        <div style={{ position: 'relative', minHeight: isMobile ? 250 : 520, background: '#0f0c09', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRight: isMobile ? 'none' : `1px solid ${border}`, borderBottom: isMobile ? `1px solid ${border}` : 'none' }}>
+          <video src="/landing-creatures.mp4" autoPlay muted loop playsInline preload="metadata" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18, filter: 'saturate(0.78) brightness(0.68)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 50% 44%, rgba(200,168,74,0.12), rgba(15,12,9,0.82) 68%)' }} />
+          <video key={clip.file} className="scribe-tales-glitch" src={`/scribe/${clip.file}.mp4`} autoPlay muted playsInline loop={clip.key === 'idle'} preload="auto" style={{ position: 'relative', width: isMobile ? 170 : 230, height: isMobile ? 170 : 230, objectFit: 'contain', mixBlendMode: 'screen', filter: 'drop-shadow(0 16px 30px rgba(0,0,0,0.58))', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', left: 22, right: 22, bottom: 22, padding: '10px 12px', border: `1px solid ${border}`, background: 'rgba(18,14,10,0.76)', borderRadius: 10, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: page.muted, textAlign: 'center' }}>{clip.line}</div>
         </div>
         <div style={{ padding: isMobile ? 22 : 32, display: 'flex', flexDirection: 'column', gap: 18, minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start' }}>
@@ -481,7 +487,7 @@ function TalesPreviewModal({ module, campaigns, userChar, onClose, onStart, page
           <div style={{ fontFamily: 'Georgia, serif', fontSize: isMobile ? 14 : 15, lineHeight: 1.75, color: page.muted }}>
             Tales is a solo and separate Scribe-led story chamber: he draws from the module lore and your character, then performs a standalone tale with his full expression set.
           </div>
-          <div style={{ border: `1px solid ${border}`, borderRadius: 10, padding: 14, background: isDark ? 'rgba(200,168,74,0.08)' : 'rgba(84,68,38,0.08)' }}>
+          <div style={{ border: `1px solid ${border}`, borderRadius: 10, padding: 14, background: 'rgba(200,168,74,0.08)' }}>
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: page.faint, marginBottom: 6 }}>Story Chamber</div>
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 15, color: page.title, fontWeight: 700 }}>{module?.name || 'Soteria'} Tales</div>
             <div style={{ fontFamily: 'Georgia, serif', fontSize: 12, color: page.muted, fontStyle: 'italic', marginTop: 4 }}>{canStart ? 'A standalone tale will open outside the campaign list.' : 'Create or claim a character first.'}</div>
@@ -2624,14 +2630,260 @@ useEffect(() => {
   );
 }
 
+const talesSeedInFlight = new Set();
+
+const TALES_STARTER_STEPS = [
+  'Answer the opening hook and establish what your character wants from this Tale.',
+  'Find the first clue, passage, witness, or pressure point.',
+  'Choose a route: maze, puzzle room, crucible, quick hunt, or dream trial.',
+  'Survive the complication and record what changed.',
+  'Resolve the decisive scene and seal the Tale into the archive.',
+];
+
+function talesStarterSlot(taleId, suffix) {
+  return 'pack__' + String(taleId || 'tales').replace(/[^a-z0-9]+/gi, '_').slice(0, 42) + '_' + suffix;
+}
+
+function talesSeedMarkerSlot(taleId) {
+  return 'tales_seed_' + String(taleId || 'tales').replace(/[^a-z0-9]+/gi, '_').slice(0, 42);
+}
+
+function normalizeEquipmentSlot(slot) {
+  return String(slot || '').replace('Side Weapon', 'Side-Weapon');
+}
+
+const TALES_VISIBLE_EQUIPMENT_SLOTS = new Set([...APPAREL_SLOTS, ...WEAPON_SLOTS, ...ACCESSORY_SLOTS].map(normalizeEquipmentSlot));
+const TALES_STALE_FALLBACK_EQUIPMENT = new Set(['magic weapon']);
+
+function parseTalesObject(value) {
+  if (!value) return null;
+  if (typeof value === 'string') {
+    try { return JSON.parse(value); } catch { return null; }
+  }
+  if (typeof value === 'object' && !Array.isArray(value)) return value;
+  return null;
+}
+
+function talesEquipmentName(value) {
+  if (value == null) return '';
+  if (typeof value === 'string' || typeof value === 'number') return String(value).trim();
+  if (typeof value === 'object') {
+    return String(value.name || value.item || value.label || value.title || '').trim();
+  }
+  return '';
+}
+
+function talesEquipmentDescription(value, category) {
+  if (value && typeof value === 'object') {
+    const desc = String(value.description || value.desc || value.notes || '').trim();
+    if (desc) return category + '|' + desc;
+  }
+  return category + '|Starter equipment from character sheet.';
+}
+
+function talesFallbackEquipment(char) {
+  const className = String(char?.class || char?.className || char?.path || '').trim();
+  const cls = className || 'Adventurer';
+  const lower = cls.toLowerCase();
+  const affinity = String(char?.cp || char?.discipline || char?.affinity || '').toLowerCase();
+  const martial = lower.includes('fighter') || lower.includes('inquisitor') || lower.includes('ranger') || lower.includes('rogue') || lower.includes('warrior');
+  const caster = affinity === 'magic' || lower.includes('mage') || lower.includes('wizard') || lower.includes('cleric') || lower.includes('acolyte') || lower.includes('warlock') || lower.includes('sorcerer');
+  return {
+    apparel: {
+      Torso: martial ? cls + ' armor' : 'Traveling clothes',
+      Boots: 'Travel boots',
+      Hands: martial ? 'Weapon grips' : '',
+    },
+    weapons: {
+      'Main Hand': caster ? (className ? cls + ' focus' : 'Arcane focus') : (className ? cls + ' weapon' : 'Reliable weapon'),
+      'Off-Hand': martial ? 'Guarding shield' : '',
+      'Side-Weapon': 'Sidearm',
+    },
+    accessories: {
+      Charm: 'Adventurer kit',
+    },
+  };
+}
+
+function talesEquipmentCandidates(char, dbData) {
+  const candidates = [];
+  const seen = new Set();
+  const push = (value) => {
+    const obj = parseTalesObject(value);
+    if (!obj || seen.has(obj)) return;
+    seen.add(obj);
+    candidates.push(obj);
+  };
+  push(char);
+  push(char?.data);
+  push(char?.character_data);
+  push(char?.sheet);
+  push(char?.profile);
+  push(dbData);
+  push(dbData?.data);
+  push(dbData?.character_data);
+  push(dbData?.sheet);
+  push(dbData?.profile);
+  [...candidates].forEach(candidate => {
+    push(candidate.equipment);
+    push(candidate.gear);
+    push(candidate.loadout);
+    push(candidate.character);
+  });
+  return candidates;
+}
+
+async function seedTalesStarterState({ char, taleId, taleScope, onUpdateChar }) {
+  if (!char?.id || !taleId) return;
+  const seedKey = String(char.id) + ':' + String(taleId);
+  if (talesSeedInFlight.has(seedKey)) return;
+  talesSeedInFlight.add(seedKey);
+  try {
+    const characterId = String(char.id);
+    const goldSlot = talesStarterSlot(taleId, 'gold_500');
+    const seedMarkerSlot = talesSeedMarkerSlot(taleId);
+    const [{ data: existingItems }, { data: charRow }] = await Promise.all([
+      supabase.from('character_items').select('slot,name').eq('character_id', characterId),
+      supabase.from('characters').select('data').eq('id', char.id).maybeSingle(),
+    ]);
+    const existingSlots = new Set((existingItems || []).map(row => row.slot));
+    const existingBySlot = new Map((existingItems || []).map(row => [normalizeEquipmentSlot(row.slot), row]));
+    const hasVisibleEquippedItem = (existingItems || []).some(row => TALES_VISIBLE_EQUIPMENT_SLOTS.has(normalizeEquipmentSlot(row.slot)) && String(row.name || '').trim());
+    const hasStaleFallbackItem = (existingItems || []).some(row => TALES_VISIBLE_EQUIPMENT_SLOTS.has(normalizeEquipmentSlot(row.slot)) && TALES_STALE_FALLBACK_EQUIPMENT.has(String(row.name || '').trim().toLowerCase()));
+    const markerExists = existingSlots.has(seedMarkerSlot);
+    if (markerExists && hasVisibleEquippedItem && !hasStaleFallbackItem) return;
+
+    const rawData = charRow?.data;
+    const dbData = parseTalesObject(rawData) || {};
+    const currentData = Object.keys(dbData).length ? dbData : (parseTalesObject(char?.data) || char || {});
+
+    if (!existingSlots.has(goldSlot)) {
+      await supabase.from('character_items').upsert({
+        character_id: characterId,
+        slot: goldSlot,
+        name: '500 Gold',
+        description: 'Currency|Starter purse for Tales.',
+        attuned: false,
+        bonuses: {},
+        equipped: false,
+        weight: 500,
+      }, { onConflict: 'character_id,slot' });
+      existingSlots.add(goldSlot);
+    }
+
+    const starterEquipment = [];
+    const collectOne = (slot, value, category) => {
+      const normalizedSlot = normalizeEquipmentSlot(slot);
+      if (!TALES_VISIBLE_EQUIPMENT_SLOTS.has(normalizedSlot)) return;
+      const existingRow = existingBySlot.get(normalizedSlot);
+      if (existingRow && !TALES_STALE_FALLBACK_EQUIPMENT.has(String(existingRow.name || '').trim().toLowerCase())) return;
+      const name = talesEquipmentName(value);
+      if (!name || /^empty$/i.test(name)) return;
+      starterEquipment.push({
+        character_id: characterId,
+        slot: normalizedSlot,
+        name,
+        description: talesEquipmentDescription(value, category),
+        attuned: true,
+        bonuses: value && typeof value === 'object' ? (value.bonuses || {}) : {},
+        equipped: true,
+        weight: Number(value && typeof value === 'object' ? value.weight : 1) || 1,
+      });
+      existingSlots.add(normalizedSlot);
+    };
+    const collectGroup = (source, category) => {
+      const obj = parseTalesObject(source);
+      Object.entries(obj || {}).forEach(([slot, value]) => collectOne(slot, value, category));
+    };
+    const collectSlotMap = (source) => {
+      const obj = parseTalesObject(source);
+      Object.entries(obj || {}).forEach(([slot, value]) => {
+        const normalizedSlot = normalizeEquipmentSlot(slot);
+        if (!TALES_VISIBLE_EQUIPMENT_SLOTS.has(normalizedSlot)) return;
+        const category = APPAREL_SLOTS.includes(normalizedSlot) ? 'Armor' : WEAPON_SLOTS.includes(normalizedSlot) ? 'Weapons' : 'Accessories';
+        collectOne(normalizedSlot, value, category);
+      });
+    };
+    const collectCandidate = (candidate) => {
+      collectGroup(candidate?.apparel || candidate?.armor, 'Armor');
+      collectGroup(candidate?.weapons || candidate?.weaponry, 'Weapons');
+      collectGroup(candidate?.accessories || candidate?.trinkets, 'Accessories');
+      collectSlotMap(candidate?.equipment);
+      collectSlotMap(candidate?.gear);
+      collectSlotMap(candidate?.loadout);
+    };
+
+    talesEquipmentCandidates(char, dbData).forEach(collectCandidate);
+    if (!starterEquipment.length && (!hasVisibleEquippedItem || hasStaleFallbackItem)) collectCandidate(talesFallbackEquipment(currentData));
+    if (starterEquipment.length) await supabase.from('character_items').upsert(starterEquipment, { onConflict: 'character_id,slot' });
+
+    if (!markerExists) {
+      const currentTokens = Number(currentData.scribeTokens ?? char.scribeTokens ?? 0);
+      if (currentTokens < 2) {
+        const nextData = { ...currentData, scribeTokens: 2 };
+        await supabase.from('characters').update({ data: nextData }).eq('id', char.id);
+        onUpdateChar?.({ ...char, ...nextData, id: char.id });
+      }
+
+      const questTitle = 'Opening Thread - ' + (char.name || 'The Adventurer');
+      const { data: existingQuest } = await supabase.from('quests').select('id').eq('campaign_id', taleId).eq('title', questTitle).maybeSingle();
+      let questId = existingQuest?.id;
+      if (!questId) {
+        const { data: quest } = await supabase.from('quests').insert({
+          campaign_id: taleId,
+          title: questTitle,
+          description: 'Your Tale begins with supplies in hand, two Scribe questions banked, and the first thread waiting to be pulled.',
+          type: 'main',
+          visibility: 'public',
+          status: 'active',
+          giver_npc_name: 'The Scribe',
+          region: taleScope || 'Tales',
+          steps: TALES_STARTER_STEPS.map((label, index) => ({ id: index + 1, label, completed: false })),
+          reward_ap: 0,
+          reward_stat_bonuses: {},
+          reward_item_name: '',
+          reward_item_desc: '',
+          reward_notes: 'The Scribe will offer rewards for the Architect to approve when the Tale closes.',
+        }).select('id').single();
+        questId = quest?.id;
+      }
+
+      if (questId) {
+        const { data: existingLink } = await supabase.from('quest_characters').select('id,status').eq('quest_id', questId).eq('character_id', characterId).maybeSingle();
+        if (!existingLink?.id) {
+          await supabase.from('quest_characters').insert({ quest_id: questId, character_id: characterId, character_name: char.name || 'Adventurer', status: 'active' });
+        } else if (existingLink.status !== 'active') {
+          await supabase.from('quest_characters').update({ status: 'active' }).eq('id', existingLink.id);
+        }
+      }
+    }
+
+    await supabase.from('character_items').upsert({
+      character_id: characterId,
+      slot: seedMarkerSlot,
+      name: 'Tales Provisioned',
+      description: 'System|Hidden barrier preventing starter Tales rewards from being awarded more than once; empty equipment can still be repaired.',
+      attuned: false,
+      bonuses: {},
+      equipped: false,
+      weight: 0,
+    }, { onConflict: 'character_id,slot' });
+  } catch (e) {
+    console.warn('[Tales] starter state seed failed:', e?.message || e);
+  } finally {
+    talesSeedInFlight.delete(seedKey);
+  }
+}
 function ModuleTalesView({ module, userChar, onBack, onUpdateChar, darkMode = false }) {
   const { isMobile } = useDevice();
-  const [activeTool, setActiveTool] = useState('Map');
+  const [activeTool, setActiveTool] = useState('map');
   const [inventory, setInventory] = useState({});
-  const page = darkMode
-    ? { bg: '#14110c', panel: '#1b1712', title: '#f7efe0', muted: 'rgba(240,238,235,0.68)', faint: 'rgba(240,238,235,0.44)', line: 'rgba(240,238,235,0.16)', backText: 'rgba(240,238,235,0.78)', tab: 'rgba(240,238,235,0.06)' }
-    : { bg: '#e4e0da', panel: '#fbfaf7', title: '#1a1714', muted: 'rgba(26,23,20,0.72)', faint: 'rgba(26,23,20,0.52)', line: 'rgba(26,23,20,0.18)', backText: 'rgba(26,23,20,0.72)', tab: 'rgba(26,23,20,0.06)' };
+  const [castorBadge, setCastorBadge] = useState(0);
+  const page = { bg: '#14110c', panel: '#1b1712', title: '#f7efe0', muted: 'rgba(240,238,235,0.68)', faint: 'rgba(240,238,235,0.44)', line: 'rgba(240,238,235,0.16)', backText: 'rgba(240,238,235,0.78)', tab: 'rgba(240,238,235,0.06)' };
   const taleId = `tales:${module?.id || module?.name || 'soteria'}`;
+  useEffect(() => {
+    seedTalesStarterState({ char: userChar, taleId, taleScope: module?.name || 'Soteria', onUpdateChar });
+  }, [userChar?.id, taleId, module?.name, onUpdateChar]);
   const effectiveStats = (() => {
     const base = userChar?.stats || {};
     const itemBonuses = {};
@@ -2647,58 +2899,159 @@ function ModuleTalesView({ module, userChar, onBack, onUpdateChar, darkMode = fa
     return effective;
   })();
   const rollAbility = async () => {};
-  const tools = ['Map', 'Battle Map', 'Sheet', 'Inventory', 'Abilities', 'Grimoire'];
+  const logRoll = () => {};
+  const img = (src, alt, style = {}, fallbackSrc = null) => (
+    <img
+      src={src}
+      alt={alt}
+      draggable={false}
+      onError={fallbackSrc ? (event) => {
+        event.currentTarget.onerror = null;
+        event.currentTarget.src = fallbackSrc;
+      } : undefined}
+      style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', ...style }}
+    />
+  );
+  const tools = [
+    { id: 'map', label: 'Map', title: 'World Map', icon: '/WorldMapIcon.png' },
+    { id: 'battle', label: 'Battle Map', title: 'VTT Battle Map', icon: '/SoteriaMap.jpg' },
+    { id: 'astragal', label: 'Astragal', title: 'Astragal - Roll the dice', icon: '/AstragalButton.png', iconStyle: { width: '118%', height: '118%', objectFit: 'contain' } },
+    { id: 'intent', label: 'Declare / Speak', title: 'Declare Intent and Speak', icon: '/intentDeclareIcon.png' },
+    { id: 'hercules', label: 'Hercules', title: 'Hercules - Combat Tracker', icon: '/HerculesCombat.png', iconStyle: { width: '150%', height: '150%', objectFit: 'contain' } },
+    { id: 'argus', label: 'Argus', title: 'Argus - Gear, Pack, and Equipment', icon: '/Backpackicon.png', iconStyle: { width: '105%', height: '105%', objectFit: 'contain' } },
+    { id: 'castor', label: 'Castor', title: 'Castor - Cast Request', icon: '/castoricon.png', badge: castorBadge },
+    { id: 'scribe', label: 'Scribe', title: 'The Scribe - Archives', icon: '/scribe-emblem.png' },
+    { id: 'bazaar', label: 'Bazaar', title: 'Bazaar - Trade and Loot', icon: '/Bazaaricon.png' },
+    { id: 'questor', label: 'Questor', title: 'Questor - Quest Board', icon: '/Questoricon.png' },
+    { id: 'grimoire', label: 'Grimoire', title: 'Grimoire - Adventure Journal', icon: '/Grimoireicon.png' },
+    { id: 'lark', label: 'Lark', title: 'Lark - Letters and NPC Messages', icon: '/Larkicon.png' },
+    { id: 'party', label: 'Party', title: "Party - Who's Nearby", icon: '/party.png' },
+    { id: 'bestiary', label: 'Bestiary', title: 'Bestiary - Creatures', icon: '/bestiaryicon.png' },
+    { id: 'sheet', label: 'Sheet', title: 'Character Sheet', icon: '/npcicon.png' },
+    { id: 'abilities', label: 'Abilities', title: 'Abilities', icon: '/abilitiesicon.png', fallbackIcon: '/abilitiesicon.svg', iconStyle: { objectFit: 'contain', padding: '8%' } },
+  ];
+  const activeToolMeta = tools.find(t => t.id === activeTool) || tools[0];
+  const mapLike = activeTool === 'map' || activeTool === 'battle';
+  const toolRailWidth = 0;
+
   const renderTool = () => {
     if (!userChar) return <div style={{ border: `1px solid ${page.line}`, borderRadius: 12, padding: 22, color: page.muted, fontStyle: 'italic' }}>Create or claim a character before opening a Tale.</div>;
     switch (activeTool) {
-      case 'Map':
+      case 'map':
         return (
           <div style={{ height: '100%', minHeight: isMobile ? 480 : 0, border: `1px solid ${page.line}`, borderRadius: 10, overflow: 'hidden', background: '#0f0c09' }}>
             <WorldMapPanel campaignId={taleId} isDM={false} characters={[userChar].filter(Boolean)} />
           </div>
         );
-      case 'Battle Map':
+      case 'battle':
         return (
           <div style={{ height: '100%', minHeight: isMobile ? 480 : 0, border: `1px solid ${page.line}`, borderRadius: 10, overflow: 'hidden', background: '#0f0c09' }}>
             <VTTViewer campaignId={taleId} userChar={userChar} />
           </div>
         );
-      case 'Sheet':
-        return <CharacterSheetInline char={userChar} effectiveStats={effectiveStats} onUpdateChar={onUpdateChar} />;
-      case 'Inventory':
-        return <InventoryPanel char={userChar} onInventoryChange={setInventory} campaignId={taleId} />;
-      case 'Abilities':
-        return <AbilitiesPanel char={userChar} campaignId={taleId} onRoll={rollAbility} />;
-      case 'Grimoire':
+      case 'astragal':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: page.muted, lineHeight: 1.55 }}>
+              Astragal is your dice tray for checks, saves, improvised rolls, and story moments the Scribe calls for.
+            </div>
+            <Astragal character={userChar} actionName="Tales Roll" statKey="will" onResult={logRoll} />
+          </div>
+        );
+      case 'intent':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div>
+              <div style={{ ...label8(), marginBottom: 8 }}>Declare Intent / Speak</div>
+              <IntentDeclare campaignId={taleId} char={userChar} embedded />
+            </div>
+            <div>
+              <div style={{ ...label8(), marginBottom: 10 }}>Available Actions</div>
+              {Object.entries(ACTIONS).map(([category, actions]) => {
+                if (category === 'magic' && userChar.cp !== 'magic') return null;
+                if (category === 'tech' && userChar.cp !== 'tech') return null;
+                return (
+                  <div key={category} style={{ marginBottom: 14 }}>
+                    <div style={{ ...label8(), color: page.faint, marginBottom: 7 }}>{category}</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 7 }}>
+                      {actions.map(action => (
+                        <div key={action} style={{ background: page.tab, border: `1px solid ${page.line}`, borderRadius: 8, padding: '9px 10px', display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
+                          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: page.title }}>{action}</div>
+                          <div style={{ fontSize: 10, color: userChar.actionBonuses?.[action] ? COLORS.magicText : page.faint }}>{userChar.actionBonuses?.[action] ? `+${userChar.actionBonuses[action]}` : '+0'}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      case 'hercules':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <HerculesPlayer campaignId={taleId} char={userChar} />
+            <PartyProximityPanel campaignId={taleId} isDM={false} char={userChar} />
+          </div>
+        );
+      case 'argus':
+        return <ArgusPlayerPanel char={userChar} onClose={() => {}} embedded />;
+      case 'castor':
+        return <CastorPanel char={userChar} campaignId={taleId} onClose={() => {}} onBadgeChange={setCastorBadge} embedded />;
+      case 'scribe':
+        return <ScribePlayerPanel char={userChar} campaignId={taleId} onUpdateChar={onUpdateChar} embedded />;
+      case 'bazaar':
+        return <BazaarPlayerPanel char={userChar} campaignId={taleId} embedded />;
+      case 'questor':
+        return <QuestorPlayerPanel char={userChar} campaignId={taleId} embedded />;
+      case 'grimoire':
         return <GrimoirePanel char={userChar} campaignId={taleId} isDM={false} embedded />;
+      case 'lark':
+        return <LarkPanel char={userChar} campaignId={taleId} isDM={false} embedded />;
+      case 'party':
+        return <PartyProximityPanel campaignId={taleId} isDM={false} char={userChar} />;
+      case 'bestiary':
+        return <BestiaryPanel isDM={false} campaignId={taleId} embedded />;
+      case 'sheet':
+        return <CharacterSheetInline char={userChar} effectiveStats={effectiveStats} onUpdateChar={onUpdateChar} />;
+      case 'abilities':
+        return <AbilitiesPanel char={userChar} campaignId={taleId} onRoll={rollAbility} />;
       default:
         return null;
     }
   };
 
   return (
-    <div style={{ minHeight: '100svh', background: page.bg, color: page.title, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100svh', background: page.bg, color: page.title, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', overflow: 'hidden', paddingLeft: toolRailWidth, boxSizing: 'border-box', width: '100%' }}>
+      <FloatToolbar
+        activeIds={[activeTool]}
+        storageKey="syntarion_tales_toolbar_pos"
+        dockedStorageKey="syntarion_tales_toolbar_docked"
+        defaultPos={isMobile ? null : { x: 8, y: 128 }}
+        buttons={tools.map(tool => ({
+          id: tool.id,
+          title: tool.title,
+          badge: tool.badge,
+          onClick: () => setActiveTool(tool.id),
+          children: img(tool.icon, tool.label, tool.iconStyle || {}, tool.fallbackIcon),
+        }))}
+      />
       <div style={{ padding: isMobile ? 'calc(16px + env(safe-area-inset-top, 0px)) 14px 12px' : '22px 28px 16px', borderBottom: `1px solid ${page.line}`, display: 'flex', alignItems: isMobile ? 'flex-start' : 'flex-end', justifyContent: 'space-between', gap: 14, flexDirection: isMobile ? 'column' : 'row' }}>
         <div>
           <button onClick={onBack} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: page.backText, padding: 0, marginBottom: 14 }}>&lt;- Campaigns</button>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: page.muted, marginBottom: 7 }}>{module?.name || 'Soteria'} Archives</div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 25 : 34, fontWeight: 700, color: page.title, letterSpacing: '0.04em' }}>TALES</div>
-          <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: page.muted, marginTop: 7 }}>A separate Scribe-led table with map, sheet, inventory, and lore tools.</div>
-        </div>
-        <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end', width: isMobile ? '100%' : 'auto' }}>
-          {tools.map(tool => (
-            <button key={tool} onClick={() => setActiveTool(tool)} style={{ background: activeTool === tool ? 'rgba(200,168,74,0.18)' : page.tab, border: `1px solid ${activeTool === tool ? 'rgba(200,168,74,0.58)' : page.line}`, color: activeTool === tool ? page.title : page.muted, borderRadius: 8, padding: '8px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{tool}</button>
-          ))}
+          <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: page.muted, marginTop: 7 }}>A separate Scribe-led table with the full player toolkit: declare intent, speak, trade, roll, fight, travel, inventory, quests, messages, and lore.</div>
         </div>
       </div>
-      <div style={{ flex: 1, minHeight: 0, padding: isMobile ? 10 : 14, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(360px, 0.78fr) minmax(520px, 1.22fr)', gap: 12, overflow: 'hidden' }}>
-        <div style={{ minHeight: isMobile ? 430 : 0, overflow: 'hidden' }}>
+      <div style={{ flex: 1, minHeight: 0, padding: isMobile ? '10px 10px calc(18px + env(safe-area-inset-bottom, 0px))' : '14px 18px 18px 92px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(320px, 0.76fr) minmax(460px, 1.24fr)', gap: 12, overflow: isMobile ? 'auto' : 'hidden', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ minHeight: isMobile ? 430 : 0, minWidth: 0, overflow: 'hidden' }}>
           {userChar ? <ScribeTale char={userChar} campaignId={taleId} taleScope={module?.name || 'Soteria'} /> : (
             <div style={{ border: `1px solid ${page.line}`, borderRadius: 12, padding: 22, color: page.muted, fontStyle: 'italic' }}>Create or claim a character before opening a Tale.</div>
           )}
         </div>
-        <div style={{ minHeight: isMobile ? 520 : 0, overflow: activeTool === 'Map' || activeTool === 'Battle Map' ? 'hidden' : 'auto', background: page.panel, border: `1px solid ${page.line}`, borderRadius: 12, padding: activeTool === 'Map' || activeTool === 'Battle Map' ? 8 : 14, WebkitOverflowScrolling: 'touch' }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: page.faint, marginBottom: activeTool === 'Map' || activeTool === 'Battle Map' ? 8 : 12 }}>{activeTool}</div>
+        <div style={{ minHeight: isMobile ? 520 : 0, minWidth: 0, overflow: mapLike ? 'hidden' : 'auto', background: page.panel, border: `1px solid ${page.line}`, borderRadius: 12, padding: mapLike ? 8 : 14, WebkitOverflowScrolling: 'touch' }}>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: page.faint, marginBottom: mapLike ? 8 : 12 }}>{activeToolMeta.label}</div>
           {renderTool()}
         </div>
       </div>
