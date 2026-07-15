@@ -7,7 +7,7 @@ import { COLORS } from './constants';
 
 const DM_USER_ID = import.meta.env.VITE_DM_USER_ID;
 
-export default function HandbookBookmark({ user, darkMode }) {
+export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark', openSignal = 0, allowEdit = false }) {
   const { isMobile } = useDevice();
   const [open, setOpen] = useState(false);
   const [chapters, setChapters] = useState(null); // null = not fetched yet
@@ -17,9 +17,12 @@ export default function HandbookBookmark({ user, darkMode }) {
   const [draft, setDraft] = useState(null); // { title, subtitle, chapter_order, content, is_published }
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
+  const [importPreview, setImportPreview] = useState(null);
+  const [importStatus, setImportStatus] = useState('');
   const contentRef = useRef(null);
+  const fileRef = useRef(null);
 
-  const isDM = user?.id === DM_USER_ID;
+  const isDM = allowEdit && user?.id === DM_USER_ID;
 
   const ink = darkMode ? COLORS.text : '#1b130a';
   const card = darkMode ? COLORS.card : '#fffaf1';
@@ -94,8 +97,56 @@ export default function HandbookBookmark({ user, darkMode }) {
     setEditing(true);
   };
 
-  const cancelEdit = () => { setEditing(false); setDraft(null); setSaveStatus(''); };
+  const cancelEdit = () => { setEditing(false); setDraft(null); setSaveStatus(''); setImportPreview(null); setImportStatus(''); };
 
+  const parseHandbookFile = async (file) => {
+    const name = file.name || 'handbook-update';
+    const ext = name.split('.').pop()?.toLowerCase();
+    if (ext === 'docx') {
+      const arrayBuffer = await file.arrayBuffer();
+      const { value } = await mammoth.convertToMarkdown({ arrayBuffer });
+      return value.trim();
+    }
+    if (ext === 'md' || ext === 'markdown' || ext === 'txt') return (await file.text()).trim();
+    if (ext === 'xlsx' || ext === 'xls') {
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      return workbook.SheetNames.map(sheetName => {
+        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '' })
+          .filter(row => row.some(cell => String(cell || '').trim()));
+        if (!rows.length) return '';
+        const header = rows[0].map(cell => String(cell || '').trim() || 'Column');
+        const divider = header.map(() => '---');
+        const bodyRows = rows.slice(1).map(row => header.map((_, i) => String(row[i] || '').replace(/\n/g, '<br>').trim()));
+        const table = [header, divider, ...bodyRows].map(row => '| ' + row.join(' | ') + ' |').join('\n');
+        return '# ' + sheetName + '\n\n' + table;
+      }).filter(Boolean).join('\n\n');
+    }
+    throw new Error('Use a .docx, .md, .txt, .xlsx, or .xls file.');
+  };
+
+  const handleImportPick = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !draft) return;
+    setImportStatus('Reading file...');
+    setImportPreview(null);
+    try {
+      const content = await parseHandbookFile(file);
+      if (!content.trim()) { setImportStatus('That document did not contain readable text.'); return; }
+      setImportPreview({ name: file.name, content });
+      setImportStatus('Preview ready. Review, then apply it to this chapter.');
+    } catch (err) {
+      setImportStatus('Import failed: ' + err.message);
+    } finally {
+      e.target.value = '';
+    }
+  };
+
+  const applyImportToDraft = () => {
+    if (!importPreview) return;
+    setDraft(d => ({ ...d, content: importPreview.content }));
+    setImportStatus('Imported into the chapter body. Save when ready.');
+  };
   const saveEdit = async () => {
     if (!active || !draft || saving) return;
     setSaving(true);
@@ -147,11 +198,23 @@ export default function HandbookBookmark({ user, darkMode }) {
     ol: ({ children }) => <ol style={{ paddingLeft: 22, margin: '10px 0', display: 'grid', gap: 5 }}>{children}</ol>,
     li: ({ children }) => <li style={{ fontSize: 13.5, lineHeight: 1.6, color: ink }}>{children}</li>,
     img: ({ src, alt }) => (
-      <img src={src} alt={alt || ''} loading="lazy" style={{
-        maxWidth: isMobile ? 140 : 200, height: 'auto', borderRadius: 8,
-        border: `1px solid ${border}`, margin: '10px 12px 10px 0',
-        display: 'inline-block', verticalAlign: 'top',
-      }} />
+      <span style={{
+        display: 'block', width: 'fit-content', maxWidth: '100%',
+        margin: '18px 0 20px', padding: isMobile ? 10 : 14,
+        borderRadius: 10, border: `1px solid ${border}`,
+        background: darkMode
+          ? 'linear-gradient(145deg, rgba(240,238,235,0.09), rgba(20,17,12,0.74))'
+          : 'linear-gradient(145deg, #fffaf1, #e7dccb)',
+        boxShadow: darkMode ? '0 12px 28px rgba(0,0,0,0.32)' : '0 8px 20px rgba(26,23,20,0.10)',
+      }}>
+        <img src={src} alt={alt || ''} loading="lazy" style={{
+          display: 'block', maxWidth: isMobile ? 150 : 220, width: '100%', height: 'auto',
+          borderRadius: 6, objectFit: 'contain',
+          background: darkMode ? '#f0eeeb' : '#fffaf1',
+          filter: darkMode ? 'contrast(1.15) saturate(0.92)' : 'contrast(1.08) saturate(0.96)',
+          mixBlendMode: 'normal',
+        }} />
+      </span>
     ),
     table: ({ children }) => (
       <div style={{ overflowX: 'auto', margin: '16px 0', border: `1px solid ${border}`, borderRadius: 8 }}>
@@ -187,16 +250,16 @@ export default function HandbookBookmark({ user, darkMode }) {
   return (
     <>
       {/* ===== BOOKMARK RIBBON ===== */}
-      {!open && (
+      {trigger !== 'none' && !open && (
         <button
           onClick={handleOpen}
           title="Player Handbook"
           style={{
-            position: 'fixed', bottom: 0, right: isMobile ? 18 : 42, zIndex: 900,
+            position: 'fixed', top: 'calc(0px + env(safe-area-inset-top))', right: isMobile ? 14 : 34, zIndex: 900,
             background: darkMode ? '#2a2118' : '#7b5a24',
-            border: `1px solid ${borderMid}`, borderBottom: 'none',
-            borderRadius: '8px 8px 0 0',
-            padding: '9px 16px 13px',
+            border: `1px solid ${borderMid}`, borderTop: 'none',
+            borderRadius: '0 0 8px 8px',
+            padding: '12px 16px 9px',
             cursor: 'pointer',
             fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 700,
             letterSpacing: '0.16em', textTransform: 'uppercase',
@@ -207,7 +270,7 @@ export default function HandbookBookmark({ user, darkMode }) {
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(4px)'; }}
         >
-          ❧ Handbook
+          Handbook
         </button>
       )}
 
@@ -220,7 +283,7 @@ export default function HandbookBookmark({ user, darkMode }) {
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              position: 'absolute', bottom: 0, left: 0, right: 0,
+              position: 'absolute', top: 0, left: 0, right: 0,
               height: isMobile ? '92dvh' : '86vh',
               background: drawerBg,
               borderTop: `1px solid ${borderMid}`,
@@ -231,7 +294,7 @@ export default function HandbookBookmark({ user, darkMode }) {
               animation: 'hbSlideUp 0.22s ease',
             }}
           >
-            <style>{`@keyframes hbSlideUp { from { transform: translateY(40px); opacity: 0.6; } to { transform: translateY(0); opacity: 1; } }`}</style>
+            <style>{`@keyframes hbSlideUp { from { transform: translateY(-34px); opacity: 0.6; } to { transform: translateY(0); opacity: 1; } }`}</style>
 
             {/* Header */}
             <div style={{
@@ -286,7 +349,7 @@ export default function HandbookBookmark({ user, darkMode }) {
               {!loadError && chapters === null && <div style={{ padding: '20px 0', fontStyle: 'italic', color: muted }}>Opening the handbook...</div>}
 
               {!editing && active && (
-                <div style={{ maxWidth: 820 }}>
+                <div style={{ maxWidth: 860, margin: '0 auto' }}>
                   {sections.length > 1 && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '6px 0 2px' }}>
                       {sections.map(s => (
@@ -308,7 +371,7 @@ export default function HandbookBookmark({ user, darkMode }) {
               )}
 
               {editing && draft && (
-                <div style={{ maxWidth: 820, display: 'grid', gap: 14, paddingTop: 8 }}>
+                <div style={{ maxWidth: 860, margin: '0 auto', display: 'grid', gap: 14, paddingTop: 8 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 2fr 90px', gap: 12 }}>
                     {editField('Title', (
                       <input value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} style={inputStyle} />
@@ -320,14 +383,36 @@ export default function HandbookBookmark({ user, darkMode }) {
                       <input type="number" value={draft.chapter_order} onChange={e => setDraft(d => ({ ...d, chapter_order: e.target.value }))} style={inputStyle} />
                     ))}
                   </div>
-                  {editField('Content (Markdown)', (
-                    <textarea
-                      value={draft.content}
-                      onChange={e => setDraft(d => ({ ...d, content: e.target.value }))}
-                      rows={22}
-                      spellCheck={false}
-                      style={{ ...inputStyle, fontFamily: 'Consolas, monospace', fontSize: 12, lineHeight: 1.55, resize: 'vertical' }}
-                    />
+                  {editField('Chapter Body', (
+                    <>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
+                        <input ref={fileRef} type="file" accept=".docx,.md,.markdown,.txt,.xlsx,.xls" onChange={handleImportPick} style={{ display: 'none' }} />
+                        <button type="button" onClick={() => fileRef.current?.click()} style={{
+                          background: COLORS.magicBg, border: '1px solid ' + COLORS.magic, borderRadius: 6,
+                          padding: '7px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif",
+                          fontSize: 8.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText,
+                        }}>Import Update</button>
+                        <div style={{ fontSize: 10, color: muted, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Use files downloaded from Drive: .docx, .md, .txt, .xlsx, or .xls.</div>
+                      </div>
+                      {importStatus && <div style={{ fontSize: 10, color: importStatus.startsWith('Import failed') ? COLORS.warn : COLORS.archText, marginBottom: 8 }}>{importStatus}</div>}
+                      {importPreview && (
+                        <div style={{ border: '1px solid ' + border, borderRadius: 8, padding: 10, marginBottom: 10, background: darkMode ? 'rgba(240,238,235,0.035)' : '#f8f0e4' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center', marginBottom: 8 }}>
+                            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', color: sectionColor, textTransform: 'uppercase' }}>{importPreview.name}</div>
+                            <button type="button" onClick={applyImportToDraft} style={{ background: COLORS.deityBg, border: '1px solid ' + COLORS.deity, borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: COLORS.deityText }}>Apply</button>
+                          </div>
+                          <div style={{ maxHeight: 150, overflow: 'auto', whiteSpace: 'pre-wrap', fontSize: 11, lineHeight: 1.5, color: muted }}>{importPreview.content.slice(0, 2600)}</div>
+                        </div>
+                      )}
+                      <textarea
+                        value={draft.content}
+                        onChange={e => setDraft(d => ({ ...d, content: e.target.value }))}
+                        rows={22}
+                        spellCheck={true}
+                        placeholder="Write or import the chapter text here. Markdown headings and tables are supported."
+                        style={{ ...inputStyle, fontFamily: 'Georgia, serif', fontSize: 13, lineHeight: 1.65, resize: 'vertical', background: darkMode ? '#1b1712' : '#fffaf1' }}
+                      />
+                    </>
                   ))}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: draft.is_published ? COLORS.magicText : muted }}>

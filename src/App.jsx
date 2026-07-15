@@ -3,7 +3,7 @@ import supabase from './lib/supabase';
 import Landing from './Landing';
 import ScribeLite from './ScribeLite';
 import LoadingScreen from './LoadingScreen';
-import CornerLoadingStinger from './CornerLoadingStinger';
+import HandbookBookmark from './HandbookBookmark';
 import LotjarrsBag from './LotjarrsBag';
 import PlayDriftstone from './PlayDriftstone';
 import Fubin from './Fubin';
@@ -31,6 +31,7 @@ export default function App() {
     localStorage.removeItem('syntarion_view');
     setView('bag');
   };
+
 
   const launchGame = (id) => {
     if (!id) return;
@@ -93,8 +94,11 @@ export default function App() {
 
   // Main app — pass real session user
   return (
-    <>
-      <CornerLoadingStinger enabled={true} />
+    <>
+      <HandbookBookmark
+        user={session.user}
+        darkMode={darkMode}
+      />
       <Landing
         user={session.user}
         darkMode={darkMode}

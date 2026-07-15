@@ -23,7 +23,6 @@ import IntentDeclare from "./IntentDeclare";
 import PartyProximityPanel from './PartyProximityPanel';
 import PortraitUpload from "./PortraitUpload";
 import ScribeTale from './ScribeTale';
-import HandbookBookmark from './HandbookBookmark';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -3072,7 +3071,6 @@ export default function CampaignView({ campaignChars = [], onHome, onAssign, onU
     return (
       <>
         <ModuleTalesView module={selectedTalesModule} userChar={campaignChars[0] || null} onBack={() => setSelectedTalesModule(null)} onUpdateChar={onUpdateChar} darkMode={darkMode} />
-        <HandbookBookmark user={user} darkMode={true} />
       </>
     );
   }
@@ -3081,14 +3079,12 @@ export default function CampaignView({ campaignChars = [], onHome, onAssign, onU
     return (
       <>
         <CampaignDashboard campaign={selectedCampaign} userChar={userChar} onBack={() => { setSelectedCampaign(null); setInitialTab('Map'); }} onAssign={onAssign} onUpdateChar={onUpdateChar} darkMode={darkMode} initialTab={initialTab} />
-        <HandbookBookmark user={user} darkMode={true} />
       </>
     );
   }
   return (
     <>
       <CampaignList onSelect={openCampaign} userChar={campaignChars[0] || null} onHome={onHome} darkMode={darkMode} user={user} onOpenDM={onOpenDM} onOpenTales={setSelectedTalesModule} />
-      <HandbookBookmark user={user} darkMode={darkMode} />
     </>
   );
 }

@@ -32,6 +32,7 @@ import PortraitUpload from './PortraitUpload';
 import CharacterTokenForge from './CharacterTokenForge';
 import AssetsPanel from './AssetsPanel';
 import ChroniclePanel from './ChroniclePanel';
+import HandbookBookmark from './HandbookBookmark';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe - an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -1453,6 +1454,8 @@ const renderTab = () => {
 
   return (
     <div style={{ minHeight: '100svh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text, overflowX: 'hidden' }}>
+      <HandbookBookmark user={user} darkMode={darkMode} allowEdit />
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
         * { box-sizing: border-box; } body { margin: 0; }

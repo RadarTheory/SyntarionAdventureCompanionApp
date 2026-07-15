@@ -618,19 +618,21 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
           : 'Create your first adventurer',
       onClick: handlePlay,
     },
-    ...(campaignChars.length > 0 ? [{
-      id: 'campaigns',
-      label: 'CAMPAIGNS',
-      sub: 'Enter the age of steam',
-      onClick: () => { localStorage.setItem('syn_view', 'campaigns'); setAppView('campaigns'); },
-    }] : []),
-       {
+    ...(campaignChars.length > 0
+      ? [{
+          id: 'campaigns',
+          label: 'CAMPAIGNS',
+          sub: 'Enter the age of steam',
+          onClick: () => { localStorage.setItem('syn_view', 'campaigns'); setAppView('campaigns'); },
+        }]
+      : []),
+    {
       id: 'howtoplay',
       label: 'HOW TO PLAY',
       sub: 'Adventure Helper',
       onClick: () => setShowTour(true),
     },
-       {
+    {
       id: 'settings',
       label: 'SETTINGS',
       sub: 'Preferences & display',
@@ -661,7 +663,6 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
       overscrollBehaviorY: 'auto',
       padding: isMobile ? 'calc(18px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom))' : '34px 24px 28px',
     }}>
-
       {/* World map atmosphere */}
       <div
         aria-hidden="true"
