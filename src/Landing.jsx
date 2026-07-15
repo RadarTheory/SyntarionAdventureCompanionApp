@@ -14,7 +14,7 @@ import LegalGate, { LEGAL_VERSION } from './LegalGate';
 import Tour, { hasSeenTour } from './Tour';
 import ScribeLite from './ScribeLite';
 
-// ─── MOVABLE DRIFTSTONE BUTTON ───────────────────────────────────────────────
+// â”€â”€â”€ MOVABLE DRIFTSTONE BUTTON â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function DriftstoneButton({ onClick, isMobile }) {
   const [pos, setPos] = useState({ x: 40, y: 40 });
   const [isDragging, setIsDragging] = useState(false);
@@ -96,7 +96,7 @@ function DriftstoneButton({ onClick, isMobile }) {
   );
 }
 
-// ─── SYNTARION LOGO ──────────────────────────────────────────────────────────
+// â”€â”€â”€ SYNTARION LOGO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isMobile = false }) {
   const ink = darkMode ? '#f0eeeb' : '#050403';
    const logoMediaSize = useHeroVideo ? size * (isMobile ? 2.18 : 2.32) : size;
@@ -212,7 +212,7 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
   );
 }
 
-// ─── SUBMIT TO GREATER ARCHIVE MODAL ────────────────────────────────────────
+// â”€â”€â”€ SUBMIT TO GREATER ARCHIVE MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SubmitToArchiveModal({ module, onClose, onSuccess }) {
   const [name, setName] = useState(module?.name || '');
   const [description, setDescription] = useState('');
@@ -243,7 +243,7 @@ function SubmitToArchiveModal({ module, onClose, onSuccess }) {
       setError("Failed to submit. Please try again.");
       console.error(err);
     } else {
-      alert("✅ Module submitted to the Greater Archive!\nThank you for contributing to Soteria.");
+      alert("âœ… Module submitted to the Greater Archive!\nThank you for contributing to Soteria.");
       onSuccess?.();
       onClose();
     }
@@ -279,7 +279,7 @@ function SubmitToArchiveModal({ module, onClose, onSuccess }) {
   );
 }
 
-// ─── DM SIGIL MODAL ──────────────────────────────────────────────────────────
+// â”€â”€â”€ DM SIGIL MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function DMSigilModal({ onSuccess, onCancel }) {
   const [modules, setModules] = useState([]);
   const [moduleId, setModuleId] = useState(null);
@@ -407,7 +407,7 @@ function DMSigilModal({ onSuccess, onCancel }) {
           value={input}
           onChange={e => { setInput(e.target.value); setError(''); }}
           onKeyDown={e => e.key === 'Enter' && attempt()}
-          placeholder={mode === 'create' ? 'Set the sigil (min 6 chars)' : '···'}
+          placeholder={mode === 'create' ? 'Set the sigil (min 6 chars)' : 'Â·Â·Â·'}
           style={{
             width: '100%', background: 'rgba(240,238,235,0.06)',
             border: `1px solid ${error ? '#ef4444' : 'rgba(240,238,235,0.14)'}`,
@@ -464,7 +464,7 @@ function DMSigilModal({ onSuccess, onCancel }) {
   );
 }
 
-// ─── MAIN LANDING COMPONENT ──────────────────────────────────────────────────
+// â”€â”€â”€ MAIN LANDING COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onViewChange }) {
   const { isMobile } = useDevice();
   const [appView, setAppView] = useState(() => localStorage.getItem('syn_view') || 'home');
@@ -531,7 +531,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
   const handlePlay = () => { localStorage.setItem('syn_view', 'character-select'); setAppView('character-select'); };
   const handleDMSuccess = (module) => { setDmModule(module || null); setShowDMModal(false); localStorage.setItem('syn_view', 'dm'); setAppView('dm'); };
 
-  // ── Legal Gate ─────────────────────────────────────────────────────────────
+  // â”€â”€ Legal Gate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (legalStatus === 'checking') return (
     <div style={{ minHeight: '100vh', background: darkMode ? '#14110c' : '#f0eeeb' }} />
   );
@@ -539,7 +539,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
     <LegalGate user={user} onAccept={() => setLegalStatus('accepted')} />
   );
 
-  // ── Render Views ───────────────────────────────────────────────────────────
+  // â”€â”€ Render Views â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (appView === 'character-select') return (
     <>
       <CharacterSelect
@@ -554,7 +554,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
     </>
   );
 
-  if (appView === 'roster') return <Roster darkMode={darkMode} user={user} userChar={selectedChar} onHome={() => { localStorage.setItem('syn_view', 'character-select'); setAppView('character-select'); }} />;
+  if (appView === 'roster') return <Roster darkMode={darkMode} user={user} userChar={selectedChar} onHome={goHome} />;
   if (appView === 'wizard') return (
     <>
       <Wizard darkMode={darkMode} onComplete={goHome} onHome={goHome} />
@@ -595,7 +595,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
     />
   );
 
-  // ── Home screen ────────────────────────────────────────────────────────────
+  // â”€â”€ Home screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const landingDarkMode = false;
   const ink = landingDarkMode ? '#f0eeeb' : '#1a1714';
   const mutedInk = landingDarkMode ? 'rgba(240,238,235,0.64)' : 'rgba(26,23,20,0.46)';
@@ -832,7 +832,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
           width: '100%',
           maxWidth: isMobile ? 360 : 680,
           display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, minmax(0, 1fr))',
+          gridTemplateColumns: isMobile ? '1fr' : `repeat(${buttons.length}, minmax(0, 1fr))`,
           gap: isMobile ? 9 : 8,
           animation: 'fadeUp 1.1s cubic-bezier(0.16,1,0.3,1) both',
           animationDelay: '0.45s',
@@ -956,7 +956,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
   );
 }
 
-// ─── STUB COMPONENT ──────────────────────────────────────────────────────────
+// â”€â”€â”€ STUB COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Stub({ label, onHome, dark }) {
   return (
     <div style={{

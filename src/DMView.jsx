@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
 import { COLORS, CAMPAIGNS, ALL_CLASSES, ALL_STATS, getRaceDisplay } from './constants';
@@ -7,6 +7,7 @@ import { RACES } from './constants';
 import { SOTERIA_LORE } from './soteria-lore';
 import { SOTERIA_MECHANICS } from './soteria-mechanics';
 import { SOTERIA_BESTIARY } from './soteria-bestiary';
+import PlayersPanel from './PlayersPanel';
 import Astragal from './Astragal';
 import SessionManager from './SessionManager';
 import { WorldMapPanel } from './WorldMapPanel';
@@ -33,9 +34,9 @@ import AssetsPanel from './AssetsPanel';
 import ChroniclePanel from './ChroniclePanel';
 
 const SOTERIA_DM_CONTEXT = `
-You are The Scribe â€” an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
+You are The Scribe - an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
 You are assisting the Dungeon Master (Architect) of this world.
-You may speak plainly and directly â€” no cryptic player-facing persona needed here.
+You may speak plainly and directly - no cryptic player-facing persona needed here.
 Be thorough, creative, and specific to the Soteria setting.
 
 ${SOTERIA_LORE}
@@ -100,7 +101,7 @@ function DraggablePanel({ defaultX, defaultY, onClose, title, width, accentColor
     </div>
   );
 }
-// â”€â”€â”€ CHAT PANEL (Player â†” DM) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// CHAT PANEL (Player DM)
 function ChatPanel({ session, onClose, isDM }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -151,7 +152,7 @@ function ChatPanel({ session, onClose, isDM }) {
       character_id: session.character_id,
       campaign_id: session.campaign_id,
       type: 'dm_system',
-      content: 'â€” Consult ended by the Architect â€”',
+      content: '- Consult ended by the Architect -',
       sender_name: 'The Architect',
       is_dm: true,
       session_ended: true,
@@ -163,7 +164,7 @@ function ChatPanel({ session, onClose, isDM }) {
 
   const headerName = session.character_name || 'Player';
   const headerSub = session.player_username
-  ? `Campaign ${session.campaign_id} Â· @${session.player_username}`
+  ? `Campaign ${session.campaign_id} - @${session.player_username}`
   : session.campaign_id ? `Campaign ${session.campaign_id}` : 'Private';
 
   return (
@@ -171,11 +172,11 @@ function ChatPanel({ session, onClose, isDM }) {
       <div style={{ padding: '12px 16px', borderBottom: `1px solid rgba(240,238,235,0.08)`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(240,238,235,0.04)' }}>
         <div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, color: COLORS.text, letterSpacing: '0.06em' }}>{headerName}</div>
-          <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{headerSub} Â· {sessionEnded ? 'Ended' : 'Active'}</div>
+          <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{headerSub} - {sessionEnded ? 'Ended' : 'Active'}</div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {!sessionEnded && <button onClick={handleEndConsult} style={{ background: 'transparent', border: `1px solid ${COLORS.warn}55`, borderRadius: 4, padding: '4px 10px', cursor: 'pointer', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.warn, fontFamily: "'Cinzel', serif" }}>End Consult</button>}
-          <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>âœ•</button>
+          <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>x</button>
         </div>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8, minHeight: 200, maxHeight: 320 }}>
@@ -197,8 +198,8 @@ function ChatPanel({ session, onClose, isDM }) {
       </div>
       {!sessionEnded ? (
         <div style={{ padding: '10px 12px', borderTop: `1px solid rgba(240,238,235,0.08)`, display: 'flex', gap: 8 }}>
-          <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()} placeholder="Type a messageâ€¦" style={{ flex: 1, background: 'rgba(240,238,235,0.06)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', fontSize: 12, color: COLORS.text, fontFamily: 'Georgia, serif', outline: 'none' }} />
-          <button onClick={handleSend} disabled={sending || !input.trim()} style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px 12px', cursor: sending || !input.trim() ? 'default' : 'pointer', fontSize: 10, color: COLORS.magicText, fontFamily: "'Cinzel', serif", opacity: sending ? 0.6 : 1 }}>â†’</button>
+          <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()} placeholder="Type a message..." style={{ flex: 1, background: 'rgba(240,238,235,0.06)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', fontSize: 12, color: COLORS.text, fontFamily: 'Georgia, serif', outline: 'none' }} />
+          <button onClick={handleSend} disabled={sending || !input.trim()} style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px 12px', cursor: sending || !input.trim() ? 'default' : 'pointer', fontSize: 10, color: COLORS.magicText, fontFamily: "'Cinzel', serif", opacity: sending ? 0.6 : 1 }}>Send</button>
         </div>
       ) : (
         <div style={{ padding: '10px 16px', borderTop: `1px solid rgba(240,238,235,0.08)`, fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center' }}>This consult has ended.</div>
@@ -207,7 +208,7 @@ function ChatPanel({ session, onClose, isDM }) {
   );
 }
 
-// â”€â”€â”€ SCRIBE PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// SCRIBE PANEL
 function ScribePanel({ onClose }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -234,7 +235,7 @@ function ScribePanel({ onClose }) {
   };
 
   const handleEnd = () => {
-    setMessages(prev => [...prev, { role: 'system', content: 'â€” Consult ended by the Architect â€”', time: new Date() }]);
+    setMessages(prev => [...prev, { role: 'system', content: '- Consult ended by the Architect -', time: new Date() }]);
     setEnded(true);
   };
 
@@ -243,14 +244,14 @@ function ScribePanel({ onClose }) {
       <div style={{ padding: '12px 16px', borderBottom: `1px solid rgba(240,238,235,0.08)`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(240,238,235,0.04)' }}>
         <div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, color: COLORS.deity, letterSpacing: '0.06em' }}>The Scribe</div>
-          <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{ended ? 'Consult ended' : 'Active Â· Soteria Archives'}</div>
+          <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{ended ? 'Consult ended' : 'Active - Soteria Archives'}</div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {!ended
             ? <button onClick={handleEnd} style={{ background: 'transparent', border: `1px solid ${COLORS.warn}55`, borderRadius: 4, padding: '4px 10px', cursor: 'pointer', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.warn, fontFamily: "'Cinzel', serif" }}>End Consult</button>
             : <button onClick={() => { setMessages([]); setEnded(false); }} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 4, padding: '4px 10px', cursor: 'pointer', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.deityText, fontFamily: "'Cinzel', serif" }}>New Consult</button>
           }
-          <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>âœ•</button>
+          <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>x</button>
         </div>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 260, maxHeight: 380 }}>
@@ -275,15 +276,15 @@ function ScribePanel({ onClose }) {
         {loading && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
             <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginBottom: 3 }}>The Scribe</div>
-            <div style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}44`, borderRadius: '12px 12px 12px 2px', padding: '8px 12px', fontSize: 12, color: COLORS.deityText, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>The Scribe deliberatesâ€¦</div>
+            <div style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}44`, borderRadius: '12px 12px 12px 2px', padding: '8px 12px', fontSize: 12, color: COLORS.deityText, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>The Scribe deliberates...</div>
           </div>
         )}
         <div ref={bottomRef} />
       </div>
       {!ended ? (
         <div style={{ padding: '10px 12px', borderTop: `1px solid rgba(240,238,235,0.08)`, display: 'flex', gap: 8 }}>
-          <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()} placeholder="Ask the Scribeâ€¦" style={{ flex: 1, background: 'rgba(240,238,235,0.06)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', fontSize: 12, color: COLORS.text, fontFamily: 'Georgia, serif', outline: 'none' }} />
-          <button onClick={handleSend} disabled={loading || !input.trim()} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 6, padding: '8px 12px', cursor: loading || !input.trim() ? 'default' : 'pointer', fontSize: 10, color: COLORS.deityText, fontFamily: "'Cinzel', serif", opacity: loading ? 0.6 : 1 }}>â†’</button>
+          <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()} placeholder="Ask the Scribe..." style={{ flex: 1, background: 'rgba(240,238,235,0.06)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', fontSize: 12, color: COLORS.text, fontFamily: 'Georgia, serif', outline: 'none' }} />
+          <button onClick={handleSend} disabled={loading || !input.trim()} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 6, padding: '8px 12px', cursor: loading || !input.trim() ? 'default' : 'pointer', fontSize: 10, color: COLORS.deityText, fontFamily: "'Cinzel', serif", opacity: loading ? 0.6 : 1 }}>Send</button>
         </div>
       ) : (
         <div style={{ padding: '10px 16px', borderTop: `1px solid rgba(240,238,235,0.08)`, fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center' }}>This consult has ended.</div>
@@ -292,7 +293,7 @@ function ScribePanel({ onClose }) {
   );
 }
 
-// â”€â”€â”€ ASSIGN OWNER PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ASSIGN OWNER PANEL
 function AssignOwnerPanel({ char }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
@@ -304,7 +305,7 @@ function AssignOwnerPanel({ char }) {
   const loadUsers = async () => {
     if (allUsers) return allUsers;
     const { data } = await supabase.rpc('get_user_profiles');
-    const mapped = (data || []).map(u => ({ ...u, username: u.email ? u.email.split('@')[0] : 'â€”' }));
+    const mapped = (data || []).map(u => ({ ...u, username: u.email ? u.email.split('@')[0] : '-' }));
     setAllUsers(mapped);
     return mapped;
   };
@@ -347,25 +348,25 @@ function AssignOwnerPanel({ char }) {
       <div style={{ ...label8(), marginBottom: 8 }}>Assigned Player</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <div style={{ flex: 1, fontSize: 11, color: owner ? COLORS.text : COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: owner ? 'normal' : 'italic' }}>
-          {owner ? `${owner.username} Â· ${owner.email}` : 'Unclaimed â€” no player assigned'}
+          {owner ? `${owner.username} - ${owner.email}` : 'Unclaimed - no player assigned'}
         </div>
         {ownerId && (
           <button onClick={unassign} style={{ background: 'transparent', border: `1px solid ${COLORS.warn}55`, borderRadius: 4, padding: '4px 10px', cursor: 'pointer', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.warn, fontFamily: "'Cinzel', serif" }}>Unassign</button>
         )}
       </div>
       <div style={{ display: 'flex', gap: 6 }}>
-        <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && runSearch()} placeholder="Search by email or usernameâ€¦" style={{ flex: 1, background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
-        <button onClick={runSearch} disabled={searching || !query.trim()} style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '7px 14px', cursor: searching || !query.trim() ? 'default' : 'pointer', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.magicText, fontFamily: "'Cinzel', serif", opacity: searching ? 0.6 : 1 }}>{searching ? 'â€¦' : 'Search'}</button>
+        <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && runSearch()} placeholder="Search by email or username..." style={{ flex: 1, background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
+        <button onClick={runSearch} disabled={searching || !query.trim()} style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '7px 14px', cursor: searching || !query.trim() ? 'default' : 'pointer', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.magicText, fontFamily: "'Cinzel', serif", opacity: searching ? 0.6 : 1 }}>{searching ? '...' : 'Search'}</button>
       </div>
       {results.length > 0 && (
         <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 180, overflowY: 'auto', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: 6 }}>
           {results.map(p => (
             <div key={p.id} onClick={() => assign(p)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, background: 'rgba(240,238,235,0.03)', border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '7px 10px', cursor: 'pointer' }}>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 10, color: COLORS.text, fontFamily: "'Cinzel', serif", letterSpacing: '0.05em' }}>{p.username || 'â€”'}</div>
+                <div style={{ fontSize: 10, color: COLORS.text, fontFamily: "'Cinzel', serif", letterSpacing: '0.05em' }}>{p.username || '-'}</div>
                 <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.email}</div>
               </div>
-              <div style={{ fontSize: 7, color: COLORS.magic, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>Assign â†’</div>
+              <div style={{ fontSize: 7, color: COLORS.magic, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>Assign</div>
             </div>
           ))}
         </div>
@@ -374,7 +375,7 @@ function AssignOwnerPanel({ char }) {
   );
 }
 
-// â”€â”€â”€ CHARACTER EDITOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// CHARACTER EDITOR
 function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
   const [data, setData] = useState({ portrait_url: char.portrait_url || char.data?.portrait_url || null, sprite_url: char.sprite_url || char.data?.sprite_url || char.data?.token?.sprite_url || null, ...char });
   const [saving, setSaving] = useState(false);
@@ -437,7 +438,7 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
       <div onClick={e => e.stopPropagation()} style={{ background: '#13100d', border: `1px solid rgba(240,238,235,0.12)`, borderRadius: 14, padding: '28px 32px', maxWidth: 560, width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 16, fontWeight: 700, color: COLORS.text }}>{char.name}</div>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 16 }}>âœ•</button>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 16 }}>x</button>
         </div>
         <div style={{ marginBottom: 20 }}>
           <PortraitUpload
@@ -468,13 +469,13 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
           }}
         />
         <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-          <button onClick={() => handleSave('approved')} style={{ flex: 1, background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText, fontFamily: "'Cinzel', serif", fontWeight: 700 }}>âœ“ Approve</button>
-          <button onClick={() => handleSave('rejected')} style={{ flex: 1, background: COLORS.warnBg, border: `1px solid ${COLORS.warn}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.warn, fontFamily: "'Cinzel', serif", fontWeight: 700 }}>âœ• Reject</button>
-          <button onClick={() => handleSave()} disabled={saving} style={{ flex: 1, background: 'rgba(240,238,235,0.06)', border: `1px solid ${COLORS.borderMid}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.text, fontFamily: "'Cinzel', serif" }}>{saving ? 'Savingâ€¦' : 'â†‘ Save'}</button>
+          <button onClick={() => handleSave('approved')} style={{ flex: 1, background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText, fontFamily: "'Cinzel', serif", fontWeight: 700 }}>Approve</button>
+          <button onClick={() => handleSave('rejected')} style={{ flex: 1, background: COLORS.warnBg, border: `1px solid ${COLORS.warn}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.warn, fontFamily: "'Cinzel', serif", fontWeight: 700 }}>Reject</button>
+          <button onClick={() => handleSave()} disabled={saving} style={{ flex: 1, background: 'rgba(240,238,235,0.06)', border: `1px solid ${COLORS.borderMid}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.text, fontFamily: "'Cinzel', serif" }}>{saving ? 'Saving...' : 'Save'}</button>
         </div>
         <div style={{ marginBottom: 20 }}>
           <div style={{ ...label8(), marginBottom: 6 }}>Note to Player (sent on approve/reject)</div>
-          <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Optional message to the playerâ€¦" rows={2} style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
+          <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Optional message to the player..." rows={2} style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
         </div>
         <div style={{ marginBottom: 16 }}>
           <div style={{ ...label8(), marginBottom: 8 }}>Campaign</div>
@@ -490,7 +491,7 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
             <div style={{ ...label8(), marginBottom: 6 }}>Race</div>
             <select value={data.race || ''} onChange={e => { set('race', e.target.value); set('rv', ''); }}
               style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none' }}>
-              <option value="" style={{ background: '#13100d' }}>â€” Select race â€”</option>
+              <option value="" style={{ background: '#13100d' }}>Select race</option>
               {RACES.map(r => <option key={r.id} value={r.id} style={{ background: '#13100d' }}>{r.name}</option>)}
             </select>
           </div>
@@ -502,7 +503,7 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
                 <div style={{ ...label8(), marginBottom: 6 }}>Variant</div>
                 <select value={data.rv || ''} onChange={e => set('rv', e.target.value)}
                   style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none' }}>
-                  <option value="" style={{ background: '#13100d' }}>â€” None â€”</option>
+                  <option value="" style={{ background: '#13100d' }}>None</option>
                   {raceDef.variants.map(v => <option key={v} value={v} style={{ background: '#13100d' }}>{v}</option>)}
                 </select>
               </div>
@@ -515,13 +516,13 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
             <div style={{ ...label8(), marginBottom: 6 }}>Class</div>
             <select value={data.cid || ''} onChange={e => set('cid', e.target.value)}
               style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none' }}>
-              <option value="" style={{ background: '#13100d' }}>â€” Select class â€”</option>
+              <option value="" style={{ background: '#13100d' }}>Select class</option>
               {ALL_CLASSES?.map(c => <option key={c.id} value={c.id} style={{ background: '#13100d' }}>{c.name}</option>)}
             </select>
           </div>
           <div style={{ width: 120 }}>
             <div style={{ ...label8(), marginBottom: 6 }}>Morality</div>
-            <input type="number" value={data.morality ?? 0} onChange={e => set('morality', parseInt(e.target.value) || 0)}
+            <input type="number" value={data.morality - 0} onChange={e => set('morality', parseInt(e.target.value) || 0)}
               style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }} />
           </div>
         </div>
@@ -557,13 +558,13 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
           <DMMemoryPanel characterId={char.id} />
         </div>
 
-        {/* â”€â”€ Danger zone: permanent delete â”€â”€ */}
+        {/* Danger zone: permanent delete */}
         <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid rgba(224,90,90,0.25)` }}>
           <div style={{ ...label8(), marginBottom: 10, color: '#e05a5a' }}>Danger Zone</div>
           {!confirmDelete ? (
             <button onClick={() => setConfirmDelete(true)}
               style={{ width: '100%', background: 'transparent', border: '1px solid rgba(224,90,90,0.4)', borderRadius: 6, padding: '9px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#e05a5a' }}>
-              âŒ¦ Delete Character Permanently
+              Delete Delete Character Permanently
             </button>
           ) : (
             <div style={{ background: 'rgba(224,90,90,0.06)', border: '1px solid rgba(224,90,90,0.35)', borderRadius: 8, padding: '12px 14px' }}>
@@ -573,7 +574,7 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={handleDelete} disabled={deleting}
                   style={{ flex: 1, background: 'rgba(224,90,90,0.15)', border: '1px solid rgba(224,90,90,0.6)', borderRadius: 6, padding: '9px', cursor: deleting ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#e05a5a', fontWeight: 700, opacity: deleting ? 0.6 : 1 }}>
-                  {deleting ? 'Deletingâ€¦' : 'Confirm â€” Delete Forever'}
+                  {deleting ? 'Deleting...' : 'Confirm - Delete Forever'}
                 </button>
                 <button onClick={() => setConfirmDelete(false)} disabled={deleting}
                   style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '9px 16px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.dim }}>
@@ -588,7 +589,7 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
   );
 }
 
-// â”€â”€â”€ DM MEMORY PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// DM MEMORY PANEL
 function DMMemoryPanel({ characterId, campaignId }) {
   const [memories, setMemories] = useState([]);
   const [newMemory, setNewMemory] = useState('');
@@ -622,7 +623,7 @@ function DMMemoryPanel({ characterId, campaignId }) {
         {cats.map(c => <div key={c} onClick={() => setCategory(c)} style={{ background: category === c ? COLORS.deityBg : 'transparent', border: `1px solid ${category === c ? COLORS.deity : COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: category === c ? COLORS.deityText : COLORS.dim, fontFamily: "'Cinzel', serif" }}>{c}</div>)}
       </div>
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-        <input value={newMemory} onChange={e => setNewMemory(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMemory()} placeholder="Add a memory entryâ€¦" style={{ flex: 1, background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
+        <input value={newMemory} onChange={e => setNewMemory(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMemory()} placeholder="Add a memory entry..." style={{ flex: 1, background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
         <button onClick={addMemory} disabled={saving} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 6, padding: '7px 12px', cursor: 'pointer', fontSize: 10, color: COLORS.deityText, fontFamily: "'Cinzel', serif" }}>+</button>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 160, overflowY: 'auto' }}>
@@ -640,7 +641,7 @@ function DMMemoryPanel({ characterId, campaignId }) {
                 </div>
               )}
             </div>
-            <button onClick={() => deleteMemory(m.id)} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 12, flexShrink: 0 }}>Ã—</button>
+            <button onClick={() => deleteMemory(m.id)} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 12, flexShrink: 0 }}>x</button>
           </div>
         ))}
         {memories.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No memories recorded.</div>}
@@ -649,18 +650,18 @@ function DMMemoryPanel({ characterId, campaignId }) {
   );
 }
 
-// â”€â”€â”€ SESSION LOG EDITOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// SESSION LOG EDITOR
 function FormattedLog({ text }) {
   if (!text) return null;
   // Break a run-on entry before inline "Capitalized Label:" headers, then on newlines.
-  const withBreaks = String(text).replace(/\s+([A-Z][^.:â€”\n]{0,46}(?:\([^)]*\))?:)\s/g, '\n\n$1 ');
+  const withBreaks = String(text).replace(/\s+([A-Z][^.:\-\n]{0,46}(?:\([^)]*\))?:)\s/g, '\n\n$1 ');
   const blocks = withBreaks.split(/\n+/).map(b => b.trim()).filter(Boolean);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
       {blocks.map((block, i) => {
         const isAllCaps = block.length < 60 && block === block.toUpperCase() && /[A-Z]/.test(block);
-        const headerMatch = block.match(/^([A-Z][^.:â€”]{0,46}(?:\([^)]*\))?)\s*[:â€”]\s+([\s\S]*)$/);
+        const headerMatch = block.match(/^([A-Z][^.:-]{0,46}(?:\([^)]*\))?)\s*[:-]\s+([\s\S]*)$/);
 
         if (isAllCaps) {
           return (
@@ -673,7 +674,7 @@ function FormattedLog({ text }) {
           const [, head, rest] = headerMatch;
           return (
             <p key={i} style={{ fontSize: 12, color: COLORS.textSub, fontFamily: 'Georgia, serif', lineHeight: 1.7, margin: 0 }}>
-              <strong style={{ color: '#e8d9a7', fontFamily: "'Cinzel', serif", fontSize: 11, letterSpacing: '0.04em' }}>{head}</strong>{rest ? ` â€” ${rest}` : ''}
+              <strong style={{ color: '#e8d9a7', fontFamily: "'Cinzel', serif", fontSize: 11, letterSpacing: '0.04em' }}>{head}</strong>{rest ? ` - ${rest}` : ''}
             </p>
           );
         }
@@ -717,12 +718,12 @@ function SessionLogEditor({ campaign }) {
 
   return (
     <div>
-      <div style={{ ...label8(), marginBottom: 12 }}>Session Log â€” {campaign.subtitle}</div>
+      <div style={{ ...label8(), marginBottom: 12 }}>Session Log - {campaign.subtitle}</div>
       <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '14px', marginBottom: 16 }}>
-        <input value={sessionTitle} onChange={e => setSessionTitle(e.target.value)} placeholder="Session title (optional)â€¦" style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${COLORS.border}`, padding: '6px 0', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
-        <textarea value={newEntry} onChange={e => setNewEntry(e.target.value)} placeholder="Write the session log entryâ€¦" rows={4} style={{ width: '100%', background: 'transparent', border: 'none', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', lineHeight: 1.7, outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
+        <input value={sessionTitle} onChange={e => setSessionTitle(e.target.value)} placeholder="Session title (optional)..." style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${COLORS.border}`, padding: '6px 0', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
+        <textarea value={newEntry} onChange={e => setNewEntry(e.target.value)} placeholder="Write the session log entry..." rows={4} style={{ width: '100%', background: 'transparent', border: 'none', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', lineHeight: 1.7, outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
         <button onClick={addEntry} disabled={saving || !newEntry.trim()} style={{ background: saving ? 'transparent' : COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px 20px', cursor: saving ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText, fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
-          {saving ? 'Committingâ€¦' : 'âœ¦ Commit to Log'}
+          {saving ? 'Committing...' : '* Commit to Log'}
         </button>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -733,7 +734,7 @@ function SessionLogEditor({ campaign }) {
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, color: COLORS.text }}>{entry.title}</div>
                 <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{new Date(entry.timestamp).toLocaleDateString()}</div>
               </div>
-              <button onClick={() => deleteEntry(entry.id)} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 14 }}>Ã—</button>
+              <button onClick={() => deleteEntry(entry.id)} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 14 }}>x</button>
             </div>
             <FormattedLog text={entry.content} />
           </div>
@@ -751,7 +752,7 @@ function normalizeMapUrl(value) {
   return `/Maps/${raw.replace(/^Maps[\\/]/i, '')}`;
 }
 
-// â”€â”€â”€ MAP MANAGER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// MAP MANAGER
 function MapManager({ campaign }) {
   const [url, setUrl] = useState('');
   const [current, setCurrent] = useState('');
@@ -779,7 +780,7 @@ function MapManager({ campaign }) {
 
   return (
     <div>
-      <div style={{ ...label8(), marginBottom: 12 }}>Map â€” {campaign.subtitle}</div>
+      <div style={{ ...label8(), marginBottom: 12 }}>Map - {campaign.subtitle}</div>
       <div style={{ minHeight: 280, border: `1px solid ${COLORS.border}`, borderRadius: 10, background: 'rgba(240,238,235,0.025)', overflow: 'hidden', marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {previewUrl && !previewFailed ? (
           <img
@@ -801,7 +802,7 @@ function MapManager({ campaign }) {
       </div>
       <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
         <input value={url} onChange={e => { setUrl(e.target.value); setCurrent(''); }} placeholder="Paste image URL or Maps file name..." style={{ flex: 1, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '9px 12px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none' }} />
-        <button onClick={save} disabled={saving} style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '9px 16px', cursor: saving ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText, fontWeight: 700 }}>{saving ? 'Savingâ€¦' : 'Set Map'}</button>
+        <button onClick={save} disabled={saving} style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '9px 16px', cursor: saving ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText, fontWeight: 700 }}>{saving ? 'Saving...' : 'Set Map'}</button>
       </div>
       {previewUrl && (
         <div style={{ marginTop: 8, fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
@@ -811,7 +812,7 @@ function MapManager({ campaign }) {
     </div>
   );
 }
-// â”€â”€â”€ MUSIC PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// MUSIC PANEL
 function MusicPanel() {
   const [tracks, setTracks] = useState([]);
   const [search, setSearch] = useState('');
@@ -861,17 +862,17 @@ function MusicPanel() {
       <input
         value={search}
         onChange={e => setSearch(e.target.value)}
-        placeholder="Search musicâ€¦"
+        placeholder="Search music..."
         style={{ width: '100%', marginBottom: 16, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '10px 12px', color: COLORS.text, fontFamily: 'Georgia, serif', outline: 'none', boxSizing: 'border-box' }}
       />
       {currentTrack && (
         <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: 16, marginBottom: 16 }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, marginBottom: 10, letterSpacing: '0.04em' }}>â™ª {currentTrack.title}</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, marginBottom: 10, letterSpacing: '0.04em' }}>Music {currentTrack.title}</div>
           <audio key={currentTrack.file_path} controls src={getMusicUrl(currentTrack.file_path)} style={{ width: '100%' }} />
         </div>
       )}
       {loading && (
-        <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Loading tracksâ€¦</div>
+        <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Loading tracks...</div>
       )}
       {error && (
         <div style={{ fontSize: 11, color: COLORS.warn, fontFamily: 'Georgia, serif', marginBottom: 12 }}>Error: {error}</div>
@@ -910,7 +911,7 @@ function MusicPanel() {
 function VitalsPanel({ row, onClose, campaignId }) {
   const isCreature = !row.character_id || row.character_id === row.character_name;
   const VITALS_KEY = `syntarion_vitals_${row.character_id}`;
-  const load = (k, def) => { try { return JSON.parse(localStorage.getItem(VITALS_KEY) || '{}')[k] ?? def; } catch { return def; } };
+  const load = (k, def) => { try { return JSON.parse(localStorage.getItem(VITALS_KEY) || '{}')[k] - def; } catch { return def; } };
   const [vitals, setVitals] = useState({ current: load('vitals', null), max: load('vitalsMax', null) });
   const [stamina, setStamina] = useState({ current: load('stamina', null), max: load('staminaMax', null) });
   const [resolve, setResolve] = useState({ current: load('resolve', null), max: load('resolveMax', null) });
@@ -922,9 +923,9 @@ function VitalsPanel({ row, onClose, campaignId }) {
         const d = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
         const s = d.stats || {};
         const v = (s.body || 8) + (s.will || 8), st = (s.body || 8) + (s.whim || 8), r = (s.soul || 8) + (s.dream || 8);
-        setVitals(p => ({ current: p.current ?? v, max: p.max ?? v }));
-        setStamina(p => ({ current: p.current ?? st, max: p.max ?? st }));
-        setResolve(p => ({ current: p.current ?? r, max: p.max ?? r }));
+        setVitals(p => ({ current: p.current - v, max: p.max - v }));
+        setStamina(p => ({ current: p.current - st, max: p.max - st }));
+        setResolve(p => ({ current: p.current - r, max: p.max - r }));
       });
     }
   }, [row.character_id]);
@@ -934,7 +935,7 @@ function VitalsPanel({ row, onClose, campaignId }) {
   }));
 
   const Tracker = ({ label, color, state, setState, others }) => {
-    const cur = state.current ?? 0, max = state.max ?? 0;
+    const cur = state.current - 0, max = state.max - 0;
     const pct = max > 0 ? Math.max(0, Math.min(100, (cur / max) * 100)) : 0;
     const upd = (next) => { setState(next); save(label === 'Vitals' ? next : vitals, label === 'Stamina' ? next : stamina, label === 'Resolve' ? next : resolve); };
     return (
@@ -942,11 +943,11 @@ function VitalsPanel({ row, onClose, campaignId }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
           <div style={{ fontFamily: "'Cinzel',serif", fontSize: 9, color, letterSpacing: '0.1em' }}>{label}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <button onClick={() => upd({ ...state, current: Math.max(0, (state.current ?? 0) - 1) })} style={{ width: 20, height: 20, borderRadius: 4, background: 'rgba(224,90,90,0.15)', border: '1px solid rgba(224,90,90,0.4)', color: '#e05a5a', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>âˆ’</button>
-            <input type="number" value={state.current ?? ''} onChange={e => upd({ ...state, current: parseInt(e.target.value) || 0 })} style={{ width: 36, textAlign: 'center', background: 'rgba(0,0,0,0.3)', border: `1px solid ${color}44`, borderRadius: 4, color, fontFamily: "'Cinzel',serif", fontSize: 13, fontWeight: 700, outline: 'none', padding: '2px 0' }} />
+            <button onClick={() => upd({ ...state, current: Math.max(0, (state.current - 0) - 1) })} style={{ width: 20, height: 20, borderRadius: 4, background: 'rgba(224,90,90,0.15)', border: '1px solid rgba(224,90,90,0.4)', color: '#e05a5a', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
+            <input type="number" value={state.current - ''} onChange={e => upd({ ...state, current: parseInt(e.target.value) || 0 })} style={{ width: 36, textAlign: 'center', background: 'rgba(0,0,0,0.3)', border: `1px solid ${color}44`, borderRadius: 4, color, fontFamily: "'Cinzel',serif", fontSize: 13, fontWeight: 700, outline: 'none', padding: '2px 0' }} />
             <span style={{ color: '#555', fontSize: 10 }}>/</span>
-            <input type="number" value={state.max ?? ''} onChange={e => upd({ ...state, max: parseInt(e.target.value) || 0 })} style={{ width: 36, textAlign: 'center', background: 'rgba(0,0,0,0.2)', border: `1px solid ${COLORS.border}`, borderRadius: 4, color: COLORS.dim, fontFamily: "'Cinzel',serif", fontSize: 11, outline: 'none', padding: '2px 0' }} />
-            <button onClick={() => upd({ ...state, current: Math.min(state.max ?? 999, (state.current ?? 0) + 1) })} style={{ width: 20, height: 20, borderRadius: 4, background: 'rgba(121,245,167,0.1)', border: '1px solid rgba(121,245,167,0.35)', color: '#79f5a7', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+            <input type="number" value={state.max - ''} onChange={e => upd({ ...state, max: parseInt(e.target.value) || 0 })} style={{ width: 36, textAlign: 'center', background: 'rgba(0,0,0,0.2)', border: `1px solid ${COLORS.border}`, borderRadius: 4, color: COLORS.dim, fontFamily: "'Cinzel',serif", fontSize: 11, outline: 'none', padding: '2px 0' }} />
+            <button onClick={() => upd({ ...state, current: Math.min(state.max - 999, (state.current - 0) + 1) })} style={{ width: 20, height: 20, borderRadius: 4, background: 'rgba(121,245,167,0.1)', border: '1px solid rgba(121,245,167,0.35)', color: '#79f5a7', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
           </div>
         </div>
         <div style={{ height: 4, background: `${color}22`, borderRadius: 3, overflow: 'hidden' }}>
@@ -959,8 +960,8 @@ function VitalsPanel({ row, onClose, campaignId }) {
   return (
     <div style={{ background: 'rgba(20,14,10,0.95)', border: '1px solid rgba(224,90,90,0.3)', borderRadius: 10, padding: '12px 14px', marginBottom: 6 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <div style={{ fontFamily: "'Cinzel',serif", fontSize: 11, color: COLORS.text }}>{row.character_name} â€” Health</div>
-        <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '2px 6px', cursor: 'pointer', fontSize: 9, color: COLORS.dim }}>âœ•</button>
+        <div style={{ fontFamily: "'Cinzel',serif", fontSize: 11, color: COLORS.text }}>{row.character_name} - Health</div>
+        <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '2px 6px', cursor: 'pointer', fontSize: 9, color: COLORS.dim }}>x</button>
       </div>
       {isCreature && <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: 'Georgia,serif', fontStyle: 'italic', marginBottom: 8 }}>Set max manually for this enemy.</div>}
       <Tracker label="Vitals" color="#e05a5a" state={vitals} setState={setVitals} />
@@ -970,9 +971,9 @@ function VitalsPanel({ row, onClose, campaignId }) {
   );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// Character editor
 // MAIN DM VIEW
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// Character editor
 const DM_TABS = ['Inbox', 'Characters', 'Campaigns', 'Chronicle', 'Scribe', 'Memory', 'Catalog', 'VTT'];
 
 export default function DMView({ user, session, onHome, darkMode = true, module = null }) {
@@ -1061,7 +1062,7 @@ useEffect(() => {
   const activeSessionRef = useRef(activeSession);
   useEffect(() => { activeSessionRef.current = activeSession; }, [activeSession]);
 
-  // CONVERSATION-OPENED SUBSCRIPTION â€” toast + commit to log
+  // CONVERSATION-OPENED SUBSCRIPTION - toast + commit to log
   useEffect(() => {
     const channel = supabase.channel('dm-dialogue-conversations')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'dialogue_conversations' }, async (payload) => {
@@ -1173,7 +1174,7 @@ useEffect(() => {
   const { data: campData } = await campaignQuery;
   if (campData && campData.length > 0) {
     setDbCampaigns(campData);
-    setActiveCampaignTab(prev => prev ?? campData[0].id);
+    setActiveCampaignTab(prev => prev - campData[0].id);
   }
   await Promise.all([fetchCharacters(), fetchMessages()]);
   setLoading(false);
@@ -1241,7 +1242,7 @@ const renderTab = () => {
                     {!session.read && !session.ended && !session.is_dm && <div style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS.magic, flexShrink: 0 }} />}
                     {session.ended && <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", border: `1px solid ${COLORS.border}`, borderRadius: 3, padding: '1px 5px' }}>ENDED</div>}
                   </div>
-                  <div style={{ fontSize: 11, color: COLORS.textSub, fontFamily: 'Georgia, serif', fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.content?.substring(0, 60)}{session.content?.length > 60 ? 'â€¦' : ''}</div>
+                  <div style={{ fontSize: 11, color: COLORS.textSub, fontFamily: 'Georgia, serif', fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.content?.substring(0, 60)}{session.content?.length > 60 ? '...' : ''}</div>
                   <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 4 }}>{new Date(session.created_at).toLocaleString()}</div>
                 </div>
                 <button onClick={e => showArchive ? unarchiveSession(e, session.session_id) : archiveSession(e, session.session_id)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", flexShrink: 0, marginLeft: 8 }}>{showArchive ? 'Unarchive' : 'Archive'}</button>
@@ -1269,7 +1270,7 @@ const renderTab = () => {
                   <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: COLORS.text }}>{char.name}</div>
                   <StatusBadge status={char.status} />
                 </div>
-                <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif' }}>{getRaceDisplay(char.race, char.rv)} Â· {char.cid || 'No class'}</div>
+                <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif' }}>{getRaceDisplay(char.race, char.rv)} - {char.cid || 'No class'}</div>
               </div>
             </div>
           ))}
@@ -1346,7 +1347,7 @@ const renderTab = () => {
             color: 'rgba(240,238,235,0.5)', fontSize: 14, lineHeight: 1,
             backdropFilter: 'blur(4px)',
           }}
-        >{vttMinimized ? 'â¤¢' : 'âˆ’'}</button>
+        >{vttMinimized ? '+' : '-'}</button>
       </div>
     );
 
@@ -1379,7 +1380,7 @@ const renderTab = () => {
       [];
 
     const diceList = Array.isArray(dice)
-      ? dice.map(d => Number(d?.value ?? d?.roll ?? d)).filter(n => !Number.isNaN(n))
+      ? dice.map(d => Number(d?.value - d?.roll - d)).filter(n => !Number.isNaN(n))
       : [];
 
     const notation =
@@ -1387,12 +1388,12 @@ const renderTab = () => {
       `${payload?.count || diceList.length || 1}d${payload?.sides || payload?.die || 20}`;
 
     const diceTotal =
-      payload?.diceTotal ??
+      payload?.diceTotal -
       diceList.reduce((sum, value) => sum + value, 0);
 
-    const statModifier = Number(payload?.statModifier ?? payload?.statMod ?? 0);
-    const flatModifier = Number(payload?.flatModifier ?? payload?.modifier ?? 0);
-    const total = Number(payload?.total ?? payload?.result ?? diceTotal + statModifier + flatModifier);
+    const statModifier = Number(payload?.statModifier - payload?.statMod - 0);
+    const flatModifier = Number(payload?.flatModifier - payload?.modifier - 0);
+    const total = Number(payload?.total - payload?.result - diceTotal + statModifier + flatModifier);
 
     const diceText = diceList.length ? diceList.join(', ') : 'unknown';
 
@@ -1461,35 +1462,58 @@ const renderTab = () => {
       {editingChar && <CharacterEditor char={editingChar} campaigns={dbCampaigns} onSave={() => { setEditingChar(null); fetchCharacters(); }} onClose={() => setEditingChar(null)} />}
       {activeSession && <ChatPanel session={activeSession} onClose={() => setActiveSession(null)} isDM={true} />}
       {showScribePanel && (
-        <DraggablePanel {...panelPriority('scribe')} defaultX={108} defaultY={80} onClose={() => setShowScribePanel(false)} title="THE SCRIBE Â· Architect Access" width={420} accentColor={`${COLORS.deity}55`}>
+        <DraggablePanel {...panelPriority('scribe')} defaultX={108} defaultY={80} onClose={() => setShowScribePanel(false)} title="THE SCRIBE - Architect Access" width={420} accentColor={`${COLORS.deity}55`}>
           <ScribeDMPanel embedded activeCampaignId={activeCampaignTab} />
         </DraggablePanel>
       )}
-{toast && (
+      <PlayersPanel
+        variant="dm"
+        campaigns={dbCampaigns}
+        onOpenCharacter={(char) => setEditingChar(char)}
+        showVTT={activeTab === 'VTT'}
+        onPlaceOnVTT={async (char) => {
+          if (vttPlaceTokenRef.current) {
+            const { data: fresh } = await supabase.from('characters').select('data').eq('id', char.id).maybeSingle();
+            const spriteUrl = fresh?.data?.sprite_url || fresh?.data?.token?.sprite_url || char.sprite_url || char.token?.sprite_url || null;
+            const portraitUrl = fresh?.data?.portrait_url || char.portrait_url || null;
+            vttPlaceTokenRef.current({
+              label: (char.name || 'PC').slice(0, 3),
+              fullName: char.name || null,
+              color: '#4a9edd',
+              type: 'player',
+              characterId: char.id,
+              race: char.race || null,
+              sprite_url: spriteUrl,
+              portrait_url: portraitUrl,
+            });
+          }
+        }}
+      />
+      {toast && (
         <div style={{ position: 'fixed', bottom: 24, left: 24, zIndex: 300, background: '#13100d', border: `1px solid ${COLORS.magic}44`, borderRadius: 10, padding: '14px 18px', maxWidth: 280, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', animation: 'slideIn 0.2s ease' }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, fontWeight: 700, color: COLORS.magic, marginBottom: 4, letterSpacing: '0.08em' }}>âœ¦ New Message</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, fontWeight: 700, color: COLORS.magic, marginBottom: 4, letterSpacing: '0.08em' }}>* New Message</div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, marginBottom: 4 }}>{toast.name}</div>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.textSub, fontStyle: 'italic', lineHeight: 1.4 }}>{toast.content?.substring(0, 80)}{toast.content?.length > 80 ? 'â€¦' : ''}</div>
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.textSub, fontStyle: 'italic', lineHeight: 1.4 }}>{toast.content?.substring(0, 80)}{toast.content?.length > 80 ? '...' : ''}</div>
         </div>
       )}
 
       {convoToast && (
         <div style={{ position: 'fixed', bottom: toast ? 140 : 24, left: 24, zIndex: 300, background: '#13100d', border: '1px solid rgba(96,150,224,0.4)', borderRadius: 10, padding: '14px 18px', maxWidth: 280, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', animation: 'slideIn 0.2s ease' }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, fontWeight: 700, color: '#7da8e0', marginBottom: 4, letterSpacing: '0.08em' }}>ðŸ’¬ Conversation Opened</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, fontWeight: 700, color: '#7da8e0', marginBottom: 4, letterSpacing: '0.08em' }}>Dialogue Conversation Opened</div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, marginBottom: 8 }}>{convoToast.entityName} <span style={{ color: COLORS.dim, fontWeight: 400 }}>({convoToast.entityType})</span></div>
           <button onClick={() => { setShowSpeak(true); setConvoToast(null); }} style={{ background: 'rgba(96,150,224,0.12)', border: '1px solid rgba(96,150,224,0.4)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7da8e0' }}>Open Dialogue</button>
         </div>
       )}
 
       {showBestiary && (
-        <DraggablePanel {...panelPriority('bestiary')} defaultX={108} defaultY={80} onClose={() => setShowBestiary(false)} title="BESTIARY Â· Creatures of Soteria" width={400} accentColor="rgba(168,230,163,0.3)">
+        <DraggablePanel {...panelPriority('bestiary')} defaultX={108} defaultY={80} onClose={() => setShowBestiary(false)} title="BESTIARY - Creatures of Soteria" width={400} accentColor="rgba(168,230,163,0.3)">
           <BestiaryPanel isDM={true} campaignId={activeCampaignTab} embedded />
         </DraggablePanel>
       )}
 
               {showNPC && (
           <DraggablePanel {...panelPriority('npc')} defaultX={108} defaultY={80} onClose={() => setShowNPC(false)}
-            title="NPC TRACKER Â· People of Soteria" width={480} accentColor="rgba(200,168,74,0.4)">
+            title="NPC TRACKER - People of Soteria" width={480} accentColor="rgba(200,168,74,0.4)">
             <div style={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
              <NPCPanel campaignId={activeCampaignTab} sessionId={activeGameSessionId} />
             </div>
@@ -1497,28 +1521,28 @@ const renderTab = () => {
         )}
 
         {showLarks && (
-          <DraggablePanel {...panelPriority('lark')} defaultX={108} defaultY={80} onClose={() => setShowLarks(false)} title="LARK Â· Letters & Correspondence" width={400} accentColor="rgba(200,168,74,0.35)">
+          <DraggablePanel {...panelPriority('lark')} defaultX={108} defaultY={80} onClose={() => setShowLarks(false)} title="LARK - Letters & Correspondence" width={400} accentColor="rgba(200,168,74,0.35)">
             <LarkPanel char={null} campaignId={activeCampaignTab} isDM={true} embedded />
           </DraggablePanel>
         )}
 
         {showSpeak && (
-          <DraggablePanel {...panelPriority('speak')} defaultX={108} defaultY={80} onClose={() => setShowSpeak(false)} title="ðŸ’¬ DIALOGUE Â· Speak as Soteria" width={420} accentColor="rgba(96,150,224,0.4)">
+          <DraggablePanel {...panelPriority('speak')} defaultX={108} defaultY={80} onClose={() => setShowSpeak(false)} title="Dialogue DIALOGUE - Speak as Soteria" width={420} accentColor="rgba(96,150,224,0.4)">
             <DMSpeakPanel campaignId={activeCampaignTab} sessionId={activeGameSessionId} embedded />
           </DraggablePanel>
         )}
 
         {showProximity && (
-          <DraggablePanel {...panelPriority('proximity')} defaultX={108} defaultY={80} onClose={() => setShowProximity(false)} title="PARTY Â· Proximity & Check-In" width={420} accentColor="rgba(121,245,167,0.35)">
+          <DraggablePanel {...panelPriority('proximity')} defaultX={108} defaultY={80} onClose={() => setShowProximity(false)} title="PARTY - Proximity & Check-In" width={420} accentColor="rgba(121,245,167,0.35)">
             <div style={{ overflowY: 'auto', height: '100%' }}>
               <PartyProximityPanel campaignId={activeCampaignTab} isDM={true} />
             </div>
           </DraggablePanel>
         )}
 
-      {/* â”€â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* Header */}
       <div style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: isMobile ? '12px 16px' : '14px 24px', display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', flexShrink: 0, gap: 12 }}>
-        <button onClick={onHome} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.muted, padding: 0, justifySelf: 'start' }}>â† Home</button>
+        <button onClick={onHome} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.muted, padding: 0, justifySelf: 'start' }}>Home</button>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
           <div style={{ textAlign: 'center' }}>
@@ -1538,7 +1562,7 @@ const renderTab = () => {
         </div>
 
        {showWorldMap && (
-  <DraggablePanel {...panelPriority('worldmap')} defaultX={120} defaultY={40} onClose={() => setShowWorldMap(false)} title="WORLD MAP Â· Soteria" width={Math.min(window.innerWidth - 140, 900)} accentColor="rgba(200,168,74,0.4)">
+  <DraggablePanel {...panelPriority('worldmap')} defaultX={120} defaultY={40} onClose={() => setShowWorldMap(false)} title="WORLD MAP - Soteria" width={Math.min(window.innerWidth - 140, 900)} accentColor="rgba(200,168,74,0.4)">
     <div style={{ height: '70vh' }}>
       <WorldMapPanel campaignId={activeCampaignTab} isDM={true} characters={characters} />
     </div>
@@ -1546,13 +1570,13 @@ const renderTab = () => {
 )}
 
 {showLore && (
-  <DraggablePanel {...panelPriority('lore')} defaultX={108} defaultY={80} onClose={() => setShowLore(false)} title="âŸ¦ LORE âŸ§ World Announcement" width={440} accentColor="rgba(200,168,74,0.5)">
+  <DraggablePanel {...panelPriority('lore')} defaultX={108} defaultY={80} onClose={() => setShowLore(false)} title="[ LORE ] World Announcement" width={440} accentColor="rgba(200,168,74,0.5)">
     <LoreAnnouncePanel campaignId={activeSession?.campaign_id || activeCampaignTab} embedded />
   </DraggablePanel>
 )}
         </div>
 
-      {/* â”€â”€â”€ Tab bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* Tab bar */}
       <div style={{ display: 'flex', borderBottom: `1px solid ${COLORS.border}`, overflowX: 'auto', background: COLORS.surface, flexShrink: 0 }}>
         {DM_TABS.map(tab => {
           const isActive = tab === activeTab;
@@ -1568,7 +1592,7 @@ const renderTab = () => {
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
         <div style={{ padding: isMobile ? '20px 16px' : '28px 32px', maxWidth: 740, width: '100%', margin: '0 auto' }}>
-          {loading ? <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 13 }}>Consulting the archivesâ€¦</div> : renderTab()}
+          {loading ? <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 13 }}>Consulting the archives...</div> : renderTab()}
         </div>
       </div>
       {showArgus && (
@@ -1589,7 +1613,7 @@ const renderTab = () => {
         </DraggablePanel>
       )}
       {showSolomon && (
-        <DraggablePanel {...panelPriority('solomon')} defaultX={108} defaultY={80} onClose={() => setShowSolomon(false)} title="SOLOMON Â· Loot Governance" width={400} accentColor="rgba(180,122,58,0.5)">
+        <DraggablePanel {...panelPriority('solomon')} defaultX={108} defaultY={80} onClose={() => setShowSolomon(false)} title="SOLOMON - Loot Governance" width={400} accentColor="rgba(180,122,58,0.5)">
           <Solomon campaignId={activeCampaignTab} />
         </DraggablePanel>
       )}
@@ -1601,19 +1625,19 @@ const renderTab = () => {
         </DraggablePanel>
       )}
       {showBazaar && (
-        <DraggablePanel {...panelPriority('bazaar')} defaultX={108} defaultY={80} onClose={() => setShowBazaar(false)} title="BAZAAR Â· Trade & Loot" width={420} accentColor="rgba(180,122,58,0.5)">
+        <DraggablePanel {...panelPriority('bazaar')} defaultX={108} defaultY={80} onClose={() => setShowBazaar(false)} title="BAZAAR - Trade & Loot" width={420} accentColor="rgba(180,122,58,0.5)">
           <div style={{ padding: 14, height: '100%', overflowY: 'auto' }}>
             <BazaarDMPanel campaignId={activeCampaignTab} onClose={() => setShowBazaar(false)} />
           </div>
         </DraggablePanel>
       )}
       {showQuestor && (
-        <DraggablePanel {...panelPriority('questor')} defaultX={108} defaultY={80} onClose={() => setShowQuestor(false)} title="QUESTOR Â· Quest Board" width={420} accentColor="rgba(200,168,74,0.4)">
+        <DraggablePanel {...panelPriority('questor')} defaultX={108} defaultY={80} onClose={() => setShowQuestor(false)} title="QUESTOR - Quest Board" width={420} accentColor="rgba(200,168,74,0.4)">
           <QuestorDMPanel campaignId={activeCampaignTab} onClose={() => setShowQuestor(false)} />
         </DraggablePanel>
       )}
       {showClock && (
-    <DraggablePanel {...panelPriority('clock')} defaultX={120} defaultY={80} onClose={() => setShowClock(false)} title="SOTERIA Â· World Clock" width={320} accentColor="rgba(201,185,145,0.3)">
+    <DraggablePanel {...panelPriority('clock')} defaultX={120} defaultY={80} onClose={() => setShowClock(false)} title="SOTERIA - World Clock" width={320} accentColor="rgba(201,185,145,0.3)">
       <div style={{ padding: 14 }}>
         <SoteriaClockPanel key={activeCampaignTab} campaignId={activeCampaignTab} />
       </div>
@@ -1622,74 +1646,74 @@ const renderTab = () => {
       <FloatToolbar activeIds={activeToolIds} buttons={[
         {
           id: 'astragal',
-          title: 'Astragal â€” Roll the dice',
+          title: 'Astragal - Roll the dice',
           onClick: () => setShowAstragal(o => !o),
           children: <img src="/AstragalButton.png" alt="Astragal" draggable={false} style={{ width: '118%', height: '118%', objectFit: 'contain', pointerEvents: 'none' }} />,
         },
         {
           id: 'hercules',
-          title: 'HERCULES â€” Combat Tracker',
+          title: 'HERCULES - Combat Tracker',
           onClick: () => setShowHercules(o => !o),
           children: <img src="/HerculesCombat.png" alt="HERCULES" draggable={false} style={{ width: '150%', height: '150%', objectFit: 'contain', pointerEvents: 'none' }} />,
         },
         {
           id: 'argus',
-          title: 'ARGUS â€” My Gear, Pack, and Revealed Chests',
+          title: 'ARGUS - My Gear, Pack, and Revealed Chests',
           onClick: () => setShowArgus(o => !o),
           children: <img src="/Backpackicon.png" alt="ARGUS" draggable={false} style={{ width: '105%', height: '105%', objectFit: 'contain', pointerEvents: 'none' }} />,
         },
         {
           id: 'castor',
-          title: 'CASTOR â€” Cast Request',
+          title: 'CASTOR - Cast Request',
           onClick: () => setShowCastor(o => !o),
           badge: castorBadge,
           children: <img src="/castoricon.png" alt="CASTOR" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
         {
           id: 'bestiary',
-          title: 'Bestiary â€” Creatures of Soteria',
+          title: 'Bestiary - Creatures of Soteria',
           onClick: () => setShowBestiary(o => !o),
           children: <img src="/bestiaryicon.png" alt="Bestiary" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
         {
           id: 'scribe',
-          title: 'The Scribe â€” Archives',
+          title: 'The Scribe - Archives',
           onClick: () => setShowScribePanel(o => !o),
           children: <img src="/scribe-emblem.png" alt="Scribe" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
         {
           id: 'solomon',
-          title: 'SOLOMON â€” Loot Governance',
+          title: 'SOLOMON - Loot Governance',
           onClick: () => setShowSolomon(o => !o),
           children: <img src="/solomonicon.png" alt="SOLOMON" draggable={false} style={{ width: '120%', height: '120%', objectFit: 'contain', pointerEvents: 'none' }} />,
         },
         {
           id: 'worldmap',
-          title: 'World Map â€” Soteria',
+          title: 'World Map - Soteria',
           onClick: () => setShowWorldMap(o => !o),
           children: <img src="/WorldMapIcon.png" alt="World Map" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
         {
           id: 'npc',
-          title: 'NPC Tracker â€” People of Soteria',
+          title: 'NPC Tracker - People of Soteria',
           onClick: () => setShowNPC(o => !o),
           children: <img src="/npcicon.png" alt="NPC Tracker" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
         {
           id: 'lark',
-          title: 'LARK â€” Player Correspondence',
+          title: 'LARK - Player Correspondence',
           onClick: () => setShowLarks(o => !o),
           children: <img src="/Larkicon.png" alt="Lark" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
         {
           id: 'bazaar',
-          title: 'BAZAAR â€” Trade & Loot',
+          title: 'BAZAAR - Trade & Loot',
           onClick: () => setShowBazaar(o => !o),
           children: <img src="/Bazaaricon.png" alt="Bazaar" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
         {
           id: 'questor',
-          title: 'QUESTOR â€” Quest Board',
+          title: 'QUESTOR - Quest Board',
           onClick: () => setShowQuestor(o => !o),
           children: <img src="/Questoricon.png" alt="Questor" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
@@ -1701,19 +1725,19 @@ const renderTab = () => {
         },
         {
           id: 'lore',
-          title: 'Lore Announce â€” Broadcast to World',
+          title: 'Lore Announce - Broadcast to World',
           onClick: () => setShowLore(o => !o),
           children: <img src="/loreicon.png" alt="Lore" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
         {
           id: 'speak',
-          title: 'Dialogue â€” Speak as NPC or Beast',
+          title: 'Dialogue - Speak as NPC or Beast',
           onClick: () => setShowSpeak(o => !o),
           children: <img src="/speakicon.png" alt="Speak" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
         {
           id: 'proximity',
-          title: 'Party â€” Proximity & Check-In',
+          title: 'Party - Proximity & Check-In',
           onClick: () => setShowProximity(o => !o),
           children: <img src="/party.png" alt="Party" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
