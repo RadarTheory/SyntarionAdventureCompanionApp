@@ -1,4 +1,4 @@
-const CACHE_NAME = 'syntarion-shell-v3';
+const CACHE_NAME = 'syntarion-shell-v4';
 const APP_SHELL = [
   '/',
   '/site.webmanifest',
@@ -28,6 +28,7 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
 
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith('/src/') || url.pathname.startsWith('/node_modules/') || url.pathname.startsWith('/@vite') || url.pathname.startsWith('/@react-refresh')) return;
 
   if (request.mode === 'navigate') {
     event.respondWith(

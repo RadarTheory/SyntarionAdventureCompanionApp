@@ -252,9 +252,9 @@ export default function ScribeTale({ char, campaignId, taleScope = 'this module'
               {pendingRoll.stat.toUpperCase()} · DC {pendingRoll.dc}
             </div>
             <div style={{ fontSize: 12.5, color: COLORS.landing, opacity: 0.76, fontStyle: 'italic', marginBottom: 8 }}>{pendingRoll.reason}</div>
-                        <div style={{ fontSize: 11.5, color: COLORS.landing, opacity: 0.58, lineHeight: 1.45, marginBottom: 10 }}>
-                          {pendingRoll.stat.toUpperCase()} measures {activeRollHelp}. Roll d20 {formatMod(activeRollMod)} against DC {pendingRoll.dc}; meet or beat the DC to succeed.
-                        </div>
+            <div style={{ fontSize: 11.5, color: COLORS.landing, opacity: 0.58, lineHeight: 1.45, marginBottom: 10 }}>
+              {pendingRoll.stat.toUpperCase()} measures {activeRollHelp}. Roll d20 {formatMod(activeRollMod)} against DC {pendingRoll.dc}; meet or beat the DC to succeed.
+            </div>
             {!rollState && (
               <button onClick={handleRoll}
                 style={{ background: axis === 'magic' ? COLORS.magicBg : COLORS.techBg, border: `1px solid ${axisColor}`, color: axis === 'magic' ? COLORS.magicText : COLORS.techText, borderRadius: 10, padding: '9px 26px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>

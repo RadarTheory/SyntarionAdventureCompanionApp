@@ -57,6 +57,7 @@ GAME MASTER DUTIES:
 - When an action's outcome is uncertain and failure would be interesting, call for a roll instead of deciding.
 - Honor roll results absolutely. Failure must genuinely cost; success must genuinely deliver.
 - Stay true to Soteria's lore, live NPC roster, and the world context provided. You never lie about the world.
+- CURRENT RESOURCE CANON: you may establish canon only from CURRENT RESOURCE CONTEXT: WORLD CONTEXT, KNOWN LIVE NPC ROSTER, STORY SO FAR, player backstory, and Supabase-backed resources surfaced there (Items, Bestiary, NPCs, POIs/Locations, Travel Time, and Lore). Named artifacts, relics, factions, POIs, beasts, and historical facts must come from those resources. If a named element is not supplied by them, frame it as an NPC claim, rumor, working title, or provisional local detail until verified in play; memory_update must preserve that uncertainty with words like "reported", "claimed", or "alleged".
 - EVERY TURN MUST ADVANCE PLAY: each Scribe turn must give the player at least one concrete thing to react to: spoken NPC dialogue, a clear offer/request/threat, a changed situation, a choice, a revealed fact, or a roll_request. Never spend a turn only describing posture, mood, or atmosphere.
 - DIRECT QUESTION RULE: when the player asks an NPC a direct question, the NPC must answer, refuse, ask for something specific, or reveal why they cannot answer. Put the actual spoken words in narration and in an npc_speaks action when possible.
 - CHARACTER DESCRIPTION, NOT PROSE INFERENCE: describe visible facts first: posture, clothing, hands, face, voice, distance, props, weather, nearby movement. Do not explain what those facts mean unless the evidence is explicit.
@@ -205,6 +206,78 @@ function validateRollRequest(rr) {
   if (!STAT_KEYS.includes(stat)) return null;
   const dc = Math.min(24, Math.max(6, Math.round(Number(rr.dc) || 12)));
   return { stat, dc, reason: String(rr.reason || 'The moment demands proof.').slice(0, 200) };
+}
+
+function preserveQuestSteps(nextLabels, existingSteps = []) {
+  return nextLabels.map((label, index) => ({ id: index + 1, label, completed: Boolean(existingSteps[index]?.completed) }));
+}
+
+function extractArtifactName(text) {
+  const source = String(text || '');
+  const direct = source.match(/\bHeartstone of Unity\b/i);
+  if (direct) return direct[0];
+  const namedOf = source.match(/\b([A-Z][A-Za-z' -]{2,40}\s+of\s+[A-Z][A-Za-z' -]{2,40})\b/);
+  if (namedOf) return namedOf[1].trim();
+  return '';
+}
+
+function buildTaleQuestCopy({ char, tale, narration = '', memoryUpdate = '' }) {
+  const actor = char?.name || 'the adventurer';
+  const source = [memoryUpdate, narration, tale?.summary, tale?.scene].filter(Boolean).join('\n');
+  const hasCorvit = /Lord\s+Corvit\s+Payne/i.test(source);
+  const artifact = extractArtifactName(source);
+  const stolen = /\b(stolen|theft|missing|taken|recover)\b/i.test(source);
+  const verified = /\b(verified|confirmed|proved|recovered|found|witnessed|recorded)\b/i.test(source) && !/\b(reported|claimed|alleged|rumou?r)\b/i.test(source);
+  const artifactLabel = artifact || 'the artifact';
+  if (hasCorvit || stolen || artifact) {
+    const claimText = verified ? artifactLabel : (artifact ? 'the reported ' + (stolen ? 'theft of ' : '') + artifactLabel : 'a reported stolen artifact');
+    return {
+      description: hasCorvit ? 'Lord Corvit Payne has pulled ' + actor + ' into ' + claimText + '. Questor treats the lead as ' + (verified ? 'verified by play' : "Corvit's claim until witnesses, records, or recovered evidence confirm it") + '.' : actor + ' is following ' + claimText + '. Questor treats the lead as ' + (verified ? 'verified by play' : 'provisional until the Tale confirms it through current resources or play') + '.',
+      giver: hasCorvit ? 'Lord Corvit Payne' : 'The Scribe',
+      steps: [
+        hasCorvit ? 'Question Lord Corvit Payne about ' + artifactLabel + ': last known location, witnesses, and who benefits.' : 'Identify who first claimed ' + artifactLabel + ' was missing and what they know.',
+        'Check current resources or in-scene evidence before treating ' + artifactLabel + ' as settled canon.',
+        hasCorvit ? "Follow the strongest lead from Lord Corvit's most recent account." : 'Follow the strongest concrete lead from the latest Scribe entry.',
+        stolen ? 'Recover ' + artifactLabel + ' or expose the false claim before the crisis hardens.' : 'Resolve what ' + artifactLabel + ' actually means in this Tale.',
+        'Return the truth to the people affected and seal the result into the archive.',
+      ],
+    };
+  }
+  return {
+    description: 'The first Tale thread will update here as named NPCs, places, items, threats, and stakes enter play. Treat early claims as leads until the story verifies them.',
+    giver: 'The Scribe',
+    steps: [
+      'Answer the opening hook and name what your character wants from this Tale.',
+      'Identify the first named NPC, place, item, threat, or pressure point the Scribe puts in play.',
+      'Verify any claimed artifact, theft, culprit, or crisis before treating it as settled truth.',
+      'Choose the first concrete lead and pursue it through a scene with risk.',
+      'Resolve the decisive scene and seal what actually happened into the archive.',
+    ],
+  };
+}
+
+async function syncTaleQuest({ campaignId, char, tale, narration = '', memoryUpdate = '' }) {
+  if (!campaignId || !char?.id || !tale?.id) return;
+  try {
+    const title = 'Opening Thread - ' + (char.name || 'The Adventurer');
+    const copy = buildTaleQuestCopy({ char, tale, narration, memoryUpdate });
+    const { data: existingQuest } = await supabase.from('quests').select('id,steps').eq('campaign_id', String(campaignId)).eq('title', title).maybeSingle();
+    const steps = preserveQuestSteps(copy.steps, Array.isArray(existingQuest?.steps) ? existingQuest.steps : []);
+    let questId = existingQuest?.id;
+    if (questId) {
+      await supabase.from('quests').update({ description: copy.description, giver_npc_name: copy.giver, region: tale.scene || 'Tales', steps, status: 'active' }).eq('id', questId);
+    } else {
+      const { data: quest } = await supabase.from('quests').insert({ campaign_id: String(campaignId), title, description: copy.description, type: 'main', visibility: 'public', status: 'active', giver_npc_name: copy.giver, region: tale.scene || 'Tales', steps, reward_ap: 0, reward_stat_bonuses: {}, reward_item_name: '', reward_item_desc: '', reward_notes: 'The Scribe will offer rewards for the Architect to approve when the Tale closes.' }).select('id').single();
+      questId = quest?.id;
+    }
+    if (questId) {
+      const { data: existingLink } = await supabase.from('quest_characters').select('id,status').eq('quest_id', questId).eq('character_id', String(char.id)).maybeSingle();
+      if (!existingLink?.id) await supabase.from('quest_characters').insert({ quest_id: questId, character_id: String(char.id), character_name: char.name || 'Adventurer', status: 'active' });
+      else if (existingLink.status !== 'active') await supabase.from('quest_characters').update({ status: 'active' }).eq('id', existingLink.id);
+    }
+  } catch (e) {
+    console.warn('[scribeDM] tale quest sync failed:', e?.message || e);
+  }
 }
 
 // ─── ACTION DISPATCHER (whitelist) ────────────────────────────────────────────

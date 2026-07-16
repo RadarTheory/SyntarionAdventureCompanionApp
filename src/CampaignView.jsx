@@ -2633,11 +2633,11 @@ useEffect(() => {
 const talesSeedInFlight = new Set();
 
 const TALES_STARTER_STEPS = [
-  'Answer the opening hook and establish what your character wants from this Tale.',
-  'Find the first clue, passage, witness, or pressure point.',
-  'Choose a route: maze, puzzle room, crucible, quick hunt, or dream trial.',
-  'Survive the complication and record what changed.',
-  'Resolve the decisive scene and seal the Tale into the archive.',
+  'Answer the opening hook and name what your character wants from this Tale.',
+  'Identify the first named NPC, place, item, threat, or pressure point the Scribe puts in play.',
+  'Verify any claimed artifact, theft, culprit, or crisis before treating it as settled truth.',
+  'Choose the first concrete lead and pursue it through a scene with risk.',
+  'Resolve the decisive scene and seal what actually happened into the archive.',
 ];
 
 function talesStarterSlot(taleId, suffix) {
@@ -2832,7 +2832,7 @@ async function seedTalesStarterState({ char, taleId, taleScope, onUpdateChar }) 
         const { data: quest } = await supabase.from('quests').insert({
           campaign_id: taleId,
           title: questTitle,
-          description: 'Your Tale begins with supplies in hand, two Scribe questions banked, and the first thread waiting to be pulled.',
+          description: 'The first Tale thread will update here as named NPCs, places, items, threats, and stakes enter play. Treat early claims as leads until the story verifies them.',
           type: 'main',
           visibility: 'public',
           status: 'active',

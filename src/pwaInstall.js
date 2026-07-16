@@ -65,6 +65,18 @@ export async function promptPWAInstall() {
 
 export function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
+
+  if (import.meta.env.DEV) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.getRegistrations?.()
+        .then(registrations => Promise.all(registrations.map(registration => registration.unregister())))
+        .then(() => caches?.keys?.())
+        .then(keys => keys ? Promise.all(keys.map(key => caches.delete(key))) : null)
+        .catch(error => console.warn('Syntarion dev service worker cleanup failed:', error));
+    });
+    return;
+  }
+
   if (!window.isSecureContext && window.location.hostname !== 'localhost') return;
 
   window.addEventListener('load', () => {

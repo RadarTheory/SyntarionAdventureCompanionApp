@@ -5,6 +5,7 @@ import { SOTERIA_LORE } from './soteria-lore';
 import { SOTERIA_MECHANICS } from './soteria-mechanics';
 import { SOTERIA_BESTIARY } from './soteria-bestiary';
 import supabase from './lib/supabase';
+import { TRAVEL_METHODS } from './lib/soteriaclock';
 
 const HEADER = /━{10,}\s*\n([^\n]+)\n━{10,}/g;
 
@@ -96,6 +97,57 @@ async function loadLiveBeastSections(campaignId) {
   }));
 }
 
+async function loadLiveItemSections() {
+  const { data, error } = await supabase
+    .from('items')
+    .select('*')
+    .order('name')
+    .limit(1200);
+  if (error || !data) return [];
+  return data
+    .filter(item => item.name)
+    .map(item => ({
+      source: 'ITEMS',
+      title: item.name,
+      body: [
+        item.category ? `Category: ${item.category}` : '',
+        item.type ? `Type: ${item.type}` : '',
+        item.rarity ? `Rarity: ${item.rarity}` : '',
+        item.description ? String(item.description).slice(0, 700) : '',
+        item.meta ? `Meta: ${String(item.meta).slice(0, 300)}` : '',
+        Array.isArray(item.tags) && item.tags.length ? `Tags: ${item.tags.join(', ')}` : '',
+      ].filter(Boolean).join('\n') || 'Known item.',
+    }));
+}
+
+async function loadLocationSections(campaignId) {
+  let query = supabase.from('locations').select('*').order('name');
+  query = campaignId
+    ? query.or(`campaign_id.is.null,campaign_id.eq.${campaignId}`)
+    : query.is('campaign_id', null);
+  const { data, error } = await query;
+  if (error || !data) return [];
+  return data
+    .filter(loc => loc.name)
+    .map(loc => ({
+      source: 'POIS / LOCATIONS',
+      title: loc.name,
+      body: [
+        loc.type ? `Type: ${loc.type}` : '',
+        loc.region ? `Region: ${loc.region}` : '',
+        loc.notes ? String(loc.notes).slice(0, 900) : '',
+        Number.isFinite(Number(loc.x_pct)) && Number.isFinite(Number(loc.y_pct)) ? `Map position: ${Number(loc.x_pct).toFixed(2)}%, ${Number(loc.y_pct).toFixed(2)}%` : '',
+      ].filter(Boolean).join('\n') || 'Known point of interest.',
+    }));
+}
+
+function travelMethodSections() {
+  return [{
+    source: 'TRAVEL TIME',
+    title: 'Soteria Travel Speeds',
+    body: TRAVEL_METHODS.map(m => `${m.label}: ${m.milesPerDay} miles per Soterian day/turn`).join('\n'),
+  }];
+}
 async function loadDbContextSections(campaignId) {
   let query = supabase.from('scribe_context').select('source, title, body, campaign_id');
   query = campaignId
@@ -107,12 +159,14 @@ async function loadDbContextSections(campaignId) {
 }
 
 export async function buildScribeContext(question, budget = 10000, campaignId = null) {
-  const [liveNpcs, liveBeasts, dbSections] = await Promise.all([
+  const [liveNpcs, liveBeasts, liveItems, locations, dbSections] = await Promise.all([
     loadLiveNpcSections(),
     loadLiveBeastSections(campaignId),
+    loadLiveItemSections(),
+    loadLocationSections(campaignId),
     loadDbContextSections(campaignId),
   ]);
-  const allSections = [...SECTIONS, ...liveNpcs, ...liveBeasts, ...dbSections];
+  const allSections = [...SECTIONS, ...travelMethodSections(), ...liveNpcs, ...liveBeasts, ...liveItems, ...locations, ...dbSections];
 
   const queryTerms = terms(question || '');
   const primer = SECTIONS[0]; // SOTERIA — WORLD PRIMER

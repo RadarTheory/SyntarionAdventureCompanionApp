@@ -11,6 +11,93 @@ import { COLORS, RACES, CLASSES, GODS, SPIRITS, UNAFFILIATED, PROGRESSION } from
 
 const LIVE_DIRECTIVE_RE = /^\s*\[\[(syntarion|supabase):([a-z_-]+)\]\]\s*$/i;
 
+function slugifyHandbookTitle(title) {
+  return String(title || 'chapter')
+    .toLowerCase()
+    .replace(/['']/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'chapter';
+}
+
+function normalizeHandbookLine(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201c\u201d]/g, '"')
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function handbookTitleCase(value) {
+  return String(value || '').toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase());
+}
+
+function looksLikeHandbookSubhead(line) {
+  const text = String(line || '').trim();
+  if (text.length < 4 || text.length > 90) return false;
+  if (/^\d+$/.test(text)) return false;
+  const letters = text.replace(/[^A-Za-z]/g, '');
+  if (letters.length < 3) return false;
+  return text === text.toUpperCase();
+}
+
+function markdownFromHandbookLines(title, lines) {
+  const body = lines
+    .map(line => String(line || '').trim())
+    .filter(line => line && !/^\d+$/.test(line))
+    .filter((line, index) => index !== 0 || normalizeHandbookLine(line) !== normalizeHandbookLine(title))
+    .map(line => looksLikeHandbookSubhead(line) ? '## ' + handbookTitleCase(line) : line);
+  return ['# ' + title, ...body].join('\n\n').trim();
+}
+
+function splitHandbookRawText(rawText) {
+  const lines = String(rawText || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+  const tocStart = lines.findIndex(line => normalizeHandbookLine(line) === 'glossary');
+  const tocEnd = lines.findIndex((line, index) => index > tocStart && /^Page numbers/i.test(line));
+  if (tocStart < 0 || tocEnd < 0) throw new Error('Could not find the handbook table of contents.');
+
+  const tocLines = lines.slice(tocStart + 1, tocEnd);
+  const entries = [];
+  for (let i = 0; i < tocLines.length; i++) {
+    const combined = tocLines[i].match(/^(\d+)\s+(.+)$/);
+    if (combined) {
+      entries.push({ order: Number(combined[1]), title: combined[2].trim() });
+      continue;
+    }
+    const numberOnly = tocLines[i].match(/^(\d+)$/);
+    if (numberOnly && tocLines[i + 1] && !/^\d+/.test(tocLines[i + 1])) {
+      entries.push({ order: Number(numberOnly[1]), title: tocLines[i + 1].trim() });
+      i += 1;
+    }
+  }
+  if (!entries.length) throw new Error('No numbered handbook chapters were found in the table of contents.');
+
+  const contentLines = lines.slice(tocEnd + 1);
+  let cursor = 0;
+  const starts = entries.map(entry => {
+    const wanted = normalizeHandbookLine(entry.title);
+    let index = contentLines.findIndex((line, i) => i >= cursor && normalizeHandbookLine(line) === wanted);
+    if (index < 0) index = contentLines.findIndex((line, i) => i >= cursor && normalizeHandbookLine(line).includes(wanted));
+    if (index >= 0) cursor = index + 1;
+    return { ...entry, index };
+  }).filter(entry => entry.index >= 0);
+  if (!starts.length) throw new Error('The TOC was found, but the document body could not be matched to chapters.');
+
+  return starts.map((entry, i) => {
+    const next = starts[i + 1]?.index ?? contentLines.length;
+    const chapterLines = contentLines.slice(entry.index, next);
+    return {
+      slug: String(entry.order).padStart(2, '0') + '-' + slugifyHandbookTitle(entry.title),
+      title: entry.title,
+      subtitle: 'Soteria Player Handbook | Syntarion Edition',
+      chapter_order: entry.order,
+      content: markdownFromHandbookLines(entry.title, chapterLines),
+      is_published: true,
+    };
+  });
+}
+
 function LiveMarkdown({ content, mdComponents, active, darkMode, isMobile, theme }) {
   const parts = String(content || '').split(/(\[\[(?:syntarion|supabase):[a-z_-]+\]\])/gi);
   const hasDirective = parts.some(part => LIVE_DIRECTIVE_RE.test(part));
@@ -188,8 +275,11 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
   const [saveStatus, setSaveStatus] = useState('');
   const [importPreview, setImportPreview] = useState(null);
   const [importStatus, setImportStatus] = useState('');
+  const [bulkImportStatus, setBulkImportStatus] = useState('');
+  const [bulkImporting, setBulkImporting] = useState(false);
   const contentRef = useRef(null);
   const fileRef = useRef(null);
+  const bulkFileRef = useRef(null);
 
   const canEdit = allowEdit === true;
 
@@ -318,6 +408,43 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
     if (!importPreview) return;
     setDraft(d => ({ ...d, content: importPreview.content }));
     setImportStatus('Imported into the chapter body. Save when ready.');
+  };
+
+  const handleBulkImportPick = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !canEdit || bulkImporting) return;
+    setBulkImporting(true);
+    setBulkImportStatus('Reading handbook...');
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      if (ext !== 'docx') throw new Error('Whole-handbook replacement expects the Soteria .docx file.');
+      const arrayBuffer = await file.arrayBuffer();
+      const { value } = await mammoth.extractRawText({ arrayBuffer });
+      const parsed = splitHandbookRawText(value);
+      if (!parsed.length) throw new Error('No handbook chapters were parsed.');
+      setBulkImportStatus('Saving ' + parsed.length + ' chapters...');
+      for (const chapter of parsed) {
+        const { data: existing, error: findError } = await supabase
+          .from('handbook_chapters')
+          .select('id')
+          .eq('slug', chapter.slug)
+          .maybeSingle();
+        if (findError) throw findError;
+        const payload = { ...chapter, updated_at: new Date().toISOString() };
+        const result = existing?.id
+          ? await supabase.from('handbook_chapters').update(payload).eq('id', existing.id)
+          : await supabase.from('handbook_chapters').insert(payload);
+        if (result.error) throw result.error;
+      }
+      setBulkImportStatus('Updated handbook: ' + parsed.length + ' published chapters.');
+      await fetchChapters();
+      setActiveSlug(parsed[0]?.slug || null);
+    } catch (err) {
+      setBulkImportStatus('Handbook import failed: ' + (err?.message || err));
+    } finally {
+      setBulkImporting(false);
+      e.target.value = '';
+    }
   };
   const saveEdit = async () => {
     if (!canEdit || !active || !draft || saving) return;
@@ -478,6 +605,17 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 15 : 18, fontWeight: 700, color: ink, letterSpacing: '0.05em' }}>PLAYER HANDBOOK</div>
               </div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                {canEdit && !editing && (
+                  <>
+                    <input ref={bulkFileRef} type="file" accept=".docx" onChange={handleBulkImportPick} style={{ display: 'none' }} />
+                    <button onClick={() => bulkFileRef.current?.click()} disabled={bulkImporting} style={{
+                      background: COLORS.magicBg, border: '1px solid ' + COLORS.magic, borderRadius: 6,
+                      padding: '7px 14px', cursor: bulkImporting ? 'default' : 'pointer', fontFamily: "'Cinzel', serif",
+                      fontSize: 8.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.magicText,
+                      opacity: bulkImporting ? 0.58 : 1,
+                    }}>{bulkImporting ? 'Importing...' : 'Replace Handbook'}</button>
+                  </>
+                )}
                 {canEdit && active && !editing && (
                   <button onClick={startEdit} style={{
                     background: 'transparent', border: `1px solid ${borderMid}`, borderRadius: 6,
@@ -518,6 +656,9 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
             {/* Content */}
             <div ref={contentRef} style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '10px 18px 40px' : '12px 28px 60px' }}>
               {loadError && <div style={{ padding: '20px 0', color: COLORS.warn, fontSize: 13 }}>Could not load the handbook: {loadError}</div>}
+              {bulkImportStatus && (
+                <div style={{ maxWidth: 860, margin: '0 auto 10px', fontSize: 11, color: bulkImportStatus.includes('failed') ? COLORS.warn : COLORS.magicText, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', textTransform: 'uppercase' }}>{bulkImportStatus}</div>
+              )}
               {!loadError && chapters === null && <div style={{ padding: '20px 0', fontStyle: 'italic', color: muted }}>Opening the handbook...</div>}
 
               {!editing && active && (
