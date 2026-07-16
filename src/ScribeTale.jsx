@@ -98,6 +98,23 @@ export default function ScribeTale({ char, campaignId, taleScope = 'this module'
 
   const taleEnded = tale?.status === 'concluded';
 
+  // ── Castor bridge: casts dispatched from the Tales toolkit land here ──
+  useEffect(() => {
+    const onCast = (e) => {
+      const d = e.detail || {};
+      if (String(d.campaignId || '') !== cid) return;
+      if (!tale || taleEnded) { setError('Begin the Tale before casting.'); return; }
+      if (loading || pendingRoll) { setError('The Scribe awaits your roll before you cast.'); return; }
+      const note = d.note ? ` Player note: "${d.note}".` : '';
+      sendTurn(
+        `[CAST] ${char?.name || 'The player'} casts ${d.abilityName} — ${d.tierLabel} tier [${d.disciplineLabel}].\nEffect: ${d.effect}${note}\nAdjudicate this cast within the scene: apply its effect narratively, spend its cost, and call for a roll only if the outcome is uncertain.`,
+        'player',
+      );
+    };
+    window.addEventListener('syntarion-tales-cast', onCast);
+    return () => window.removeEventListener('syntarion-tales-cast', onCast);
+  }, [cid, tale, taleEnded, loading, pendingRoll, sendTurn, char?.name]);
+
   const handleSend = () => {
     const text = input.trim();
     if (!text || loading || pendingRoll || taleEnded) return;
