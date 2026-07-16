@@ -833,6 +833,7 @@ function CastorInner({ char, campaignId, onClose, onBadgeChange }) {
     const tiers    = getTiers(ability.axis);
     const tierName = tiers[tierIndex] || `Tier ${tierIndex + 1}`;
     const axisLabel = ability.axis === 'magic' ? 'Cast' : 'Deploy';
+    const isTales  = String(campaignId || '').startsWith('tales:');
 
     const { data: req, error } = await supabase.from('cast_requests').insert({
       campaign_id:      String(campaignId),
@@ -846,9 +847,25 @@ function CastorInner({ char, campaignId, onClose, onBadgeChange }) {
       modifier:         0,
       cost:             tierIndex + 1,
       currency_key:     ability.axis === 'magic' ? 'MOTE' : 'TINKERTRICK',
-      status:           'pending',
-      dm_note:          note || null,
+      status:           isTales ? 'approved' : 'pending',
+      dm_note:          isTales ? 'Adjudicated by the Scribe (Tales).' : (note || null),
+      resolved_at:      isTales ? new Date().toISOString() : null,
     }).select().single();
+
+    if (!error && req && isTales) {
+      window.dispatchEvent(new CustomEvent('syntarion-tales-cast', {
+        detail: {
+          campaignId:      String(campaignId),
+          abilityName:     ability.name,
+          tierLabel:       tierName,
+          disciplineLabel: ability.axis === 'magic' ? 'Magicka' : 'Ingenium',
+          effect:          ability.tiers[tierIndex] || '',
+          note:            note || '',
+        },
+      }));
+      loadRequests();
+      return;
+    }
 
     if (!error && req) {
       const { data: hsession } = await supabase.from('hercules_sessions').select('id')
