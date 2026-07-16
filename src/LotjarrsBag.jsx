@@ -34,7 +34,7 @@ function BagIcon({ size = 48 }) {
   return (
     <img
       src="/Lotjarrsbagofgames.png"
-      alt="L?tjarr's Bag"
+      alt="Lótjarr's Bag"
       draggable={false}
       onError={() => setFailed(true)}
       style={{ width: size, height: size, objectFit: 'contain', display: 'block' }}
@@ -201,7 +201,7 @@ export default function LotjarrsBag({ onHome, onLaunchGame }) {
           textTransform: 'uppercase',
           zIndex: 100,
         }}
-      >? Back</button>
+      >← Back</button>
 
       {/* Header */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginBottom: 56 }}>
@@ -216,7 +216,7 @@ export default function LotjarrsBag({ onHome, onLaunchGame }) {
             textAlign: 'center',
             marginBottom: 8,
           }}>
-            L?TJARR'S BAG OF GAMES
+            LÓTJARR'S BAG OF GAMES
           </div>
           <div style={{
             fontFamily: 'Georgia, serif',
@@ -252,7 +252,7 @@ export default function LotjarrsBag({ onHome, onLaunchGame }) {
         color: 'rgba(200,168,74,0.2)',
         textTransform: 'uppercase',
       }}>
-        Syntarion ? Games of Soteria
+        Syntarion · Games of Soteria
       </div>
     </div>
   );
