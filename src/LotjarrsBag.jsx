@@ -8,6 +8,7 @@ const GAMES = [
     subtitle: 'A two-player strategy of stone and tide',
     icon: '/Driftstoneicon.png',
     dimIcon: '/Driftstoneicondim.png',
+    iconScale: 1.18,
   },
   {
     id: 'fubin',
@@ -15,6 +16,7 @@ const GAMES = [
     subtitle: 'A game of cunning and fate',
     icon: '/FubinIcon.png',
     dimIcon: '/Fubinicondim.png',
+    iconScale: 1.95,
   },
  {
     id: 'elddimgates',
@@ -22,6 +24,7 @@ const GAMES = [
     subtitle: 'A game of passage and authority',
     icon: '/elddimgates-logo-lit.png',
     dimIcon: '/elddimgates-logo.png',
+    iconScale: 0.98,
   },
 ];
 
@@ -31,7 +34,7 @@ function BagIcon({ size = 48 }) {
   return (
     <img
       src="/Lotjarrsbagofgames.png"
-      alt="Lótjarr's Bag"
+      alt="L?tjarr's Bag"
       draggable={false}
       onError={() => setFailed(true)}
       style={{ width: size, height: size, objectFit: 'contain', display: 'block' }}
@@ -41,6 +44,8 @@ function BagIcon({ size = 48 }) {
 
 function GameTile({ game, onClick }) {
   const [hovered, setHovered] = useState(false);
+  const [pressed, setPressed] = useState(false);
+  const active = hovered || pressed;
 
   return (
     <button
@@ -48,9 +53,14 @@ function GameTile({ game, onClick }) {
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onFocus={() => setHovered(true)}
+      onBlur={() => { setHovered(false); setPressed(false); }}
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerCancel={() => setPressed(false)}
       style={{
-        background: hovered ? 'rgba(200,168,74,0.08)' : 'rgba(240,238,235,0.03)',
-        border: `1px solid ${hovered ? 'rgba(200,168,74,0.55)' : 'rgba(200,168,74,0.18)'}`,
+        background: active ? 'rgba(200,168,74,0.075)' : 'rgba(240,238,235,0.026)',
+        border: `1px solid ${active ? 'rgba(232,200,116,0.58)' : 'rgba(200,168,74,0.2)'}`,
         borderRadius: 14,
         padding: '32px 28px',
         cursor: 'pointer',
@@ -60,29 +70,52 @@ function GameTile({ game, onClick }) {
         gap: 16,
         width: 220,
         transition: 'all 0.18s ease',
-        transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
-        boxShadow: hovered
-          ? '0 12px 40px rgba(200,168,74,0.15), 0 4px 16px rgba(0,0,0,0.5)'
+        transform: active ? 'translateY(-3px)' : 'translateY(0)',
+        boxShadow: active
+          ? '0 12px 40px rgba(200,168,74,0.14), 0 4px 16px rgba(0,0,0,0.5)'
           : '0 4px 16px rgba(0,0,0,0.35)',
       }}
     >
-      <img
-        src={hovered ? game.icon : game.dimIcon}
-        alt={game.name}
-        draggable={false}
-        style={{
-          width: 80,
-          height: 80,
-          objectFit: 'contain',
-          transition: 'opacity 0.18s ease',
-        }}
-      />
+      <div style={{
+        width: 92,
+        height: 92,
+        borderRadius: '50%',
+        display: 'grid',
+        placeItems: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+        background: active
+          ? 'radial-gradient(circle, rgba(232,200,116,0.16) 0%, rgba(200,168,74,0.08) 42%, rgba(8,6,4,0) 72%)'
+          : 'radial-gradient(circle, rgba(200,168,74,0.055) 0%, rgba(8,6,4,0) 70%)',
+        boxShadow: active
+          ? '0 0 22px rgba(232,200,116,0.2), inset 0 0 16px rgba(232,200,116,0.08)'
+          : 'inset 0 0 14px rgba(232,200,116,0.035)',
+        transition: 'background 0.18s ease, box-shadow 0.18s ease',
+      }}>
+        <img
+          src={active ? game.icon : game.dimIcon}
+          alt={game.name}
+          draggable={false}
+          style={{
+            width: 82,
+            height: 82,
+            objectFit: 'contain',
+            transform: 'scale(' + (game.iconScale || 1) + ')' ,
+            filter: active
+              ? 'drop-shadow(0 0 10px rgba(232,200,116,0.34)) saturate(1.08)'
+              : 'brightness(0.84) contrast(1.04) saturate(0.82)',
+            mixBlendMode: 'screen',
+            opacity: active ? 1 : 0.84,
+            transition: 'opacity 0.18s ease, filter 0.18s ease, transform 0.18s ease',
+          }}
+        />
+      </div>
       <div>
         <div style={{
           fontFamily: "'Cinzel', serif",
           fontSize: 14,
           fontWeight: 700,
-          color: hovered ? '#e8c84a' : '#c8b89a',
+          color: active ? '#e8c84a' : '#c8b89a',
           letterSpacing: '0.12em',
           marginBottom: 6,
           transition: 'color 0.18s ease',
@@ -93,7 +126,7 @@ function GameTile({ game, onClick }) {
           fontFamily: 'Georgia, serif',
           fontSize: 10,
           fontStyle: 'italic',
-          color: hovered ? 'rgba(200,168,74,0.65)' : 'rgba(240,238,235,0.35)',
+          color: active ? 'rgba(200,168,74,0.65)' : 'rgba(240,238,235,0.35)',
           lineHeight: 1.5,
           transition: 'color 0.18s ease',
         }}>
@@ -168,9 +201,7 @@ export default function LotjarrsBag({ onHome, onLaunchGame }) {
           textTransform: 'uppercase',
           zIndex: 100,
         }}
-      >
-        ← Back
-      </button>
+      >? Back</button>
 
       {/* Header */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginBottom: 56 }}>
@@ -185,7 +216,7 @@ export default function LotjarrsBag({ onHome, onLaunchGame }) {
             textAlign: 'center',
             marginBottom: 8,
           }}>
-            LÓTJARR'S BAG OF GAMES
+            L?TJARR'S BAG OF GAMES
           </div>
           <div style={{
             fontFamily: 'Georgia, serif',
@@ -221,7 +252,7 @@ export default function LotjarrsBag({ onHome, onLaunchGame }) {
         color: 'rgba(200,168,74,0.2)',
         textTransform: 'uppercase',
       }}>
-        Syntarion · Games of Soteria
+        Syntarion ? Games of Soteria
       </div>
     </div>
   );

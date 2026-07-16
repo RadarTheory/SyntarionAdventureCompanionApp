@@ -6,6 +6,7 @@ import LoadingScreen from './LoadingScreen';
 import LotjarrsBag from './LotjarrsBag';
 import PlayDriftstone from './PlayDriftstone';
 import Fubin from './Fubin';
+import Elddimgates from './Elddimgates';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -14,8 +15,8 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('syn_dark') === '1');
   useEffect(() => { localStorage.setItem('syn_dark', darkMode ? '1' : '0'); }, [darkMode]);
   const [view, setView] = useState(() => {
-    const saved = localStorage.getItem('syntarion_view');
-    return ['driftstone', 'fubin'].includes(saved) ? saved : 'landing';
+   const saved = localStorage.getItem('syntarion_view');
+    return ['driftstone', 'fubin', 'elddimgates'].includes(saved) ? saved : 'landing';
   });
   const [inSession, setInSession] = useState(false);
   const [inCampaign, setInCampaign] = useState(false);
@@ -90,10 +91,12 @@ export default function App() {
   if (view === 'bag') return <LotjarrsBag onHome={goLandingHome} onLaunchGame={launchGame} />;
   if (view === 'driftstone') return <PlayDriftstone onHome={returnToBag} />;
   if (view === 'fubin') return <Fubin onHome={returnToBag} />;
+  if (view === 'elddimgates') return <Elddimgates onExit={returnToBag} />;
 
   // Main app — pass real session user
   return (
-    <>
+    <>
+
       <Landing
         user={session.user}
         darkMode={darkMode}
