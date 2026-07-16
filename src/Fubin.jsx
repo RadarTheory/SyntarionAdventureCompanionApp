@@ -43,7 +43,7 @@ export default function Fubin({ onHome }) {
       <button className="fubin-back" onClick={onHome}>
         Back
       </button>
-      <FubinGame config={DEFAULT_CONFIG} mode="single" playerTwo={null} soloStart />
+      <FubinGame config={DEFAULT_CONFIG} mode="single" playerTwo={null} soloStart onHome={onHome} />
     </div>
   );
 }
