@@ -1473,6 +1473,7 @@ const renderTab = () => {
         variant="dm"
         campaigns={dbCampaigns}
         onOpenCharacter={(char) => setEditingChar(char)}
+        onMessage={(session) => setActiveSession(session)}
         showVTT={activeTab === 'VTT'}
         onPlaceOnVTT={async (char) => {
           if (vttPlaceTokenRef.current) {

@@ -182,6 +182,7 @@ export default function PlayersPanel({ onOpenCharacter, onMessage, showVTT, onPl
             </div>
             <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
               {onOpenCharacter && <button onClick={(e) => { e.stopPropagation(); onOpenCharacter(char); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + COLORS.border, borderRadius: 4, padding: '5px 7px', cursor: 'pointer', fontSize: 7, letterSpacing: '0.08em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" }}>Sheet</button>}
+              {onMessage && owner && <button onClick={(e) => { e.stopPropagation(); handleMessage(owner, char); }} style={{ flex: 1, background: COLORS.magicBg, border: '1px solid ' + COLORS.magic, borderRadius: 4, padding: '5px 7px', cursor: 'pointer', fontSize: 7, letterSpacing: '0.08em', textTransform: 'uppercase', color: COLORS.magicText, fontFamily: "'Cinzel', serif" }}>Whisper</button>}
               {showVTT && onPlaceOnVTT && <button onClick={(e) => { e.stopPropagation(); onPlaceOnVTT(char); }} style={{ flex: 1, background: 'rgba(200,168,74,0.12)', border: '1px solid #c8a84a66', borderRadius: 4, padding: '5px 7px', cursor: 'pointer', fontSize: 7, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#e8c84a', fontFamily: "'Cinzel', serif" }}>Add to VTT</button>}
             </div>
           </div>

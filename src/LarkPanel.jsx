@@ -63,7 +63,7 @@ function label8() {
 
 // ─── COMPOSE FORM ─────────────────────────────────────────────────────────────
 function ComposeForm({ char, campaignId, npcs, players, onSent, onCancel, isDM }) {
-  const [recipientType, setRecipientType] = useState('npc');
+  const [recipientType, setRecipientType] = useState(isDM ? 'player' : 'npc');
   const [recipientName, setRecipientName] = useState('');
   const [recipientId, setRecipientId]     = useState('');
   const [subject, setSubject]             = useState('');
@@ -79,12 +79,12 @@ function ComposeForm({ char, campaignId, npcs, players, onSent, onCancel, isDM }
 
   const send = async () => {
   if (!body.trim() || !recipientName.trim()) return;
-  if (recipientType === 'player' && !warned) { setWarned(true); return; }
+  if (!isDM && recipientType === 'player' && !warned) { setWarned(true); return; }
   setSending(true);
   await supabase.from('larks').insert({
     campaign_id:    String(campaignId),
     sender_id:      char?.id ? String(char.id) : null,
-    sender_name:    char?.name || 'Unknown',
+    sender_name:    isDM ? 'The Architect' : (char?.name || 'Unknown'),
     recipient_type: recipientType,
     recipient_name: recipientName.trim(),
     recipient_id:   recipientType === 'player' ? recipientId : null, // Set recipient_id for player larks
@@ -328,11 +328,11 @@ export default function LarkPanel({ char, campaignId, isDM = false, embedded = f
   const sentLarks = larks.filter(l => l.sender_id === charIdStr);
 
   const tabs = isDM
-    ? [['all', 'All Larks'], ['npc', 'NPC Replies Needed']]
+    ? [['all', 'All Larks'], ['npc', 'NPC Replies Needed'], ['compose', 'Whisper']]
     : [['inbox', `Inbox (${inboxLarks.length})`], ['sent', 'Sent']];
 
   const displayLarks = isDM
-    ? (tab === 'npc' ? larks.filter(l => l.recipient_type === 'npc' && l.status !== 'replied') : larks)
+    ? (tab === 'compose' ? [] : tab === 'npc' ? larks.filter(l => l.recipient_type === 'npc' && l.status !== 'replied') : larks)
     : (tab === 'inbox' ? inboxLarks : sentLarks);
 
   const inner = (
@@ -357,14 +357,14 @@ export default function LarkPanel({ char, campaignId, isDM = false, embedded = f
 
       {/* Body */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
-        {composing && !isDM && (
+        {(composing || (isDM && tab === 'compose')) && (
           <div style={{ marginBottom: 14 }}>
             <ComposeForm
               char={char}
               campaignId={campaignId}
               npcs={npcs}
               players={players}
-              onSent={() => { setComposing(false); loadLarks(); setTab('sent'); }}
+              onSent={() => { setComposing(false); loadLarks(); setTab(isDM ? 'all' : 'sent'); }}
               onCancel={() => setComposing(false)}
               isDM={isDM}
             />

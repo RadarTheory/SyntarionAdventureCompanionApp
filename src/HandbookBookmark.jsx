@@ -10,6 +10,8 @@ import { COLORS, RACES, CLASSES, GODS, SPIRITS, UNAFFILIATED, PROGRESSION } from
 
 
 const LIVE_DIRECTIVE_RE = /^\s*\[\[(syntarion|supabase):([a-z_-]+)\]\]\s*$/i;
+const HANDBOOK_HTML_PREFIX = '<!-- syntarion:handbook-html -->';
+const HANDBOOK_TRANSPARENT_IMAGES_FLAG = '<!-- syntarion:transparent-images -->';
 
 function slugifyHandbookTitle(title) {
   return String(title || 'chapter')
@@ -51,6 +53,13 @@ function markdownFromHandbookLines(title, lines) {
   return ['# ' + title, ...body].join('\n\n').trim();
 }
 
+function cleanHandbookTitle(title) {
+  return String(title || '')
+    .replace(/^\d+\s+/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function splitHandbookRawText(rawText) {
   const lines = String(rawText || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
   const tocStart = lines.findIndex(line => normalizeHandbookLine(line) === 'glossary');
@@ -62,12 +71,12 @@ function splitHandbookRawText(rawText) {
   for (let i = 0; i < tocLines.length; i++) {
     const combined = tocLines[i].match(/^(\d+)\s+(.+)$/);
     if (combined) {
-      entries.push({ order: Number(combined[1]), title: combined[2].trim() });
+      entries.push({ order: Number(combined[1]), title: cleanHandbookTitle(combined[2]) });
       continue;
     }
     const numberOnly = tocLines[i].match(/^(\d+)$/);
     if (numberOnly && tocLines[i + 1] && !/^\d+/.test(tocLines[i + 1])) {
-      entries.push({ order: Number(numberOnly[1]), title: tocLines[i + 1].trim() });
+      entries.push({ order: Number(numberOnly[1]), title: cleanHandbookTitle(tocLines[i + 1]) });
       i += 1;
     }
   }
@@ -98,7 +107,219 @@ function splitHandbookRawText(rawText) {
   });
 }
 
+function findHandbookChapter(parsed, active) {
+  if (!active) return null;
+  const activeSlug = slugifyHandbookTitle(active.slug || active.title);
+  const activeTitle = normalizeHandbookLine(active.title);
+  return parsed.find(chapter => chapter.slug === active.slug)
+    || parsed.find(chapter => slugifyHandbookTitle(chapter.title) === activeSlug)
+    || parsed.find(chapter => normalizeHandbookLine(chapter.title) === activeTitle)
+    || parsed.find(chapter => normalizeHandbookLine(chapter.title).includes(activeTitle) || activeTitle.includes(normalizeHandbookLine(chapter.title)));
+}
+
+const MAMMOTH_HANDBOOK_OPTIONS = {
+  styleMap: [
+    "p[style-name='Title'] => h1:fresh",
+    "p[style-name='Subtitle'] => h2:fresh",
+    "p[style-name='Heading 1'] => h1:fresh",
+    "p[style-name='Heading 2'] => h2:fresh",
+    "p[style-name='Heading 3'] => h3:fresh",
+    "b => strong",
+    "i => em",
+  ],
+  convertImage: mammoth.images.imgElement(image =>
+    image.read('base64').then(imageBuffer => ({
+      src: 'data:' + image.contentType + ';base64,' + imageBuffer,
+    }))
+  ),
+  includeDefaultStyleMap: true,
+};
+
+function splitHandbookHtmlByChapters(html, parsedChapters) {
+  if (typeof document === 'undefined') return parsedChapters;
+  const cleaned = normalizeImportedHtml(html);
+  if (!cleaned) return parsedChapters;
+
+  const doc = document.implementation.createHTMLDocument('');
+  doc.body.innerHTML = cleaned;
+  const children = Array.from(doc.body.children);
+  if (!children.length) return parsedChapters;
+
+  const tocEnd = children.findIndex(node => /page numbers/i.test(node.textContent || ''));
+  let cursor = tocEnd >= 0 ? tocEnd + 1 : 0;
+  const starts = parsedChapters.map(chapter => {
+    const title = normalizeHandbookLine(chapter.title);
+    const index = children.findIndex((node, i) => {
+      if (i < cursor) return false;
+      const text = normalizeHandbookLine(node.textContent);
+      return text === title || text.startsWith(title + ' ') || text.includes(title);
+    });
+    if (index >= 0) cursor = index + 1;
+    return { ...chapter, index };
+  });
+
+  if (starts.some(chapter => chapter.index < 0)) return parsedChapters;
+
+  return starts.map((chapter, i) => {
+    const next = starts[i + 1]?.index ?? children.length;
+    const sectionHtml = children.slice(chapter.index, next).map(node => node.outerHTML).join('\n');
+    const content = normalizeImportedHtml(sectionHtml);
+    return {
+      ...chapter,
+      content: content ? HANDBOOK_HTML_PREFIX + '\n' + content : chapter.content,
+    };
+  });
+}
+
+async function parseHandbookDocx(arrayBuffer) {
+  const { value } = await mammoth.extractRawText({ arrayBuffer });
+  const parsed = splitHandbookRawText(value);
+  try {
+    const result = await mammoth.convertToHtml({ arrayBuffer }, MAMMOTH_HANDBOOK_OPTIONS);
+    return splitHandbookHtmlByChapters(result.value, parsed);
+  } catch (err) {
+    console.warn('Rich handbook import failed; falling back to raw text import.', err);
+    return parsed;
+  }
+}
+
+function hasTransparentImagesFlag(content) {
+  return String(content || '').includes(HANDBOOK_TRANSPARENT_IMAGES_FLAG);
+}
+
+function setTransparentImagesFlag(content, enabled) {
+  const withoutFlag = String(content || '').replace(HANDBOOK_TRANSPARENT_IMAGES_FLAG, '').trimStart();
+  return enabled ? HANDBOOK_TRANSPARENT_IMAGES_FLAG + '\n' + withoutFlag : withoutFlag;
+}
+
+function normalizeImportedHtml(html) {
+  const raw = String(html || '').trim();
+  if (!raw) return '';
+  if (typeof document === 'undefined') {
+    return raw
+      .replace(/<p>\s*<\/p>/gi, '')
+      .replace(/<p><br\s*\/?><\/p>/gi, '')
+      .trim();
+  }
+
+  const doc = document.implementation.createHTMLDocument('');
+  doc.body.innerHTML = raw;
+  doc.querySelectorAll('script, style, meta, link, o\\:p').forEach(node => node.remove());
+
+  const allowedTags = new Set(['A', 'B', 'BLOCKQUOTE', 'BR', 'DIV', 'EM', 'H1', 'H2', 'H3', 'H4', 'I', 'IMG', 'LI', 'OL', 'P', 'SPAN', 'STRONG', 'TABLE', 'TBODY', 'TD', 'TH', 'THEAD', 'TR', 'U', 'UL']);
+  const allowedAttrs = new Set(['href', 'src', 'alt', 'colspan', 'rowspan']);
+  doc.body.querySelectorAll('*').forEach(node => {
+    if (!allowedTags.has(node.tagName)) {
+      node.replaceWith(...Array.from(node.childNodes));
+      return;
+    }
+    Array.from(node.attributes).forEach(attr => {
+      const name = attr.name.toLowerCase();
+      if (!allowedAttrs.has(name)) node.removeAttribute(attr.name);
+    });
+    if (node.tagName === 'A' && node.getAttribute('href')) {
+      node.setAttribute('target', '_blank');
+      node.setAttribute('rel', 'noreferrer');
+    }
+    if (node.tagName === 'IMG') {
+      const src = node.getAttribute('src') || '';
+      if (!src || (!/^data:image\//i.test(src) && !/^https?:\/\//i.test(src))) node.remove();
+    }
+  });
+
+  doc.body.querySelectorAll('p, div, span, li, td, th').forEach(node => {
+    if (!node.textContent.trim() && !node.querySelector('img, table')) node.remove();
+  });
+
+  return doc.body.innerHTML
+    .replace(/<p>\s*<\/p>/gi, '')
+    .replace(/<p><br\s*\/?><\/p>/gi, '')
+    .trim();
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function textToHtmlParagraphs(value) {
+  return String(value || '')
+    .split(/\n{2,}/)
+    .map(block => '<p>' + escapeHtml(block).replace(/\n/g, '<br>') + '</p>')
+    .join('\n');
+}
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error || new Error('Could not read pasted image.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function clipboardImageItemsToHtml(items) {
+  const images = [];
+  for (const item of Array.from(items || [])) {
+    if (item.kind === 'file' && /^image\//i.test(item.type || '')) {
+      const file = item.getAsFile();
+      if (file) images.push('<p><img src="' + await fileToDataUrl(file) + '" alt="" /></p>');
+    }
+  }
+  return images.join('\n');
+}
+async function parseClipboardHtml(event) {
+  const clipboard = event.clipboardData;
+  const html = clipboard?.getData('text/html') || '';
+  const plain = clipboard?.getData('text/plain') || '';
+  const imageHtml = await clipboardImageItemsToHtml(clipboard?.items);
+  const body = normalizeImportedHtml(html || textToHtmlParagraphs(plain));
+  const combined = normalizeImportedHtml([body, imageHtml].filter(Boolean).join('\n'));
+  if (!combined) throw new Error('The clipboard did not contain readable Word/Docs content.');
+  return HANDBOOK_HTML_PREFIX + '\n' + combined;
+}
+async function parseSingleChapterDocx(arrayBuffer) {
+  const result = await mammoth.convertToHtml({ arrayBuffer }, MAMMOTH_HANDBOOK_OPTIONS);
+  const html = normalizeImportedHtml(result.value);
+  if (!html) throw new Error('That Word document did not contain readable handbook content.');
+  return HANDBOOK_HTML_PREFIX + '\n' + html;
+}
+
+function HandbookHtmlContent({ content, darkMode, isMobile, theme }) {
+  const transparentImages = hasTransparentImagesFlag(content);
+  const html = String(content || '').replace(HANDBOOK_TRANSPARENT_IMAGES_FLAG, '').replace(HANDBOOK_HTML_PREFIX, '').trim();
+  const scope = 'hb-word-content';
+  const css = [
+    '.' + scope + ' { color: ' + theme.ink + '; font-family: Georgia, serif; font-size: 14px; line-height: 1.62; }',
+    '.' + scope + ' h1, .' + scope + ' h2, .' + scope + ' h3 { font-family: Cinzel, serif; color: ' + theme.ink + '; letter-spacing: 0.04em; }',
+    '.' + scope + ' h1 { font-size: ' + (isMobile ? 18 : 22) + 'px; text-align: center; margin: 24px 0 18px; }',
+    '.' + scope + ' h2 { font-size: ' + (isMobile ? 15 : 18) + 'px; margin: 24px 0 12px; }',
+    '.' + scope + ' h3 { font-size: 12px; text-transform: uppercase; color: ' + theme.sectionColor + '; margin: 20px 0 10px; }',
+    '.' + scope + ' p { margin: 8px 0; }',
+    '.' + scope + ' strong { font-weight: 700; }',
+    '.' + scope + ' em { font-style: italic; }',
+    '.' + scope + ' img { display: block; max-width: min(100%, 220px); height: auto; margin: 10px auto 14px; object-fit: contain; background: transparent; ' + (transparentImages ? 'mix-blend-mode: multiply; filter: contrast(1.18);' : '') + ' }',
+    '.' + scope + ' table { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 18px 0; background: ' + (darkMode ? 'rgba(240,238,235,0.025)' : 'rgba(255,250,241,0.65)') + '; }',
+    '.' + scope + ' td, .' + scope + ' th { border: 1px solid ' + theme.borderMid + '; padding: ' + (isMobile ? 7 : 9) + 'px; vertical-align: top; color: ' + theme.ink + '; font-size: ' + (isMobile ? 11 : 12) + 'px; line-height: 1.35; }',
+    '.' + scope + ' th { background: ' + (darkMode ? 'rgba(240,238,235,0.05)' : '#efe2cf') + '; font-family: Cinzel, serif; font-size: 10px; }',
+    '.' + scope + ' td p, .' + scope + ' th p { margin: 0 0 6px; }',
+    '.' + scope + ' td img, .' + scope + ' th img { max-width: 150px; margin: 8px auto; }',
+    '.' + scope + ' ul, .' + scope + ' ol { padding-left: 22px; }',
+  ].join('\n');
+  return (
+    <div className={scope}>
+      <style>{css}</style>
+      <div dangerouslySetInnerHTML={{ __html: html }} />
+    </div>
+  );
+}
 function LiveMarkdown({ content, mdComponents, active, darkMode, isMobile, theme }) {
+  if (String(content || '').startsWith(HANDBOOK_HTML_PREFIX)) {
+    return <HandbookHtmlContent content={content} darkMode={darkMode} isMobile={isMobile} theme={theme} />;
+  }
   const parts = String(content || '').split(/(\[\[(?:syntarion|supabase):[a-z_-]+\]\])/gi);
   const hasDirective = parts.some(part => LIVE_DIRECTIVE_RE.test(part));
   const isGlossary = /glossary/i.test(active?.slug || '') || /glossary/i.test(active?.title || '');
@@ -277,8 +498,10 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
   const [importStatus, setImportStatus] = useState('');
   const [bulkImportStatus, setBulkImportStatus] = useState('');
   const [bulkImporting, setBulkImporting] = useState(false);
+  const [richPasteOpen, setRichPasteOpen] = useState(false);
   const contentRef = useRef(null);
   const fileRef = useRef(null);
+  const pasteRef = useRef(null);
   const bulkFileRef = useRef(null);
 
   const canEdit = allowEdit === true;
@@ -315,6 +538,10 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
   useEffect(() => {
     if (activeSlug) localStorage.setItem('syntarion_handbook_chapter', activeSlug);
   }, [activeSlug]);
+
+  useEffect(() => {
+    if (openSignal) handleOpen();
+  }, [openSignal]);
 
   useEffect(() => {
     if (!open) return;
@@ -366,8 +593,18 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
     const ext = name.split('.').pop()?.toLowerCase();
     if (ext === 'docx') {
       const arrayBuffer = await file.arrayBuffer();
-      const { value } = await mammoth.convertToMarkdown({ arrayBuffer });
-      return value.trim();
+      try {
+        const parsed = await parseHandbookDocx(arrayBuffer);
+        const matched = findHandbookChapter(parsed, active);
+        if (!matched) {
+          const available = parsed.slice(0, 12).map(chapter => chapter.title).join(', ');
+          throw new Error('This full handbook did not contain a section matching "' + (active?.title || 'this chapter') + '". Found: ' + available + (parsed.length > 12 ? ', ...' : ''));
+        }
+        return matched.content.trim();
+      } catch (err) {
+        if (!/table of contents|numbered handbook chapters|document body/i.test(err?.message || '')) throw err;
+        return parseSingleChapterDocx(arrayBuffer);
+      }
     }
     if (ext === 'md' || ext === 'markdown' || ext === 'txt') return (await file.text()).trim();
     if (ext === 'xlsx' || ext === 'xls') {
@@ -410,6 +647,19 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
     setImportStatus('Imported into the chapter body. Save when ready.');
   };
 
+  const handleRichPaste = async (event) => {
+    event.preventDefault();
+    setImportStatus('Reading rich clipboard...');
+    try {
+      const content = await parseClipboardHtml(event);
+      setImportPreview({ name: 'Pasted Word / Docs content', content });
+      setImportStatus('Rich paste ready. Review, then apply it to this chapter.');
+      if (pasteRef.current) pasteRef.current.innerHTML = '';
+    } catch (err) {
+      setImportStatus('Paste failed: ' + (err?.message || err));
+    }
+  };
+
   const handleBulkImportPick = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !canEdit || bulkImporting) return;
@@ -417,28 +667,43 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
     setBulkImportStatus('Reading handbook...');
     try {
       const ext = file.name.split('.').pop()?.toLowerCase();
-      if (ext !== 'docx') throw new Error('Whole-handbook replacement expects the Soteria .docx file.');
+      if (ext !== 'docx') throw new Error('Use a .docx file for handbook replacement or chapter updates.');
       const arrayBuffer = await file.arrayBuffer();
-      const { value } = await mammoth.extractRawText({ arrayBuffer });
-      const parsed = splitHandbookRawText(value);
-      if (!parsed.length) throw new Error('No handbook chapters were parsed.');
-      setBulkImportStatus('Saving ' + parsed.length + ' chapters...');
-      for (const chapter of parsed) {
-        const { data: existing, error: findError } = await supabase
-          .from('handbook_chapters')
-          .select('id')
-          .eq('slug', chapter.slug)
-          .maybeSingle();
-        if (findError) throw findError;
-        const payload = { ...chapter, updated_at: new Date().toISOString() };
-        const result = existing?.id
-          ? await supabase.from('handbook_chapters').update(payload).eq('id', existing.id)
-          : await supabase.from('handbook_chapters').insert(payload);
-        if (result.error) throw result.error;
+      let parsed = null;
+      try {
+        parsed = await parseHandbookDocx(arrayBuffer);
+      } catch (err) {
+        if (!/table of contents|numbered handbook chapters|document body/i.test(err?.message || '')) throw err;
       }
-      setBulkImportStatus('Updated handbook: ' + parsed.length + ' published chapters.');
-      await fetchChapters();
-      setActiveSlug(parsed[0]?.slug || null);
+
+      if (parsed?.length) {
+        setBulkImportStatus('Saving ' + parsed.length + ' chapters...');
+        for (const chapter of parsed) {
+          const { data: existing, error: findError } = await supabase
+            .from('handbook_chapters')
+            .select('id')
+            .eq('slug', chapter.slug)
+            .maybeSingle();
+          if (findError) throw findError;
+          const payload = { ...chapter, updated_at: new Date().toISOString() };
+          const result = existing?.id
+            ? await supabase.from('handbook_chapters').update(payload).eq('id', existing.id)
+            : await supabase.from('handbook_chapters').insert(payload);
+          if (result.error) throw result.error;
+        }
+        setBulkImportStatus('Updated handbook: ' + parsed.length + ' published chapters.');
+        await fetchChapters();
+        setActiveSlug(parsed[0]?.slug || null);
+      } else {
+        if (!active?.id) throw new Error('Select a handbook chapter before importing a single-page Word document.');
+        setBulkImportStatus('Saving this Word page to ' + active.title + '...');
+        const content = await parseSingleChapterDocx(arrayBuffer);
+        const payload = { content, updated_at: new Date().toISOString() };
+        const { error } = await supabase.from('handbook_chapters').update(payload).eq('id', active.id);
+        if (error) throw error;
+        setChapters(prev => (prev || []).map(chapter => chapter.id === active.id ? { ...chapter, ...payload } : chapter));
+        setBulkImportStatus('Updated chapter: ' + active.title + '.');
+      }
     } catch (err) {
       setBulkImportStatus('Handbook import failed: ' + (err?.message || err));
     } finally {
@@ -549,12 +814,12 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
   return (
     <>
       {/* ===== BOOKMARK RIBBON ===== */}
-      {trigger !== 'none' && !open && (
+      {trigger === 'bookmark' && !open && (
         <button
           onClick={handleOpen}
           title="Player Handbook"
           style={{
-            position: 'fixed', top: 'calc(0px + env(safe-area-inset-top))', right: isMobile ? 14 : 34, zIndex: 900,
+            position: 'fixed', top: 'calc(0px + env(safe-area-inset-top))', left: isMobile ? 14 : 96, zIndex: 900,
             background: darkMode ? '#2a2118' : '#7b5a24',
             border: `1px solid ${borderMid}`, borderTop: 'none',
             borderRadius: '0 0 8px 8px',
@@ -710,16 +975,51 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
                           padding: '7px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif",
                           fontSize: 8.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText,
                         }}>Import Update</button>
-                        <div style={{ fontSize: 10, color: muted, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Use files downloaded from Drive: .docx, .md, .txt, .xlsx, or .xls.</div>
+                        <button type="button" onClick={() => { setRichPasteOpen(v => !v); setTimeout(() => pasteRef.current?.focus(), 0); }} style={{
+                          background: 'transparent', border: '1px solid ' + borderMid, borderRadius: 6,
+                          padding: '7px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif",
+                          fontSize: 8.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: sectionColor,
+                        }}>Paste From Word</button>
+                        <div style={{ fontSize: 10, color: muted, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Import a file, or paste a copied Word/Google Docs section with images.</div>
                       </div>
-                      {importStatus && <div style={{ fontSize: 10, color: importStatus.startsWith('Import failed') ? COLORS.warn : COLORS.archText, marginBottom: 8 }}>{importStatus}</div>}
+                      {importStatus && <div style={{ fontSize: 10, color: importStatus.startsWith('Import failed') || importStatus.startsWith('Paste failed') ? COLORS.warn : COLORS.archText, marginBottom: 8 }}>{importStatus}</div>}
+                      {richPasteOpen && (
+                        <div style={{ border: '1px dashed ' + borderMid, borderRadius: 8, padding: 10, marginBottom: 10, background: darkMode ? 'rgba(240,238,235,0.035)' : '#fffaf1' }}>
+                          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: sectionColor, marginBottom: 6 }}>Paste Word / Google Docs Content Here</div>
+                          <div style={{ fontSize: 10, color: muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 8 }}>Copy the section, including images, then click this box and paste. A preview will appear below.</div>
+                          <div
+                            ref={pasteRef}
+                            contentEditable
+                            suppressContentEditableWarning
+                            onPaste={handleRichPaste}
+                            style={{ minHeight: 92, outline: 'none', border: '1px solid ' + border, borderRadius: 6, padding: 10, background: darkMode ? '#1b1712' : '#f8f0e4', color: muted, fontSize: 12, lineHeight: 1.5 }}
+                          />
+                        </div>
+                      )}
+                      {draft.content?.includes(HANDBOOK_HTML_PREFIX) && (
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: hasTransparentImagesFlag(draft.content) ? COLORS.magicText : muted }}>
+                          <input
+                            type="checkbox"
+                            checked={hasTransparentImagesFlag(draft.content)}
+                            onChange={e => setDraft(d => ({ ...d, content: setTransparentImagesFlag(d.content, e.target.checked) }))}
+                            style={{ accentColor: COLORS.magic }}
+                          />
+                          Remove white image backgrounds
+                        </label>
+                      )}
                       {importPreview && (
                         <div style={{ border: '1px solid ' + border, borderRadius: 8, padding: 10, marginBottom: 10, background: darkMode ? 'rgba(240,238,235,0.035)' : '#f8f0e4' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center', marginBottom: 8 }}>
                             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', color: sectionColor, textTransform: 'uppercase' }}>{importPreview.name}</div>
                             <button type="button" onClick={applyImportToDraft} style={{ background: COLORS.deityBg, border: '1px solid ' + COLORS.deity, borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: COLORS.deityText }}>Apply</button>
                           </div>
-                          <div style={{ maxHeight: 150, overflow: 'auto', whiteSpace: 'pre-wrap', fontSize: 11, lineHeight: 1.5, color: muted }}>{importPreview.content.slice(0, 2600)}</div>
+                          {importPreview.content.startsWith(HANDBOOK_HTML_PREFIX) ? (
+                            <div style={{ maxHeight: 220, overflow: 'auto', padding: 8, background: darkMode ? 'rgba(0,0,0,0.16)' : '#fffaf1', borderRadius: 6 }}>
+                              <HandbookHtmlContent content={importPreview.content} darkMode={darkMode} isMobile={isMobile} theme={{ ink, card, surface, muted, border, borderMid, sectionColor }} />
+                            </div>
+                          ) : (
+                            <div style={{ maxHeight: 150, overflow: 'auto', whiteSpace: 'pre-wrap', fontSize: 11, lineHeight: 1.5, color: muted }}>{importPreview.content.slice(0, 2600)}</div>
+                          )}
                         </div>
                       )}
                       <textarea

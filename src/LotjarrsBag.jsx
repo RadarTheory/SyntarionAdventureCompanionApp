@@ -16,6 +16,13 @@ const GAMES = [
     icon: '/FubinIcon.png',
     dimIcon: '/Fubinicondim.png',
   },
+ {
+    id: 'elddimgates',
+    name: 'Elddimgates',
+    subtitle: 'A game of passage and authority',
+    icon: '/elddimgates-logo-lit.png',
+    dimIcon: '/elddimgates-logo.png',
+  },
 ];
 
 function BagIcon({ size = 48 }) {

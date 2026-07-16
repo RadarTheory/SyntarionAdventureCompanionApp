@@ -13,6 +13,7 @@ import Settings from './Settings';
 import LegalGate, { LEGAL_VERSION } from './LegalGate';
 import Tour, { hasSeenTour } from './Tour';
 import ScribeLite from './ScribeLite';
+import HandbookBookmark from './HandbookBookmark';
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MOVABLE DRIFTSTONE BUTTON Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 function DriftstoneButton({ onClick, isMobile }) {
@@ -931,6 +932,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
       </div>
 
       <ScribeLite />
+      <HandbookBookmark user={user} darkMode={darkMode} />
 
       <style>{`
         @keyframes fadeUp {

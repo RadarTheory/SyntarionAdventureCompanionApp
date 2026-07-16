@@ -23,6 +23,7 @@ import IntentDeclare from "./IntentDeclare";
 import PartyProximityPanel from './PartyProximityPanel';
 import PortraitUpload from "./PortraitUpload";
 import ScribeTale from './ScribeTale';
+import HandbookBookmark from './HandbookBookmark';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -2324,6 +2325,7 @@ useEffect(() => {
     showLark && 'lark',
   ].filter(Boolean);
   const [topToolId, setTopToolId] = useState(null);
+  const [handbookOpenSignal, setHandbookOpenSignal] = useState(0);
   const previousToolIds = useRef([]);
 
   useEffect(() => {
@@ -2464,8 +2466,11 @@ useEffect(() => {
           children: <img src="/Grimoireicon.png" alt="Grimoire" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
         { id: 'lark', title: 'Lark — Send a Letter', onClick: () => setShowLark(o => !o),
           children: <img src="/Larkicon.png" alt="Lark" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
+        { id: 'handbook', title: 'Player Handbook', onClick: () => setHandbookOpenSignal(n => n + 1),
+          children: <img src="/handbookicon.png" alt="Handbook" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
       ]} />
-            {showGrimoire && (
+      <HandbookBookmark user={user} darkMode={darkMode} trigger="external" openSignal={handbookOpenSignal} />
+      {showGrimoire && (
         <DraggablePanel {...panelPriority('grimoire')} defaultX={108} defaultY={80} onClose={() => setShowGrimoire(false)} title="GRIMOIRE · Adventure Journal" width={400} accentColor="rgba(121,245,167,0.35)">
           <GrimoirePanel char={userChar} campaignId={String(campaign.id)} isDM={false} embedded />
         </DraggablePanel>
@@ -2879,6 +2884,7 @@ function ModuleTalesView({ module, userChar, onBack, onUpdateChar, darkMode = fa
   const [activeTool, setActiveTool] = useState('map');
   const [inventory, setInventory] = useState({});
   const [castorBadge, setCastorBadge] = useState(0);
+  const [talesHandbookOpenSignal, setTalesHandbookOpenSignal] = useState(0);
   const page = { bg: '#14110c', panel: '#1b1712', title: '#f7efe0', muted: 'rgba(240,238,235,0.68)', faint: 'rgba(240,238,235,0.44)', line: 'rgba(240,238,235,0.16)', backText: 'rgba(240,238,235,0.78)', tab: 'rgba(240,238,235,0.06)' };
   const taleId = `tales:${module?.id || module?.name || 'soteria'}`;
   useEffect(() => {
@@ -2925,6 +2931,7 @@ function ModuleTalesView({ module, userChar, onBack, onUpdateChar, darkMode = fa
     { id: 'questor', label: 'Questor', title: 'Questor - Quest Board', icon: '/Questoricon.png' },
     { id: 'grimoire', label: 'Grimoire', title: 'Grimoire - Adventure Journal', icon: '/Grimoireicon.png' },
     { id: 'lark', label: 'Lark', title: 'Lark - Letters and NPC Messages', icon: '/Larkicon.png' },
+    { id: 'handbook', label: 'Handbook', title: 'Player Handbook', icon: '/handbookicon.png', popup: true },
     { id: 'party', label: 'Party', title: "Party - Who's Nearby", icon: '/party.png' },
     { id: 'bestiary', label: 'Bestiary', title: 'Bestiary - Creatures', icon: '/bestiaryicon.png' },
     { id: 'sheet', label: 'Sheet', title: 'Character Sheet', icon: '/npcicon.png' },
@@ -3032,10 +3039,11 @@ function ModuleTalesView({ module, userChar, onBack, onUpdateChar, darkMode = fa
           id: tool.id,
           title: tool.title,
           badge: tool.badge,
-          onClick: () => setActiveTool(tool.id),
+          onClick: () => tool.id === 'handbook' ? setTalesHandbookOpenSignal(n => n + 1) : setActiveTool(tool.id),
           children: img(tool.icon, tool.label, tool.iconStyle || {}, tool.fallbackIcon),
         }))}
       />
+      <HandbookBookmark user={null} darkMode={true} trigger="external" openSignal={talesHandbookOpenSignal} />
       <div style={{ padding: isMobile ? 'calc(16px + env(safe-area-inset-top, 0px)) 14px 12px' : '22px 28px 16px', borderBottom: `1px solid ${page.line}`, display: 'flex', alignItems: isMobile ? 'flex-start' : 'flex-end', justifyContent: 'space-between', gap: 14, flexDirection: isMobile ? 'column' : 'row' }}>
         <div>
           <button onClick={onBack} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: page.backText, padding: 0, marginBottom: 14 }}>&lt;- Campaigns</button>
