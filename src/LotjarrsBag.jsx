@@ -34,6 +34,14 @@ const GAMES = [
     dimIcon: null,
     iconScale: 1,
   },
+  {
+    id: 'ocp-nodewright',
+    name: 'Nodewright',
+    subtitle: 'Learn Java, JSON, and relay flows',
+    icon: null,
+    dimIcon: null,
+    iconScale: 1,
+  },
 ];
 
 function UndercryptsGlyph({ active }) {
@@ -49,6 +57,19 @@ function UndercryptsGlyph({ active }) {
   );
 }
 
+
+function NodewrightGlyph({ active }) {
+  return (
+    <div style={{
+      width: 54, height: 54, borderRadius: 14, display: 'grid', placeItems: 'center',
+      border: active ? '1px solid rgba(138,220,208,0.76)' : '1px solid rgba(138,220,208,0.26)',
+      background: active ? 'radial-gradient(circle, rgba(138,220,208,0.24), rgba(10,8,6,0.98) 68%)' : 'radial-gradient(circle, rgba(138,220,208,0.08), rgba(7,6,5,0.98) 70%)',
+      boxShadow: active ? '0 0 22px rgba(138,220,208,0.28), inset 0 0 18px rgba(0,0,0,0.6)' : 'inset 0 0 18px rgba(0,0,0,0.6)',
+      color: active ? '#9de1d6' : 'rgba(212,197,164,0.62)',
+      fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, letterSpacing: '0.03em',
+    }}>N</div>
+  );
+}
 function BagIcon({ size = 48 }) {
   const [failed, setFailed] = useState(false);
   if (failed) return <div style={{ width: size, height: size }} />;
@@ -154,7 +175,7 @@ function GameTile({ game, onClick }) {
           boxShadow: active ? '0 0 18px rgba(0,0,0,0.55)' : '0 0 14px rgba(0,0,0,0.48)',
           pointerEvents: 'none',
         }} />
-        {game.id === 'undercrypts' ? <UndercryptsGlyph active={active} /> : (
+        {game.id === 'undercrypts' ? <UndercryptsGlyph active={active} /> : game.id === 'ocp-nodewright' ? <NodewrightGlyph active={active} /> : (
           <img
             src={active ? game.icon : game.dimIcon}
             alt={game.name}
@@ -333,3 +354,5 @@ export default function LotjarrsBag({ onHome, onLaunchGame }) {
     </div>
   );
 }
+
+

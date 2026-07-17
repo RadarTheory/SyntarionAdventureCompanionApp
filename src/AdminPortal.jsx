@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import supabase from './lib/supabase';
 import CompendiumUpload from './CompendiumUpload';
 import PlayersPanel from './PlayersPanel';
@@ -57,6 +57,7 @@ export default function AdminPortal() {
   const [cellEdit, setCellEdit] = useState(null);
   const [cellVal_, setCellVal] = useState('');
   const [view, setView] = useState('tables');
+  const [handbookOpenSignal, setHandbookOpenSignal] = useState(0);
   const [tlCampaign, setTlCampaign] = useState('4');
   const [tlEvents, setTlEvents] = useState([]);
   const [tlClock, setTlClock] = useState(null);
@@ -260,7 +261,31 @@ export default function AdminPortal() {
 
   return (
     <>
-      <HandbookBookmark user={session.user} darkMode allowEdit />
+      <HandbookBookmark user={session.user} darkMode allowEdit trigger="external" openSignal={handbookOpenSignal} />
+      <button
+        onClick={() => setHandbookOpenSignal((n) => n + 1)}
+        title="Player Handbook"
+        style={{
+          position: 'fixed',
+          right: 'calc(18px + env(safe-area-inset-right))',
+          bottom: 'calc(18px + env(safe-area-inset-bottom))',
+          zIndex: 900,
+          background: '#2a2118',
+          border: '1px solid rgba(200,168,74,0.55)',
+          borderRadius: 8,
+          padding: '12px 16px 9px',
+          color: '#c9a961',
+          cursor: 'pointer',
+          fontFamily: "'Cinzel', serif",
+          fontSize: 9,
+          fontWeight: 700,
+          letterSpacing: '0.16em',
+          textTransform: 'uppercase',
+          boxShadow: '0 10px 28px rgba(0,0,0,0.45)',
+        }}
+      >
+        Handbook
+      </button>
       <div style={{ minHeight: '100vh', background: '#0a0806', color: '#f0eeeb', fontFamily: 'monospace', display: 'flex' }}>
       <div style={{ width: 200, borderRight: '1px solid #2a251e', padding: 12, display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, height: '100vh', overflowY: 'auto', position: 'sticky', top: 0 }}>
         <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>

@@ -2326,6 +2326,10 @@ useEffect(() => {
   ].filter(Boolean);
   const [topToolId, setTopToolId] = useState(null);
   const [handbookOpenSignal, setHandbookOpenSignal] = useState(0);
+  const [authUser, setAuthUser] = useState(null);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setAuthUser(data?.user || null));
+  }, []);
   const previousToolIds = useRef([]);
 
   useEffect(() => {
@@ -2469,7 +2473,7 @@ useEffect(() => {
         { id: 'handbook', title: 'Player Handbook', onClick: () => setHandbookOpenSignal(n => n + 1),
           children: <img src="/handbookicon.png" alt="Handbook" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
       ]} />
-      <HandbookBookmark user={user} darkMode={darkMode} trigger="external" openSignal={handbookOpenSignal} />
+      <HandbookBookmark user={authUser} darkMode={false} trigger="external" openSignal={handbookOpenSignal} />
       {showGrimoire && (
         <DraggablePanel {...panelPriority('grimoire')} defaultX={108} defaultY={80} onClose={() => setShowGrimoire(false)} title="GRIMOIRE · Adventure Journal" width={400} accentColor="rgba(121,245,167,0.35)">
           <GrimoirePanel char={userChar} campaignId={String(campaign.id)} isDM={false} embedded />
