@@ -11,6 +11,7 @@ import { COLORS, RACES, CLASSES, GODS, SPIRITS, UNAFFILIATED, PROGRESSION } from
 
 const LIVE_DIRECTIVE_RE = /^\s*\[\[(syntarion|supabase):([a-z_-]+)\]\]\s*$/i;
 const HANDBOOK_HTML_PREFIX = '<!-- syntarion:handbook-html -->';
+const HANDBOOK_PDF_PREFIX = '<!-- syntarion:handbook-pdf -->';
 const HANDBOOK_TRANSPARENT_IMAGES_FLAG = '<!-- syntarion:transparent-images -->';
 
 function slugifyHandbookTitle(title) {
@@ -192,6 +193,28 @@ function setTransparentImagesFlag(content, enabled) {
   return enabled ? HANDBOOK_TRANSPARENT_IMAGES_FLAG + '\n' + withoutFlag : withoutFlag;
 }
 
+function makeHandbookPdfContent(meta) {
+  return HANDBOOK_PDF_PREFIX + '\n' + JSON.stringify(meta);
+}
+
+function parseHandbookPdfContent(content) {
+  const raw = String(content || '').trim();
+  if (!raw.startsWith(HANDBOOK_PDF_PREFIX)) return null;
+  try {
+    return JSON.parse(raw.replace(HANDBOOK_PDF_PREFIX, '').trim());
+  } catch {
+    return null;
+  }
+}
+
+function safePdfFileName(name) {
+  return String(name || 'handbook.pdf')
+    .replace(/\.pdf$/i, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'handbook';
+}
+
 function normalizeImportedHtml(html) {
   const raw = String(html || '').trim();
   if (!raw) return '';
@@ -288,6 +311,44 @@ async function parseSingleChapterDocx(arrayBuffer) {
   return HANDBOOK_HTML_PREFIX + '\n' + html;
 }
 
+function HandbookPdfContent({ content, darkMode, isMobile, theme }) {
+  const meta = parseHandbookPdfContent(content);
+  if (!meta?.url) {
+    return <LiveBlockHeader title="PDF unavailable" subtitle="This handbook entry points to a PDF, but the file reference could not be read." theme={theme} warn />;
+  }
+  const src = meta.url + (meta.url.includes('#') ? '&' : '#') + 'toolbar=0&navpanes=0&scrollbar=1&view=FitH';
+  return (
+    <section
+      onContextMenu={e => e.preventDefault()}
+      onDragStart={e => e.preventDefault()}
+      style={{
+        userSelect: 'none', WebkitUserSelect: 'none',
+        border: '1px solid ' + theme.borderMid, borderRadius: 12, overflow: 'hidden',
+        background: darkMode ? '#0c0906' : '#efe7d8',
+        boxShadow: darkMode ? '0 18px 42px rgba(0,0,0,0.45)' : '0 12px 28px rgba(26,23,20,0.12)',
+      }}
+    >
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center',
+        padding: '10px 14px', borderBottom: '1px solid ' + theme.border,
+        background: darkMode ? 'rgba(240,238,235,0.035)' : '#f8f0e4',
+      }}>
+        <div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: theme.sectionColor }}>Protected PDF View</div>
+          <div style={{ marginTop: 3, fontSize: 11, color: theme.muted, fontStyle: 'italic' }}>{meta.name || 'Player Handbook PDF'}</div>
+        </div>
+        <div style={{ fontSize: 10, color: theme.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'right' }}>Right-click and drag saving are disabled in-app.</div>
+      </div>
+      <iframe
+        title={meta.name || 'Player Handbook PDF'}
+        src={src}
+        draggable={false}
+        style={{ width: '100%', height: isMobile ? '68dvh' : '70dvh', border: 0, display: 'block', background: '#f5efe4' }}
+      />
+    </section>
+  );
+}
+
 function HandbookHtmlContent({ content, darkMode, isMobile, theme }) {
   const transparentImages = hasTransparentImagesFlag(content);
   const html = String(content || '').replace(HANDBOOK_TRANSPARENT_IMAGES_FLAG, '').replace(HANDBOOK_HTML_PREFIX, '').trim();
@@ -317,10 +378,14 @@ function HandbookHtmlContent({ content, darkMode, isMobile, theme }) {
   );
 }
 function LiveMarkdown({ content, mdComponents, active, darkMode, isMobile, theme }) {
-  if (String(content || '').startsWith(HANDBOOK_HTML_PREFIX)) {
-    return <HandbookHtmlContent content={content} darkMode={darkMode} isMobile={isMobile} theme={theme} />;
+  const rawContent = String(content || '').trim();
+  if (rawContent.startsWith(HANDBOOK_PDF_PREFIX)) {
+    return <HandbookPdfContent content={rawContent} darkMode={darkMode} isMobile={isMobile} theme={theme} />;
   }
-  const parts = String(content || '').split(/(\[\[(?:syntarion|supabase):[a-z_-]+\]\])/gi);
+  if (rawContent.startsWith(HANDBOOK_HTML_PREFIX)) {
+    return <HandbookHtmlContent content={rawContent} darkMode={darkMode} isMobile={isMobile} theme={theme} />;
+  }
+  const parts = rawContent.split(/(\[\[(?:syntarion|supabase):[a-z_-]+\]\])/gi);
   const hasDirective = parts.some(part => LIVE_DIRECTIVE_RE.test(part));
   const isGlossary = /glossary/i.test(active?.slug || '') || /glossary/i.test(active?.title || '');
 
@@ -588,9 +653,32 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
 
   const cancelEdit = () => { setEditing(false); setDraft(null); setSaveStatus(''); setImportPreview(null); setImportStatus(''); };
 
+  const uploadHandbookPdf = async (file, scope = 'chapter') => {
+    if (!file) throw new Error('Choose a PDF file.');
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext !== 'pdf' && file.type !== 'application/pdf') throw new Error('Use a .pdf file.');
+    const base = safePdfFileName(file.name);
+    const chapterSlug = slugifyHandbookTitle(active?.slug || active?.title || scope);
+    const storagePath = 'handbook/' + scope + '/' + chapterSlug + '-' + Date.now() + '-' + base + '.pdf';
+    const buckets = ['dm_assets', 'portraits'];
+    let uploadedBucket = '';
+    let uploadError = null;
+    for (const bucket of buckets) {
+      const { error } = await supabase.storage.from(bucket).upload(storagePath, file, { upsert: true, contentType: 'application/pdf' });
+      if (!error) { uploadedBucket = bucket; break; }
+      uploadError = error;
+      if (!/bucket not found/i.test(error.message || '')) break;
+    }
+    if (!uploadedBucket) throw uploadError || new Error('Could not upload PDF.');
+    const { data } = supabase.storage.from(uploadedBucket).getPublicUrl(storagePath);
+    if (!data?.publicUrl) throw new Error('PDF uploaded, but no public URL was returned.');
+    return makeHandbookPdfContent({ type: scope, name: file.name, bucket: uploadedBucket, path: storagePath, url: data.publicUrl, uploaded_at: new Date().toISOString() });
+  };
+
   const parseHandbookFile = async (file) => {
     const name = file.name || 'handbook-update';
     const ext = name.split('.').pop()?.toLowerCase();
+    if (ext === 'pdf') return uploadHandbookPdf(file, 'chapter');
     if (ext === 'docx') {
       const arrayBuffer = await file.arrayBuffer();
       try {
@@ -621,7 +709,7 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
         return '# ' + sheetName + '\n\n' + table;
       }).filter(Boolean).join('\n\n');
     }
-    throw new Error('Use a .docx, .md, .txt, .xlsx, or .xls file.');
+    throw new Error('Use a .pdf, .docx, .md, .txt, .xlsx, or .xls file.');
   };
 
   const handleImportPick = async (e) => {
@@ -667,7 +755,35 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
     setBulkImportStatus('Reading handbook...');
     try {
       const ext = file.name.split('.').pop()?.toLowerCase();
-      if (ext !== 'docx') throw new Error('Use a .docx file for handbook replacement or chapter updates.');
+      if (ext === 'pdf') {
+        setBulkImportStatus('Uploading PDF handbook...');
+        const content = await uploadHandbookPdf(file, 'book');
+        const slug = '00-full-handbook-pdf';
+        const payload = {
+          slug,
+          title: 'Full Handbook PDF',
+          subtitle: 'Soteria Player Handbook | PDF Edition',
+          chapter_order: 0,
+          content,
+          is_published: true,
+          updated_at: new Date().toISOString(),
+        };
+        const { data: existing, error: findError } = await supabase
+          .from('handbook_chapters')
+          .select('id')
+          .eq('slug', slug)
+          .maybeSingle();
+        if (findError) throw findError;
+        const result = existing?.id
+          ? await supabase.from('handbook_chapters').update(payload).eq('id', existing.id)
+          : await supabase.from('handbook_chapters').insert(payload);
+        if (result.error) throw result.error;
+        setBulkImportStatus('Updated handbook PDF.');
+        await fetchChapters();
+        setActiveSlug(slug);
+        return;
+      }
+      if (ext !== 'docx') throw new Error('Use a .pdf or .docx file for handbook replacement or chapter updates.');
       const arrayBuffer = await file.arrayBuffer();
       let parsed = null;
       try {
@@ -872,13 +988,13 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 {canEdit && !editing && (
                   <>
-                    <input ref={bulkFileRef} type="file" accept=".docx" onChange={handleBulkImportPick} style={{ display: 'none' }} />
+                    <input ref={bulkFileRef} type="file" onChange={handleBulkImportPick} style={{ display: 'none' }} />
                     <button onClick={() => bulkFileRef.current?.click()} disabled={bulkImporting} style={{
                       background: COLORS.magicBg, border: '1px solid ' + COLORS.magic, borderRadius: 6,
                       padding: '7px 14px', cursor: bulkImporting ? 'default' : 'pointer', fontFamily: "'Cinzel', serif",
                       fontSize: 8.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.magicText,
                       opacity: bulkImporting ? 0.58 : 1,
-                    }}>{bulkImporting ? 'Importing...' : 'Replace Handbook'}</button>
+                    }}>{bulkImporting ? 'Importing...' : 'Replace PDF / Word'}</button>
                   </>
                 )}
                 {canEdit && active && !editing && (
@@ -969,18 +1085,18 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
                   {editField('Chapter Body', (
                     <>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
-                        <input ref={fileRef} type="file" accept=".docx,.md,.markdown,.txt,.xlsx,.xls" onChange={handleImportPick} style={{ display: 'none' }} />
+                        <input ref={fileRef} type="file" onChange={handleImportPick} style={{ display: 'none' }} />
                         <button type="button" onClick={() => fileRef.current?.click()} style={{
                           background: COLORS.magicBg, border: '1px solid ' + COLORS.magic, borderRadius: 6,
                           padding: '7px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif",
                           fontSize: 8.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText,
-                        }}>Import Update</button>
+                        }}>Import PDF / File</button>
                         <button type="button" onClick={() => { setRichPasteOpen(v => !v); setTimeout(() => pasteRef.current?.focus(), 0); }} style={{
                           background: 'transparent', border: '1px solid ' + borderMid, borderRadius: 6,
                           padding: '7px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif",
                           fontSize: 8.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: sectionColor,
                         }}>Paste From Word</button>
-                        <div style={{ fontSize: 10, color: muted, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Import a file, or paste a copied Word/Google Docs section with images.</div>
+                        <div style={{ fontSize: 10, color: muted, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Upload a PDF for this entry, import a file, or paste a copied Word/Google Docs section with images.</div>
                       </div>
                       {importStatus && <div style={{ fontSize: 10, color: importStatus.startsWith('Import failed') || importStatus.startsWith('Paste failed') ? COLORS.warn : COLORS.archText, marginBottom: 8 }}>{importStatus}</div>}
                       {richPasteOpen && (
@@ -1013,7 +1129,11 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
                             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', color: sectionColor, textTransform: 'uppercase' }}>{importPreview.name}</div>
                             <button type="button" onClick={applyImportToDraft} style={{ background: COLORS.deityBg, border: '1px solid ' + COLORS.deity, borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: COLORS.deityText }}>Apply</button>
                           </div>
-                          {importPreview.content.startsWith(HANDBOOK_HTML_PREFIX) ? (
+                          {importPreview.content.startsWith(HANDBOOK_PDF_PREFIX) ? (
+                            <div style={{ maxHeight: 300, overflow: 'hidden', borderRadius: 6 }}>
+                              <HandbookPdfContent content={importPreview.content} darkMode={darkMode} isMobile={isMobile} theme={{ ink, card, surface, muted, border, borderMid, sectionColor }} />
+                            </div>
+                          ) : importPreview.content.startsWith(HANDBOOK_HTML_PREFIX) ? (
                             <div style={{ maxHeight: 220, overflow: 'auto', padding: 8, background: darkMode ? 'rgba(0,0,0,0.16)' : '#fffaf1', borderRadius: 6 }}>
                               <HandbookHtmlContent content={importPreview.content} darkMode={darkMode} isMobile={isMobile} theme={{ ink, card, surface, muted, border, borderMid, sectionColor }} />
                             </div>

@@ -2326,10 +2326,6 @@ useEffect(() => {
   ].filter(Boolean);
   const [topToolId, setTopToolId] = useState(null);
   const [handbookOpenSignal, setHandbookOpenSignal] = useState(0);
-  const [authUser, setAuthUser] = useState(null);
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setAuthUser(data?.user || null));
-  }, []);
   const previousToolIds = useRef([]);
 
   useEffect(() => {

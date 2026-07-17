@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="stone" x1="20" y1="8" x2="108" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4b5350"/>
+      <stop offset="0.56" stop-color="#151b19"/>
+      <stop offset="1" stop-color="#080a09"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="34" y1="16" x2="95" y2="113" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f4d27a"/>
+      <stop offset="0.48" stop-color="#a87320"/>
+      <stop offset="1" stop-color="#fff0a8"/>
+    </linearGradient>
+    <linearGradient id="blade" x1="51" y1="45" x2="80" y2="111" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f7fbf3"/>
+      <stop offset="0.5" stop-color="#88918e"/>
+      <stop offset="1" stop-color="#d8e4df"/>
+    </linearGradient>
+  </defs>
+  <path d="M64 7 104 28v46c0 24-16 39-40 48-24-9-40-24-40-48V28L64 7Z" fill="url(#stone)" stroke="#111" stroke-width="4"/>
+  <path d="M64 14 96 32v41c0 18-11 31-32 40-21-9-32-22-32-40V32l32-18Z" fill="none" stroke="url(#gold)" stroke-width="4"/>
+  <path d="M64 25v25" stroke="url(#gold)" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="64" cy="26" r="8" fill="#070a09" stroke="url(#gold)" stroke-width="5"/>
+  <path d="M43 56h42l-7 9H50l-7-9Z" fill="url(#gold)" stroke="#3a2509" stroke-width="2"/>
+  <path d="M64 55 80 70 64 118 48 70 64 55Z" fill="url(#blade)" stroke="#101312" stroke-width="3"/>
+  <path d="M64 64v38" stroke="#1dd8d0" stroke-width="3" stroke-linecap="round"/>
+  <path d="M64 71 70 78 64 85 58 78 64 71Z" fill="#0b1515" stroke="#1dd8d0" stroke-width="3"/>
+  <path d="M42 25v20M86 25v20M42 45h12M86 45H74" stroke="url(#gold)" stroke-width="4" stroke-linecap="round"/>
+</svg>

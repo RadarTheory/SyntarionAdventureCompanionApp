@@ -8,7 +8,7 @@ const GAMES = [
     subtitle: 'A two-player strategy of stone and tide',
     icon: '/Driftstoneicon.png',
     dimIcon: '/Driftstoneicondim.png',
-    iconScale: 1.18,
+    iconScale: 1.68,
   },
   {
     id: 'fubin',
@@ -24,52 +24,26 @@ const GAMES = [
     subtitle: 'A game of passage and authority',
     icon: '/elddimgates-logo-lit.png',
     dimIcon: '/elddimgates-logo.png',
-    iconScale: 0.98,
+    iconScale: 1.28,
   },
   {
     id: 'undercrypts',
     name: 'Undercrypts',
     subtitle: 'Descend, survive, return changed',
-    icon: null,
-    dimIcon: null,
-    iconScale: 1,
+    icon: '/undercrypts-logo-lit.svg',
+    dimIcon: '/undercrypts-logo.svg',
+    iconScale: 1.08,
   },
   {
     id: 'ocp-nodewright',
     name: 'Nodewright',
-    subtitle: 'Learn Java, JSON, and relay flows',
-    icon: null,
-    dimIcon: null,
-    iconScale: 1,
+    subtitle: 'Mimic the weaver\'s code, seal the relay',
+    icon: '/nodewright-logo-lit.svg',
+    dimIcon: '/nodewright-logo.svg',
+    iconScale: 1.08,
   },
 ];
 
-function UndercryptsGlyph({ active }) {
-  return (
-    <div style={{
-      width: 54, height: 54, borderRadius: 14, display: 'grid', placeItems: 'center',
-      border: active ? '1px solid rgba(239,211,122,0.72)' : '1px solid rgba(200,168,74,0.28)',
-      background: active ? 'radial-gradient(circle, rgba(239,211,122,0.24), rgba(10,8,6,0.98) 68%)' : 'radial-gradient(circle, rgba(200,168,74,0.08), rgba(7,6,5,0.98) 70%)',
-      boxShadow: active ? '0 0 22px rgba(239,211,122,0.28), inset 0 0 18px rgba(0,0,0,0.6)' : 'inset 0 0 18px rgba(0,0,0,0.6)',
-      color: active ? '#f2d96f' : 'rgba(212,197,164,0.62)',
-      fontFamily: "'Cinzel', serif", fontSize: 24, fontWeight: 700, letterSpacing: '0.03em',
-    }}>U</div>
-  );
-}
-
-
-function NodewrightGlyph({ active }) {
-  return (
-    <div style={{
-      width: 54, height: 54, borderRadius: 14, display: 'grid', placeItems: 'center',
-      border: active ? '1px solid rgba(138,220,208,0.76)' : '1px solid rgba(138,220,208,0.26)',
-      background: active ? 'radial-gradient(circle, rgba(138,220,208,0.24), rgba(10,8,6,0.98) 68%)' : 'radial-gradient(circle, rgba(138,220,208,0.08), rgba(7,6,5,0.98) 70%)',
-      boxShadow: active ? '0 0 22px rgba(138,220,208,0.28), inset 0 0 18px rgba(0,0,0,0.6)' : 'inset 0 0 18px rgba(0,0,0,0.6)',
-      color: active ? '#9de1d6' : 'rgba(212,197,164,0.62)',
-      fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, letterSpacing: '0.03em',
-    }}>N</div>
-  );
-}
 function BagIcon({ size = 48 }) {
   const [failed, setFailed] = useState(false);
   if (failed) return <div style={{ width: size, height: size }} />;
@@ -175,27 +149,25 @@ function GameTile({ game, onClick }) {
           boxShadow: active ? '0 0 18px rgba(0,0,0,0.55)' : '0 0 14px rgba(0,0,0,0.48)',
           pointerEvents: 'none',
         }} />
-        {game.id === 'undercrypts' ? <UndercryptsGlyph active={active} /> : game.id === 'ocp-nodewright' ? <NodewrightGlyph active={active} /> : (
-          <img
-            src={active ? game.icon : game.dimIcon}
-            alt={game.name}
-            draggable={false}
-            style={{
-              width: 84,
-              height: 84,
-              objectFit: 'contain',
-              transform: 'scale(' + (game.iconScale || 1) + ')',
-              filter: active
-                ? 'drop-shadow(0 0 12px rgba(255,205,76,0.46)) saturate(1.16) contrast(1.05)'
-                : 'brightness(0.76) contrast(1.06) saturate(0.78)',
-              mixBlendMode: 'screen',
-              position: 'relative',
-              zIndex: 1,
-              opacity: active ? 1 : 0.78,
-              transition: 'opacity 180ms ease, filter 180ms ease, transform 180ms ease',
-            }}
-          />
-        )}
+        <img
+          src={active ? game.icon : game.dimIcon}
+          alt={game.name}
+          draggable={false}
+          style={{
+            width: 84,
+            height: 84,
+            objectFit: 'contain',
+            transform: 'scale(' + (game.iconScale || 1) + ')',
+            filter: active
+              ? 'drop-shadow(0 0 12px rgba(255,205,76,0.46)) saturate(1.16) contrast(1.05)'
+              : 'brightness(0.76) contrast(1.06) saturate(0.78)',
+            mixBlendMode: 'screen',
+            position: 'relative',
+            zIndex: 1,
+            opacity: active ? 1 : 0.78,
+            transition: 'opacity 180ms ease, filter 180ms ease, transform 180ms ease',
+          }}
+        />
       </div>
       <div style={{ textAlign: 'center' }}>
         <div style={{

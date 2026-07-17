@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="plate" x1="12" y1="12" x2="116" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#263735"/>
+      <stop offset="0.62" stop-color="#0b1414"/>
+      <stop offset="1" stop-color="#050808"/>
+    </linearGradient>
+    <linearGradient id="teal" x1="20" y1="18" x2="110" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#b9fff3"/>
+      <stop offset="0.44" stop-color="#39c7bd"/>
+      <stop offset="1" stop-color="#0f716d"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="31" y1="22" x2="96" y2="106" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f3d27a"/>
+      <stop offset="1" stop-color="#9d6c20"/>
+    </linearGradient>
+  </defs>
+  <rect x="20" y="20" width="88" height="88" rx="18" fill="url(#plate)" stroke="#1d2d2b" stroke-width="4"/>
+  <path d="M38 42h18v44H38M72 42h18v44H72" fill="none" stroke="url(#gold)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="64" cy="64" r="11" fill="#101715" stroke="url(#teal)" stroke-width="5"/>
+  <circle cx="64" cy="64" r="4" fill="#f0c86d"/>
+  <path d="M64 30v17M64 81v17M30 64h16M82 64h16" stroke="url(#teal)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M34 34 48 48M94 34 80 48M34 94 48 80M94 94 80 80" stroke="#5acfc6" stroke-opacity=".55" stroke-width="3" stroke-linecap="round"/>
+</svg>
