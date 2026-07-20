@@ -13,6 +13,8 @@ const LIVE_DIRECTIVE_RE = /^\s*\[\[(syntarion|supabase):([a-z_-]+)\]\]\s*$/i;
 const HANDBOOK_HTML_PREFIX = '<!-- syntarion:handbook-html -->';
 const HANDBOOK_PDF_PREFIX = '<!-- syntarion:handbook-pdf -->';
 const HANDBOOK_TRANSPARENT_IMAGES_FLAG = '<!-- syntarion:transparent-images -->';
+const HANDBOOK_FULL_PDF_SLUG = '00-full-handbook-pdf';
+const HANDBOOK_DEFAULT_PDF_PAGE_COUNT = 97;
 
 function slugifyHandbookTitle(title) {
   return String(title || 'chapter')
@@ -207,6 +209,82 @@ function parseHandbookPdfContent(content) {
   }
 }
 
+function padHandbookPage(page) {
+  return String(page).padStart(3, '0');
+}
+
+function handbookPageSlug(page) {
+  return 'page-' + padHandbookPage(page);
+}
+
+function handbookPageTitle(page) {
+  return 'Page ' + padHandbookPage(page);
+}
+
+function isFullHandbookPdfRow(row) {
+  const meta = parseHandbookPdfContent(row?.content);
+  return row?.slug === HANDBOOK_FULL_PDF_SLUG || meta?.type === 'book';
+}
+
+function isHandbookPageRow(row) {
+  const meta = parseHandbookPdfContent(row?.content);
+  return /^page-\d+$/i.test(row?.slug || '') || Number.isFinite(Number(meta?.page));
+}
+
+function pageNumberFromRow(row) {
+  const meta = parseHandbookPdfContent(row?.content);
+  const metaPage = Number(meta?.page);
+  if (Number.isFinite(metaPage) && metaPage > 0) return metaPage;
+  const slugPage = String(row?.slug || '').match(/^page-(\d+)$/i);
+  return slugPage ? Number(slugPage[1]) : null;
+}
+
+function makePdfPageChapter(fullPdfRow, page, existingRow = null) {
+  const fullMeta = parseHandbookPdfContent(fullPdfRow?.content) || {};
+  const existingMeta = parseHandbookPdfContent(existingRow?.content) || {};
+  const totalPages = Number(fullMeta.total_pages || existingMeta.total_pages) || HANDBOOK_DEFAULT_PDF_PAGE_COUNT;
+  const content = existingRow?.content || makeHandbookPdfContent({
+    ...fullMeta,
+    type: 'book-page',
+    page,
+    total_pages: totalPages,
+    source_chapter_id: fullPdfRow?.id || fullMeta.source_chapter_id || null,
+    source_slug: fullPdfRow?.slug || fullMeta.source_slug || HANDBOOK_FULL_PDF_SLUG,
+  });
+  return {
+    ...(existingRow || {}),
+    slug: handbookPageSlug(page),
+    title: existingRow?.title || handbookPageTitle(page),
+    subtitle: existingRow?.subtitle || 'Soteria Player Handbook | PDF page ' + page + ' of ' + totalPages,
+    chapter_order: Number(existingRow?.chapter_order) || page,
+    content,
+    is_published: existingRow?.is_published ?? fullPdfRow?.is_published ?? true,
+    pdf_page: page,
+    virtual_pdf_page: !existingRow?.id,
+  };
+}
+
+function normalizeHandbookChapters(rows, canEdit) {
+  const visibleRows = canEdit
+    ? rows
+    : rows.filter(c => c.is_published && String(c.content || '').trim());
+  const fullPdfRow = visibleRows.find(isFullHandbookPdfRow);
+  if (!fullPdfRow) return visibleRows;
+
+  const fullMeta = parseHandbookPdfContent(fullPdfRow.content) || {};
+  const totalPages = Number(fullMeta.total_pages) || HANDBOOK_DEFAULT_PDF_PAGE_COUNT;
+  const pageRows = new Map(
+    visibleRows
+      .filter(row => !isFullHandbookPdfRow(row) && isHandbookPageRow(row))
+      .map(row => [pageNumberFromRow(row), row])
+      .filter(([page]) => Number.isFinite(page) && page > 0)
+  );
+  const pages = Array.from({ length: totalPages }, (_, index) => {
+    const page = index + 1;
+    return makePdfPageChapter(fullPdfRow, page, pageRows.get(page));
+  });
+  return pages.sort((a, b) => Number(a.chapter_order || 0) - Number(b.chapter_order || 0));
+}
 function safePdfFileName(name) {
   return String(name || 'handbook.pdf')
     .replace(/\.pdf$/i, '')
@@ -316,7 +394,18 @@ function HandbookPdfContent({ content, darkMode, isMobile, theme }) {
   if (!meta?.url) {
     return <LiveBlockHeader title="PDF unavailable" subtitle="This handbook entry points to a PDF, but the file reference could not be read." theme={theme} warn />;
   }
-  const src = meta.url + (meta.url.includes('#') ? '&' : '#') + 'toolbar=0&navpanes=0&scrollbar=1&view=FitH';
+  const baseUrl = String(meta.url).split('#')[0];
+  const fragment = [
+    meta.page ? 'page=' + Number(meta.page) : '',
+    'toolbar=0',
+    'navpanes=0',
+    'scrollbar=1',
+    'view=FitH',
+  ].filter(Boolean).join('&');
+  const src = baseUrl + '#' + fragment;
+  const pageLabel = meta.page
+    ? 'Page ' + meta.page + (meta.total_pages ? ' of ' + meta.total_pages : '')
+    : 'Full PDF';
   return (
     <section
       onContextMenu={e => e.preventDefault()}
@@ -335,7 +424,7 @@ function HandbookPdfContent({ content, darkMode, isMobile, theme }) {
       }}>
         <div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: theme.sectionColor }}>Protected PDF View</div>
-          <div style={{ marginTop: 3, fontSize: 11, color: theme.muted, fontStyle: 'italic' }}>{meta.name || 'Player Handbook PDF'}</div>
+          <div style={{ marginTop: 3, fontSize: 11, color: theme.muted, fontStyle: 'italic' }}>{pageLabel} | {meta.name || 'Player Handbook PDF'}</div>
         </div>
         <div style={{ fontSize: 10, color: theme.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'right' }}>Right-click and drag saving are disabled in-app.</div>
       </div>
@@ -588,9 +677,7 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
       .order('chapter_order', { ascending: true });
     if (error) { setLoadError(error.message); return; }
     const rows = data || [];
-    const list = canEdit
-      ? rows
-      : rows.filter(c => c.is_published && String(c.content || '').trim());
+    const list = normalizeHandbookChapters(rows, canEdit);
     setChapters(list);
     setActiveSlug(prev => (prev && list.some(c => c.slug === prev) ? prev : list[0]?.slug || null));
   };
@@ -653,7 +740,7 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
 
   const cancelEdit = () => { setEditing(false); setDraft(null); setSaveStatus(''); setImportPreview(null); setImportStatus(''); };
 
-  const uploadHandbookPdf = async (file, scope = 'chapter') => {
+  const uploadHandbookPdf = async (file, scope = 'chapter', metaOverrides = {}) => {
     if (!file) throw new Error('Choose a PDF file.');
     const ext = file.name.split('.').pop()?.toLowerCase();
     if (ext !== 'pdf' && file.type !== 'application/pdf') throw new Error('Use a .pdf file.');
@@ -672,13 +759,16 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
     if (!uploadedBucket) throw uploadError || new Error('Could not upload PDF.');
     const { data } = supabase.storage.from(uploadedBucket).getPublicUrl(storagePath);
     if (!data?.publicUrl) throw new Error('PDF uploaded, but no public URL was returned.');
-    return makeHandbookPdfContent({ type: scope, name: file.name, bucket: uploadedBucket, path: storagePath, url: data.publicUrl, uploaded_at: new Date().toISOString() });
+    return makeHandbookPdfContent({ type: scope, name: file.name, bucket: uploadedBucket, path: storagePath, url: data.publicUrl, uploaded_at: new Date().toISOString(), ...metaOverrides });
   };
 
   const parseHandbookFile = async (file) => {
     const name = file.name || 'handbook-update';
     const ext = name.split('.').pop()?.toLowerCase();
-    if (ext === 'pdf') return uploadHandbookPdf(file, 'chapter');
+    if (ext === 'pdf') {
+      const page = active?.pdf_page || pageNumberFromRow(active);
+      return uploadHandbookPdf(file, page ? 'page' : 'chapter', page ? { page: 1, replaces_handbook_page: page, total_pages: 1 } : {});
+    }
     if (ext === 'docx') {
       const arrayBuffer = await file.arrayBuffer();
       try {
@@ -757,8 +847,8 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
       const ext = file.name.split('.').pop()?.toLowerCase();
       if (ext === 'pdf') {
         setBulkImportStatus('Uploading PDF handbook...');
-        const content = await uploadHandbookPdf(file, 'book');
-        const slug = '00-full-handbook-pdf';
+        const content = await uploadHandbookPdf(file, 'book', { total_pages: HANDBOOK_DEFAULT_PDF_PAGE_COUNT });
+        const slug = HANDBOOK_FULL_PDF_SLUG;
         const payload = {
           slug,
           title: 'Full Handbook PDF',
@@ -778,12 +868,35 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
           ? await supabase.from('handbook_chapters').update(payload).eq('id', existing.id)
           : await supabase.from('handbook_chapters').insert(payload);
         if (result.error) throw result.error;
-        setBulkImportStatus('Updated handbook PDF.');
+        const fullMeta = parseHandbookPdfContent(content) || {};
+        setBulkImportStatus('Saving ' + HANDBOOK_DEFAULT_PDF_PAGE_COUNT + ' PDF page references...');
+        for (let page = 1; page <= HANDBOOK_DEFAULT_PDF_PAGE_COUNT; page += 1) {
+          const pageSlug = handbookPageSlug(page);
+          const pagePayload = {
+            slug: pageSlug,
+            title: handbookPageTitle(page),
+            subtitle: 'Soteria Player Handbook | PDF page ' + page + ' of ' + HANDBOOK_DEFAULT_PDF_PAGE_COUNT,
+            chapter_order: page,
+            content: makeHandbookPdfContent({ ...fullMeta, type: 'book-page', page, total_pages: HANDBOOK_DEFAULT_PDF_PAGE_COUNT, source_slug: slug, source_chapter_id: existing?.id || null }),
+            is_published: true,
+            updated_at: new Date().toISOString(),
+          };
+          const { data: existingPage, error: findPageError } = await supabase
+            .from('handbook_chapters')
+            .select('id')
+            .eq('slug', pageSlug)
+            .maybeSingle();
+          if (findPageError) throw findPageError;
+          const pageResult = existingPage?.id
+            ? await supabase.from('handbook_chapters').update(pagePayload).eq('id', existingPage.id)
+            : await supabase.from('handbook_chapters').insert(pagePayload);
+          if (pageResult.error) throw pageResult.error;
+        }
+        setBulkImportStatus('Updated handbook PDF: ' + HANDBOOK_DEFAULT_PDF_PAGE_COUNT + ' clickable page references.');
         await fetchChapters();
-        setActiveSlug(slug);
+        setActiveSlug(handbookPageSlug(1));
         return;
-      }
-      if (ext !== 'docx') throw new Error('Use a .pdf or .docx file for handbook replacement or chapter updates.');
+      }      if (ext !== 'docx') throw new Error('Use a .pdf or .docx file for handbook replacement or chapter updates.');
       const arrayBuffer = await file.arrayBuffer();
       let parsed = null;
       try {
@@ -811,15 +924,25 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
         await fetchChapters();
         setActiveSlug(parsed[0]?.slug || null);
       } else {
-        if (!active?.id) throw new Error('Select a handbook chapter before importing a single-page Word document.');
+        if (!active?.slug) throw new Error('Select a handbook page before importing a single-page Word document.');
         setBulkImportStatus('Saving this Word page to ' + active.title + '...');
         const content = await parseSingleChapterDocx(arrayBuffer);
-        const payload = { content, updated_at: new Date().toISOString() };
-        const { error } = await supabase.from('handbook_chapters').update(payload).eq('id', active.id);
-        if (error) throw error;
-        setChapters(prev => (prev || []).map(chapter => chapter.id === active.id ? { ...chapter, ...payload } : chapter));
-        setBulkImportStatus('Updated chapter: ' + active.title + '.');
-      }
+        const payload = {
+          slug: active.slug,
+          title: active.title,
+          subtitle: active.subtitle || null,
+          chapter_order: Number(active.chapter_order) || pageNumberFromRow(active) || 1,
+          content,
+          is_published: active.is_published ?? true,
+          updated_at: new Date().toISOString(),
+        };
+        const result = active.id
+          ? await supabase.from('handbook_chapters').update(payload).eq('id', active.id).select('id, slug, title, subtitle, chapter_order, content, is_published').single()
+          : await supabase.from('handbook_chapters').insert(payload).select('id, slug, title, subtitle, chapter_order, content, is_published').single();
+        if (result.error) throw result.error;
+        const saved = result.data || { ...active, ...payload };
+        setChapters(prev => (prev || []).map(chapter => chapter.slug === active.slug ? { ...chapter, ...saved } : chapter));
+        setBulkImportStatus('Updated chapter: ' + active.title + '.');      }
     } catch (err) {
       setBulkImportStatus('Handbook import failed: ' + (err?.message || err));
     } finally {
@@ -839,16 +962,25 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
       is_published: draft.is_published,
       updated_at: new Date().toISOString(),
     };
-    const { error } = await supabase
-      .from('handbook_chapters')
-      .update(payload)
-      .eq('id', active.id);
+    const savePayload = active.id ? payload : { ...payload, slug: active.slug };
+    const result = active.id
+      ? await supabase
+        .from('handbook_chapters')
+        .update(savePayload)
+        .eq('id', active.id)
+        .select('id, slug, title, subtitle, chapter_order, content, is_published')
+        .single()
+      : await supabase
+        .from('handbook_chapters')
+        .insert(savePayload)
+        .select('id, slug, title, subtitle, chapter_order, content, is_published')
+        .single();
     setSaving(false);
-    if (error) { setSaveStatus(`Could not save: ${error.message}`); return; }
-    setChapters(prev => prev
-      .map(c => (c.id === active.id ? { ...c, ...payload } : c))
-      .sort((a, b) => a.chapter_order - b.chapter_order));
-    setSaveStatus('Saved.');
+    if (result.error) { setSaveStatus(`Could not save: ${result.error.message}`); return; }
+    const saved = result.data || { ...active, ...savePayload };
+    setChapters(prev => (prev || [])
+      .map(c => (c.slug === active.slug ? { ...c, ...saved } : c))
+      .sort((a, b) => a.chapter_order - b.chapter_order));    setSaveStatus('Saved.');
     setEditing(false);
     setDraft(null);
   };
@@ -1188,3 +1320,7 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
     </>
   );
 }
+
+
+
+
