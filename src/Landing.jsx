@@ -103,8 +103,8 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
   const logoMediaSize = useHeroVideo ? size * (isMobile ? 2.18 : 2.32) : size;
  const mobileHeroVideoOffset = isMobile ? { x: 12, y: -34 } : { x: 12, y: -50 };
   const heroMask = isMobile
-    ? 'linear-gradient(to bottom, transparent 4%, rgba(0,0,0,0.76) 22%, #000 38%, #000 62%, rgba(0,0,0,0.76) 78%, transparent 96%), linear-gradient(to right, transparent 0%, rgba(0,0,0,0.72) 5%, #000 12%, #000 88%, rgba(0,0,0,0.72) 95%, transparent 100%)'
-    : 'linear-gradient(to bottom, transparent 4%, rgba(0,0,0,0.76) 22%, #000 38%, #000 62%, rgba(0,0,0,0.76) 78%, transparent 96%), linear-gradient(to right, transparent 0%, rgba(0,0,0,0.72) 5%, #000 12%, #000 88%, rgba(0,0,0,0.72) 95%, transparent 100%)';
+    ? 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.72) 7%, #000 18%, #000 62%, rgba(0,0,0,0.76) 78%, transparent 96%), linear-gradient(to right, transparent 0%, rgba(0,0,0,0.72) 5%, #000 12%, #000 88%, rgba(0,0,0,0.72) 95%, transparent 100%)'
+    : 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.72) 7%, #000 18%, #000 62%, rgba(0,0,0,0.76) 78%, transparent 96%), linear-gradient(to right, transparent 0%, rgba(0,0,0,0.72) 5%, #000 12%, #000 88%, rgba(0,0,0,0.72) 95%, transparent 100%)';
   const landingBg = '#f0eeeb';
   const [heroVideoSrc] = useState(() => 'https://evcyfplbiuxnlwfrbyri.supabase.co/storage/v1/object/public/assets/landing-creatures-web.mp4');
   const [videoReady, setVideoReady] = useState(useHeroVideo);
@@ -778,10 +778,15 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
               position: 'absolute',
               left: isMobile ? -8 : 8,
               right: isMobile ? -8 : 8,
-              top: isMobile ? 48 : 60,
-              bottom: isMobile ? 174 : 188,
-              background: 'transparent',
-              boxShadow: 'none',
+              top: isMobile ? 48 : 40,
+              bottom: isMobile ? 174 : 208,
+              background: `
+                linear-gradient(90deg, transparent 0%, rgba(240,239,236,0.08) 8%, rgba(240,239,236,0.30) 20%, rgba(240,239,236,0.42) 50%, rgba(240,239,236,0.30) 80%, rgba(240,239,236,0.08) 92%, transparent 100%),
+                linear-gradient(to bottom, transparent 0%, rgba(235,236,236,0.12) 14%, rgba(242,241,238,0.30) 42%, rgba(242,241,238,0.30) 58%, rgba(235,236,236,0.12) 86%, transparent 100%)
+              `,
+              boxShadow: '0 14px 42px rgba(26,23,20,0.04)',
+              WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, #000 16%, #000 70%, rgba(0,0,0,0.72) 84%, transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, transparent 0%, #000 16%, #000 70%, rgba(0,0,0,0.72) 84%, transparent 100%)',
               pointerEvents: 'none',
             }} />
             <div aria-hidden="true" style={{
