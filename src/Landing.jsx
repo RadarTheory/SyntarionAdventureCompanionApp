@@ -101,7 +101,7 @@ function DriftstoneButton({ onClick, isMobile }) {
 function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isMobile = false }) {
   const ink = darkMode ? '#f0eeeb' : '#050403';
   const logoMediaSize = useHeroVideo ? size * (isMobile ? 2.18 : 2.32) : size;
-  const mobileHeroVideoOffset = isMobile ? { x: 12, y: -34 } : { x: 0, y: 0 };
+ const mobileHeroVideoOffset = isMobile ? { x: 12, y: -34 } : { x: 12, y: -24 };
   const heroMask = isMobile
     ? 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.34) 5%, rgba(0,0,0,0.9) 12%, #000 22%, #000 70%, rgba(0,0,0,0.72) 84%, transparent 100%)'
     : 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.34) 5%, rgba(0,0,0,0.9) 12%, #000 20%, #000 70%, rgba(0,0,0,0.72) 84%, transparent 100%)';
@@ -776,8 +776,8 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
               position: 'absolute',
               left: isMobile ? -8 : 8,
               right: isMobile ? -8 : 8,
-              top: isMobile ? 48 : 56,
-              bottom: isMobile ? 174 : 192,
+              top: isMobile ? 48 : 32,
+              bottom: isMobile ? 174 : 216,
               background: `
                 linear-gradient(90deg, transparent 0%, rgba(240,239,236,0.14) 8%, rgba(240,239,236,0.46) 20%, rgba(240,239,236,0.58) 50%, rgba(240,239,236,0.46) 80%, rgba(240,239,236,0.14) 92%, transparent 100%),
                 linear-gradient(to bottom, transparent 0%, rgba(238,238,237,0.20) 12%, rgba(242,241,238,0.50) 28%, rgba(242,241,238,0.44) 58%, rgba(235,236,236,0.18) 86%, transparent 100%)
@@ -789,7 +789,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
               position: 'absolute',
               left: isMobile ? 10 : 24,
               right: isMobile ? 10 : 24,
-              top: isMobile ? 44 : 52,
+              top: isMobile ? 44 : 28,
               height: 1,
               background: 'linear-gradient(90deg, transparent, rgba(200,168,74,0.44), transparent)',
             }} />
@@ -797,7 +797,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
               position: 'absolute',
               left: isMobile ? 10 : 24,
               right: isMobile ? 10 : 24,
-              bottom: isMobile ? 96 : 116,
+              bottom: isMobile ? 96 : 140,
               height: 1,
               background: 'linear-gradient(90deg, transparent, rgba(200,168,74,0.30), transparent)',
             }} />
