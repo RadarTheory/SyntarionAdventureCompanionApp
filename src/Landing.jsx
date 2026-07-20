@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
 import medallion from './assets/medallion.png';
@@ -106,7 +106,7 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
     ? 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.34) 5%, rgba(0,0,0,0.9) 12%, #000 22%, #000 70%, rgba(0,0,0,0.72) 84%, transparent 100%)'
     : 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.34) 5%, rgba(0,0,0,0.9) 12%, #000 20%, #000 70%, rgba(0,0,0,0.72) 84%, transparent 100%)';
   const landingBg = '#f0eeeb';
-  const [heroVideoSrc] = useState(() => '/landing-creatures.mp4?t=' + Date.now());
+  const [heroVideoSrc] = useState(() => 'https://evcyfplbiuxnlwfrbyri.supabase.co/storage/v1/object/public/assets/landing-creatures-web.mp4');
   const [videoReady, setVideoReady] = useState(useHeroVideo);
 
   return (
