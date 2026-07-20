@@ -103,8 +103,8 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
   const logoMediaSize = useHeroVideo ? size * (isMobile ? 2.18 : 2.32) : size;
  const mobileHeroVideoOffset = isMobile ? { x: 12, y: -34 } : { x: 12, y: -50 };
   const heroMask = isMobile
-    ? 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.72) 3%, #000 7%, #000 70%, rgba(0,0,0,0.72) 84%, transparent 100%)'
-    : 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.72) 3%, #000 7%, #000 70%, rgba(0,0,0,0.72) 84%, transparent 100%)';
+    ? 'linear-gradient(to bottom, transparent 4%, rgba(0,0,0,0.76) 22%, #000 38%, #000 62%, rgba(0,0,0,0.76) 78%, transparent 96%), linear-gradient(to right, transparent 0%, rgba(0,0,0,0.72) 5%, #000 12%, #000 88%, rgba(0,0,0,0.72) 95%, transparent 100%)'
+    : 'linear-gradient(to bottom, transparent 4%, rgba(0,0,0,0.76) 22%, #000 38%, #000 62%, rgba(0,0,0,0.76) 78%, transparent 96%), linear-gradient(to right, transparent 0%, rgba(0,0,0,0.72) 5%, #000 12%, #000 88%, rgba(0,0,0,0.72) 95%, transparent 100%)';
   const landingBg = '#f0eeeb';
   const [heroVideoSrc] = useState(() => 'https://evcyfplbiuxnlwfrbyri.supabase.co/storage/v1/object/public/assets/landing-creatures-web.mp4');
   const [videoReady, setVideoReady] = useState(useHeroVideo);
@@ -136,7 +136,9 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
               background: 'transparent',
               opacity: 1,
             WebkitMaskImage: heroMask,
+              WebkitMaskComposite: 'source-in',
               maskImage: heroMask,
+              maskComposite: 'intersect',
               mixBlendMode: 'multiply',
               filter: 'contrast(1.06) saturate(1.04)',
               transform: mobileHeroVideoOffset.x || mobileHeroVideoOffset.y ? 'translate(' + mobileHeroVideoOffset.x + 'px, ' + mobileHeroVideoOffset.y + 'px)' : 'none',
@@ -776,20 +778,17 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
               position: 'absolute',
               left: isMobile ? -8 : 8,
               right: isMobile ? -8 : 8,
-              top: isMobile ? 48 : 22,
-              bottom: isMobile ? 174 : 226,
-              background: `
-                linear-gradient(90deg, transparent 0%, rgba(240,239,236,0.06) 8%, rgba(240,239,236,0.24) 20%, rgba(240,239,236,0.30) 50%, rgba(240,239,236,0.24) 80%, rgba(240,239,236,0.06) 92%, transparent 100%),
-                linear-gradient(to bottom, transparent 0%, rgba(238,238,237,0.10) 12%, rgba(242,241,238,0.24) 28%, rgba(242,241,238,0.20) 58%, rgba(235,236,236,0.08) 86%, transparent 100%)
-              `,
-              boxShadow: '0 14px 42px rgba(26,23,20,0.05)',
+              top: isMobile ? 48 : 60,
+              bottom: isMobile ? 174 : 188,
+              background: 'transparent',
+              boxShadow: 'none',
               pointerEvents: 'none',
             }} />
             <div aria-hidden="true" style={{
               position: 'absolute',
               left: isMobile ? 10 : 24,
               right: isMobile ? 10 : 24,
-              top: isMobile ? 44 : 18,
+              top: isMobile ? 44 : 28,
               height: 1,
               background: isMobile ? 'linear-gradient(90deg, transparent, rgba(200,168,74,0.44), transparent)' : 'transparent',
             }} />
@@ -797,9 +796,9 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
               position: 'absolute',
               left: isMobile ? 10 : 24,
               right: isMobile ? 10 : 24,
-              bottom: isMobile ? 96 : 150,
+              bottom: isMobile ? 96 : 140,
               height: 1,
-              background: 'linear-gradient(90deg, transparent, rgba(200,168,74,0.30), transparent)',
+              background: isMobile ? 'linear-gradient(90deg, transparent, rgba(200,168,74,0.30), transparent)' : 'transparent',
             }} />
             <SyntarionLogo size={isMobile ? 204 : 318} darkMode={false} useHeroVideo isMobile={isMobile} />
           </div>
