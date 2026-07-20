@@ -100,7 +100,8 @@ function DriftstoneButton({ onClick, isMobile }) {
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ SYNTARION LOGO Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isMobile = false }) {
   const ink = darkMode ? '#f0eeeb' : '#050403';
-   const logoMediaSize = useHeroVideo ? size * (isMobile ? 2.18 : 2.32) : size;
+  const logoMediaSize = useHeroVideo ? size * (isMobile ? 2.18 : 2.32) : size;
+  const mobileHeroVideoNudge = isMobile ? 12 : 0;
   const heroMask = isMobile
     ? 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.34) 5%, rgba(0,0,0,0.9) 12%, #000 22%, #000 70%, rgba(0,0,0,0.72) 84%, transparent 100%)'
     : 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.34) 5%, rgba(0,0,0,0.9) 12%, #000 20%, #000 70%, rgba(0,0,0,0.72) 84%, transparent 100%)';
@@ -138,6 +139,7 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
               maskImage: heroMask,
               mixBlendMode: 'normal',
               filter: 'contrast(1.04)',
+              transform: mobileHeroVideoNudge ? 'translateX(' + mobileHeroVideoNudge + 'px)' : 'none',
               pointerEvents: 'none',
             }}
           />
@@ -984,6 +986,7 @@ function Stub({ label, onHome, dark }) {
     </div>
   );
 }
+
 
 
 
