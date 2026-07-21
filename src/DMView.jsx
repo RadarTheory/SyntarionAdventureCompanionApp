@@ -33,6 +33,7 @@ import CharacterTokenForge from './CharacterTokenForge';
 import AssetsPanel from './AssetsPanel';
 import ChroniclePanel from './ChroniclePanel';
 import HandbookBookmark from './HandbookBookmark';
+import { MENU_MUSIC_TRACKS, getTrackUrl, loadMenuMusicTracks } from './musicLibrary';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe - an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -815,51 +816,41 @@ function MapManager({ campaign }) {
 }
 // MUSIC PANEL
 function MusicPanel() {
-  const [tracks, setTracks] = useState([]);
+  const [tracks, setTracks] = useState(MENU_MUSIC_TRACKS);
   const [search, setSearch] = useState('');
-  const [currentTrack, setCurrentTrack] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [currentTrack, setCurrentTrack] = useState(MENU_MUSIC_TRACKS[0] || null);
+  const [libraryStatus, setLibraryStatus] = useState('');
 
-  useEffect(() => { fetchMusic(); }, []);
+  useEffect(() => {
+    let cancelled = false;
+    loadMenuMusicTracks()
+      .then(rows => {
+        if (cancelled) return;
+        setTracks(rows);
+        setCurrentTrack(current => current || rows[0] || null);
+        setLibraryStatus('');
+      })
+      .catch(err => {
+        console.warn('Could not load R2 music manifest; no music tracks are available yet.', err);
+        setLibraryStatus('Using the confirmed R2 proof track.');
+      });
+    return () => { cancelled = true; };
+  }, []);
 
-  const fetchMusic = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const { data, error: listError } = await supabase
-        .storage
-        .from('music')
-        .list('', { limit: 1000, sortBy: { column: 'name', order: 'asc' } });
-
-      if (listError) throw new Error(`Storage error: ${listError.message} (${listError.statusCode})`);
-      if (!data) throw new Error('No data returned from storage');
-
-      const audioFiles = data
-        .filter(f => f.name && /\.(wav|mp3|ogg|flac|m4a)$/i.test(f.name))
-        .map(f => ({
-          title: f.name.replace(/\.(wav|mp3|ogg|flac|m4a)$/i, ''),
-          file_path: f.name,
-        }));
-
-      setTracks(audioFiles);
-      if (audioFiles.length > 0) setCurrentTrack(audioFiles[0]);
-    } catch (err) {
-      setError(err.message);
-    }
-    setLoading(false);
-  };
-
-  const getMusicUrl = (filePath) =>
-    `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/music/${encodeURIComponent(filePath)}`;
-
-  const filteredTracks = tracks.filter(t =>
-    t.title.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredTracks = tracks.filter(t => {
+    const haystack = `${t.title || ''} ${t.artist || ''} ${t.filename || t.path || ''}`.toLowerCase();
+    return haystack.includes(search.toLowerCase());
+  });
 
   return (
     <div>
       <div style={{ ...label8(), marginBottom: 12 }}>Music Library</div>
+      <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', lineHeight: 1.45, marginBottom: 14 }}>
+        R2-backed music library loaded from music-manifest.json in the public bucket.
+      </div>
+      {libraryStatus && (
+        <div style={{ fontSize: 10, color: COLORS.magicText, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>{libraryStatus}</div>
+      )}
       <input
         value={search}
         onChange={e => setSearch(e.target.value)}
@@ -868,47 +859,59 @@ function MusicPanel() {
       />
       {currentTrack && (
         <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: 16, marginBottom: 16 }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, marginBottom: 10, letterSpacing: '0.04em' }}>Music {currentTrack.title}</div>
-          <audio key={currentTrack.file_path} controls src={getMusicUrl(currentTrack.file_path)} style={{ width: '100%' }} />
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12 }}>
+            {currentTrack.artwork && (
+              <img src={currentTrack.artwork} alt="" style={{ width: 56, height: 56, borderRadius: 6, objectFit: 'cover', border: `1px solid ${COLORS.border}`, background: COLORS.surface }} />
+            )}
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, marginBottom: 4, letterSpacing: '0.04em' }}>{currentTrack.title}</div>
+              <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 3 }}>
+                {currentTrack.artist || 'Unknown artist'}
+              </div>
+              <div style={{ fontSize: 8, color: COLORS.magicText, fontFamily: "'Cinzel', serif", letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                {currentTrack.album || 'Syntarion'}
+              </div>
+            </div>
+          </div>
+          <audio key={currentTrack.filename || currentTrack.path || currentTrack.url} controls src={getTrackUrl(currentTrack)} style={{ width: '100%' }} />
         </div>
       )}
-      {loading && (
-        <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Loading tracks...</div>
-      )}
-      {error && (
-        <div style={{ fontSize: 11, color: COLORS.warn, fontFamily: 'Georgia, serif', marginBottom: 12 }}>Error: {error}</div>
-      )}
-      {!loading && !error && (
-        <>
-          <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', marginBottom: 10 }}>
-            {filteredTracks.length} of {tracks.length} track{tracks.length !== 1 ? 's' : ''}
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {filteredTracks.map(track => (
-              <button
-                key={track.file_path}
-                onClick={() => setCurrentTrack(track)}
-                style={{
-                  textAlign: 'left',
-                  background: currentTrack?.file_path === track.file_path ? COLORS.magicBg : COLORS.card,
-                  border: `1px solid ${currentTrack?.file_path === track.file_path ? COLORS.magic : COLORS.border}`,
-                  borderRadius: 6,
-                  padding: '10px 12px',
-                  color: COLORS.text,
-                  cursor: 'pointer',
-                  fontFamily: 'Georgia, serif',
-                }}
-              >
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11 }}>{track.title}</div>
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+      <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', marginBottom: 10 }}>
+        {filteredTracks.length} of {tracks.length} track{tracks.length !== 1 ? 's' : ''}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {filteredTracks.map(track => {
+          const trackKey = track.filename || track.path || track.url || track.title;
+          const activeKey = currentTrack?.filename || currentTrack?.path || currentTrack?.url || currentTrack?.title;
+          return (
+            <button
+              key={trackKey}
+              onClick={() => setCurrentTrack(track)}
+              style={{
+                textAlign: 'left',
+                background: activeKey === trackKey ? COLORS.magicBg : COLORS.card,
+                border: `1px solid ${activeKey === trackKey ? COLORS.magic : COLORS.border}`,
+                borderRadius: 6,
+                padding: '10px 12px',
+                color: COLORS.text,
+                cursor: 'pointer',
+                fontFamily: 'Georgia, serif',
+              }}
+            >
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                {track.artwork && <img src={track.artwork} alt="" style={{ width: 34, height: 34, borderRadius: 4, objectFit: 'cover', border: `1px solid ${COLORS.border}` }} />}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11 }}>{track.title}</div>
+                  <div style={{ fontSize: 10, color: COLORS.dim, fontStyle: 'italic', marginTop: 3 }}>{track.artist || 'Unknown artist'} - {track.album || 'Syntarion'}</div>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
-
 function VitalsPanel({ row, onClose, campaignId }) {
   const isCreature = !row.character_id || row.character_id === row.character_name;
   const VITALS_KEY = `syntarion_vitals_${row.character_id}`;

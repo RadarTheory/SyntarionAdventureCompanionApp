@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
 import medallion from './assets/medallion.png';
@@ -13,7 +13,7 @@ import Settings from './Settings';
 import LegalGate, { LEGAL_VERSION } from './LegalGate';
 import Tour, { hasSeenTour } from './Tour';
 import ScribeLite from './ScribeLite';
-import musicEngine from './musicEngine';
+import MenuMusicPlayer from './MenuMusicPlayer';
 import HandbookBookmark from './HandbookBookmark';
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MOVABLE DRIFTSTONE BUTTON Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -938,6 +938,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
         Developed by Adrian 'Radar Theory' Gilmore and Jacob 'Jake' Homer. &copy; 2026 TheonhexMedia &amp; Publishing. All rights reserved.
       </div>
 
+      <MenuMusicPlayer isMobile={isMobile} />
       <ScribeLite />
       <HandbookBookmark user={user} darkMode={darkMode} />
 

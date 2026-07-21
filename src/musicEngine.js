@@ -50,7 +50,10 @@ class MusicEngine {
   }
 
   trackUrl(track) {
-    return `${R2_BASE}/${encodeURIComponent(track.filename)}`;
+    if (track.url) return track.url;
+    const filePath = track.path || track.filename || track.file_path || '';
+    const encodedPath = String(filePath).split('/').map(encodeURIComponent).join('/');
+    return `${R2_BASE}/${encodedPath}`;
   }
 
   setQueue(tracks) {
@@ -68,8 +71,10 @@ class MusicEngine {
     try {
       await incoming.audio.play();
     } catch (err) {
-      console.error('Music play failed:', err);
-      return;
+      console.warn('Music play failed:', this.trackUrl(track), err);
+      incoming.audio.removeAttribute('src');
+      incoming.audio.load();
+      return { ok: false, error: err, track };
     }
 
     const now = this.ctx.currentTime;
@@ -91,13 +96,14 @@ class MusicEngine {
     this._quietSince = null;
     this.onTrackChange?.(track);
     this._watchOutro();
+    return { ok: true, track };
   }
 
   playNext() {
-    if (this.queue.length === 0) return;
+    if (this.queue.length === 0) return { ok: false };
     const next = this.queue.shift();
     this.queue.push(next); // rotate so the pool loops
-    this.play(next);
+    return this.play(next);
   }
 
   // ── Volume-aware transition: watch the active deck's outro ──

@@ -1,9 +1,11 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
 import { COLORS } from './constants';
 import LegalGate from './LegalGate';
 import { getPWAInstallState, promptPWAInstall, subscribePWAInstall } from './pwaInstall';
+import { getAudioSettings, saveAudioSettings, subscribeAudioSettings } from './audioSettings';
+import musicEngine from './musicEngine';
 
 export default function Settings({ user, darkMode, setDarkMode, onHome }) {
   const { isMobile } = useDevice();
@@ -19,6 +21,7 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
   const [supportMessage, setSupportMessage] = useState('');
   const [supportSending, setSupportSending] = useState(false);
   const [supportStatus, setSupportStatus] = useState('');
+  const [audioSettings, setAudioSettings] = useState(getAudioSettings);
 
   const ink = darkMode ? COLORS.text : '#1b130a';
   const bg = darkMode ? COLORS.wizard : '#e8e1d5';
@@ -32,6 +35,14 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
   const cardShadow = darkMode ? 'none' : '0 10px 24px rgba(52, 35, 18, 0.08)';
 
   useEffect(() => subscribePWAInstall(setInstallState), []);
+  useEffect(() => subscribeAudioSettings(setAudioSettings), []);
+
+  const updateAudioSettings = (patch) => {
+    const next = saveAudioSettings({ ...audioSettings, ...patch });
+    setAudioSettings(next);
+    musicEngine.setVolume(next.musicVolume);
+    musicEngine.setMuted(!next.musicEnabled);
+  };
 
   const handleSaveName = async () => {
     setSaving(true);
@@ -169,6 +180,99 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
                   transition: 'left 0.25s ease',
                 }} />
               </div>
+            </div>
+          </div>
+        </div>
+        <div style={{ marginBottom: 36 }}>
+          {sectionHead('Audio')}
+
+          <div style={{ background: card, border: `1px solid ${border}`, borderRadius: 10, padding: '16px 20px', boxShadow: cardShadow }}>
+            <div style={{ display: 'grid', gap: 18 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, fontWeight: 700, color: ink, letterSpacing: '0.04em', marginBottom: 3 }}>
+                    Menu Music
+                  </div>
+                  <div style={{ fontSize: 11, color: muted, fontStyle: 'italic' }}>
+                    Controls the main screen soundtrack and library player.
+                  </div>
+                </div>
+                <button
+                  onClick={() => updateAudioSettings({ musicEnabled: !audioSettings.musicEnabled })}
+                  style={{
+                    background: audioSettings.musicEnabled ? COLORS.magicBg : 'transparent',
+                    border: `1px solid ${audioSettings.musicEnabled ? COLORS.magic : borderMid}`,
+                    borderRadius: 6,
+                    padding: '9px 14px',
+                    cursor: 'pointer',
+                    fontFamily: "'Cinzel', serif",
+                    fontSize: 9,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color: audioSettings.musicEnabled ? COLORS.magicText : ink,
+                    flexShrink: 0,
+                  }}
+                >
+                  {audioSettings.musicEnabled ? 'On' : 'Off'}
+                </button>
+              </div>
+              <label style={{ display: 'grid', gap: 7 }}>
+                <span style={{ fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: muted, fontFamily: "'Cinzel', serif" }}>
+                  Music Volume {Math.round(audioSettings.musicVolume * 100)}
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={audioSettings.musicVolume}
+                  onChange={e => updateAudioSettings({ musicVolume: Number(e.target.value), musicEnabled: true })}
+                  style={{ width: '100%' }}
+                />
+              </label>
+
+              <div style={{ borderTop: `1px solid ${border}`, paddingTop: 16, display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, fontWeight: 700, color: ink, letterSpacing: '0.04em', marginBottom: 3 }}>
+                    Main Sounds
+                  </div>
+                  <div style={{ fontSize: 11, color: muted, fontStyle: 'italic' }}>
+                    Shared volume for interface, combat, and game sound effects.
+                  </div>
+                </div>
+                <button
+                  onClick={() => updateAudioSettings({ soundsEnabled: !audioSettings.soundsEnabled })}
+                  style={{
+                    background: audioSettings.soundsEnabled ? COLORS.magicBg : 'transparent',
+                    border: `1px solid ${audioSettings.soundsEnabled ? COLORS.magic : borderMid}`,
+                    borderRadius: 6,
+                    padding: '9px 14px',
+                    cursor: 'pointer',
+                    fontFamily: "'Cinzel', serif",
+                    fontSize: 9,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color: audioSettings.soundsEnabled ? COLORS.magicText : ink,
+                    flexShrink: 0,
+                  }}
+                >
+                  {audioSettings.soundsEnabled ? 'On' : 'Off'}
+                </button>
+              </div>
+              <label style={{ display: 'grid', gap: 7 }}>
+                <span style={{ fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: muted, fontFamily: "'Cinzel', serif" }}>
+                  Main Sounds Volume {Math.round(audioSettings.soundsVolume * 100)}
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={audioSettings.soundsVolume}
+                  onChange={e => updateAudioSettings({ soundsVolume: Number(e.target.value), soundsEnabled: true })}
+                  style={{ width: '100%' }}
+                />
+              </label>
             </div>
           </div>
         </div>
