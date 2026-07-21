@@ -71,7 +71,7 @@ class MusicEngine {
     try {
       await incoming.audio.play();
     } catch (err) {
-      console.warn('Music play failed:', this.trackUrl(track), err);
+      if (err?.name !== 'AbortError') console.warn('Music play failed:', this.trackUrl(track), err);
       incoming.audio.removeAttribute('src');
       incoming.audio.load();
       return { ok: false, error: err, track };

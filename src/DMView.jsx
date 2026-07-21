@@ -33,7 +33,9 @@ import CharacterTokenForge from './CharacterTokenForge';
 import AssetsPanel from './AssetsPanel';
 import ChroniclePanel from './ChroniclePanel';
 import HandbookBookmark from './HandbookBookmark';
-import { MENU_MUSIC_TRACKS, getTrackUrl, loadMenuMusicTracks } from './musicLibrary';
+import MenuMusicPlayer from './MenuMusicPlayer';
+import musicEngine from './musicEngine';
+import { MENU_MUSIC_TRACKS, buildMenuMusicQueue, getTrackFamilyKey, getTrackKey, loadMenuMusicTracks } from './musicLibrary';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe - an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -842,6 +844,18 @@ function MusicPanel() {
     return haystack.includes(search.toLowerCase());
   });
 
+  const playInMenuPlayer = async (track) => {
+    if (!track) return;
+    setCurrentTrack(track);
+    musicEngine.setQueue(buildMenuMusicQueue(tracks, {
+      avoidFirstFamily: getTrackFamilyKey(track),
+    }));
+    const result = await musicEngine.play(track);
+    if (!result?.ok && result?.error?.name !== 'AbortError') {
+      console.warn('DM music play failed:', result?.error);
+    }
+  };
+
   return (
     <div>
       <div style={{ ...label8(), marginBottom: 12 }}>Music Library</div>
@@ -873,7 +887,26 @@ function MusicPanel() {
               </div>
             </div>
           </div>
-          <audio key={currentTrack.filename || currentTrack.path || currentTrack.url} controls src={getTrackUrl(currentTrack)} style={{ width: '100%' }} />
+          <button
+            type="button"
+            onClick={() => playInMenuPlayer(currentTrack)}
+            style={{
+              width: '100%',
+              background: COLORS.magicBg,
+              border: `1px solid ${COLORS.magic}`,
+              borderRadius: 6,
+              padding: '10px 12px',
+              cursor: 'pointer',
+              fontFamily: "'Cinzel', serif",
+              fontSize: 9,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: COLORS.magicText,
+              fontWeight: 700,
+            }}
+          >
+            Play In Menu Player
+          </button>
         </div>
       )}
       <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', marginBottom: 10 }}>
@@ -881,12 +914,12 @@ function MusicPanel() {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {filteredTracks.map(track => {
-          const trackKey = track.filename || track.path || track.url || track.title;
-          const activeKey = currentTrack?.filename || currentTrack?.path || currentTrack?.url || currentTrack?.title;
+          const trackKey = getTrackKey(track);
+          const activeKey = currentTrack ? getTrackKey(currentTrack) : '';
           return (
             <button
               key={trackKey}
-              onClick={() => setCurrentTrack(track)}
+              onClick={() => playInMenuPlayer(track)}
               style={{
                 textAlign: 'left',
                 background: activeKey === trackKey ? COLORS.magicBg : COLORS.card,
@@ -1458,6 +1491,7 @@ const renderTab = () => {
   return (
     <div style={{ minHeight: '100svh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text, overflowX: 'hidden' }}>
       <HandbookBookmark user={user} darkMode={darkMode} allowEdit />
+      <MenuMusicPlayer isMobile={isMobile} />
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');

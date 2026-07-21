@@ -1,0 +1,1625 @@
+{
+  "version": 1,
+  "source": "R2 soundtrack bucket",
+  "generatedAt": "2026-07-21T03:16:52.877Z",
+  "tracks": [
+    {
+      "title": "The Eryatav (Cinematic Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "The Eryatav",
+      "suite": "The Eryatav",
+      "variant": "Cinematic Mix",
+      "filename": "Syntarion Orchestra -  The Eryatav (Cinematic Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "orchestral"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "The Eryatav (Main Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "The Eryatav",
+      "suite": "The Eryatav",
+      "variant": "Main Theme",
+      "filename": "Syntarion Orchestra -  The Eryatav (Main Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "The Eryatav (Menu Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "The Eryatav",
+      "suite": "The Eryatav",
+      "variant": "Menu Mix",
+      "filename": "Syntarion Orchestra -  The Eryatav (Menu Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "The Eryatav (Orchestral Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "The Eryatav",
+      "suite": "The Eryatav",
+      "variant": "Orchestral Mix",
+      "filename": "Syntarion Orchestra -  The Eryatav (Orchestral Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "orchestral"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "The Eryatav (Piano Ballad Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "The Eryatav",
+      "suite": "The Eryatav",
+      "variant": "Piano Ballad Mix",
+      "filename": "Syntarion Orchestra -  The Eryatav (Piano Ballad Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "ballad"
+      ],
+      "energy": 1,
+      "menu": false
+    },
+    {
+      "title": "The Eryatav (Veridora Mix One)",
+      "artist": "Syntarion Orchestra",
+      "album": "The Eryatav",
+      "suite": "The Eryatav",
+      "variant": "Veridora Mix One",
+      "filename": "Syntarion Orchestra -  The Eryatav (Veridora Mix One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "The Eryatav (Veridora Mix Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "The Eryatav",
+      "suite": "The Eryatav",
+      "variant": "Veridora Mix Two",
+      "filename": "Syntarion Orchestra -  The Eryatav (Veridora Mix Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "The Eryatav",
+      "artist": "Syntarion Orchestra",
+      "album": "The Eryatav",
+      "suite": "The Eryatav",
+      "variant": null,
+      "filename": "Syntarion Orchestra -  The Eryatav.wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Arcanium (Menu Mix One)",
+      "artist": "Syntarion Orchestra",
+      "album": "Arcanium",
+      "suite": "Arcanium",
+      "variant": "Menu Mix One",
+      "filename": "Syntarion Orchestra - Arcanium (Menu Mix One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "Arcanium (Menu Mix Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "Arcanium",
+      "suite": "Arcanium",
+      "variant": "Menu Mix Two",
+      "filename": "Syntarion Orchestra - Arcanium (Menu Mix Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "Arcanium (Orchestra Mix Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "Arcanium",
+      "suite": "Arcanium",
+      "variant": "Orchestra Mix Two",
+      "filename": "Syntarion Orchestra - Arcanium (Orchestra Mix Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Arcanium (Orchestra Mixe One)",
+      "artist": "Syntarion Orchestra",
+      "album": "Arcanium",
+      "suite": "Arcanium",
+      "variant": "Orchestra Mixe One",
+      "filename": "Syntarion Orchestra - Arcanium (Orchestra Mixe One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Arcanium (String Mix One)",
+      "artist": "Syntarion Orchestra",
+      "album": "Arcanium",
+      "suite": "Arcanium",
+      "variant": "String Mix One",
+      "filename": "Syntarion Orchestra - Arcanium (String Mix One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "orchestral"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Arcanium (String Mix Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "Arcanium",
+      "suite": "Arcanium",
+      "variant": "String Mix Two",
+      "filename": "Syntarion Orchestra - Arcanium (String Mix Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "orchestral"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Arcanium (Tribal Alternate Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "Arcanium",
+      "suite": "Arcanium",
+      "variant": "Tribal Alternate Mix",
+      "filename": "Syntarion Orchestra - Arcanium (Tribal Alternate Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "world"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Arcanium (Tribal Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "Arcanium",
+      "suite": "Arcanium",
+      "variant": "Tribal Mix",
+      "filename": "Syntarion Orchestra - Arcanium (Tribal Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "world"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Arcanium",
+      "artist": "Syntarion Orchestra",
+      "album": "Arcanium",
+      "suite": "Arcanium",
+      "variant": null,
+      "filename": "Syntarion Orchestra - Arcanium.wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Disc of Soteria (Alternate Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Disc of Soteria",
+      "suite": "Disc of Soteria",
+      "variant": "Alternate Theme",
+      "filename": "Syntarion Orchestra - Disc of Soteria (Alternate Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Disc of Soteria (Combat Mix One)",
+      "artist": "Syntarion Orchestra",
+      "album": "Disc of Soteria",
+      "suite": "Disc of Soteria",
+      "variant": "Combat Mix One",
+      "filename": "Syntarion Orchestra - Disc of Soteria (Combat Mix One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "combat"
+      ],
+      "energy": 5,
+      "menu": false
+    },
+    {
+      "title": "Disc of Soteria (Combat Mix Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "Disc of Soteria",
+      "suite": "Disc of Soteria",
+      "variant": "Combat Mix Two",
+      "filename": "Syntarion Orchestra - Disc of Soteria (Combat Mix Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "combat"
+      ],
+      "energy": 5,
+      "menu": false
+    },
+    {
+      "title": "Disc of Soteria (Heroic Mix Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "Disc of Soteria",
+      "suite": "Disc of Soteria",
+      "variant": "Heroic Mix Two",
+      "filename": "Syntarion Orchestra - Disc of Soteria (Heroic Mix Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "victory"
+      ],
+      "energy": 4,
+      "menu": false
+    },
+    {
+      "title": "Disc of Soteria (Menu Ballad)",
+      "artist": "Syntarion Orchestra",
+      "album": "Disc of Soteria",
+      "suite": "Disc of Soteria",
+      "variant": "Menu Ballad",
+      "filename": "Syntarion Orchestra - Disc of Soteria (Menu Ballad).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu",
+        "ballad"
+      ],
+      "energy": 1,
+      "menu": true
+    },
+    {
+      "title": "Disc of Soteria (Menu Music)",
+      "artist": "Syntarion Orchestra",
+      "album": "Disc of Soteria",
+      "suite": "Disc of Soteria",
+      "variant": "Menu Music",
+      "filename": "Syntarion Orchestra - Disc of Soteria (Menu Music).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "Disc of Soteria (Tribal Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Disc of Soteria",
+      "suite": "Disc of Soteria",
+      "variant": "Tribal Theme",
+      "filename": "Syntarion Orchestra - Disc of Soteria (Tribal Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "world"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Disc of Soteria (Victory Mix One)",
+      "artist": "Syntarion Orchestra",
+      "album": "Disc of Soteria",
+      "suite": "Disc of Soteria",
+      "variant": "Victory Mix One",
+      "filename": "Syntarion Orchestra - Disc of Soteria (Victory  Mix One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "victory"
+      ],
+      "energy": 4,
+      "menu": false
+    },
+    {
+      "title": "Disc of Soteria - Theme",
+      "artist": "Syntarion Orchestra",
+      "album": "Disc of Soteria",
+      "suite": "Disc of Soteria",
+      "variant": null,
+      "filename": "Syntarion Orchestra - Disc of Soteria - Theme.wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "If Only Though (Arcane Mix One)",
+      "artist": "Syntarion Orchestra",
+      "album": "If Only Though",
+      "suite": "If Only Though",
+      "variant": "Arcane Mix One",
+      "filename": "Syntarion Orchestra - If Only Though (Arcane Mix One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "If Only Though (Arcane Mix Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "If Only Though (Arcane Mix Two)",
+      "suite": "If Only Though (Arcane Mix Two)",
+      "variant": null,
+      "filename": "Syntarion Orchestra - If Only Though (Arcane Mix Two.wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "If Only Though (Chime Natural Mix One)",
+      "artist": "Syntarion Orchestra",
+      "album": "If Only Though",
+      "suite": "If Only Though",
+      "variant": "Chime Natural Mix One",
+      "filename": "Syntarion Orchestra - If Only Though (Chime Natural Mix One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "folk"
+      ],
+      "energy": 2,
+      "menu": false
+    },
+    {
+      "title": "If Only Though (Chime Natural Mix Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "If Only Though",
+      "suite": "If Only Though",
+      "variant": "Chime Natural Mix Two",
+      "filename": "Syntarion Orchestra - If Only Though (Chime Natural Mix Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "folk"
+      ],
+      "energy": 2,
+      "menu": false
+    },
+    {
+      "title": "If Only Though (Main Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "If Only Though",
+      "suite": "If Only Though",
+      "variant": "Main Theme",
+      "filename": "Syntarion Orchestra - If Only Though (Main Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "If Only Though (Nature Theme Four)",
+      "artist": "Syntarion Orchestra",
+      "album": "If Only Though",
+      "suite": "If Only Though",
+      "variant": "Nature Theme Four",
+      "filename": "Syntarion Orchestra - If Only Though (Nature Theme Four).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "folk"
+      ],
+      "energy": 2,
+      "menu": false
+    },
+    {
+      "title": "If Only Though (Nature Theme One)",
+      "artist": "Syntarion Orchestra",
+      "album": "If Only Though",
+      "suite": "If Only Though",
+      "variant": "Nature Theme One",
+      "filename": "Syntarion Orchestra - If Only Though (Nature Theme One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "folk"
+      ],
+      "energy": 2,
+      "menu": false
+    },
+    {
+      "title": "If Only Though (Nature Theme Three)",
+      "artist": "Syntarion Orchestra",
+      "album": "If Only Though",
+      "suite": "If Only Though",
+      "variant": "Nature Theme Three",
+      "filename": "Syntarion Orchestra - If Only Though (Nature Theme Three).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "folk"
+      ],
+      "energy": 2,
+      "menu": false
+    },
+    {
+      "title": "If Only Though (Nature Theme Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "If Only Though",
+      "suite": "If Only Though",
+      "variant": "Nature Theme Two",
+      "filename": "Syntarion Orchestra - If Only Though (Nature Theme Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "folk"
+      ],
+      "energy": 2,
+      "menu": false
+    },
+    {
+      "title": "If Only Though (Nursery Ballad)",
+      "artist": "Syntarion Orchestra",
+      "album": "If Only Though",
+      "suite": "If Only Though",
+      "variant": "Nursery Ballad",
+      "filename": "Syntarion Orchestra - If Only Though (Nursery Ballad).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "ballad"
+      ],
+      "energy": 1,
+      "menu": false
+    },
+    {
+      "title": "If Only Though (Piano Ballad One)",
+      "artist": "Syntarion Orchestra",
+      "album": "If Only Though",
+      "suite": "If Only Though",
+      "variant": "Piano Ballad One",
+      "filename": "Syntarion Orchestra - If Only Though (Piano Ballad One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "ballad"
+      ],
+      "energy": 1,
+      "menu": false
+    },
+    {
+      "title": "If Only Though (Piano Ballad Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "If Only Though",
+      "suite": "If Only Though",
+      "variant": "Piano Ballad Two",
+      "filename": "Syntarion Orchestra - If Only Though (Piano Ballad Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "ballad"
+      ],
+      "energy": 1,
+      "menu": false
+    },
+    {
+      "title": "If Only Though (String Ballad Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "If Only Though",
+      "suite": "If Only Though",
+      "variant": "String Ballad Theme",
+      "filename": "Syntarion Orchestra - If Only Though (String Ballad Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "ballad",
+        "orchestral"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "If Only Though (Violin Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "If Only Though",
+      "suite": "If Only Though",
+      "variant": "Violin Mix",
+      "filename": "Syntarion Orchestra - If Only Though (Violin Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "orchestral"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Lilith'iel",
+      "artist": "Syntarion Orchestra",
+      "album": "Lilith'iel",
+      "suite": "Lilith'iel",
+      "variant": null,
+      "filename": "Syntarion Orchestra - Lilith'iel.wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Metropolis (Alternate Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Metropolis",
+      "suite": "Metropolis",
+      "variant": "Alternate Theme",
+      "filename": "Syntarion Orchestra - Metropolis (Alternate Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Metropolis (Main Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Metropolis",
+      "suite": "Metropolis",
+      "variant": "Main Theme",
+      "filename": "Syntarion Orchestra - Metropolis (Main Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Metropolis (Menu Theme One)",
+      "artist": "Syntarion Orchestra",
+      "album": "Metropolis",
+      "suite": "Metropolis",
+      "variant": "Menu Theme One",
+      "filename": "Syntarion Orchestra - Metropolis (Menu Theme One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "Metropolis (Menu Theme Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "Metropolis",
+      "suite": "Metropolis",
+      "variant": "Menu Theme Two",
+      "filename": "Syntarion Orchestra - Metropolis (Menu Theme Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "Paint In One (Alternative Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Paint In One",
+      "suite": "Paint In One",
+      "variant": "Alternative Theme",
+      "filename": "Syntarion Orchestra - Paint In One (Alternative Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Paint In One (Main Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Paint In One",
+      "suite": "Paint In One",
+      "variant": "Main Theme",
+      "filename": "Syntarion Orchestra - Paint In One (Main Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Paint In One (Menu Theme One)",
+      "artist": "Syntarion Orchestra",
+      "album": "Paint In One",
+      "suite": "Paint In One",
+      "variant": "Menu Theme One",
+      "filename": "Syntarion Orchestra - Paint In One (Menu Theme One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "Paint In One (Menu Theme Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "Paint In One",
+      "suite": "Paint In One",
+      "variant": "Menu Theme Two",
+      "filename": "Syntarion Orchestra - Paint In One (Menu Theme Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "Paint In One (Shanty Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "Paint In One",
+      "suite": "Paint In One",
+      "variant": "Shanty Mix",
+      "filename": "Syntarion Orchestra - Paint In One (Shanty  Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "folk"
+      ],
+      "energy": 2,
+      "menu": false
+    },
+    {
+      "title": "Scarred Freedom (Alternate Menu Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Scarred Freedom",
+      "suite": "Scarred Freedom",
+      "variant": "Alternate Menu Theme",
+      "filename": "Syntarion Orchestra - Scarred Freedom (Alternate Menu Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "Scarred Freedom (Choire Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Scarred Freedom",
+      "suite": "Scarred Freedom",
+      "variant": "Choire Theme",
+      "filename": "Syntarion Orchestra - Scarred Freedom (Choire Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "orchestral"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Scarred Freedom (Guitar Ballad Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Scarred Freedom",
+      "suite": "Scarred Freedom",
+      "variant": "Guitar Ballad Theme",
+      "filename": "Syntarion Orchestra - Scarred Freedom (Guitar Ballad Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "ballad",
+        "folk"
+      ],
+      "energy": 2,
+      "menu": false
+    },
+    {
+      "title": "Scarred Freedom (Guitar Menu Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Scarred Freedom",
+      "suite": "Scarred Freedom",
+      "variant": "Guitar Menu Theme",
+      "filename": "Syntarion Orchestra - Scarred Freedom (Guitar Menu Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu",
+        "folk"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "Scarred Freedom (High Seas Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Scarred Freedom",
+      "suite": "Scarred Freedom",
+      "variant": "High Seas Theme",
+      "filename": "Syntarion Orchestra - Scarred Freedom (High Seas Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Scarred Freedom (Menu Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Scarred Freedom",
+      "suite": "Scarred Freedom",
+      "variant": "Menu Theme",
+      "filename": "Syntarion Orchestra - Scarred Freedom (Menu Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "Scarred Freedom (Orchestra Lite Version)",
+      "artist": "Syntarion Orchestra",
+      "album": "Scarred Freedom",
+      "suite": "Scarred Freedom",
+      "variant": "Orchestra Lite Version",
+      "filename": "Syntarion Orchestra - Scarred Freedom (Orchestra Lite Version).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Scarred Freedom (Orchestral Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Scarred Freedom",
+      "suite": "Scarred Freedom",
+      "variant": "Orchestral Theme",
+      "filename": "Syntarion Orchestra - Scarred Freedom (Orchestral Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "orchestral"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Scarred Freedom (Shanty Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Scarred Freedom",
+      "suite": "Scarred Freedom",
+      "variant": "Shanty Theme",
+      "filename": "Syntarion Orchestra - Scarred Freedom (Shanty Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "folk"
+      ],
+      "energy": 2,
+      "menu": false
+    },
+    {
+      "title": "Scarred Freedom (Triumph Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "Scarred Freedom",
+      "suite": "Scarred Freedom",
+      "variant": "Triumph Mix",
+      "filename": "Syntarion Orchestra - Scarred Freedom (Triumph Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "victory"
+      ],
+      "energy": 4,
+      "menu": false
+    },
+    {
+      "title": "Scarred Freedom (Victory Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Scarred Freedom",
+      "suite": "Scarred Freedom",
+      "variant": "Victory Theme",
+      "filename": "Syntarion Orchestra - Scarred Freedom (Victory Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "victory"
+      ],
+      "energy": 4,
+      "menu": false
+    },
+    {
+      "title": "Scarred Freedom",
+      "artist": "Syntarion Orchestra",
+      "album": "Scarred Freedom",
+      "suite": "Scarred Freedom",
+      "variant": null,
+      "filename": "Syntarion Orchestra - Scarred Freedom.wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Setting Fire to Pontunea (Alternate Lunatik Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Setting Fire to Pontunea",
+      "suite": "Setting Fire to Pontunea",
+      "variant": "Alternate Lunatik Theme",
+      "filename": "Syntarion Orchestra - Setting Fire to Pontunea (Alternate Lunatik Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Setting Fire to Pontunea (Lunatik Menu Theme One)",
+      "artist": "Syntarion Orchestra",
+      "album": "Setting Fire to Pontunea",
+      "suite": "Setting Fire to Pontunea",
+      "variant": "Lunatik Menu Theme One",
+      "filename": "Syntarion Orchestra - Setting Fire to Pontunea (Lunatik Menu Theme One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "Setting Fire to Pontunea (Lunatik Menu Theme Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "Setting Fire to Pontunea",
+      "suite": "Setting Fire to Pontunea",
+      "variant": "Lunatik Menu Theme Two",
+      "filename": "Syntarion Orchestra - Setting Fire to Pontunea (Lunatik Menu Theme Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "Setting Fire to Pontunea (Lunatik Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Setting Fire to Pontunea",
+      "suite": "Setting Fire to Pontunea",
+      "variant": "Lunatik Theme",
+      "filename": "Syntarion Orchestra - Setting Fire to Pontunea (Lunatik Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Soteria Awakened - Main Theme",
+      "artist": "Syntarion Orchestra",
+      "album": "Soteria Awakened",
+      "suite": "Soteria Awakened",
+      "variant": null,
+      "filename": "Syntarion Orchestra - Soteria Awakened -  Main Theme.wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Soteria Awakened - Main Theme (Menu Music)",
+      "artist": "Syntarion Orchestra",
+      "album": "Soteria Awakened",
+      "suite": "Soteria Awakened",
+      "variant": "Menu Music",
+      "filename": "Syntarion Orchestra - Soteria Awakened - Main Theme (Menu Music).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "Soteria Beyond (Desert Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Soteria Beyond",
+      "suite": "Soteria Beyond",
+      "variant": "Desert Theme",
+      "filename": "Syntarion Orchestra - Soteria Beyond (Desert Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "world"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Soteria Beyond (Durinak Mix Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "Soteria Beyond",
+      "suite": "Soteria Beyond",
+      "variant": "Durinak Mix Two",
+      "filename": "Syntarion Orchestra - Soteria Beyond (Durinak Mix Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Soteria Beyond (Durinak Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "Soteria Beyond",
+      "suite": "Soteria Beyond",
+      "variant": "Durinak Mix",
+      "filename": "Syntarion Orchestra - Soteria Beyond (Durinak Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Soteria Beyond (Jiro'Ki Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "Soteria Beyond",
+      "suite": "Soteria Beyond",
+      "variant": "Jiro'Ki Mix",
+      "filename": "Syntarion Orchestra - Soteria Beyond (Jiro'Ki Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Soteria Beyond (Main Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Soteria Beyond",
+      "suite": "Soteria Beyond",
+      "variant": "Main Theme",
+      "filename": "Syntarion Orchestra - Soteria Beyond (Main Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Soteria Beyond (Vald Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "Soteria Beyond",
+      "suite": "Soteria Beyond",
+      "variant": "Vald Mix",
+      "filename": "Syntarion Orchestra - Soteria Beyond (Vald Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Soteria Beyond (Zhallakan Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Soteria Beyond",
+      "suite": "Soteria Beyond",
+      "variant": "Zhallakan Theme",
+      "filename": "Syntarion Orchestra - Soteria Beyond (Zhallakan Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "world"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Soteria Eternal (Menu Version Choir)",
+      "artist": "Syntarion Orchestra",
+      "album": "Soteria Eternal",
+      "suite": "Soteria Eternal",
+      "variant": "Menu Version Choir",
+      "filename": "Syntarion Orchestra - Soteria Eternal (Menu Version Choir).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu",
+        "orchestral"
+      ],
+      "energy": 3,
+      "menu": true
+    },
+    {
+      "title": "Soteria Eternal (Menu Version Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "Soteria Eternal",
+      "suite": "Soteria Eternal",
+      "variant": "Menu Version Two",
+      "filename": "Syntarion Orchestra - Soteria Eternal (Menu Version Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "Soteria Rises - Secondary Theme",
+      "artist": "Syntarion Orchestra",
+      "album": "Soteria Rises",
+      "suite": "Soteria Rises",
+      "variant": null,
+      "filename": "Syntarion Orchestra - Soteria Rises - Secondary Theme.wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore",
+        "menu"
+      ],
+      "energy": 3,
+      "menu": true
+    },
+    {
+      "title": "Soteria Under Three Suns (Action Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Soteria Under Three Suns",
+      "suite": "Soteria Under Three Suns",
+      "variant": "Action Theme",
+      "filename": "Syntarion Orchestra - Soteria Under Three Suns (Action Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "combat"
+      ],
+      "energy": 5,
+      "menu": false
+    },
+    {
+      "title": "Soteria Under Three Suns (Alternate Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Soteria Under Three Suns",
+      "suite": "Soteria Under Three Suns",
+      "variant": "Alternate Theme",
+      "filename": "Syntarion Orchestra - Soteria Under Three Suns (Alternate Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Soteria Under Three Suns (Main Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Soteria Under Three Suns",
+      "suite": "Soteria Under Three Suns",
+      "variant": "Main Theme",
+      "filename": "Syntarion Orchestra - Soteria Under Three Suns (Main Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Soteria Under Three Suns (Violin Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Soteria Under Three Suns",
+      "suite": "Soteria Under Three Suns",
+      "variant": "Violin Theme",
+      "filename": "Syntarion Orchestra - Soteria Under Three Suns (Violin Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "orchestral"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "The College of Mages (Arcane Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "The College of Mages",
+      "suite": "The College of Mages",
+      "variant": "Arcane Mix",
+      "filename": "Syntarion Orchestra - The College of Mages (Arcane Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "The College of Mages (Bagpipe Mix One)",
+      "artist": "Syntarion Orchestra",
+      "album": "The College of Mages",
+      "suite": "The College of Mages",
+      "variant": "Bagpipe Mix One",
+      "filename": "Syntarion Orchestra - The College of Mages (Bagpipe Mix One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "folk"
+      ],
+      "energy": 2,
+      "menu": false
+    },
+    {
+      "title": "The College of Mages (Bagpipe Mix Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "The College of Mages",
+      "suite": "The College of Mages",
+      "variant": "Bagpipe Mix Two",
+      "filename": "Syntarion Orchestra - The College of Mages (Bagpipe Mix Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "folk"
+      ],
+      "energy": 2,
+      "menu": false
+    },
+    {
+      "title": "The College of Mages (Cinematic Mix One)",
+      "artist": "Syntarion Orchestra",
+      "album": "The College of Mages",
+      "suite": "The College of Mages",
+      "variant": "Cinematic Mix One",
+      "filename": "Syntarion Orchestra - The College of Mages (Cinematic Mix One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "orchestral"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "The College of Mages (Cinematic Mix Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "The College of Mages",
+      "suite": "The College of Mages",
+      "variant": "Cinematic Mix Two",
+      "filename": "Syntarion Orchestra - The College of Mages (Cinematic Mix Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "orchestral"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "The College of Mages (Cinematic Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "The College of Mages",
+      "suite": "The College of Mages",
+      "variant": "Cinematic Mix",
+      "filename": "Syntarion Orchestra - The College of Mages (Cinematic Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "orchestral"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "The College of Mages (Desert Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "The College of Mages",
+      "suite": "The College of Mages",
+      "variant": "Desert Mix",
+      "filename": "Syntarion Orchestra - The College of Mages (Desert Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "world"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "The College of Mages (Eryatav Mix One)",
+      "artist": "Syntarion Orchestra",
+      "album": "The College of Mages",
+      "suite": "The College of Mages",
+      "variant": "Eryatav Mix One",
+      "filename": "Syntarion Orchestra - The College of Mages (Eryatav Mix One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "The College of Mages (Eryatav Mix Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "The College of Mages",
+      "suite": "The College of Mages",
+      "variant": "Eryatav Mix Two",
+      "filename": "Syntarion Orchestra - The College of Mages (Eryatav Mix Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "The College of Mages (Main Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "The College of Mages",
+      "suite": "The College of Mages",
+      "variant": "Main Theme",
+      "filename": "Syntarion Orchestra - The College of Mages (Main Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "The College of Mages (Menu Mix One)",
+      "artist": "Syntarion Orchestra",
+      "album": "The College of Mages",
+      "suite": "The College of Mages",
+      "variant": "Menu Mix One",
+      "filename": "Syntarion Orchestra - The College of Mages (Menu Mix One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "The College of Mages (Menu Mix Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "The College of Mages",
+      "suite": "The College of Mages",
+      "variant": "Menu Mix Two",
+      "filename": "Syntarion Orchestra - The College of Mages (Menu Mix Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "The College of Mages (Menu Theme One)",
+      "artist": "Syntarion Orchestra",
+      "album": "The College of Mages",
+      "suite": "The College of Mages",
+      "variant": "Menu Theme One",
+      "filename": "Syntarion Orchestra - The College of Mages (Menu Theme One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "The College of Mages (Menu Theme Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "The College of Mages",
+      "suite": "The College of Mages",
+      "variant": "Menu Theme Two",
+      "filename": "Syntarion Orchestra - The College of Mages (Menu Theme Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "The College of Mages (Orchestral Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "The College of Mages",
+      "suite": "The College of Mages",
+      "variant": "Orchestral Mix",
+      "filename": "Syntarion Orchestra - The College of Mages (Orchestral Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "orchestral"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "The College of Mages (Zhallakan Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "The College of Mages",
+      "suite": "The College of Mages",
+      "variant": "Zhallakan Mix",
+      "filename": "Syntarion Orchestra - The College of Mages (Zhallakan Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "world"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "The Road to Aldermore",
+      "artist": "Syntarion Orchestra",
+      "album": "The Road to Aldermore",
+      "suite": "The Road to Aldermore",
+      "variant": null,
+      "filename": "Syntarion Orchestra - The Road to Aldermore.wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "The Road to Ebba",
+      "artist": "Syntarion Orchestra",
+      "album": "The Road to Ebba",
+      "suite": "The Road to Ebba",
+      "variant": null,
+      "filename": "Syntarion Orchestra - The Road to Ebba.wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Zhallakan (Hoshiari Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "Zhallakan",
+      "suite": "Zhallakan",
+      "variant": "Hoshiari Mix",
+      "filename": "Syntarion Orchestra - Zhallakan (Hoshiari Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "world"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Zhallakan (Jiro'ki Mix)",
+      "artist": "Syntarion Orchestra",
+      "album": "Zhallakan",
+      "suite": "Zhallakan",
+      "variant": "Jiro'ki Mix",
+      "filename": "Syntarion Orchestra - Zhallakan (Jiro'ki Mix).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "world"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Zhallakan (Menu Mix One)",
+      "artist": "Syntarion Orchestra",
+      "album": "Zhallakan",
+      "suite": "Zhallakan",
+      "variant": "Menu Mix One",
+      "filename": "Syntarion Orchestra - Zhallakan (Menu Mix One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu",
+        "world"
+      ],
+      "energy": 3,
+      "menu": true
+    },
+    {
+      "title": "Zhallakan (Menu Mix Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "Zhallakan",
+      "suite": "Zhallakan",
+      "variant": "Menu Mix Two",
+      "filename": "Syntarion Orchestra - Zhallakan (Menu Mix Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu",
+        "world"
+      ],
+      "energy": 3,
+      "menu": true
+    },
+    {
+      "title": "Zhallakan",
+      "artist": "Syntarion Orchestra",
+      "album": "Zhallakan",
+      "suite": "Zhallakan",
+      "variant": null,
+      "filename": "Syntarion Orchestra - Zhallakan.wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "world"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Syntarion Orchestrea - Away We Go (To Soteria) (Alternate Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "suite": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "variant": "Alternate Theme",
+      "filename": "Syntarion Orchestrea - Away We Go (To Soteria) (Alternate Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Syntarion Orchestrea - Away We Go (To Soteria) (Ballad Theme One)",
+      "artist": "Syntarion Orchestra",
+      "album": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "suite": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "variant": "Ballad Theme One",
+      "filename": "Syntarion Orchestrea - Away We Go (To Soteria) (Ballad Theme One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "ballad"
+      ],
+      "energy": 1,
+      "menu": false
+    },
+    {
+      "title": "Syntarion Orchestrea - Away We Go (To Soteria) (Ballad Theme Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "suite": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "variant": "Ballad Theme Two",
+      "filename": "Syntarion Orchestrea - Away We Go (To Soteria) (Ballad Theme Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "ballad"
+      ],
+      "energy": 1,
+      "menu": false
+    },
+    {
+      "title": "Syntarion Orchestrea - Away We Go (To Soteria) (Island Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "suite": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "variant": "Island Theme",
+      "filename": "Syntarion Orchestrea - Away We Go (To Soteria) (Island Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "world"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Syntarion Orchestrea - Away We Go (To Soteria) (Main Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "suite": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "variant": "Main Theme",
+      "filename": "Syntarion Orchestrea - Away We Go (To Soteria) (Main Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "explore"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Syntarion Orchestrea - Away We Go (To Soteria) (Menu Alternative Theme)",
+      "artist": "Syntarion Orchestra",
+      "album": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "suite": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "variant": "Menu Alternative Theme",
+      "filename": "Syntarion Orchestrea - Away We Go (To Soteria) (Menu Alternative Theme).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "Syntarion Orchestrea - Away We Go (To Soteria) (Menu Theme One)",
+      "artist": "Syntarion Orchestra",
+      "album": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "suite": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "variant": "Menu Theme One",
+      "filename": "Syntarion Orchestrea - Away We Go (To Soteria) (Menu Theme One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "Syntarion Orchestrea - Away We Go (To Soteria) (Menu Theme Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "suite": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "variant": "Menu Theme Two",
+      "filename": "Syntarion Orchestrea - Away We Go (To Soteria) (Menu Theme Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "menu"
+      ],
+      "energy": 2,
+      "menu": true
+    },
+    {
+      "title": "Syntarion Orchestrea - Away We Go (To Soteria) (Tribal Theme One)",
+      "artist": "Syntarion Orchestra",
+      "album": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "suite": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "variant": "Tribal Theme One",
+      "filename": "Syntarion Orchestrea - Away We Go (To Soteria) (Tribal Theme One).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "world"
+      ],
+      "energy": 3,
+      "menu": false
+    },
+    {
+      "title": "Syntarion Orchestrea - Away We Go (To Soteria) (Tribal Theme Two)",
+      "artist": "Syntarion Orchestra",
+      "album": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "suite": "Syntarion Orchestrea - Away We Go (To Soteria)",
+      "variant": "Tribal Theme Two",
+      "filename": "Syntarion Orchestrea - Away We Go (To Soteria) (Tribal Theme Two).wav",
+      "artwork": "/music/syntarion-soundtrack-cover.png",
+      "tags": [
+        "world"
+      ],
+      "energy": 3,
+      "menu": false
+    }
+  ]
+}

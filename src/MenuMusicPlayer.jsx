@@ -1,12 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import musicEngine from './musicEngine';
-import { getMenuMusicTracks, getTrackKey, loadMenuMusicTracks } from './musicLibrary';
+import { buildMenuMusicQueue, getMenuMusicTracks, getTrackFamilyKey, getTrackKey, loadMenuMusicTracks } from './musicLibrary';
 import { getAudioSettings, saveAudioSettings, subscribeAudioSettings } from './audioSettings';
 
-function rotateFromRandom(tracks) {
-  if (!tracks.length) return [];
-  const start = Math.floor(Math.random() * tracks.length);
-  return [...tracks.slice(start), ...tracks.slice(0, start)];
+
+function isMissingSourceError(error) {
+  const name = error?.name || '';
+  const message = error?.message || '';
+  return name === 'NotSupportedError'
+    || name === 'MediaError'
+    || /not found|404|no supported source|failed to load/i.test(message);
 }
 
 const ICONS = {
@@ -27,6 +30,8 @@ export default function MenuMusicPlayer({ isMobile = false }) {
   const [needsGesture, setNeedsGesture] = useState(false);
   const [missingTracks, setMissingTracks] = useState(() => new Set());
   const [statusMessage, setStatusMessage] = useState('');
+  const playInFlightRef = useRef(false);
+  const autoplayAttemptedRef = useRef(false);
 
   const playableTracks = useMemo(
     () => tracks.filter(track => !missingTracks.has(getTrackKey(track))),
@@ -56,7 +61,9 @@ export default function MenuMusicPlayer({ isMobile = false }) {
   }), []);
 
   useEffect(() => {
-    musicEngine.setQueue(rotateFromRandom(playableTracks));
+    musicEngine.setQueue(buildMenuMusicQueue(playableTracks, {
+      avoidFirstFamily: getTrackFamilyKey(musicEngine.currentTrack),
+    }));
     musicEngine.setVolume(audioSettings.musicVolume);
     musicEngine.setMuted(!audioSettings.musicEnabled);
 
@@ -92,29 +99,45 @@ export default function MenuMusicPlayer({ isMobile = false }) {
       return true;
     }
 
-    const failedTrack = attemptedTrack || result?.track;
-    const key = getTrackKey(failedTrack);
-    if (key) setMissingTracks(prev => new Set(prev).add(key));
+    const error = result?.error;
+    if (isMissingSourceError(error)) {
+      const failedTrack = attemptedTrack || result?.track;
+      const key = getTrackKey(failedTrack);
+      if (key) setMissingTracks(prev => new Set(prev).add(key));
+      setPlaying(false);
+      setNeedsGesture(false);
+      setStatusMessage('Track source not found. Skipping.');
+      return false;
+    }
+
     setPlaying(false);
-    setNeedsGesture(false);
-    setStatusMessage('Track source not found. Skipping.');
+    setNeedsGesture(true);
+    setStatusMessage('Tap play to start music in this browser.');
     return false;
   };
 
   const playSpecific = async (track) => {
-    if (!track || !audioSettings.musicEnabled) return false;
-    const result = await musicEngine.play(track);
-    return handlePlayResult(result, track);
+    if (!track || !audioSettings.musicEnabled || playInFlightRef.current) return false;
+    playInFlightRef.current = true;
+    try {
+      const result = await musicEngine.play(track);
+      return await handlePlayResult(result, track);
+    } finally {
+      playInFlightRef.current = false;
+    }
   };
 
   const playRelative = async (direction) => {
     if (!playableTracks.length) return false;
-    const currentKey = getTrackKey(currentTrack);
-    const currentIndex = playableTracks.findIndex(track => getTrackKey(track) === currentKey);
-    const fallbackIndex = direction > 0 ? -1 : 0;
-    const baseIndex = currentIndex >= 0 ? currentIndex : fallbackIndex;
-    const nextIndex = (baseIndex + direction + playableTracks.length) % playableTracks.length;
-    return playSpecific(playableTracks[nextIndex]);
+    if (direction > 0) {
+      const result = await musicEngine.playNext();
+      return handlePlayResult(result, result?.track);
+    }
+
+    const currentFamily = getTrackFamilyKey(currentTrack);
+    const reverseQueue = buildMenuMusicQueue(playableTracks, { avoidFirstFamily: currentFamily }).reverse();
+    const previous = reverseQueue.find(track => getTrackFamilyKey(track) !== currentFamily) || reverseQueue[0] || playableTracks[0];
+    return playSpecific(previous);
   };
 
   const playNext = () => playRelative(1);
@@ -132,12 +155,20 @@ export default function MenuMusicPlayer({ isMobile = false }) {
   useEffect(() => {
     if (!audioSettings.musicEnabled || musicEngine.currentTrack || !playableTracks.length) return;
 
-    startMusic();
-    const unlock = () => startMusic();
+    let timer = null;
+    if (!autoplayAttemptedRef.current) {
+      autoplayAttemptedRef.current = true;
+      timer = window.setTimeout(() => startMusic(), 250);
+    }
+
+    const unlock = () => {
+      if (!musicEngine.currentTrack) startMusic();
+    };
     window.addEventListener('pointerdown', unlock, { once: true });
     window.addEventListener('keydown', unlock, { once: true });
 
     return () => {
+      if (timer) window.clearTimeout(timer);
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);
     };
@@ -258,7 +289,7 @@ export default function MenuMusicPlayer({ isMobile = false }) {
           <div style={{ borderTop: '1px solid rgba(240,238,235,0.10)', padding: '8px 10px 10px', display: 'grid', gap: 8 }}>
             {(needsGesture || statusMessage || !playableTracks.length) && (
               <div style={{ fontSize: 9, color: 'rgba(226,207,145,0.88)', fontStyle: 'italic', lineHeight: 1.3 }}>
-                {!playableTracks.length ? 'No reachable music sources yet.' : statusMessage || 'Tap play to start music in this browser.'}
+                {!playableTracks.length ? 'No playable tracks remain in this session.' : statusMessage || 'Tap play to start music in this browser.'}
               </div>
             )}
             <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>

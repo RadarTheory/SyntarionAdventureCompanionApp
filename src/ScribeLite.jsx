@@ -693,7 +693,7 @@ export default function ScribeLite({ dismiss = false }) {
       aria-label="Ask the Scribe"
       disabled={dismiss}
       style={{
-        position: 'fixed', bottom: isMobile ? 16 : 24, right: isMobile ? 16 : 24,
+        position: 'fixed', bottom: isMobile ? 84 : 78, right: isMobile ? 16 : 24,
         zIndex: 1900, width: isMobile ? 68 : 84, height: isMobile ? 68 : 84,
         borderRadius: '50%', border: '1px solid rgba(200,168,74,0.5)',
         background: '#13100d', cursor: 'pointer', padding: 0,
@@ -709,11 +709,11 @@ export default function ScribeLite({ dismiss = false }) {
   return (
     <div style={{
       position: 'fixed', zIndex: 1900,
-      bottom: isMobile ? 0 : 24, right: isMobile ? 0 : 24,
+      bottom: isMobile ? 84 : 78, right: isMobile ? 0 : 24,
       left: isMobile ? 0 : 'auto',
       width: isMobile ? '100%' : 380,
       height: isMobile ? '85svh' : 640,
-      maxHeight: isMobile ? '85svh' : 'calc(100svh - 48px)',
+      maxHeight: isMobile ? 'calc(100svh - 108px)' : 'calc(100svh - 102px)',
       background: '#13100d',
       border: '1px solid rgba(200,168,74,0.3)',
       borderRadius: isMobile ? '14px 14px 0 0' : 14,
