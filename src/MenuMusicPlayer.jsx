@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import musicEngine from './musicEngine';
 import { buildMenuMusicQueue, getMenuMusicTracks, getTrackFamilyKey, getTrackKey, loadMenuMusicTracks } from './musicLibrary';
 import { getAudioSettings, saveAudioSettings, subscribeAudioSettings } from './audioSettings';
@@ -80,22 +80,29 @@ export default function MenuMusicPlayer({ isMobile = false }) {
     };
   }, [audioSettings.musicEnabled, audioSettings.musicVolume, playableTracks, tracks]);
 
-  const handlePlayResult = async (result, attemptedTrack) => {
+  const updateMediaSession = useCallback((track, playbackState = 'playing') => {
+    if (!('mediaSession' in navigator)) return;
+
+    navigator.mediaSession.playbackState = playbackState;
+
+    if (track?.artwork && window.MediaMetadata) {
+      navigator.mediaSession.metadata = new window.MediaMetadata({
+        title: track.title || 'Menu Music',
+        artist: track.artist || 'Syntarion',
+        album: track.album || 'Syntarion',
+        artwork: [{ src: track.artwork, sizes: '512x512', type: 'image/png' }],
+      });
+    }
+  }, []);
+
+  const handlePlayResult = useCallback(async (result, attemptedTrack) => {
     if (result?.ok) {
       const track = result.track || attemptedTrack;
       setPlaying(true);
       setNeedsGesture(false);
       setStatusMessage('');
       setCurrentTrack(track || null);
-
-      if (track?.artwork && 'mediaSession' in navigator && window.MediaMetadata) {
-        navigator.mediaSession.metadata = new window.MediaMetadata({
-          title: track.title || 'Menu Music',
-          artist: track.artist || 'Syntarion',
-          album: track.album || 'Syntarion',
-          artwork: [{ src: track.artwork, sizes: '512x512', type: 'image/png' }],
-        });
-      }
+      updateMediaSession(track, 'playing');
       return true;
     }
 
@@ -105,18 +112,20 @@ export default function MenuMusicPlayer({ isMobile = false }) {
       const key = getTrackKey(failedTrack);
       if (key) setMissingTracks(prev => new Set(prev).add(key));
       setPlaying(false);
+      updateMediaSession(null, 'none');
       setNeedsGesture(false);
       setStatusMessage('Track source not found. Skipping.');
       return false;
     }
 
     setPlaying(false);
+    updateMediaSession(null, 'none');
     setNeedsGesture(true);
     setStatusMessage('Tap play to start music in this browser.');
     return false;
-  };
+  }, [updateMediaSession]);
 
-  const playSpecific = async (track) => {
+  const playSpecific = useCallback(async (track) => {
     if (!track || !audioSettings.musicEnabled || playInFlightRef.current) return false;
     playInFlightRef.current = true;
     try {
@@ -125,9 +134,9 @@ export default function MenuMusicPlayer({ isMobile = false }) {
     } finally {
       playInFlightRef.current = false;
     }
-  };
+  }, [audioSettings.musicEnabled, handlePlayResult]);
 
-  const playRelative = async (direction) => {
+  const playRelative = useCallback(async (direction) => {
     if (!playableTracks.length) return false;
     if (direction > 0) {
       const result = await musicEngine.playNext();
@@ -138,19 +147,57 @@ export default function MenuMusicPlayer({ isMobile = false }) {
     const reverseQueue = buildMenuMusicQueue(playableTracks, { avoidFirstFamily: currentFamily }).reverse();
     const previous = reverseQueue.find(track => getTrackFamilyKey(track) !== currentFamily) || reverseQueue[0] || playableTracks[0];
     return playSpecific(previous);
-  };
+  }, [currentTrack, handlePlayResult, playableTracks, playSpecific]);
 
-  const playNext = () => playRelative(1);
-  const playBack = () => playRelative(-1);
+  const playNext = useCallback(() => playRelative(1), [playRelative]);
+  const playBack = useCallback(() => playRelative(-1), [playRelative]);
 
-  const startMusic = async () => {
+  const startMusic = useCallback(async () => {
     if (!playableTracks.length || !audioSettings.musicEnabled) return;
     const next = musicEngine.currentTrack && !missingTracks.has(getTrackKey(musicEngine.currentTrack))
       ? musicEngine.currentTrack
       : playableTracks[0];
     const ok = await playSpecific(next);
     if (!ok && playableTracks.length > 1) await playNext();
-  };
+  }, [audioSettings.musicEnabled, missingTracks, playableTracks, playNext, playSpecific]);
+
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+
+    const handlers = {
+      play: () => startMusic(),
+      pause: () => {
+        musicEngine.stop();
+        setPlaying(false);
+        updateMediaSession(currentTrack, 'paused');
+      },
+      previoustrack: () => playBack(),
+      nexttrack: () => playNext(),
+      stop: () => {
+        musicEngine.stop();
+        setPlaying(false);
+        updateMediaSession(null, 'none');
+      },
+    };
+
+    Object.entries(handlers).forEach(([action, handler]) => {
+      try {
+        navigator.mediaSession.setActionHandler(action, handler);
+      } catch (err) {
+        console.warn(`Media session action ${action} is not supported:`, err);
+      }
+    });
+
+    return () => {
+      Object.keys(handlers).forEach(action => {
+        try {
+          navigator.mediaSession.setActionHandler(action, null);
+        } catch {
+          // Ignore unsupported media session actions during cleanup.
+        }
+      });
+    };
+  }, [currentTrack, playBack, playNext, startMusic, updateMediaSession]);
 
   useEffect(() => {
     if (!audioSettings.musicEnabled || musicEngine.currentTrack || !playableTracks.length) return;
@@ -172,7 +219,7 @@ export default function MenuMusicPlayer({ isMobile = false }) {
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);
     };
-  }, [audioSettings.musicEnabled, playableTracks]);
+  }, [audioSettings.musicEnabled, playableTracks.length, startMusic]);
 
   const updateMusicVolume = (value) => {
     const next = saveAudioSettings({ ...audioSettings, musicVolume: Number(value), musicEnabled: true });
@@ -185,6 +232,7 @@ export default function MenuMusicPlayer({ isMobile = false }) {
     if (playing) {
       musicEngine.stop();
       setPlaying(false);
+      updateMediaSession(currentTrack, 'paused');
       return;
     }
 
@@ -198,6 +246,7 @@ export default function MenuMusicPlayer({ isMobile = false }) {
     const next = saveAudioSettings({ ...audioSettings, musicEnabled: false });
     setAudioSettings(next);
     setPlaying(false);
+    updateMediaSession(null, 'none');
     setNeedsGesture(false);
     setStatusMessage('Menu music is off.');
   };

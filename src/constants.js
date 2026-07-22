@@ -209,15 +209,6 @@ export const PM_AEON = [
 ];
 
 export const PM_ASTRAL = [
-  { id:'khellsarii', name:'Khellsarii', sub:'Honor-Bound Warrior Caste'     },
-  { id:'khellskini', name:'Khellskini', sub:'Four-Armed Salvage Caste'      },
-  { id:'khellhanae', name:'Khellhanae', sub:'Brute Siege Caste'             },
-  { id:'khelloch',   name:'Khelloch',   sub:'Colony-Form Worm-Mass Caste'   },
-  { id:'khellyuum',  name:'Khellyuum',  sub:'Priestly Brood-Ruler Caste'    },
-  { id:'khelljta',   name:'Khelljta',   sub:'Solitary Apex-Hunter Caste'    },
-  { id:'khellxen',   name:"Khell'xen",  sub:'Nightmare Hive-Predator Caste' },
-  { id:'khellchin',  name:'Khellchin',  sub:'Infiltrator Mimic Caste'       },
-
 ];
 
 // ─── PA'MORPH BLOODLINE LORE ──────────────────────────────────────────────────

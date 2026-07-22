@@ -12,7 +12,7 @@ const RACE_OPTIONS = {
   Terraxian: [],
   Fynlor: [],
   Trink: [],
-  "Pa'morph": ['Major', 'Minor', 'Aeon', 'Astral'],
+  "Pa'morph": ['Major', 'Minor', 'Aeon'],
   Fae: [],
   Djinn: ['Efreet (Fire)', 'Marid (Water)', 'Djinni (Air)', 'Dao (Earth)'],
   Helianth: [],

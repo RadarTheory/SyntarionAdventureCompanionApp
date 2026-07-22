@@ -505,16 +505,20 @@ export default function StepRace({
                         ))}
                       </div>
 
-                      <span style={label}>Astral bloodlines</span>
-                      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: 6 }}>
-                        {PM_ASTRAL.map(p => (
-                          <div key={p.id} onClick={() => setPmV(pmV === p.id ? null : p.id)}
-                            style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 2, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
-                            <div style={{ fontSize: 11, color: pmV === p.id ? COLORS.text : COLORS.muted, fontFamily: 'Georgia, serif' }}>{p.name}</div>
-                            <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{p.sub}</div>
+                      {PM_ASTRAL.length > 0 && (
+                        <>
+                          <span style={label}>Astral bloodlines</span>
+                          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: 6 }}>
+                            {PM_ASTRAL.map(p => (
+                              <div key={p.id} onClick={() => setPmV(pmV === p.id ? null : p.id)}
+                                style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 2, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
+                                <div style={{ fontSize: 11, color: pmV === p.id ? COLORS.text : COLORS.muted, fontFamily: 'Georgia, serif' }}>{p.name}</div>
+                                <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{p.sub}</div>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
+                        </>
+                      )}
 
                     </div>
                   )}

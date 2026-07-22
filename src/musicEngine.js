@@ -1,51 +1,41 @@
-// ─── SYNTARION MUSIC ENGINE ───────────────────────────────
-// Singleton dual-deck Web Audio engine with volume-aware crossfades.
+// SYNTARION MUSIC ENGINE
+// Singleton dual-deck native media engine with crossfades.
 // Consumers: MenuJukebox (landing), DJ Console (DM mode), combat hooks.
 
 const R2_BASE = 'https://pub-e285d3c995214371936d1f94dd10ed90.r2.dev';
 
 const CROSSFADE_SECONDS = 4;
-const OUTRO_WATCH_WINDOW = 12;   // start analysing this many secs before track end
-const QUIET_THRESHOLD = 0.04;    // RMS level considered "outro quiet"
-const QUIET_HOLD_MS = 1500;      // must stay quiet this long to trigger early fade
 
 class MusicEngine {
   constructor() {
-    this.ctx = null;
-    this.masterGain = null;
-    this.decks = null;        // [{ audio, source, gain, analyser }, ...]
+    this.decks = null;        // [{ audio, fadeTimer }, ...]
     this.activeDeck = 0;
     this.currentTrack = null; // track row from soundtrack_tracks
     this.queue = [];          // upcoming track rows
     this.onTrackChange = null; // callback(track) for UI
     this._fading = false;
-    this._quietSince = null;
-    this._rafId = null;
+    this._watchTimer = null;
     this._muted = false;
     this._volume = 0.7;
   }
 
   // Must be called from a user gesture (autoplay policy).
   init() {
-    if (this.ctx) return;
-    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-    this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.value = this._volume;
-    this.masterGain.connect(this.ctx.destination);
+    if (this.decks) return;
 
-    this.decks = [0, 1].map(() => {
+    this.decks = [0, 1].map((index) => {
       const audio = new Audio();
       audio.crossOrigin = 'anonymous';
       audio.preload = 'auto';
-      const source = this.ctx.createMediaElementSource(audio);
-      const gain = this.ctx.createGain();
-      gain.gain.value = 0;
-      const analyser = this.ctx.createAnalyser();
-      analyser.fftSize = 512;
-      source.connect(gain);
-      gain.connect(analyser);
-      analyser.connect(this.masterGain);
-      return { audio, source, gain, analyser };
+      audio.loop = false;
+      audio.volume = 0;
+      audio.addEventListener('ended', () => {
+        if (index === this.activeDeck && !this._fading) {
+          this._fading = true;
+          this.playNext();
+        }
+      });
+      return { audio, fadeTimer: null };
     });
   }
 
@@ -62,12 +52,12 @@ class MusicEngine {
 
   async play(track) {
     this.init();
-    if (this.ctx.state === 'suspended') await this.ctx.resume();
 
     const incoming = this.decks[1 - this.activeDeck];
     const outgoing = this.decks[this.activeDeck];
 
     incoming.audio.src = this.trackUrl(track);
+    incoming.audio.volume = 0;
     try {
       await incoming.audio.play();
     } catch (err) {
@@ -77,23 +67,20 @@ class MusicEngine {
       return { ok: false, error: err, track };
     }
 
-    const now = this.ctx.currentTime;
-    incoming.gain.gain.cancelScheduledValues(now);
-    incoming.gain.gain.setValueAtTime(0.0001, now);
-    incoming.gain.gain.exponentialRampToValueAtTime(1, now + CROSSFADE_SECONDS);
+    this._fadeAudio(incoming, this._effectiveVolume(), CROSSFADE_SECONDS);
 
     if (this.currentTrack) {
-      outgoing.gain.gain.cancelScheduledValues(now);
-      outgoing.gain.gain.setValueAtTime(Math.max(outgoing.gain.gain.value, 0.0001), now);
-      outgoing.gain.gain.exponentialRampToValueAtTime(0.0001, now + CROSSFADE_SECONDS);
       const oldAudio = outgoing.audio;
-      setTimeout(() => { oldAudio.pause(); oldAudio.src = ''; }, CROSSFADE_SECONDS * 1000 + 200);
+      this._fadeAudio(outgoing, 0, CROSSFADE_SECONDS, () => {
+        oldAudio.pause();
+        oldAudio.removeAttribute('src');
+        oldAudio.load();
+      });
     }
 
     this.activeDeck = 1 - this.activeDeck;
     this.currentTrack = track;
     this._fading = false;
-    this._quietSince = null;
     this.onTrackChange?.(track);
     this._watchOutro();
     return { ok: true, track };
@@ -106,11 +93,9 @@ class MusicEngine {
     return this.play(next);
   }
 
-  // ── Volume-aware transition: watch the active deck's outro ──
   _watchOutro() {
-    cancelAnimationFrame(this._rafId);
+    window.clearInterval(this._watchTimer);
     const deck = this.decks[this.activeDeck];
-    const data = new Float32Array(deck.analyser.fftSize);
 
     const tick = () => {
       const { audio } = deck;
@@ -118,61 +103,77 @@ class MusicEngine {
 
       const remaining = audio.duration - audio.currentTime;
 
-      // Hard fallback: crossfade regardless when nearly over
       if (remaining <= CROSSFADE_SECONDS + 0.5) {
         this._fading = true;
         this.playNext();
-        return;
       }
-
-      // Smart trigger: sustained quiet inside the outro window
-      if (remaining <= OUTRO_WATCH_WINDOW) {
-        deck.analyser.getFloatTimeDomainData(data);
-        let sum = 0;
-        for (let i = 0; i < data.length; i++) sum += data[i] * data[i];
-        const rms = Math.sqrt(sum / data.length);
-
-        if (rms < QUIET_THRESHOLD) {
-          if (this._quietSince === null) this._quietSince = performance.now();
-          else if (performance.now() - this._quietSince > QUIET_HOLD_MS) {
-            this._fading = true;
-            this.playNext();
-            return;
-          }
-        } else {
-          this._quietSince = null;
-        }
-      }
-      this._rafId = requestAnimationFrame(tick);
     };
-    this._rafId = requestAnimationFrame(tick);
+    this._watchTimer = window.setInterval(tick, 500);
   }
 
   setVolume(v) {
     this._volume = v;
-    if (this.masterGain && !this._muted) {
-      this.masterGain.gain.setTargetAtTime(v, this.ctx.currentTime, 0.05);
+    if (this.decks && !this._muted) {
+      this.decks[this.activeDeck].audio.volume = this._effectiveVolume();
     }
   }
 
   setMuted(muted) {
     this._muted = muted;
-    if (this.masterGain) {
-      this.masterGain.gain.setTargetAtTime(muted ? 0 : this._volume, this.ctx.currentTime, 0.05);
+    if (this.decks) {
+      this.decks[this.activeDeck].audio.volume = this._effectiveVolume();
     }
   }
 
   stop() {
-    cancelAnimationFrame(this._rafId);
-    if (!this.ctx) return;
-    const now = this.ctx.currentTime;
+    window.clearInterval(this._watchTimer);
+    if (!this.decks) return;
     this.decks.forEach(d => {
-      d.gain.gain.cancelScheduledValues(now);
-      d.gain.gain.setTargetAtTime(0.0001, now, 0.4);
-      setTimeout(() => { d.audio.pause(); d.audio.src = ''; }, 1500);
+      this._fadeAudio(d, 0, 0.4, () => {
+        d.audio.pause();
+        d.audio.removeAttribute('src');
+        d.audio.load();
+      });
     });
     this.currentTrack = null;
     this.onTrackChange?.(null);
+  }
+
+  _effectiveVolume() {
+    return this._muted ? 0 : this._volume;
+  }
+
+  _clearFade(deck) {
+    if (!deck.fadeTimer) return;
+    window.clearInterval(deck.fadeTimer);
+    deck.fadeTimer = null;
+  }
+
+  _fadeAudio(deck, targetVolume, seconds, onComplete) {
+    this._clearFade(deck);
+
+    const audio = deck.audio;
+    const from = audio.volume;
+    const to = Math.min(1, Math.max(0, targetVolume));
+    const durationMs = Math.max(0, seconds * 1000);
+
+    if (durationMs === 0) {
+      audio.volume = to;
+      onComplete?.();
+      return;
+    }
+
+    const startedAt = performance.now();
+    deck.fadeTimer = window.setInterval(() => {
+      const elapsed = performance.now() - startedAt;
+      const progress = Math.min(1, elapsed / durationMs);
+      audio.volume = from + (to - from) * progress;
+
+      if (progress >= 1) {
+        this._clearFade(deck);
+        onComplete?.();
+      }
+    }, 50);
   }
 }
 
