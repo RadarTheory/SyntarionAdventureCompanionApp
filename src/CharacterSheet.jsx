@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useDevice } from './useDevice';
+import { getLevelProgress } from './leveling';
 import {
   COLORS, ALL_STATS, ALL_CLASSES, RACES, ACTIONS,
   APPAREL_SLOTS, WEAPON_SLOTS, ACCESSORY_SLOTS,
@@ -149,6 +150,10 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
   const raceDisplay = getRaceDisplay(char.race, char.rv, char.pmV);
   const cls         = ALL_CLASSES.find(c => c.id === char.cid);
   const sliders     = char.sliders || { morality: 0, magicTech: 0, willWhim: 0 };
+  const apTotal     = char.apTotal ?? char.ap_total ?? 0;
+  const atCurrent   = char.atCurrent ?? char.at_current ?? char.apCurrent ?? 0;
+  const atTotal     = char.atTotal ?? char.at_total ?? char.apTotal ?? 0;
+  const progress    = getLevelProgress(apTotal);
 
   const renderTab = () => {
     switch (activeTab) {
@@ -163,8 +168,13 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
             <StatusBadge status={char.status || 'draft'} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginBottom: 24 }}>
-            {[{ label: 'Level', value: char.charLevel || 1 }, { label: 'AP Current', value: char.apCurrent || 0 }, { label: 'AP Total', value: char.apTotal || 0 }].map(({ label, value }) => (
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))', gap: 8, marginBottom: 24 }}>
+            {[
+              { label: 'Level', value: char.charLevel || progress.level },
+              { label: 'AP Total', value: apTotal },
+              { label: 'AP Next', value: progress.level >= 50 ? 'Cap' : progress.neededForNext },
+              { label: 'AT', value: String(atCurrent) + '/' + String(atTotal) },
+            ].map(({ label, value }) => (
               <div key={label} style={{ flex: 1, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px', textAlign: 'center' }}>
                 <div style={{ ...label8(), marginBottom: 4 }}>{label}</div>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: 20, fontWeight: 800, color: COLORS.text }}>{value}</div>

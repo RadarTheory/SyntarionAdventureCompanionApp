@@ -307,6 +307,8 @@ export default function Wizard({ onComplete, onHome }) {
   const [charLevel, setCharLevel] = useState(1);
   const [apCurrent, setApCurrent] = useState(0);
   const [apTotal, setApTotal]     = useState(0);
+  const [atCurrent, setAtCurrent] = useState(0);
+  const [atTotal, setAtTotal]     = useState(0);
   const [classAbilities, setClassAbilities]     = useState([]);
   const [heritageAbilities, setHeritageAbilities] = useState([]);
   const [disciplinePoints, setDisciplinePoints] = useState({});
@@ -416,7 +418,7 @@ export default function Wizard({ onComplete, onHome }) {
     notes,
     inventory, apparel, weapons, accessories,
     actionBonuses,
-    charLevel, apCurrent, apTotal,
+    charLevel, apCurrent, apTotal, atCurrent, atTotal,
     classAbilities, heritageAbilities, disciplinePoints,
     campaign,
     savedAt: Date.now(),

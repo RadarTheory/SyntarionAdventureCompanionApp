@@ -80,7 +80,8 @@ function GrantModal({ item, onClose }) {
       name: item.name,
       description: `${item.category}|${item.desc}${note ? ' — ' + note : ''}`,
       attuned: false,
-      bonuses: {},
+      bonuses: { ...(item.effect?.bonuses || {}), ...(item.apBonus > 0 ? { apBonus: item.apBonus } : {}) },
+      ap_bonus: item.apBonus || 0,
       weight: qty,
     });
     if (!error) {
@@ -106,6 +107,7 @@ function GrantModal({ item, onClose }) {
       item_type: item.type,
       item_desc: item.desc,
       item_meta: item.meta || '',
+      ap_bonus: item.apBonus || 0,
       qty,
       note,
     });
@@ -306,7 +308,7 @@ const ALL_EIGHT_KEYS = ['spirit','soul','body','essence','will','whim','mind','d
 
 // ─── NEW ITEM MODAL ───────────────────────────────────────────────────────────
 function NewItemModal({ onClose, onCreated }) {
-  const EMPTY = { name: '', category: 'Weapons', type: '', description: '', rarity: 'Common', value: '', tags: '', bonuses: {} };
+  const EMPTY = { name: '', category: 'Weapons', type: '', description: '', rarity: 'Common', value: '', tags: '', bonuses: {}, apBonus: '' };
   const [draft, setDraft] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
@@ -325,7 +327,8 @@ function NewItemModal({ onClose, onCreated }) {
       rarity: draft.rarity,
       value: draft.value ? Number(draft.value) : null,
       tags: draft.tags ? draft.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-      effect: { bonuses: draft.bonuses },
+      effect: { bonuses: draft.bonuses, apBonus: Math.max(0, Number(draft.apBonus) || 0) },
+      ap_bonus: Math.max(0, Number(draft.apBonus) || 0),
       is_equippable: ['Weapons','Armor','Magic Items','Artifacts','Spellcasting Items','Accessories'].includes(draft.category),
       is_consumable: draft.category === 'Consumables',
       is_usable: ['Weapons','Magic Items','Artifacts','Spellcasting Items','Consumables'].includes(draft.category),
@@ -339,6 +342,8 @@ function NewItemModal({ onClose, onCreated }) {
         desc: data.description,
         tags: data.tags || [],
         meta: data.meta || '',
+        apBonus: data.ap_bonus || data.effect?.apBonus || 0,
+        effect: data.effect || {},
       });
       setDone(true);
     }
@@ -415,6 +420,12 @@ function NewItemModal({ onClose, onCreated }) {
             <input value={draft.tags} onChange={e => set('tags', e.target.value)}
               placeholder="e.g. fire, enchanted, rare-drop"
               style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 8px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+
+          <div>
+            <div style={{ ...label8(), marginBottom: 6 }}>Held AP Bonus</div>
+            <input type='number' min='0' value={draft.apBonus} onChange={e => set('apBonus', e.target.value)} placeholder='0' style={{ width: '100%', background: COLORS.card, border: '1px solid rgba(240,238,235,0.12)', borderRadius: 6, padding: '7px 8px', fontFamily: 'monospace', fontSize: 11, color: COLORS.text, outline: 'none', boxSizing: 'border-box' }} />
+            <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 4 }}>Awarded once when a character receives or holds this item.</div>
           </div>
 
           <div>
@@ -500,6 +511,8 @@ export default function ItemCatalog() {
         desc: row.description,
         tags: row.tags || [],
         meta: row.meta || '',
+        apBonus: row.ap_bonus || row.effect?.apBonus || 0,
+        effect: row.effect || {},
       })));
       setItemsLoading(false);
     };
@@ -604,6 +617,7 @@ export default function ItemCatalog() {
 
               <p style={{ color: COLORS.textSub || COLORS.muted, fontSize: 12, margin: '6px 0 4px' }}>{item.desc}</p>
               <div style={{ color: COLORS.deity || '#C4A35A', fontSize: 9 }}>{item.meta}</div>
+              {item.apBonus > 0 && <div style={{ color: COLORS.magic || '#7B68D8', fontSize: 9, marginTop: 4 }}>+{item.apBonus} AP once when held</div>}
             </div>
           );
         })}

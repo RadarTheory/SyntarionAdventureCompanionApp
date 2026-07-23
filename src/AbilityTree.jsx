@@ -776,8 +776,9 @@ export default function AbilityTree({ char, onUpdateChar, user, isDM = false }) 
   const abilityPending   = useMemo(() => char.ability_pending   || char.abilityPending   || [], [char.ability_pending, char.abilityPending]);
   const abilityOverrides = useMemo(() => char.ability_overrides || char.abilityOverrides || [], [char.ability_overrides, char.abilityOverrides]);
 
-  const apCurrent = char.apCurrent || 0;
-  const apTotal   = char.apTotal   || 0;
+  const apTotal = char.apTotal ?? char.ap_total ?? 0;
+  const atCurrent = char.atCurrent ?? char.at_current ?? char.apCurrent ?? 0;
+  const atTotal   = char.atTotal   ?? char.at_total   ?? char.apTotal   ?? 0;
 
   const pendingCost = useMemo(() =>
     abilityPending.reduce((sum, key) => sum + tierCost(key.split('|')[1]), 0),
@@ -790,7 +791,7 @@ export default function AbilityTree({ char, onUpdateChar, user, isDM = false }) 
     return null;
   }
 
-  function canSpend() { return apCurrent > 0; }
+  function canSpend() { return atCurrent > 0; }
 
   async function persist(patch) {
     setSaving(true);
@@ -810,12 +811,12 @@ export default function AbilityTree({ char, onUpdateChar, user, isDM = false }) 
     setTimeout(() => setNotice(null), 3200);
   }
 
-  // Player requests an ability — deducts AP, adds to ability_pending
+  // Player requests an ability: deducts AT, adds to ability_pending
   async function handleSpend(key, cost) {
-    if (apCurrent < cost) { flash(`Not enough AP. Need ${cost}, have ${apCurrent}.`, 'error'); return; }
+    if (atCurrent < cost) { flash(`Not enough AT. Need ${cost}, have ${atCurrent}.`, 'error'); return; }
     if (statusOf(key))    { flash('Already unlocked or pending.', 'error'); return; }
     const newSliders = { ...(char.sliders || {}), magicTech: Math.max(-4, Math.min(4, (char.sliders?.magicTech || 0) + sliderNudge(key.split('|')[0]))) };
-    await persist({ ability_pending: [...abilityPending, key], apCurrent: apCurrent - cost, sliders: newSliders });
+    await persist({ ability_pending: [...abilityPending, key], atCurrent: atCurrent - cost, at_current: atCurrent - cost, sliders: newSliders });
     flash('Ability requested — awaiting DM approval.');
   }
 
@@ -831,17 +832,18 @@ export default function AbilityTree({ char, onUpdateChar, user, isDM = false }) 
     }
   }
 
-  // DM buyback — removes ability, refunds AP, reverses slider nudge
+  // DM buyback: removes ability, refunds AT, reverses slider nudge
   async function handleBuyback(key, cost) {
     const newSliders = { ...(char.sliders || {}), magicTech: Math.max(-4, Math.min(4, (char.sliders?.magicTech || 0) - sliderNudge(key.split('|')[0]))) };
     await persist({
       abilities:         abilities.filter(k => k !== key),
       ability_overrides: abilityOverrides.filter(k => k !== key),
       ability_pending:   abilityPending.filter(k => k !== key),
-      apCurrent:         apCurrent + cost,
+      atCurrent:         atCurrent + cost,
+      at_current:        atCurrent + cost,
       sliders:           newSliders,
     });
-    flash(`Buyback complete. ${cost}pt refunded.`);
+    flash(`Buyback complete. ${cost} AT refunded.`);
   }
 
   const paths = macroTab === 'magic' ? TREE.magic : TREE.tech;
@@ -851,8 +853,9 @@ export default function AbilityTree({ char, onUpdateChar, user, isDM = false }) 
       {/* AP summary */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
         {[
-          { label: 'AP Current',   value: apCurrent,   dim: false },
-          { label: 'AP Total',     value: apTotal,     dim: false },
+          { label: 'AT Current',   value: atCurrent,   dim: false },
+          { label: 'AT Total',     value: atTotal,     dim: false },
+          { label: 'AP Total',     value: apTotal,     dim: true },
           { label: 'Pending Cost', value: pendingCost, dim: true  },
         ].map(({ label, value, dim }) => (
           <div key={label} style={{ flex: 1, minWidth: 80, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '9px 12px', textAlign: 'center' }}>

@@ -891,8 +891,9 @@ function ScalesPanel({ char, effectiveStats }) {
 
   // alignment raw value stored as number -4 to +4; default 0
   const alignVal = Number(char?.alignment ?? 0);
-  const apCurrent = char?.apCurrent ?? 0;
-  const apTotal = char?.apTotal ?? 0;
+  const apTotal = char?.apTotal ?? char?.ap_total ?? 0;
+  const atCurrent = char?.atCurrent ?? char?.at_current ?? char?.apCurrent ?? 0;
+  const atTotal = char?.atTotal ?? char?.at_total ?? char?.apTotal ?? 0;
   const morality = char?.morality ?? 0;
 
   const scaleRow = (label, val, maxVal, leftLabel, rightLabel, color) => {
@@ -993,9 +994,9 @@ function ScalesPanel({ char, effectiveStats }) {
       {/* AP & Morality */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px' }}>
-          <div style={{ ...label8(), marginBottom: 6 }}>Ability Points</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, fontWeight: 800, color: COLORS.magic }}>{apCurrent}</div>
-          <div style={{ fontSize: 8, color: COLORS.dim }}>of {apTotal} total</div>
+          <div style={{ ...label8(), marginBottom: 6 }}>Ability Tokens</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, fontWeight: 800, color: COLORS.magic }}>{atCurrent}</div>
+          <div style={{ fontSize: 8, color: COLORS.dim }}>of {atTotal} total - {apTotal} AP</div>
         </div>
         <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px' }}>
           <div style={{ ...label8(), marginBottom: 6 }}>Morality</div>
@@ -1139,9 +1140,9 @@ function CharacterSheetInline({ char, effectiveStats, onUpdateChar }) {
       {/* AP & Money */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
         <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px' }}>
-          <div style={{ ...label8(), marginBottom: 6 }}>Ability Points</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, fontWeight: 800, color: COLORS.magic }}>{char.apCurrent ?? 0}</div>
-          <div style={{ fontSize: 8, color: COLORS.dim }}>of {char.apTotal ?? 0} total</div>
+          <div style={{ ...label8(), marginBottom: 6 }}>Ability Tokens</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, fontWeight: 800, color: COLORS.magic }}>{char.atCurrent ?? char.at_current ?? char.apCurrent ?? 0}</div>
+          <div style={{ fontSize: 8, color: COLORS.dim }}>of {char.atTotal ?? char.at_total ?? char.apTotal ?? 0} total - {char.apTotal ?? char.ap_total ?? 0} AP</div>
         </div>
         <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px' }}>
           <div style={{ ...label8(), marginBottom: 6 }}>Coin</div>

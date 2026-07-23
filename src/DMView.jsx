@@ -35,6 +35,7 @@ import ChroniclePanel from './ChroniclePanel';
 import HandbookBookmark from './HandbookBookmark';
 import MenuMusicPlayer from './MenuMusicPlayer';
 import musicEngine from './musicEngine';
+import { LEVEL_CAP, apForLevel, getLevelProgress, grantAp } from './leveling';
 import { MENU_MUSIC_TRACKS, buildMenuMusicQueue, getTrackFamilyKey, getTrackKey, loadMenuMusicTracks } from './musicLibrary';
 
 const SOTERIA_DM_CONTEXT = `
@@ -389,6 +390,14 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
   const [spriteDrafts, setSpriteDrafts] = useState([]);
   const [selectedSpriteUrl, setSelectedSpriteUrl] = useState(data.sprite_url || '');
   const [spriteGenerationCount, setSpriteGenerationCount] = useState(data.token?.generation_count || 0);
+  const [apGrant, setApGrant] = useState('');
+  const [apReason, setApReason] = useState('');
+  const [levelDraft, setLevelDraft] = useState(String(data.charLevel || data.level || 1));
+  const [grantingAp, setGrantingAp] = useState(false);
+  const apTotal = data.apTotal ?? data.ap_total ?? 0;
+  const atCurrent = data.atCurrent ?? data.at_current ?? data.apCurrent ?? 0;
+  const atTotal = data.atTotal ?? data.at_total ?? data.apTotal ?? 0;
+  const progress = getLevelProgress(apTotal);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -410,6 +419,66 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
 
   const set = (key, val) => setData(prev => ({ ...prev, [key]: val }));
   const setStat = (key, val) => setData(prev => ({ ...prev, stats: { ...prev.stats, [key]: parseInt(val) || 8 } }));
+
+  const awardAp = async () => {
+    const amount = Math.max(0, parseInt(apGrant, 10) || 0);
+    if (!amount || grantingAp) return;
+    setGrantingAp(true);
+    try {
+      const result = await grantAp(supabase, { targetType: 'character', targetId: char.id, amount, reason: apReason || 'DM award' });
+      const nextAtCurrent = atCurrent + (result?.at_granted || 0);
+      const nextAtTotal = atTotal + (result?.at_granted || 0);
+      setData(prev => ({ ...prev, apTotal: result?.ap_after ?? apTotal + amount, apCurrent: result?.ap_after ?? apTotal + amount, charLevel: result?.level_after ?? prev.charLevel, atCurrent: nextAtCurrent, atTotal: nextAtTotal, at_current: nextAtCurrent, at_total: nextAtTotal }));
+      setApGrant('');
+      setApReason('');
+      onSave?.();
+    } catch (e) {
+      setNote(e.message || 'AP award failed.');
+    } finally {
+      setGrantingAp(false);
+    }
+  };
+
+  const setManualLevel = async () => {
+    const targetLevel = Math.max(1, Math.min(LEVEL_CAP, parseInt(levelDraft, 10) || 1));
+    const currentLevel = data.charLevel || data.level || progress.level;
+    const levelDelta = targetLevel - currentLevel;
+    const nextApTotal = apForLevel(targetLevel);
+    const nextAtCurrent = Math.max(0, atCurrent + levelDelta);
+    const nextAtTotal = Math.max(0, atTotal + levelDelta);
+    const nextData = {
+      ...data,
+      apTotal: nextApTotal,
+      apCurrent: nextApTotal,
+      charLevel: targetLevel,
+      level: targetLevel,
+      atCurrent: nextAtCurrent,
+      atTotal: nextAtTotal,
+      at_current: nextAtCurrent,
+      at_total: nextAtTotal,
+    };
+    const { id, status, campaign_id, user_id, ...blob } = nextData;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from('characters').update({
+        ap_total: nextApTotal,
+        level: targetLevel,
+        at_current: nextAtCurrent,
+        at_total: nextAtTotal,
+        atCurrent: nextAtCurrent,
+        atTotal: nextAtTotal,
+        data: blob,
+      }).eq('id', char.id);
+      if (error) throw error;
+      setData(nextData);
+      setLevelDraft(String(targetLevel));
+      onSave?.();
+    } catch (e) {
+      setNote(e.message || 'Manual level update failed.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const syncSpriteToVttSessions = async (url) => {
     const { data: sessions } = await supabase.from('vtt_sessions').select('id,tokens,map_states');
@@ -539,12 +608,30 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
           </div>
         ))}
         <div style={{ marginBottom: 16 }}>
-          <div style={{ ...label8(), marginBottom: 10 }}>Ability Points</div>
+          <div style={{ ...label8(), marginBottom: 10 }}>Progression</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8, marginBottom: 10 }}>
+            {[[ 'Level', data.charLevel || progress.level ], [ 'AP Total', apTotal ], [ 'AP Next', progress.level >= 50 ? 'Cap' : progress.neededForNext ], [ 'AT', String(atCurrent) + '/' + String(atTotal) ]].map(([lbl, val]) => (
+              <div key={lbl} style={{ background: COLORS.card, border: '1px solid rgba(240,238,235,0.12)', borderRadius: 6, padding: '8px 10px', textAlign: 'center' }}>
+                <div style={{ ...label8(), marginBottom: 4 }}>{lbl}</div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 15, color: COLORS.text, fontWeight: 800 }}>{val}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
+            <input type='number' min='1' value={apGrant} onChange={e => setApGrant(e.target.value)} placeholder='AP' style={{ width: 74, background: 'rgba(240,238,235,0.04)', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 5, padding: '6px 8px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }} />
+            <input value={apReason} onChange={e => setApReason(e.target.value)} placeholder='Reason' style={{ flex: 1, background: 'rgba(240,238,235,0.04)', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 5, padding: '6px 8px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
+            <button onClick={awardAp} disabled={grantingAp || !apGrant} style={{ background: COLORS.magicBg, border: '1px solid rgba(159,136,255,0.55)', borderRadius: 5, padding: '7px 12px', cursor: grantingAp || !apGrant ? 'default' : 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.magicText, fontFamily: "'Cinzel', serif", opacity: grantingAp || !apGrant ? 0.6 : 1 }}>{grantingAp ? 'Awarding...' : 'Award AP'}</button>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
+            <input type='number' min='1' max={LEVEL_CAP} value={levelDraft} onChange={e => setLevelDraft(e.target.value)} placeholder='Level' style={{ width: 74, background: 'rgba(240,238,235,0.04)', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 5, padding: '6px 8px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }} />
+            <div style={{ flex: 1, fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Sets AP to that level threshold and adjusts AT by the level difference.</div>
+            <button onClick={setManualLevel} disabled={saving} style={{ background: 'rgba(240,238,235,0.06)', border: '1px solid rgba(240,238,235,0.18)', borderRadius: 5, padding: '7px 12px', cursor: saving ? 'default' : 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text, fontFamily: "'Cinzel', serif", opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving...' : 'Set Level'}</button>
+          </div>
           <div style={{ display: 'flex', gap: 16 }}>
-            {[['apCurrent', 'AP Current'], ['apTotal', 'AP Total']].map(([key, lbl]) => (
+            {[['atCurrent', 'AT Current'], ['atTotal', 'AT Total']].map(([key, lbl]) => (
               <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ fontSize: 9, color: COLORS.muted, fontFamily: "'Cinzel', serif", width: 70 }}>{lbl}</div>
-                <input type="number" min="0" value={data[key] || 0} onChange={e => set(key, parseInt(e.target.value) || 0)} style={{ width: 50, background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 6px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }} />
+                <input type='number' min='0' value={data[key] ?? 0} onChange={e => { const val = parseInt(e.target.value) || 0; set(key, val); set(key === 'atCurrent' ? 'at_current' : 'at_total', val); }} style={{ width: 50, background: 'rgba(240,238,235,0.04)', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 4, padding: '4px 6px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }} />
               </div>
             ))}
           </div>
@@ -1219,7 +1306,18 @@ useEffect(() => {
 
   const fetchCharacters = async () => {
     const { data } = await supabase.from('characters').select('*');
-    if (data) setCharacters(data.map(row => ({ ...row.data, id: row.id, status: row.status, campaign_id: row.campaign_id, user_id: row.user_id })));
+    if (data) setCharacters(data.map(row => ({
+      ...row.data,
+      id: row.id,
+      status: row.status,
+      campaign_id: row.campaign_id,
+      user_id: row.user_id,
+      apTotal: row.ap_total ?? row.apTotal ?? row.data?.apTotal ?? 0,
+      apCurrent: row.ap_total ?? row.apCurrent ?? row.data?.apCurrent ?? 0,
+      charLevel: row.level ?? row.charLevel ?? row.data?.charLevel ?? 1,
+      atCurrent: row.at_current ?? row.atCurrent ?? row.data?.atCurrent ?? row.data?.apCurrent ?? 0,
+      atTotal: row.at_total ?? row.atTotal ?? row.data?.atTotal ?? row.data?.apTotal ?? 0,
+    }))); 
   };
 
   const markRead = async (sessionId) => { await supabase.from('messages').update({ read: true }).eq('session_id', sessionId).eq('is_dm', false); fetchMessages(); };
