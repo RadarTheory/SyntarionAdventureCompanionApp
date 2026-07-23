@@ -10,6 +10,11 @@ import { COLORS, RACES, CLASSES, GODS, SPIRITS, UNAFFILIATED, PROGRESSION } from
 
 
 const LIVE_DIRECTIVE_RE = /^\s*\[\[(syntarion|supabase):([a-z_-]+)\]\]\s*$/i;
+// Create this bucket in the Supabase dashboard (Storage -> New bucket ->
+// "handbook_pdfs", Public bucket OFF) to get real access control on handbook
+// PDFs. Until it exists, uploads fall back to the existing public buckets
+// below (same as before), so nothing breaks in the meantime.
+const HANDBOOK_PDF_BUCKET = 'handbook_pdfs';
 const HANDBOOK_HTML_PREFIX = '<!-- syntarion:handbook-html -->';
 const HANDBOOK_PDF_PREFIX = '<!-- syntarion:handbook-pdf -->';
 const HANDBOOK_TRANSPARENT_IMAGES_FLAG = '<!-- syntarion:transparent-images -->';
@@ -389,20 +394,117 @@ async function parseSingleChapterDocx(arrayBuffer) {
   return HANDBOOK_HTML_PREFIX + '\n' + html;
 }
 
+// Signed URLs expire (here: 30 minutes) so a leaked/bookmarked link stops
+// working shortly after, unlike the permanent public URLs this used to store.
+const HANDBOOK_PDF_SIGNED_URL_TTL = 60 * 30;
+const HANDBOOK_PDFJS_VERSION = '3.11.174';
+
+function loadHandbookPdfJs() {
+  if (typeof window === 'undefined') return Promise.reject(new Error('PDF rendering is only available in the browser.'));
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (window.__syntarionPdfJsPromise) return window.__syntarionPdfJsPromise;
+  window.__syntarionPdfJsPromise = new Promise((resolve, reject) => {
+    const existing = document.getElementById('syntarion-pdfjs');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(window.pdfjsLib), { once: true });
+      existing.addEventListener('error', () => reject(new Error('Could not load the secure handbook viewer.')), { once: true });
+      return;
+    }
+    const script = document.createElement('script');
+    script.id = 'syntarion-pdfjs';
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/' + HANDBOOK_PDFJS_VERSION + '/pdf.min.js';
+    script.async = true;
+    script.onload = () => {
+      if (!window.pdfjsLib) { reject(new Error('The secure handbook viewer did not initialize.')); return; }
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/' + HANDBOOK_PDFJS_VERSION + '/pdf.worker.min.js';
+      resolve(window.pdfjsLib);
+    };
+    script.onerror = () => reject(new Error('Could not load the secure handbook viewer.'));
+    document.head.appendChild(script);
+  });
+  return window.__syntarionPdfJsPromise;
+}
+
 function HandbookPdfContent({ content, darkMode, isMobile, theme }) {
   const meta = parseHandbookPdfContent(content);
-  if (!meta?.url) {
+  const [signedUrl, setSignedUrl] = useState(null);
+  const [urlError, setUrlError] = useState('');
+  const [renderState, setRenderState] = useState({ loading: false, error: '' });
+  const canvasRef = useRef(null);
+  const canvasShellRef = useRef(null);
+
+  useEffect(() => {
+    setSignedUrl(null);
+    setUrlError('');
+    if (!meta?.bucket || !meta?.path) return;
+    let cancelled = false;
+    supabase.storage.from(meta.bucket).createSignedUrl(meta.path, HANDBOOK_PDF_SIGNED_URL_TTL).then(({ data, error }) => {
+      if (cancelled) return;
+      if (error || !data?.signedUrl) { setUrlError(error?.message || 'Could not create a secure link for this PDF.'); return; }
+      setSignedUrl(data.signedUrl);
+    });
+    return () => { cancelled = true; };
+  }, [meta?.bucket, meta?.path]);
+
+  const hasStoragePath = !!(meta?.bucket && meta?.path);
+  const resolvedUrl = hasStoragePath ? signedUrl : meta?.url;
+  const renderPage = Math.max(1, Number(meta?.page) || 1);
+
+  useEffect(() => {
+    if (!resolvedUrl) return;
+    let cancelled = false;
+    let pdfTask = null;
+    async function renderPdfPage() {
+      setRenderState({ loading: true, error: '' });
+      try {
+        const pdfjsLib = await loadHandbookPdfJs();
+        pdfTask = pdfjsLib.getDocument({
+          url: String(resolvedUrl).split('#')[0],
+          disableAutoFetch: true,
+          disableStream: true,
+        });
+        const pdf = await pdfTask.promise;
+        if (cancelled) return;
+        const page = await pdf.getPage(Math.min(renderPage, pdf.numPages));
+        if (cancelled) return;
+        const shellWidth = canvasShellRef.current?.clientWidth || (isMobile ? window.innerWidth - 36 : 860);
+        const viewport = page.getViewport({ scale: 1 });
+        const scale = Math.max(0.5, Math.min(2.2, (shellWidth - 2) / viewport.width));
+        const scaledViewport = page.getViewport({ scale });
+        const canvas = canvasRef.current;
+        const context = canvas?.getContext('2d', { alpha: false });
+        if (!canvas || !context) throw new Error('Could not prepare the handbook page canvas.');
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(scaledViewport.width * dpr);
+        canvas.height = Math.floor(scaledViewport.height * dpr);
+        canvas.style.width = Math.floor(scaledViewport.width) + 'px';
+        canvas.style.height = Math.floor(scaledViewport.height) + 'px';
+        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+        context.fillStyle = '#f5efe4';
+        context.fillRect(0, 0, scaledViewport.width, scaledViewport.height);
+        await page.render({ canvasContext: context, viewport: scaledViewport }).promise;
+        if (!cancelled) setRenderState({ loading: false, error: '' });
+      } catch (err) {
+        if (!cancelled) setRenderState({ loading: false, error: err?.message || 'Could not render this handbook page.' });
+      }
+    }
+    renderPdfPage();
+    return () => {
+      cancelled = true;
+      try { pdfTask?.destroy?.(); } catch {}
+    };
+  }, [resolvedUrl, renderPage, isMobile]);
+
+  if (!hasStoragePath && !meta?.url) {
     return <LiveBlockHeader title="PDF unavailable" subtitle="This handbook entry points to a PDF, but the file reference could not be read." theme={theme} warn />;
   }
-  const baseUrl = String(meta.url).split('#')[0];
-  const fragment = [
-    meta.page ? 'page=' + Number(meta.page) : '',
-    'toolbar=0',
-    'navpanes=0',
-    'scrollbar=1',
-    'view=FitH',
-  ].filter(Boolean).join('&');
-  const src = baseUrl + '#' + fragment;
+  if (urlError) {
+    return <LiveBlockHeader title="PDF unavailable" subtitle={urlError} theme={theme} warn />;
+  }
+  if (!resolvedUrl) {
+    return <LiveBlockHeader title="Loading PDF..." subtitle="Requesting a secure link for this page." theme={theme} />;
+  }
+
   const pageLabel = meta.page
     ? 'Page ' + meta.page + (meta.total_pages ? ' of ' + meta.total_pages : '')
     : 'Full PDF';
@@ -426,18 +528,39 @@ function HandbookPdfContent({ content, darkMode, isMobile, theme }) {
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: theme.sectionColor }}>Protected PDF View</div>
           <div style={{ marginTop: 3, fontSize: 11, color: theme.muted, fontStyle: 'italic' }}>{pageLabel} | {meta.name || 'Player Handbook PDF'}</div>
         </div>
-        <div style={{ fontSize: 10, color: theme.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'right' }}>Right-click and drag saving are disabled in-app.</div>
+        <div style={{ fontSize: 10, color: theme.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'right' }}>Rendered in-app without browser save controls.</div>
       </div>
-      <iframe
-        title={meta.name || 'Player Handbook PDF'}
-        src={src}
-        draggable={false}
-        style={{ width: '100%', height: isMobile ? '68dvh' : '70dvh', border: 0, display: 'block', background: '#f5efe4' }}
-      />
+      <div
+        ref={canvasShellRef}
+        style={{
+          minHeight: isMobile ? '58dvh' : '66dvh',
+          maxHeight: isMobile ? '62dvh' : '70dvh',
+          overflow: 'auto',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: renderState.loading || renderState.error ? 'center' : 'flex-start',
+          padding: isMobile ? 0 : 10,
+          background: '#f5efe4',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
+        {renderState.loading && <div style={{ padding: 18, color: '#655848', fontStyle: 'italic', fontSize: 13 }}>Rendering handbook page...</div>}
+        {renderState.error && <div style={{ padding: 18, color: COLORS.warn, fontSize: 13, textAlign: 'center' }}>{renderState.error}</div>}
+        <canvas
+          ref={canvasRef}
+          aria-label={meta.name || 'Player Handbook PDF'}
+          style={{
+            display: renderState.error ? 'none' : 'block',
+            maxWidth: '100%',
+            height: 'auto',
+            pointerEvents: 'none',
+            background: '#f5efe4',
+          }}
+        />
+      </div>
     </section>
   );
 }
-
 function HandbookHtmlContent({ content, darkMode, isMobile, theme }) {
   const transparentImages = hasTransparentImagesFlag(content);
   const html = String(content || '').replace(HANDBOOK_TRANSPARENT_IMAGES_FLAG, '').replace(HANDBOOK_HTML_PREFIX, '').trim();
@@ -652,11 +775,14 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
   const [importStatus, setImportStatus] = useState('');
   const [bulkImportStatus, setBulkImportStatus] = useState('');
   const [bulkImporting, setBulkImporting] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [renameDraft, setRenameDraft] = useState('');
   const [richPasteOpen, setRichPasteOpen] = useState(false);
   const contentRef = useRef(null);
   const fileRef = useRef(null);
   const pasteRef = useRef(null);
   const bulkFileRef = useRef(null);
+  const pageFileRef = useRef(null);
 
   const canEdit = allowEdit === true;
 
@@ -747,7 +873,7 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
     const base = safePdfFileName(file.name);
     const chapterSlug = slugifyHandbookTitle(active?.slug || active?.title || scope);
     const storagePath = 'handbook/' + scope + '/' + chapterSlug + '-' + Date.now() + '-' + base + '.pdf';
-    const buckets = ['dm_assets', 'portraits'];
+    const buckets = [HANDBOOK_PDF_BUCKET, 'dm_assets', 'portraits'];
     let uploadedBucket = '';
     let uploadError = null;
     for (const bucket of buckets) {
@@ -950,6 +1076,77 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
       e.target.value = '';
     }
   };
+
+  // Updates only the currently-selected page/chapter row — unlike
+  // handleBulkImportPick's PDF path, this never touches the other 96 pages.
+  const saveActivePageContent = async (content) => {
+    const payload = {
+      title: active.title,
+      subtitle: active.subtitle || null,
+      chapter_order: active.chapter_order,
+      content,
+      is_published: active.is_published ?? true,
+      updated_at: new Date().toISOString(),
+    };
+    const result = active.id
+      ? await supabase.from('handbook_chapters').update(payload).eq('id', active.id).select('id, slug, title, subtitle, chapter_order, content, is_published').single()
+      : await supabase.from('handbook_chapters').insert({ ...payload, slug: active.slug }).select('id, slug, title, subtitle, chapter_order, content, is_published').single();
+    if (result.error) throw result.error;
+    const saved = result.data || { ...active, ...payload };
+    setChapters(prev => (prev || []).map(chapter => chapter.slug === active.slug ? { ...chapter, ...saved } : chapter));
+  };
+
+  const handleSinglePageReplace = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !canEdit || bulkImporting || !active) return;
+    setBulkImporting(true);
+    setBulkImportStatus('Replacing this page: ' + active.title + '...');
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      let content;
+      if (ext === 'pdf') {
+        const page = pageNumberFromRow(active) || Number(active.chapter_order) || null;
+        content = await uploadHandbookPdf(file, 'page', page ? { page, replaces_handbook_page: page, total_pages: 1 } : {});
+      } else if (ext === 'docx') {
+        content = await parseSingleChapterDocx(await file.arrayBuffer());
+      } else {
+        throw new Error('Use a .pdf or .docx file to replace this page.');
+      }
+      await saveActivePageContent(content);
+      setBulkImportStatus('Replaced this page: ' + active.title + '.');
+    } catch (err) {
+      setBulkImportStatus('Page replace failed: ' + (err?.message || err));
+    } finally {
+      setBulkImporting(false);
+      e.target.value = '';
+    }
+  };
+
+  const startRename = () => {
+    if (!active) return;
+    setRenameDraft(active.title);
+    setRenaming(true);
+  };
+
+  const cancelRename = () => { setRenaming(false); setRenameDraft(''); };
+
+  // Renames only the title — chapter_order and slug are untouched, so the
+  // page number can never shift as a side effect of a rename.
+  const saveRename = async () => {
+    const title = renameDraft.trim();
+    if (!active || !title || title === active.title) { cancelRename(); return; }
+    const payload = { title, updated_at: new Date().toISOString() };
+    if (active.id) {
+      const result = await supabase.from('handbook_chapters').update(payload).eq('id', active.id)
+        .select('id, slug, title, subtitle, chapter_order, content, is_published').single();
+      if (result.error) { setBulkImportStatus('Rename failed: ' + result.error.message); return; }
+      const saved = result.data || { ...active, ...payload };
+      setChapters(prev => (prev || []).map(chapter => chapter.slug === active.slug ? { ...chapter, ...saved } : chapter));
+    }
+    setRenaming(false);
+    setRenameDraft('');
+  };
+
   const saveEdit = async () => {
     if (!canEdit || !active || !draft || saving) return;
     setSaving(true);
@@ -1062,12 +1259,12 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
   return (
     <>
       {/* ===== BOOKMARK RIBBON ===== */}
-      {trigger === 'bookmark' && !open && (
+      {trigger === 'bookmark' && !isMobile && !open && (
         <button
           onClick={handleOpen}
           title="Player Handbook"
           style={{
-            position: 'fixed', top: 'calc(0px + env(safe-area-inset-top))', left: isMobile ? 14 : 96, zIndex: 900,
+            position: 'fixed', top: 'calc(0px + env(safe-area-inset-top))', left: isMobile ? 'auto' : 96, right: isMobile ? 12 : 'auto', zIndex: 900,
             background: darkMode ? '#2a2118' : '#7b5a24',
             border: `1px solid ${borderMid}`, borderTop: 'none',
             borderRadius: '0 0 8px 8px',
@@ -1090,13 +1287,13 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
       {open && (
         <div
           onClick={() => setOpen(false)}
-          style={{ position: 'fixed', inset: 0, zIndex: 950, background: 'rgba(10, 7, 4, 0.55)', backdropFilter: 'blur(2px)' }}
+          style={{ position: 'fixed', inset: 0, zIndex: 300000, background: 'rgba(10, 7, 4, 0.55)', backdropFilter: 'blur(2px)' }}
         >
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              position: 'absolute', top: 0, left: 0, right: 0,
-              height: isMobile ? '92dvh' : '86vh',
+              position: 'absolute', top: isMobile ? 'calc(8px + env(safe-area-inset-top))' : 0, left: 0, right: 0,
+              height: isMobile ? 'calc(92dvh - env(safe-area-inset-top))' : '86vh',
               background: drawerBg,
               borderTop: `1px solid ${borderMid}`,
               borderRadius: '14px 14px 0 0',
@@ -1110,23 +1307,34 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
 
             {/* Header */}
             <div style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: 12, flexWrap: isMobile ? 'wrap' : 'nowrap',
               padding: isMobile ? '14px 18px' : '16px 28px', borderBottom: `1px solid ${border}`, flexShrink: 0,
             }}>
               <div>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.22em', textTransform: 'uppercase', color: sectionColor, marginBottom: 3 }}>Soteria</div>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 15 : 18, fontWeight: 700, color: ink, letterSpacing: '0.05em' }}>PLAYER HANDBOOK</div>
               </div>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                 {canEdit && !editing && (
                   <>
+                    {active && (
+                      <>
+                        <input ref={pageFileRef} type="file" onChange={handleSinglePageReplace} style={{ display: 'none' }} />
+                        <button onClick={() => pageFileRef.current?.click()} disabled={bulkImporting} title={'Replace only this page: ' + active.title} style={{
+                          background: 'transparent', border: '1px solid ' + COLORS.magic, borderRadius: 6,
+                          padding: '7px 14px', cursor: bulkImporting ? 'default' : 'pointer', fontFamily: "'Cinzel', serif",
+                          fontSize: 8.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.magicText,
+                          opacity: bulkImporting ? 0.58 : 1,
+                        }}>{bulkImporting ? 'Working...' : 'Replace This Page'}</button>
+                      </>
+                    )}
                     <input ref={bulkFileRef} type="file" onChange={handleBulkImportPick} style={{ display: 'none' }} />
-                    <button onClick={() => bulkFileRef.current?.click()} disabled={bulkImporting} style={{
+                    <button onClick={() => bulkFileRef.current?.click()} disabled={bulkImporting} title="Replace the entire handbook PDF/Word document (regenerates every page reference)" style={{
                       background: COLORS.magicBg, border: '1px solid ' + COLORS.magic, borderRadius: 6,
                       padding: '7px 14px', cursor: bulkImporting ? 'default' : 'pointer', fontFamily: "'Cinzel', serif",
                       fontSize: 8.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.magicText,
                       opacity: bulkImporting ? 0.58 : 1,
-                    }}>{bulkImporting ? 'Importing...' : 'Replace PDF / Word'}</button>
+                    }}>{bulkImporting ? 'Importing...' : 'Replace Whole Book'}</button>
                   </>
                 )}
                 {canEdit && active && !editing && (
@@ -1145,7 +1353,7 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
             </div>
 
             {/* Chapter nav */}
-            <div style={{ padding: isMobile ? '12px 18px 0' : '14px 28px 0', flexShrink: 0 }}>
+            <div style={{ padding: isMobile ? '12px 18px 0' : '14px 28px 0', flexShrink: 0, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <select
                 value={activeSlug || ''}
                 onChange={e => {
@@ -1164,6 +1372,38 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
                   <option key={c.slug} value={c.slug}>{c.title}{!c.is_published ? ' (Draft)' : ''}</option>
                 ))}
               </select>
+
+              {canEdit && active && !editing && (
+                renaming ? (
+                  <>
+                    <input
+                      value={renameDraft}
+                      onChange={e => setRenameDraft(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') saveRename(); if (e.key === 'Escape') cancelRename(); }}
+                      autoFocus
+                      style={{
+                        background: card, border: `1px solid ${COLORS.magic}`, borderRadius: 6,
+                        padding: '8px 10px', fontSize: 12, color: ink, fontFamily: 'Georgia, serif',
+                        outline: 'none', width: isMobile ? 160 : 220,
+                      }}
+                    />
+                    <button onClick={saveRename} title="Save name" style={{
+                      background: COLORS.magicBg, border: '1px solid ' + COLORS.magic, borderRadius: 6,
+                      padding: '8px 11px', cursor: 'pointer', color: COLORS.magicText, fontSize: 12,
+                    }}>✓</button>
+                    <button onClick={cancelRename} title="Cancel" style={{
+                      background: 'transparent', border: `1px solid ${borderMid}`, borderRadius: 6,
+                      padding: '8px 11px', cursor: 'pointer', color: muted, fontSize: 12,
+                    }}>✕</button>
+                  </>
+                ) : (
+                  <button onClick={startRename} title="Rename this page (the page number stays the same)" style={{
+                    background: 'transparent', border: `1px solid ${borderMid}`, borderRadius: 6,
+                    padding: '9px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif",
+                    fontSize: 8.5, letterSpacing: '0.1em', textTransform: 'uppercase', color: ink,
+                  }}>Rename</button>
+                )
+              )}
             </div>
 
             {/* Content */}

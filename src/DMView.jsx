@@ -991,6 +991,7 @@ export default function DMView({ user, session, onHome, darkMode = true, module 
   const [headerClock, setHeaderClock] = useState(null);
   const [showSpeak, setShowSpeak] = useState(false);
   const [showProximity, setShowProximity] = useState(false);
+  const [handbookOpenSignal, setHandbookOpenSignal] = useState(0);
   const [soundboardOpen, setSoundboardOpen] = useState(false);
   const [activeGameSessionId, setActiveGameSessionId] = useState(null);
   const [vttMinimized, setVttMinimized] = useState(false);
@@ -1441,7 +1442,7 @@ const renderTab = () => {
 
   return (
     <div style={{ minHeight: '100svh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text, overflowX: 'hidden' }}>
-      <HandbookBookmark user={user} darkMode={darkMode} allowEdit />
+      <HandbookBookmark user={user} darkMode={darkMode} allowEdit trigger="external" openSignal={handbookOpenSignal} />
       <MenuMusicPlayer isMobile={isMobile} restrictToMenu={false} isDM onSoundboardToggle={setSoundboardOpen} />
 
       <style>{`
@@ -1714,6 +1715,12 @@ const renderTab = () => {
           title: 'Soteria World Clock',
           onClick: () => setShowClock(o => !o),
           children: <img src="/clockIcon.png" alt="Clock" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+        },
+        {
+          id: 'handbook',
+          title: 'Player Handbook',
+          onClick: () => setHandbookOpenSignal(n => n + 1),
+          children: <img src="/handbookicon.png" alt="Handbook" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
         {
           id: 'lore',
