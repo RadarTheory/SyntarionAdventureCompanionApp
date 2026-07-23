@@ -1720,7 +1720,7 @@ const renderTab = () => {
           id: 'handbook',
           title: 'Player Handbook',
           onClick: () => setHandbookOpenSignal(n => n + 1),
-          children: <img src="/handbookicon.png" alt="Handbook" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+          children: <img src="/player-handbook.png" alt="Handbook" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
         {
           id: 'lore',

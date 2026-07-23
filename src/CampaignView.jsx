@@ -2468,7 +2468,7 @@ useEffect(() => {
         { id: 'lark', title: 'Lark — Send a Letter', onClick: () => setShowLark(o => !o),
           children: <img src="/Larkicon.png" alt="Lark" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
         { id: 'handbook', title: 'Player Handbook', onClick: () => setHandbookOpenSignal(n => n + 1),
-          children: <img src="/handbookicon.png" alt="Handbook" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
+          children: <img src="/player-handbook.png" alt="Handbook" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
       ]} />
       <HandbookBookmark user={authUser} darkMode={false} trigger="external" openSignal={handbookOpenSignal} />
       {showGrimoire && (
@@ -2932,7 +2932,7 @@ function ModuleTalesView({ module, userChar, onBack, onUpdateChar, darkMode = fa
     { id: 'questor', label: 'Questor', title: 'Questor - Quest Board', icon: '/Questoricon.png' },
     { id: 'grimoire', label: 'Grimoire', title: 'Grimoire - Adventure Journal', icon: '/Grimoireicon.png' },
     { id: 'lark', label: 'Lark', title: 'Lark - Letters and NPC Messages', icon: '/Larkicon.png' },
-    { id: 'handbook', label: 'Handbook', title: 'Player Handbook', icon: '/handbookicon.png', popup: true },
+    { id: 'handbook', label: 'Handbook', title: 'Player Handbook', icon: '/player-handbook.png', popup: true },
     { id: 'party', label: 'Party', title: "Party - Who's Nearby", icon: '/party.png' },
     { id: 'bestiary', label: 'Bestiary', title: 'Bestiary - Creatures', icon: '/bestiaryicon.png' },
     { id: 'sheet', label: 'Sheet', title: 'Character Sheet', icon: '/npcicon.png' },
