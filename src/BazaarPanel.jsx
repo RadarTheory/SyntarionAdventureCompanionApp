@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
+import { playSfxByKey, playCoinSfx } from './soundLibrary';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -117,11 +118,12 @@ export function BazaarPlayerPanel({ char, campaignId, embedded = false }) {
   };
 
   const claimApprovedItem = async (box, item) => {
+    const description = `${item.item_category || 'Misc'}|${item.item_desc || ''}${item.note ? ' — ' + item.note : ''}`;
     await supabase.from('character_items').insert({
       character_id: String(char.id),
       slot: `pack__${Date.now()}`,
       name: item.item_name,
-      description: `${item.item_category || 'Misc'}|${item.item_desc || ''}${item.note ? ' — ' + item.note : ''}`,
+      description,
       attuned: false, bonuses: {}, weight: item.qty || 1,
     });
     await supabase.from('lootbox_items').update({ claim_status: 'claimed' }).eq('id', item.id);
@@ -133,6 +135,7 @@ export function BazaarPlayerPanel({ char, campaignId, embedded = false }) {
       content: `Claimed ${item.item_name} from ${box.name}.${item.item_desc ? ` ${item.item_desc}` : ''}`,
       is_dm: false,
     });
+    if (!playCoinSfx({ name: item.item_name, description, weight: item.qty || 1 })) playSfxByKey('ui-reveal');
     showToast(`✦ ${item.item_name} added to pack.`);
     loadAll();
   };
@@ -528,13 +531,15 @@ export function BazaarDMPanel({ campaignId, onClose }) {
         }
       }
       for (const item of theirItems) {
+        const description = `${item.item_category || 'Misc'}|${item.item_desc || ''}`;
         await supabase.from('character_items').insert({
           character_id: trade.initiator_character_id,
           slot: `pack__${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
           name: item.item_name,
-          description: `${item.item_category || 'Misc'}|${item.item_desc || ''}`,
+          description,
           attuned: false, bonuses: {}, weight: item.qty || 1,
         });
+        playCoinSfx({ name: item.item_name, description, weight: item.qty || 1 });
       }
       await supabase.from('grimoire_entries').insert({
         character_id: trade.initiator_character_id,
@@ -581,6 +586,7 @@ export function BazaarDMPanel({ campaignId, onClose }) {
       }).eq('id', item.id);
     }
     await supabase.from('lootboxes').update({ revealed: true }).eq('id', box.id);
+    playSfxByKey('ui-loot-box-open');
     showToast('Loot assigned and revealed to players.');
     setDivvyBox(null);
     setAssignments({});

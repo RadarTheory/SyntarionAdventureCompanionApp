@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
+import { playCoinSfx } from './soundLibrary';
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
@@ -61,12 +62,14 @@ function GrantModal({ item, onClose }) {
   const grantToPlayer = async () => {
     if (!selectedChar || saving) return;
     setSaving(true);
+    const description = `${item.category}|${item.desc}${note ? ' — ' + note : ''}`;
     const { error } = await supabase.from('character_items').insert({
       character_id: String(selectedChar.id), slot: `pack__${Date.now()}`,
-      name: item.name, description: `${item.category}|${item.desc}${note ? ' — ' + note : ''}`,
+      name: item.name, description,
       attuned: false, bonuses: {}, weight: qty, equip_slot: item.equip_slot || null,
     });
     if (!error) {
+      playCoinSfx({ name: item.name, description, weight: qty });
       await supabase.from('messages').insert({
         type: 'dm', is_dm: true, sender_name: 'The Architect',
         character_id: String(selectedChar.id), campaign_id: selectedChar.campaign,

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { COLORS } from './constants';
+import { playSfxByKey } from './soundLibrary';
 
 const DIE_TYPES = [4, 6, 8, 10, 12, 20, 100];
 const DICE_COUNTS = [1, 2, 3, 4, 5, 6, 8, 10];
@@ -102,6 +103,8 @@ export default function Astragal({
         const diceTotal = usedRolls.reduce((sum, n) => sum + n, 0);
         const total = diceTotal + totalBonus;
         const crit = getCritState(dieSides, finalRolls, mode);
+        if (crit === 'critical_success') playSfxByKey('ui-dice-crit-success');
+        if (crit === 'critical_failure') playSfxByKey('ui-dice-crit-fail');
 
         const payload = {
           type: 'ROLL',

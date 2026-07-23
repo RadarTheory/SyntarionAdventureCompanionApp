@@ -125,6 +125,46 @@ class MusicEngine {
     }
   }
 
+  // Pause in place — unlike stop(), this does NOT clear currentTrack or fire
+  // onTrackChange, so nothing downstream mistakes "paused" for "no track" and
+  // silently re-triggers playback (that was the bug: stop()'s onTrackChange(null)
+  // reset currentTrack to a fallback track, which cascaded into new callback
+  // references and re-armed the autoplay-unlock click listener).
+  pause() {
+    if (!this.decks) return;
+    window.clearInterval(this._watchTimer);
+    this.decks[this.activeDeck].audio.pause();
+  }
+
+  resume() {
+    if (!this.decks || !this.currentTrack) return;
+    this.decks[this.activeDeck].audio.play().catch(() => {});
+    this._watchOutro();
+  }
+
+  // DM-controlled manual fade (independent of the volume slider), e.g. "fade out for a cutscene".
+  // A fade to 0 is a hard pass: it actually pauses the deck and halts the
+  // outro auto-advance timer, so nothing (not the outro watcher, not an
+  // unrelated slider change) can silently undo it. Fading back up resumes
+  // playback first, then ramps the volume.
+  fadeTo(volume, seconds) {
+    if (!this.decks) return;
+    const deck = this.decks[this.activeDeck];
+    const goingSilent = volume <= 0;
+
+    if (!goingSilent && deck.audio.paused && this.currentTrack) {
+      deck.audio.play().catch(() => {});
+      this._watchOutro();
+    }
+
+    this._fadeAudio(deck, volume, seconds, () => {
+      if (goingSilent) {
+        window.clearInterval(this._watchTimer);
+        deck.audio.pause();
+      }
+    });
+  }
+
   stop() {
     window.clearInterval(this._watchTimer);
     if (!this.decks) return;

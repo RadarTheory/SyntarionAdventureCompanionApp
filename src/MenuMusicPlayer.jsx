@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import musicEngine from './musicEngine';
-import { buildMenuMusicQueue, getMenuMusicTracks, getTrackFamilyKey, getTrackKey, loadMenuMusicTracks } from './musicLibrary';
+import { environmentEngine, ambienceEngine } from './audioEngines';
+import sfxEngine from './sfxEngine';
+import { buildMenuMusicQueue, getMenuMusicTracks, getTrackFamilyKey, getTrackKey, loadMusicTracks } from './musicLibrary';
 import { getAudioSettings, saveAudioSettings, subscribeAudioSettings } from './audioSettings';
+import { DraggablePanel } from './DraggablePanel';
+import DMSoundboard from './DMSoundboard';
 
 
 function isMissingSourceError(error) {
@@ -20,7 +24,20 @@ const ICONS = {
   decline: '\u00D7',
 };
 
-export default function MenuMusicPlayer({ isMobile = false }) {
+const MENU_MUSIC_POS_KEY = 'syntarion_menu_music_pos';
+
+function getDefaultMenuMusicPos(mobile) {
+  return {
+    x: mobile ? 12 : 18,
+    y: window.innerHeight - (mobile ? 148 : 148),
+  };
+}
+
+function pointFromEvent(e) {
+  return e.touches ? e.touches[0] : e;
+}
+
+export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = true, isDM = false, onSoundboardToggle }) {
   const [tracks, setTracks] = useState(() => getMenuMusicTracks());
   const [audioSettings, setAudioSettings] = useState(getAudioSettings);
   const [currentTrack, setCurrentTrack] = useState(musicEngine.currentTrack || tracks[0] || null);
@@ -30,8 +47,60 @@ export default function MenuMusicPlayer({ isMobile = false }) {
   const [needsGesture, setNeedsGesture] = useState(false);
   const [missingTracks, setMissingTracks] = useState(() => new Set());
   const [statusMessage, setStatusMessage] = useState('');
+  const [showSoundboard, setShowSoundboard] = useState(false);
   const playInFlightRef = useRef(false);
   const autoplayAttemptedRef = useRef(false);
+
+  const savedPos = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem(MENU_MUSIC_POS_KEY)); } catch { return null; }
+  }, []);
+  const [pos, setPos] = useState(() => savedPos || getDefaultMenuMusicPos(isMobile));
+  const [dragging, setDragging] = useState(false);
+  const dragOffset = useRef({ x: 0, y: 0 });
+  const dragMoved = useRef(false);
+  const widgetRef = useRef(null);
+
+  useEffect(() => {
+    localStorage.setItem(MENU_MUSIC_POS_KEY, JSON.stringify(pos));
+  }, [pos]);
+
+  const clampPos = useCallback((x, y) => {
+    const el = widgetRef.current;
+    const w = el?.offsetWidth || 220;
+    const h = el?.offsetHeight || 64;
+    return {
+      x: Math.max(4, Math.min(window.innerWidth - w - 4, x)),
+      y: Math.max(4, Math.min(window.innerHeight - h - 4, y)),
+    };
+  }, []);
+
+  const startDrag = (e) => {
+    const p = pointFromEvent(e);
+    dragOffset.current = { x: p.clientX - pos.x, y: p.clientY - pos.y };
+    dragMoved.current = false;
+    setDragging(true);
+  };
+
+  useEffect(() => {
+    if (!dragging) return;
+    const onMove = (e) => {
+      const p = pointFromEvent(e);
+      dragMoved.current = true;
+      setPos(clampPos(p.clientX - dragOffset.current.x, p.clientY - dragOffset.current.y));
+      if (e.cancelable) e.preventDefault();
+    };
+    const onUp = () => setDragging(false);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onUp);
+    };
+  }, [dragging, clampPos]);
 
   const playableTracks = useMemo(
     () => tracks.filter(track => !missingTracks.has(getTrackKey(track))),
@@ -40,7 +109,7 @@ export default function MenuMusicPlayer({ isMobile = false }) {
 
   useEffect(() => {
     let cancelled = false;
-    loadMenuMusicTracks()
+    loadMusicTracks({ menuOnly: restrictToMenu })
       .then(rows => {
         if (cancelled) return;
         setTracks(rows);
@@ -52,13 +121,21 @@ export default function MenuMusicPlayer({ isMobile = false }) {
         setStatusMessage('Using the confirmed R2 proof track.');
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [restrictToMenu]);
 
-  useEffect(() => subscribeAudioSettings(settings => {
-    setAudioSettings(settings);
-    musicEngine.setVolume(settings.musicVolume);
-    musicEngine.setMuted(!settings.musicEnabled);
-  }), []);
+  // Only sync React state here — applying volume/mute to each engine is left to the
+  // dependency-scoped effects below, so changing one bus's slider never re-applies
+  // another bus's (which was stomping a DM's in-progress manual music fade).
+  useEffect(() => subscribeAudioSettings(setAudioSettings), []);
+
+  useEffect(() => {
+    environmentEngine.setVolume(audioSettings.environmentVolume);
+    environmentEngine.setMuted(!audioSettings.environmentEnabled);
+    ambienceEngine.setVolume(audioSettings.ambienceVolume);
+    ambienceEngine.setMuted(!audioSettings.ambienceEnabled);
+    sfxEngine.setVolume(audioSettings.sfxVolume);
+    sfxEngine.setMuted(!audioSettings.sfxEnabled);
+  }, [audioSettings.environmentVolume, audioSettings.environmentEnabled, audioSettings.ambienceVolume, audioSettings.ambienceEnabled, audioSettings.sfxVolume, audioSettings.sfxEnabled]);
 
   useEffect(() => {
     musicEngine.setQueue(buildMenuMusicQueue(playableTracks, {
@@ -125,8 +202,8 @@ export default function MenuMusicPlayer({ isMobile = false }) {
     return false;
   }, [updateMediaSession]);
 
-  const playSpecific = useCallback(async (track) => {
-    if (!track || !audioSettings.musicEnabled || playInFlightRef.current) return false;
+  const playSpecific = useCallback(async (track, force = false) => {
+    if (!track || (!force && !audioSettings.musicEnabled) || playInFlightRef.current) return false;
     playInFlightRef.current = true;
     try {
       const result = await musicEngine.play(track);
@@ -152,12 +229,12 @@ export default function MenuMusicPlayer({ isMobile = false }) {
   const playNext = useCallback(() => playRelative(1), [playRelative]);
   const playBack = useCallback(() => playRelative(-1), [playRelative]);
 
-  const startMusic = useCallback(async () => {
-    if (!playableTracks.length || !audioSettings.musicEnabled) return;
+  const startMusic = useCallback(async (force = false) => {
+    if (!playableTracks.length || (!force && !audioSettings.musicEnabled)) return;
     const next = musicEngine.currentTrack && !missingTracks.has(getTrackKey(musicEngine.currentTrack))
       ? musicEngine.currentTrack
       : playableTracks[0];
-    const ok = await playSpecific(next);
+    const ok = await playSpecific(next, force);
     if (!ok && playableTracks.length > 1) await playNext();
   }, [audioSettings.musicEnabled, missingTracks, playableTracks, playNext, playSpecific]);
 
@@ -165,9 +242,17 @@ export default function MenuMusicPlayer({ isMobile = false }) {
     if (!('mediaSession' in navigator)) return;
 
     const handlers = {
-      play: () => startMusic(),
+      play: () => {
+        if (musicEngine.currentTrack) {
+          musicEngine.resume();
+          setPlaying(true);
+          updateMediaSession(currentTrack, 'playing');
+        } else {
+          startMusic();
+        }
+      },
       pause: () => {
-        musicEngine.stop();
+        musicEngine.pause();
         setPlaying(false);
         updateMediaSession(currentTrack, 'paused');
       },
@@ -228,17 +313,31 @@ export default function MenuMusicPlayer({ isMobile = false }) {
     musicEngine.setMuted(false);
   };
 
+  const updateBusVolume = (volumeKey, enabledKey, engine, value) => {
+    const next = saveAudioSettings({ ...audioSettings, [volumeKey]: Number(value), [enabledKey]: true });
+    setAudioSettings(next);
+    engine.setVolume(next[volumeKey]);
+    engine.setMuted(false);
+  };
+
   const togglePlay = async () => {
     if (playing) {
-      musicEngine.stop();
+      musicEngine.pause();
       setPlaying(false);
       updateMediaSession(currentTrack, 'paused');
       return;
     }
 
+    if (musicEngine.currentTrack) {
+      musicEngine.resume();
+      setPlaying(true);
+      updateMediaSession(currentTrack, 'playing');
+      return;
+    }
+
     const next = saveAudioSettings({ ...audioSettings, musicEnabled: true });
     setAudioSettings(next);
-    await startMusic();
+    await startMusic(true);
   };
 
   const declineMusic = () => {
@@ -261,23 +360,51 @@ export default function MenuMusicPlayer({ isMobile = false }) {
   const volume = Math.round(audioSettings.musicVolume * 100);
 
   return (
+    <>
     <div
+      ref={widgetRef}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
         position: 'fixed',
-        left: isMobile ? 12 : 18,
-        bottom: isMobile ? 84 : 78,
+        left: pos.x,
+        top: pos.y,
         zIndex: 48,
         width: expanded ? (isMobile ? 'min(calc(100vw - 24px), 304px)' : 292) : (isMobile ? 206 : 218),
         maxWidth: 'calc(100vw - 24px)',
         opacity: active ? 1 : 0.7,
         transform: active ? 'translateY(0)' : 'translateY(2px)',
-        transition: 'opacity 0.18s ease, transform 0.18s ease, width 0.18s ease',
+        transition: dragging ? 'none' : 'opacity 0.18s ease, transform 0.18s ease, width 0.18s ease',
         fontFamily: 'Georgia, serif',
         color: '#f0eeeb',
+        touchAction: dragging ? 'none' : 'auto',
       }}
     >
+      <div
+        onMouseDown={startDrag}
+        onTouchStart={startDrag}
+        title="Drag to move"
+        style={{
+          position: 'absolute',
+          top: -9,
+          right: -9,
+          width: 22,
+          height: 22,
+          borderRadius: 8,
+          background: 'rgba(20,16,12,0.94)',
+          border: '1px solid rgba(226,207,145,0.42)',
+          cursor: dragging ? 'grabbing' : 'grab',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 2,
+          touchAction: 'none',
+        }}
+      >
+        <svg viewBox="0 0 16 16" width={9} height={9} fill="none">
+          <path d="M5 8h6M8 5v6" stroke="rgba(201,185,145,0.6)" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </div>
       <div style={{
         background: 'linear-gradient(145deg, rgba(33,28,22,0.93), rgba(18,16,13,0.9))',
         border: '1px solid rgba(214,184,91,0.34)',
@@ -368,10 +495,50 @@ export default function MenuMusicPlayer({ isMobile = false }) {
               style={{ width: '100%', height: 3, accentColor: '#d7b75a' }}
               aria-label="Music volume"
             />
+            <div style={{ display: 'grid', gap: 5, marginTop: 2 }}>
+              <MixerSlider label="Environment" volume={audioSettings.environmentVolume} onChange={v => updateBusVolume('environmentVolume', 'environmentEnabled', environmentEngine, v)} />
+              <MixerSlider label="Ambience" volume={audioSettings.ambienceVolume} onChange={v => updateBusVolume('ambienceVolume', 'ambienceEnabled', ambienceEngine, v)} />
+              <MixerSlider label="SFX" volume={audioSettings.sfxVolume} onChange={v => updateBusVolume('sfxVolume', 'sfxEnabled', sfxEngine, v)} />
+            </div>
+            {isDM && (
+              <button
+                onClick={() => { setShowSoundboard(true); onSoundboardToggle?.(true); }}
+                style={{
+                  width: '100%',
+                  background: 'rgba(226,207,145,0.10)',
+                  border: '1px solid rgba(226,207,145,0.4)',
+                  borderRadius: 5,
+                  padding: '7px 10px',
+                  cursor: 'pointer',
+                  fontFamily: "'Cinzel', serif",
+                  fontSize: 8,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(226,207,145,0.92)',
+                  marginTop: 2,
+                }}
+              >
+                Open Soundboard
+              </button>
+            )}
           </div>
         )}
       </div>
     </div>
+
+    {isDM && showSoundboard && (
+      <DraggablePanel
+        defaultX={isMobile ? 12 : 260}
+        defaultY={isMobile ? 90 : 60}
+        onClose={() => { setShowSoundboard(false); onSoundboardToggle?.(false); }}
+        title="DM SOUNDBOARD - Music, Environment, Ambience & SFX"
+        width={Math.min(window.innerWidth - 24, 520)}
+        accentColor="rgba(226,207,145,0.4)"
+      >
+        <DMSoundboard />
+      </DraggablePanel>
+    )}
+    </>
   );
 }
 
@@ -399,3 +566,22 @@ const primaryControlButtonStyle = {
   background: 'rgba(226,207,145,0.14)',
   border: '1px solid rgba(226,207,145,0.48)',
 };
+
+function MixerSlider({ label, volume, onChange }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ width: 62, fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.1em', color: 'rgba(226,207,145,0.68)', textTransform: 'uppercase', flexShrink: 0 }}>{label}</div>
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+        value={volume}
+        onChange={e => onChange(e.target.value)}
+        style={{ flex: 1, height: 3, accentColor: '#d7b75a' }}
+        aria-label={`${label} volume`}
+      />
+      <div style={{ width: 22, textAlign: 'right', fontSize: 7, color: 'rgba(240,238,235,0.62)', fontFamily: 'monospace', flexShrink: 0 }}>{Math.round(volume * 100)}</div>
+    </div>
+  );
+}

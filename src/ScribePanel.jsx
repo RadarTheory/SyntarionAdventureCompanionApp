@@ -3,6 +3,7 @@ import supabase from './lib/supabase';
 import { COLORS, CAMPAIGNS } from './constants';
 import { buildScribeContext } from './scribe-context';
 import { useDisplayName } from './lib/displayName';
+import { playSfxByKey } from './soundLibrary';
 
 // ─── GEMINI CALL (via Supabase Edge Function relay — no key in client) ────────
 async function callGemini(system, messages, maxTokens = 1024, image = null) {
@@ -369,6 +370,7 @@ const handleAsk = async () => {
     const current = charData.scribeTokens || 0;
     const next    = Math.max(0, current - amount);
     await supabase.from('characters').update({ data: { ...charData, scribeTokens: next } }).eq('id', charId);
+    playSfxByKey('ui-scribe-token-spend');
     await loadCharacters();
   };
 
@@ -378,6 +380,7 @@ const handleAsk = async () => {
     const next = (charData.scribeTokens || 0) + n;
     await supabase.from('characters').update({ data: { ...charData, scribeTokens: next } }).eq('id', charId);
     setTokenInputs(p => ({ ...p, [charId]: '' }));
+    playSfxByKey('ui-scribe-token-grant');
     await loadCharacters();
   };
 

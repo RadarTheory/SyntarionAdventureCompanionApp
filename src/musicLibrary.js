@@ -163,13 +163,14 @@ function prioritizeTracks(tracks) {
     return aProof - bProof;
   });
 }
-export async function loadMenuMusicTracks() {
+export async function loadMusicTracks({ menuOnly = true } = {}) {
   for (const manifestUrl of MANIFEST_URLS) {
     try {
       const response = await fetch(manifestUrl, { cache: 'no-store' });
       if (!response.ok) continue;
       const payload = await response.json();
-      const rows = extractTracks(payload).map(normalizeTrack).filter(track => track.menu);
+      const allRows = extractTracks(payload).map(normalizeTrack);
+      const rows = menuOnly ? allRows.filter(track => track.menu) : allRows;
       if (rows.length) return prioritizeTracks(rows);
     } catch (err) {
       console.warn(`Could not load music manifest ${manifestUrl}:`, err);
@@ -177,4 +178,8 @@ export async function loadMenuMusicTracks() {
   }
 
   return prioritizeTracks(MENU_MUSIC_TRACKS);
+}
+
+export function loadMenuMusicTracks() {
+  return loadMusicTracks({ menuOnly: true });
 }

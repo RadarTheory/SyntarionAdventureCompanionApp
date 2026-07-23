@@ -1,0 +1,1820 @@
+{
+  "version": 1,
+  "source": "R2 SFX bucket",
+  "generatedAt": "2026-07-23T05:41:28.131Z",
+  "tracks": [
+    {
+      "key": "ambience-pub-folk",
+      "title": "Pub Folk",
+      "category": "Ambience",
+      "filename": "AmbiencePubFolk.mp3",
+      "path": "SFX/Ambience/AmbiencePubFolk.mp3"
+    },
+    {
+      "key": "ambience-pub-small-folk",
+      "title": "Pub Small Folk",
+      "category": "Ambience",
+      "filename": "AmbiencePubSmallFolk.mp3",
+      "path": "SFX/Ambience/AmbiencePubSmallFolk.mp3"
+    },
+    {
+      "key": "ambience-small-town",
+      "title": "Small Town",
+      "category": "Ambience",
+      "filename": "AmbienceSmallTown.mp3",
+      "path": "SFX/Ambience/AmbienceSmallTown.mp3"
+    },
+    {
+      "key": "ambience-small-town-cafe",
+      "title": "Small Town Cafe",
+      "category": "Ambience",
+      "filename": "AmbienceSmallTownCafe.mp3",
+      "path": "SFX/Ambience/AmbienceSmallTownCafe.mp3"
+    },
+    {
+      "key": "ambience-stadium-roar-needtofadeout",
+      "title": "Stadium Roar(needtofadeout)",
+      "category": "Ambience",
+      "filename": "AmbienceStadiumRoar(needtofadeout).mp3",
+      "path": "SFX/Ambience/AmbienceStadiumRoar(needtofadeout).mp3"
+    },
+    {
+      "key": "ambience-tavern-folk",
+      "title": "Tavern Folk",
+      "category": "Ambience",
+      "filename": "AmbienceTavernFolk.mp3",
+      "path": "SFX/Ambience/AmbienceTavernFolk.mp3"
+    },
+    {
+      "key": "ambience-town-square",
+      "title": "Town Square",
+      "category": "Ambience",
+      "filename": "AmbienceTownSquare.mp3",
+      "path": "SFX/Ambience/AmbienceTownSquare.mp3"
+    },
+    {
+      "key": "combat-attack-sword-sound",
+      "title": "Attack Sword Sound",
+      "category": "Combat",
+      "filename": "AttackSwordSound.mp3",
+      "path": "SFX/Combat/AttackSwordSound.mp3"
+    },
+    {
+      "key": "combat-armor-impact",
+      "title": "Armor Impact",
+      "category": "Combat",
+      "filename": "CombatArmorImpact.mp3",
+      "path": "SFX/Combat/CombatArmorImpact.mp3"
+    },
+    {
+      "key": "combat-arrow-bolt-miss",
+      "title": "Arrow Bolt Miss",
+      "category": "Combat",
+      "filename": "CombatArrowBoltMiss.mp3",
+      "path": "SFX/Combat/CombatArrowBoltMiss.mp3"
+    },
+    {
+      "key": "combat-arrow-bolt-success",
+      "title": "Arrow Bolt Success",
+      "category": "Combat",
+      "filename": "CombatArrowBoltSuccess.mp3",
+      "path": "SFX/Combat/CombatArrowBoltSuccess.mp3"
+    },
+    {
+      "key": "combat-axe-impact",
+      "title": "Axe Impact",
+      "category": "Combat",
+      "filename": "CombatAxeImpact.mp3",
+      "path": "SFX/Combat/CombatAxeImpact.mp3"
+    },
+    {
+      "key": "combat-breakyard-bell",
+      "title": "Breakyard Bell",
+      "category": "Combat",
+      "filename": "CombatBreakyardBell.mp3",
+      "path": "SFX/Combat/CombatBreakyardBell.mp3"
+    },
+    {
+      "key": "combat-coggunshot",
+      "title": "Coggunshot",
+      "category": "Combat",
+      "filename": "CombatCoggunshot.mp3",
+      "path": "SFX/Combat/CombatCoggunshot.mp3"
+    },
+    {
+      "key": "combat-death-sound",
+      "title": "Death Sound",
+      "category": "Combat",
+      "filename": "CombatDeathSound.mp3",
+      "path": "SFX/Combat/CombatDeathSound.mp3"
+    },
+    {
+      "key": "combat-flintlock",
+      "title": "Flintlock",
+      "category": "Combat",
+      "filename": "CombatFlintlock.mp3",
+      "path": "SFX/Combat/CombatFlintlock.mp3"
+    },
+    {
+      "key": "combat-gunshot-echo",
+      "title": "Gunshot Echo",
+      "category": "Combat",
+      "filename": "CombatGunshotEcho.mp3",
+      "path": "SFX/Combat/CombatGunshotEcho.mp3"
+    },
+    {
+      "key": "combat-melee",
+      "title": "Melee",
+      "category": "Combat",
+      "filename": "CombatMelee.mp3",
+      "path": "SFX/Combat/CombatMelee.mp3"
+    },
+    {
+      "key": "combat-melee-impact",
+      "title": "Melee Impact",
+      "category": "Combat",
+      "filename": "CombatMeleeImpact.mp3",
+      "path": "SFX/Combat/CombatMeleeImpact.mp3"
+    },
+    {
+      "key": "combat-scorpion-sting",
+      "title": "Scorpion Sting",
+      "category": "Combat",
+      "filename": "CombatScorpionSting.mp3",
+      "path": "SFX/Combat/CombatScorpionSting.mp3"
+    },
+    {
+      "key": "combat-shield-block-success",
+      "title": "Shield Block Success",
+      "category": "Combat",
+      "filename": "CombatShieldBlockSuccess.mp3",
+      "path": "SFX/Combat/CombatShieldBlockSuccess.mp3"
+    },
+    {
+      "key": "combat-singing-blade",
+      "title": "Singing Blade",
+      "category": "Combat",
+      "filename": "CombatSingingBlade.mp3",
+      "path": "SFX/Combat/CombatSingingBlade.mp3"
+    },
+    {
+      "key": "combat-singing-greatsword-axe-swing",
+      "title": "Singing Greatsword Axe Swing",
+      "category": "Combat",
+      "filename": "CombatSingingGreatswordAxeSwing.mp3",
+      "path": "SFX/Combat/CombatSingingGreatswordAxeSwing.mp3"
+    },
+    {
+      "key": "combat-slow-mo-strike",
+      "title": "Slow Mo Strike",
+      "category": "Combat",
+      "filename": "CombatSlowMoStrike.mp3",
+      "path": "SFX/Combat/CombatSlowMoStrike.mp3"
+    },
+    {
+      "key": "combat-spear-glaive-thrust",
+      "title": "Spear Glaive Thrust",
+      "category": "Combat",
+      "filename": "CombatSpearGlaiveThrust.mp3",
+      "path": "SFX/Combat/CombatSpearGlaiveThrust.mp3"
+    },
+    {
+      "key": "combat-stab-pierce",
+      "title": "Stab Pierce",
+      "category": "Combat",
+      "filename": "CombatStabPierce.mp3",
+      "path": "SFX/Combat/CombatStabPierce.mp3"
+    },
+    {
+      "key": "combat-sword-fight-medium",
+      "title": "Sword Fight Medium",
+      "category": "Combat",
+      "filename": "CombatSwordFightMedium.mp3",
+      "path": "SFX/Combat/CombatSwordFightMedium.mp3"
+    },
+    {
+      "key": "combat-sword-fight-short",
+      "title": "Sword Fight Short",
+      "category": "Combat",
+      "filename": "CombatSwordFightShort.mp3",
+      "path": "SFX/Combat/CombatSwordFightShort.mp3"
+    },
+    {
+      "key": "combat-sword-slash",
+      "title": "Sword Slash",
+      "category": "Combat",
+      "filename": "CombatSwordSlash.mp3",
+      "path": "SFX/Combat/CombatSwordSlash.mp3"
+    },
+    {
+      "key": "combat-weapon-impact",
+      "title": "Weapon Impact",
+      "category": "Combat",
+      "filename": "CombatWeaponImpact.mp3",
+      "path": "SFX/Combat/CombatWeaponImpact.mp3"
+    },
+    {
+      "key": "combat-draw-sword",
+      "title": "Draw Sword",
+      "category": "Combat",
+      "filename": "DrawSword.mp3",
+      "path": "SFX/Combat/DrawSword.mp3"
+    },
+    {
+      "key": "combat-knife-draw",
+      "title": "Knife Draw",
+      "category": "Combat",
+      "filename": "KnifeDraw.mp3",
+      "path": "SFX/Combat/KnifeDraw.mp3"
+    },
+    {
+      "key": "combat-othrod-war-horn",
+      "title": "Othrod War Horn",
+      "category": "Combat",
+      "filename": "OthrodWarHorn.mp3",
+      "path": "SFX/Combat/OthrodWarHorn.mp3"
+    },
+    {
+      "key": "combat-sword-clang",
+      "title": "Sword Clang",
+      "category": "Combat",
+      "filename": "SwordClang.mp3",
+      "path": "SFX/Combat/SwordClang.mp3"
+    },
+    {
+      "key": "combat-sword-cut2",
+      "title": "Sword Cut2",
+      "category": "Combat",
+      "filename": "SwordCut2.mp3",
+      "path": "SFX/Combat/SwordCut2.mp3"
+    },
+    {
+      "key": "combat-sword-cut-fx",
+      "title": "Sword Cut FX",
+      "category": "Combat",
+      "filename": "SwordCutFX.mp3",
+      "path": "SFX/Combat/SwordCutFX.mp3"
+    },
+    {
+      "key": "combat-sword-parry",
+      "title": "Sword Parry",
+      "category": "Combat",
+      "filename": "SwordParry.mp3",
+      "path": "SFX/Combat/SwordParry.mp3"
+    },
+    {
+      "key": "combat-wet-hard-impact",
+      "title": "Wet Hard Impact",
+      "category": "Combat",
+      "filename": "WetHardImpact.mp3",
+      "path": "SFX/Combat/WetHardImpact.mp3"
+    },
+    {
+      "key": "creatures-banshee-scream",
+      "title": "Banshee Scream",
+      "category": "Creatures",
+      "filename": "BansheeScream.mp3",
+      "path": "SFX/Creatures/BansheeScream.mp3"
+    },
+    {
+      "key": "creatures-cave-durinak-song",
+      "title": "Cave Durinak Song",
+      "category": "Creatures",
+      "filename": "CaveDurinakSong.mp3",
+      "path": "SFX/Creatures/CaveDurinakSong.mp3"
+    },
+    {
+      "key": "creatures-crow-caw",
+      "title": "Crow Caw",
+      "category": "Creatures",
+      "filename": "CrowCaw.mp3",
+      "path": "SFX/Creatures/CrowCaw.mp3"
+    },
+    {
+      "key": "creatures-fae-wings",
+      "title": "Fae Wings",
+      "category": "Creatures",
+      "filename": "FaeWings.mp3",
+      "path": "SFX/Creatures/FaeWings.mp3"
+    },
+    {
+      "key": "creatures-fae-wings2",
+      "title": "Fae Wings2",
+      "category": "Creatures",
+      "filename": "FaeWings2.mp3",
+      "path": "SFX/Creatures/FaeWings2.mp3"
+    },
+    {
+      "key": "creatures-farm-chicken",
+      "title": "Farm Chicken",
+      "category": "Creatures",
+      "filename": "FarmChicken.mp3",
+      "path": "SFX/Creatures/FarmChicken.mp3"
+    },
+    {
+      "key": "creatures-farm-goat-bleat",
+      "title": "Farm Goat Bleat",
+      "category": "Creatures",
+      "filename": "FarmGoatBleat.mp3",
+      "path": "SFX/Creatures/FarmGoatBleat.mp3"
+    },
+    {
+      "key": "creatures-griffon-cry",
+      "title": "Griffon Cry",
+      "category": "Creatures",
+      "filename": "GriffonCry.mp3",
+      "path": "SFX/Creatures/GriffonCry.mp3"
+    },
+    {
+      "key": "creatures-krulmaw-growl",
+      "title": "Krulmaw Growl",
+      "category": "Creatures",
+      "filename": "KrulmawGrowl.mp3",
+      "path": "SFX/Creatures/KrulmawGrowl.mp3"
+    },
+    {
+      "key": "creatures-phantom-cry-breeze",
+      "title": "Phantom Cry Breeze",
+      "category": "Creatures",
+      "filename": "PhantomCryBreeze.mp3",
+      "path": "SFX/Creatures/PhantomCryBreeze.mp3"
+    },
+    {
+      "key": "creatures-satyr-horn",
+      "title": "Satyr Horn",
+      "category": "Creatures",
+      "filename": "SatyrHorn.mp3",
+      "path": "SFX/Creatures/SatyrHorn.mp3"
+    },
+    {
+      "key": "creatures-sprite-laughing",
+      "title": "Sprite Laughing",
+      "category": "Creatures",
+      "filename": "SpriteLaughing.mp3",
+      "path": "SFX/Creatures/SpriteLaughing.mp3"
+    },
+    {
+      "key": "creatures-werewolf-distant-howl",
+      "title": "Werewolf Distant Howl",
+      "category": "Creatures",
+      "filename": "WerewolfDistantHowl.mp3",
+      "path": "SFX/Creatures/WerewolfDistantHowl.mp3"
+    },
+    {
+      "key": "creatures-werewolf-growl",
+      "title": "Werewolf Growl",
+      "category": "Creatures",
+      "filename": "WerewolfGrowl.mp3",
+      "path": "SFX/Creatures/WerewolfGrowl.mp3"
+    },
+    {
+      "key": "creatures-werewolf-howl",
+      "title": "Werewolf Howl",
+      "category": "Creatures",
+      "filename": "WerewolfHowl.mp3",
+      "path": "SFX/Creatures/WerewolfHowl.mp3"
+    },
+    {
+      "key": "creatures-werewolf-howl-cave",
+      "title": "Werewolf Howl Cave",
+      "category": "Creatures",
+      "filename": "WerewolfHowlCave.mp3",
+      "path": "SFX/Creatures/WerewolfHowlCave.mp3"
+    },
+    {
+      "key": "dmsoundboard-joke-victory",
+      "title": "Joke Victory",
+      "category": "DMSoundboard",
+      "filename": "UIDMBoardJokeVictory.mp3",
+      "path": "SFX/DMSoundboard/UIDMBoardJokeVictory.mp3"
+    },
+    {
+      "key": "dmsoundboard-joke-wiff",
+      "title": "Joke Wiff",
+      "category": "DMSoundboard",
+      "filename": "UIDMBoardJokeWiff.mp3",
+      "path": "SFX/DMSoundboard/UIDMBoardJokeWiff.mp3"
+    },
+    {
+      "key": "dmsoundboard-trickster-creep",
+      "title": "Trickster Creep",
+      "category": "DMSoundboard",
+      "filename": "UIDMBoardTricksterCreep.mp3",
+      "path": "SFX/DMSoundboard/UIDMBoardTricksterCreep.mp3"
+    },
+    {
+      "key": "dmsoundboard-balloon-burst",
+      "title": "Balloon Burst",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardBalloonBurst.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardBalloonBurst.mp3"
+    },
+    {
+      "key": "dmsoundboard-crickets",
+      "title": "Crickets",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardCrickets.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardCrickets.mp3"
+    },
+    {
+      "key": "dmsoundboard-joke-blunder",
+      "title": "Joke Blunder",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardJokeBlunder.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardJokeBlunder.mp3"
+    },
+    {
+      "key": "dmsoundboard-joke-cartoon-slide-down",
+      "title": "Joke Cartoon Slide Down",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardJokeCartoonSlideDown.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardJokeCartoonSlideDown.mp3"
+    },
+    {
+      "key": "dmsoundboard-joke-cartoon-slide-up",
+      "title": "Joke Cartoon Slide Up",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardJokeCartoonSlideUp.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardJokeCartoonSlideUp.mp3"
+    },
+    {
+      "key": "dmsoundboard-joke-cartoon-spinout",
+      "title": "Joke Cartoon Spinout",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardJokeCartoonSpinout.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardJokeCartoonSpinout.mp3"
+    },
+    {
+      "key": "dmsoundboard-joke-ewww-kids",
+      "title": "Joke Ewww Kids",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardJokeEwwwKids.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardJokeEwwwKids.mp3"
+    },
+    {
+      "key": "dmsoundboard-joke-food-crunch",
+      "title": "Joke Food Crunch",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardJokeFoodCrunch.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardJokeFoodCrunch.mp3"
+    },
+    {
+      "key": "dmsoundboard-joke-pun",
+      "title": "Joke Pun",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardJokePun.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardJokePun.mp3"
+    },
+    {
+      "key": "dmsoundboard-joke-triumph",
+      "title": "Joke Triumph",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardJokeTriumph.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardJokeTriumph.mp3"
+    },
+    {
+      "key": "dmsoundboard-loud-thunder",
+      "title": "Loud Thunder",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardLoudThunder.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardLoudThunder.mp3"
+    },
+    {
+      "key": "dmsoundboard-men-laughing",
+      "title": "Men Laughing",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardMenLaughing.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardMenLaughing.mp3"
+    },
+    {
+      "key": "dmsoundboard-nature-forest-wuid",
+      "title": "Nature Forest Wuid",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardNatureForestWuid.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardNatureForestWuid.mp3"
+    },
+    {
+      "key": "dmsoundboard-nature-monster-laugh",
+      "title": "Nature Monster Laugh",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardNatureMonsterLaugh.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardNatureMonsterLaugh.mp3"
+    },
+    {
+      "key": "dmsoundboard-shimmering-item",
+      "title": "Shimmering Item",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardShimmeringItem.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardShimmeringItem.mp3"
+    },
+    {
+      "key": "dmsoundboard-smack",
+      "title": "Smack",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardSmack.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardSmack.mp3"
+    },
+    {
+      "key": "dmsoundboard-snore",
+      "title": "Snore",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardSnore.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardSnore.mp3"
+    },
+    {
+      "key": "dmsoundboard-splat",
+      "title": "Splat",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardSplat.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardSplat.mp3"
+    },
+    {
+      "key": "dmsoundboard-thunder-long",
+      "title": "Thunder Long",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardThunderLong.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardThunderLong.mp3"
+    },
+    {
+      "key": "dmsoundboard-toddler-laughing-long",
+      "title": "Toddler Laughing Long",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardToddlerLaughingLong.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardToddlerLaughingLong.mp3"
+    },
+    {
+      "key": "dmsoundboard-trickster-laugh",
+      "title": "Trickster Laugh",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardTricksterLaugh.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardTricksterLaugh.mp3"
+    },
+    {
+      "key": "dmsoundboard-water-splash",
+      "title": "Water Splash",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardWaterSplash.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardWaterSplash.mp3"
+    },
+    {
+      "key": "dmsoundboard-whistle-catcall",
+      "title": "Whistle Catcall",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardWhistleCatcall.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardWhistleCatcall.mp3"
+    },
+    {
+      "key": "dmsoundboard-whistle-heyoo",
+      "title": "Whistle HEYOO",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardWhistleHEYOO.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardWhistleHEYOO.mp3"
+    },
+    {
+      "key": "dmsoundboard-whistle-signal",
+      "title": "Whistle Signal",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardWhistleSignal.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardWhistleSignal.mp3"
+    },
+    {
+      "key": "dmsoundboard-whistle-theme",
+      "title": "Whistle Theme",
+      "category": "DMSoundboard",
+      "filename": "UIDMSoundBoardWhistleTheme.mp3",
+      "path": "SFX/DMSoundboard/UIDMSoundBoardWhistleTheme.mp3"
+    },
+    {
+      "key": "environment-cave-boom",
+      "title": "Cave Boom",
+      "category": "Environment",
+      "filename": "CaveBoom.mp3",
+      "path": "SFX/Environment/CaveBoom.mp3"
+    },
+    {
+      "key": "environment-dungeon-echo",
+      "title": "Dungeon Echo",
+      "category": "Environment",
+      "filename": "DungeonEcho.mp3",
+      "path": "SFX/Environment/DungeonEcho.mp3"
+    },
+    {
+      "key": "environment-underwater",
+      "title": "Underwater",
+      "category": "Environment",
+      "filename": "Environment-Underwater.mp3",
+      "path": "SFX/Environment/Environment-Underwater.mp3"
+    },
+    {
+      "key": "environment-bird-chirp",
+      "title": "Bird Chirp",
+      "category": "Environment",
+      "filename": "EnvironmentBirdChirp.mp3",
+      "path": "SFX/Environment/EnvironmentBirdChirp.mp3"
+    },
+    {
+      "key": "environment-camp-w-fire",
+      "title": "Camp W Fire",
+      "category": "Environment",
+      "filename": "EnvironmentCampWFire.mp3",
+      "path": "SFX/Environment/EnvironmentCampWFire.mp3"
+    },
+    {
+      "key": "environment-campfire-woods",
+      "title": "Campfire Woods",
+      "category": "Environment",
+      "filename": "EnvironmentCampfireWoods.mp3",
+      "path": "SFX/Environment/EnvironmentCampfireWoods.mp3"
+    },
+    {
+      "key": "environment-cave",
+      "title": "Cave",
+      "category": "Environment",
+      "filename": "EnvironmentCave.mp3",
+      "path": "SFX/Environment/EnvironmentCave.mp3"
+    },
+    {
+      "key": "environment-coast",
+      "title": "Coast",
+      "category": "Environment",
+      "filename": "EnvironmentCoast.mp3",
+      "path": "SFX/Environment/EnvironmentCoast.mp3"
+    },
+    {
+      "key": "environment-coastline",
+      "title": "Coastline",
+      "category": "Environment",
+      "filename": "EnvironmentCoastline.mp3",
+      "path": "SFX/Environment/EnvironmentCoastline.mp3"
+    },
+    {
+      "key": "environment-creek-peaceful",
+      "title": "Creek Peaceful",
+      "category": "Environment",
+      "filename": "EnvironmentCreekPeaceful.mp3",
+      "path": "SFX/Environment/EnvironmentCreekPeaceful.mp3"
+    },
+    {
+      "key": "environment-forest",
+      "title": "Forest",
+      "category": "Environment",
+      "filename": "EnvironmentForest.mp3",
+      "path": "SFX/Environment/EnvironmentForest.mp3"
+    },
+    {
+      "key": "environment-forest-walking",
+      "title": "Forest Walking",
+      "category": "Environment",
+      "filename": "EnvironmentForestWalking.mp3",
+      "path": "SFX/Environment/EnvironmentForestWalking.mp3"
+    },
+    {
+      "key": "environment-forest-waterfall",
+      "title": "Forest Waterfall",
+      "category": "Environment",
+      "filename": "EnvironmentForestWaterfall.mp3",
+      "path": "SFX/Environment/EnvironmentForestWaterfall.mp3"
+    },
+    {
+      "key": "environment-high-winds",
+      "title": "High Winds",
+      "category": "Environment",
+      "filename": "EnvironmentHighWinds.mp3",
+      "path": "SFX/Environment/EnvironmentHighWinds.mp3"
+    },
+    {
+      "key": "environment-mountain-river",
+      "title": "Mountain River",
+      "category": "Environment",
+      "filename": "EnvironmentMountainRiver.mp3",
+      "path": "SFX/Environment/EnvironmentMountainRiver.mp3"
+    },
+    {
+      "key": "environment-nature",
+      "title": "Nature",
+      "category": "Environment",
+      "filename": "EnvironmentNature.mp3",
+      "path": "SFX/Environment/EnvironmentNature.mp3"
+    },
+    {
+      "key": "environment-nighttime",
+      "title": "Nighttime",
+      "category": "Environment",
+      "filename": "EnvironmentNighttime.mp3",
+      "path": "SFX/Environment/EnvironmentNighttime.mp3"
+    },
+    {
+      "key": "environment-old-mine",
+      "title": "Old Mine",
+      "category": "Environment",
+      "filename": "EnvironmentOldMine.mp3",
+      "path": "SFX/Environment/EnvironmentOldMine.mp3"
+    },
+    {
+      "key": "environment-plains",
+      "title": "Plains",
+      "category": "Environment",
+      "filename": "EnvironmentPlains.mp3",
+      "path": "SFX/Environment/EnvironmentPlains.mp3"
+    },
+    {
+      "key": "environment-rain",
+      "title": "Rain",
+      "category": "Environment",
+      "filename": "EnvironmentRain.mp3",
+      "path": "SFX/Environment/EnvironmentRain.mp3"
+    },
+    {
+      "key": "environment-rain-city",
+      "title": "Rain City",
+      "category": "Environment",
+      "filename": "EnvironmentRainCity.mp3",
+      "path": "SFX/Environment/EnvironmentRainCity.mp3"
+    },
+    {
+      "key": "environment-summer-day",
+      "title": "Summer Day",
+      "category": "Environment",
+      "filename": "EnvironmentSummerDay.mp3",
+      "path": "SFX/Environment/EnvironmentSummerDay.mp3"
+    },
+    {
+      "key": "environment-thunderstorm",
+      "title": "Thunderstorm",
+      "category": "Environment",
+      "filename": "EnvironmentThunderstorm.mp3",
+      "path": "SFX/Environment/EnvironmentThunderstorm.mp3"
+    },
+    {
+      "key": "environment-windy-mountain-pass",
+      "title": "Windy Mountain Pass",
+      "category": "Environment",
+      "filename": "EnvironmentWindyMountainPass.mp3",
+      "path": "SFX/Environment/EnvironmentWindyMountainPass.mp3"
+    },
+    {
+      "key": "environment-footsteps-loud",
+      "title": "Footsteps Loud",
+      "category": "Environment",
+      "filename": "Footsteps-Loud.mp3",
+      "path": "SFX/Environment/Footsteps-Loud.mp3"
+    },
+    {
+      "key": "horror-ambience",
+      "title": "Ambience",
+      "category": "Horror",
+      "filename": "HorrorAmbience.mp3",
+      "path": "SFX/Horror/HorrorAmbience.mp3"
+    },
+    {
+      "key": "horror-dropoff-sound",
+      "title": "Dropoff Sound",
+      "category": "Horror",
+      "filename": "HorrorDropoffSound.mp3",
+      "path": "SFX/Horror/HorrorDropoffSound.mp3"
+    },
+    {
+      "key": "horror-steampunk-scratch-through-wall",
+      "title": "Steampunk Scratch Through Wall",
+      "category": "Horror",
+      "filename": "HorrorSteampunkScratchThroughWall.mp3",
+      "path": "SFX/Horror/HorrorSteampunkScratchThroughWall.mp3"
+    },
+    {
+      "key": "horror-suspense-sound",
+      "title": "Suspense Sound",
+      "category": "Horror",
+      "filename": "HorrorSuspenseSound.mp3",
+      "path": "SFX/Horror/HorrorSuspenseSound.mp3"
+    },
+    {
+      "key": "horror-trombone-crescendo",
+      "title": "Trombone Crescendo",
+      "category": "Horror",
+      "filename": "HorrorTromboneCrescendo.mp3",
+      "path": "SFX/Horror/HorrorTromboneCrescendo.mp3"
+    },
+    {
+      "key": "horror-wraith-scream",
+      "title": "Wraith Scream",
+      "category": "Horror",
+      "filename": "HorrorWraithScream.mp3",
+      "path": "SFX/Horror/HorrorWraithScream.mp3"
+    },
+    {
+      "key": "horror-the-voicesinthe-void",
+      "title": "The Voicesinthe Void",
+      "category": "Horror",
+      "filename": "TheVoicesintheVoid.mp3",
+      "path": "SFX/Horror/TheVoicesintheVoid.mp3"
+    },
+    {
+      "key": "magic-alchemist-beaker",
+      "title": "Alchemist Beaker",
+      "category": "Magic",
+      "filename": "AlchemistBeaker.mp3",
+      "path": "SFX/Magic/AlchemistBeaker.mp3"
+    },
+    {
+      "key": "magic-blessing-boon",
+      "title": "Blessing Boon",
+      "category": "Magic",
+      "filename": "Blessing-Boon.mp3",
+      "path": "SFX/Magic/Blessing-Boon.mp3"
+    },
+    {
+      "key": "magic-fast-mote",
+      "title": "Fast Mote",
+      "category": "Magic",
+      "filename": "FastMote.mp3",
+      "path": "SFX/Magic/FastMote.mp3"
+    },
+    {
+      "key": "magic-healing-spell",
+      "title": "Healing Spell",
+      "category": "Magic",
+      "filename": "HealingSpell.mp3",
+      "path": "SFX/Magic/HealingSpell.mp3"
+    },
+    {
+      "key": "magic-illusion-spell",
+      "title": "Illusion Spell",
+      "category": "Magic",
+      "filename": "IllusionSpell.mp3",
+      "path": "SFX/Magic/IllusionSpell.mp3"
+    },
+    {
+      "key": "magic-lightning-spell",
+      "title": "Lightning Spell",
+      "category": "Magic",
+      "filename": "LightningSpell.mp3",
+      "path": "SFX/Magic/LightningSpell.mp3"
+    },
+    {
+      "key": "magic-lightning-spellgreater",
+      "title": "Lightning Spellgreater",
+      "category": "Magic",
+      "filename": "LightningSpellgreater.mp3",
+      "path": "SFX/Magic/LightningSpellgreater.mp3"
+    },
+    {
+      "key": "magic-blast",
+      "title": "Blast",
+      "category": "Magic",
+      "filename": "MagicBlast.mp3",
+      "path": "SFX/Magic/MagicBlast.mp3"
+    },
+    {
+      "key": "magic-charm",
+      "title": "Charm",
+      "category": "Magic",
+      "filename": "MagicCharm.mp3",
+      "path": "SFX/Magic/MagicCharm.mp3"
+    },
+    {
+      "key": "magic-chime",
+      "title": "Chime",
+      "category": "Magic",
+      "filename": "MagicChime.mp3",
+      "path": "SFX/Magic/MagicChime.mp3"
+    },
+    {
+      "key": "magic-chime2",
+      "title": "Chime2",
+      "category": "Magic",
+      "filename": "MagicChime2.mp3",
+      "path": "SFX/Magic/MagicChime2.mp3"
+    },
+    {
+      "key": "magic-discovery",
+      "title": "Discovery",
+      "category": "Magic",
+      "filename": "MagicDiscovery.mp3",
+      "path": "SFX/Magic/MagicDiscovery.mp3"
+    },
+    {
+      "key": "magic-druid",
+      "title": "Druid",
+      "category": "Magic",
+      "filename": "MagicDruid.mp3",
+      "path": "SFX/Magic/MagicDruid.mp3"
+    },
+    {
+      "key": "magic-element-cast",
+      "title": "Element Cast",
+      "category": "Magic",
+      "filename": "MagicElementCast.mp3",
+      "path": "SFX/Magic/MagicElementCast.mp3"
+    },
+    {
+      "key": "magic-element-cast2",
+      "title": "Element Cast2",
+      "category": "Magic",
+      "filename": "MagicElementCast2.mp3",
+      "path": "SFX/Magic/MagicElementCast2.mp3"
+    },
+    {
+      "key": "magic-fae-chime",
+      "title": "Fae Chime",
+      "category": "Magic",
+      "filename": "MagicFaeChime.mp3",
+      "path": "SFX/Magic/MagicFaeChime.mp3"
+    },
+    {
+      "key": "magic-fire-extinguish",
+      "title": "Fire Extinguish",
+      "category": "Magic",
+      "filename": "MagicFireExtinguish.mp3",
+      "path": "SFX/Magic/MagicFireExtinguish.mp3"
+    },
+    {
+      "key": "magic-fire-impact",
+      "title": "Fire Impact",
+      "category": "Magic",
+      "filename": "MagicFireImpact.mp3",
+      "path": "SFX/Magic/MagicFireImpact.mp3"
+    },
+    {
+      "key": "magic-fire-impact-huge",
+      "title": "Fire Impact Huge",
+      "category": "Magic",
+      "filename": "MagicFireImpactHuge.mp3",
+      "path": "SFX/Magic/MagicFireImpactHuge.mp3"
+    },
+    {
+      "key": "magic-fire-impact-large",
+      "title": "Fire Impact Large",
+      "category": "Magic",
+      "filename": "MagicFireImpactLarge.mp3",
+      "path": "SFX/Magic/MagicFireImpactLarge.mp3"
+    },
+    {
+      "key": "magic-fireball",
+      "title": "Fireball",
+      "category": "Magic",
+      "filename": "MagicFireball.mp3",
+      "path": "SFX/Magic/MagicFireball.mp3"
+    },
+    {
+      "key": "magic-fireball2",
+      "title": "Fireball2",
+      "category": "Magic",
+      "filename": "MagicFireball2.mp3",
+      "path": "SFX/Magic/MagicFireball2.mp3"
+    },
+    {
+      "key": "magic-glyph-lock",
+      "title": "Glyph Lock",
+      "category": "Magic",
+      "filename": "MagicGlyphLock.mp3",
+      "path": "SFX/Magic/MagicGlyphLock.mp3"
+    },
+    {
+      "key": "magic-heal-cast",
+      "title": "Heal Cast",
+      "category": "Magic",
+      "filename": "MagicHealCast.mp3",
+      "path": "SFX/Magic/MagicHealCast.mp3"
+    },
+    {
+      "key": "magic-illusion",
+      "title": "Illusion",
+      "category": "Magic",
+      "filename": "MagicIllusion.mp3",
+      "path": "SFX/Magic/MagicIllusion.mp3"
+    },
+    {
+      "key": "magic-impact",
+      "title": "Impact",
+      "category": "Magic",
+      "filename": "MagicImpact.mp3",
+      "path": "SFX/Magic/MagicImpact.mp3"
+    },
+    {
+      "key": "magic-impact-large",
+      "title": "Impact Large",
+      "category": "Magic",
+      "filename": "MagicImpactLarge.mp3",
+      "path": "SFX/Magic/MagicImpactLarge.mp3"
+    },
+    {
+      "key": "magic-loot-equip",
+      "title": "Loot Equip",
+      "category": "Magic",
+      "filename": "MagicLootEquip.mp3",
+      "path": "SFX/Magic/MagicLootEquip.mp3"
+    },
+    {
+      "key": "magic-mote",
+      "title": "Mote",
+      "category": "Magic",
+      "filename": "MagicMote.mp3",
+      "path": "SFX/Magic/MagicMote.mp3"
+    },
+    {
+      "key": "magic-rock-spell",
+      "title": "Rock Spell",
+      "category": "Magic",
+      "filename": "MagicRockSpell.mp3",
+      "path": "SFX/Magic/MagicRockSpell.mp3"
+    },
+    {
+      "key": "magic-rock-spell2",
+      "title": "Rock Spell2",
+      "category": "Magic",
+      "filename": "MagicRockSpell2.mp3",
+      "path": "SFX/Magic/MagicRockSpell2.mp3"
+    },
+    {
+      "key": "magic-sacral",
+      "title": "Sacral",
+      "category": "Magic",
+      "filename": "MagicSacral.mp3",
+      "path": "SFX/Magic/MagicSacral.mp3"
+    },
+    {
+      "key": "magic-sanctus",
+      "title": "Sanctus",
+      "category": "Magic",
+      "filename": "MagicSanctus.mp3",
+      "path": "SFX/Magic/MagicSanctus.mp3"
+    },
+    {
+      "key": "magic-sanctus-heal",
+      "title": "Sanctus Heal",
+      "category": "Magic",
+      "filename": "MagicSanctusHeal.mp3",
+      "path": "SFX/Magic/MagicSanctusHeal.mp3"
+    },
+    {
+      "key": "magic-shaeid",
+      "title": "Shaeid",
+      "category": "Magic",
+      "filename": "MagicShaeid.mp3",
+      "path": "SFX/Magic/MagicShaeid.mp3"
+    },
+    {
+      "key": "magic-shimmer",
+      "title": "Shimmer",
+      "category": "Magic",
+      "filename": "MagicShimmer.mp3",
+      "path": "SFX/Magic/MagicShimmer.mp3"
+    },
+    {
+      "key": "magic-silly-hover-spell",
+      "title": "Silly Hover Spell",
+      "category": "Magic",
+      "filename": "MagicSillyHoverSpell.mp3",
+      "path": "SFX/Magic/MagicSillyHoverSpell.mp3"
+    },
+    {
+      "key": "magic-sparkle-whoosh",
+      "title": "Sparkle Whoosh",
+      "category": "Magic",
+      "filename": "MagicSparkleWhoosh.mp3",
+      "path": "SFX/Magic/MagicSparkleWhoosh.mp3"
+    },
+    {
+      "key": "magic-strike",
+      "title": "Strike",
+      "category": "Magic",
+      "filename": "MagicStrike.mp3",
+      "path": "SFX/Magic/MagicStrike.mp3"
+    },
+    {
+      "key": "magic-success",
+      "title": "Success",
+      "category": "Magic",
+      "filename": "MagicSuccess.mp3",
+      "path": "SFX/Magic/MagicSuccess.mp3"
+    },
+    {
+      "key": "magic-summon",
+      "title": "Summon",
+      "category": "Magic",
+      "filename": "MagicSummon.mp3",
+      "path": "SFX/Magic/MagicSummon.mp3"
+    },
+    {
+      "key": "magic-teleport",
+      "title": "Teleport",
+      "category": "Magic",
+      "filename": "MagicTeleport.mp3",
+      "path": "SFX/Magic/MagicTeleport.mp3"
+    },
+    {
+      "key": "magic-twinkle",
+      "title": "Twinkle",
+      "category": "Magic",
+      "filename": "MagicTwinkle.mp3",
+      "path": "SFX/Magic/MagicTwinkle.mp3"
+    },
+    {
+      "key": "magic-water-cast",
+      "title": "Water Cast",
+      "category": "Magic",
+      "filename": "MagicWaterCast.mp3",
+      "path": "SFX/Magic/MagicWaterCast.mp3"
+    },
+    {
+      "key": "magic-whoosh2",
+      "title": "Whoosh2",
+      "category": "Magic",
+      "filename": "MagicWhoosh2.mp3",
+      "path": "SFX/Magic/MagicWhoosh2.mp3"
+    },
+    {
+      "key": "magic-wind",
+      "title": "Wind",
+      "category": "Magic",
+      "filename": "MagicWind.mp3",
+      "path": "SFX/Magic/MagicWind.mp3"
+    },
+    {
+      "key": "magic-wind-cast",
+      "title": "Wind Cast",
+      "category": "Magic",
+      "filename": "MagicWindCast.mp3",
+      "path": "SFX/Magic/MagicWindCast.mp3"
+    },
+    {
+      "key": "magic-wish",
+      "title": "Wish",
+      "category": "Magic",
+      "filename": "MagicWish.mp3",
+      "path": "SFX/Magic/MagicWish.mp3"
+    },
+    {
+      "key": "magic-wish-cast",
+      "title": "Wish Cast",
+      "category": "Magic",
+      "filename": "MagicWishCast.mp3",
+      "path": "SFX/Magic/MagicWishCast.mp3"
+    },
+    {
+      "key": "magic-wraill",
+      "title": "Wraill",
+      "category": "Magic",
+      "filename": "MagicWraill.mp3",
+      "path": "SFX/Magic/MagicWraill.mp3"
+    },
+    {
+      "key": "magic-wraill-cast",
+      "title": "Wraill Cast",
+      "category": "Magic",
+      "filename": "MagicWraillCast.mp3",
+      "path": "SFX/Magic/MagicWraillCast.mp3"
+    },
+    {
+      "key": "magic-mystical-chime",
+      "title": "Mystical Chime",
+      "category": "Magic",
+      "filename": "MysticalChime.mp3",
+      "path": "SFX/Magic/MysticalChime.mp3"
+    },
+    {
+      "key": "misc-hercules",
+      "title": "Hercules",
+      "category": "Misc",
+      "filename": "Hercules.mp3",
+      "path": "SFX/Misc/Hercules.mp3"
+    },
+    {
+      "key": "steampunk-healing-tech",
+      "title": "Healing Tech",
+      "category": "Steampunk",
+      "filename": "HealingTech.mp3",
+      "path": "SFX/Steampunk/HealingTech.mp3"
+    },
+    {
+      "key": "steampunk-schematic-charging",
+      "title": "Schematic Charging",
+      "category": "Steampunk",
+      "filename": "SchematicCharging.mp3",
+      "path": "SFX/Steampunk/SchematicCharging.mp3"
+    },
+    {
+      "key": "steampunk-schematic-whirring-ding",
+      "title": "Schematic Whirring Ding",
+      "category": "Steampunk",
+      "filename": "SchematicWhirringDing.mp3",
+      "path": "SFX/Steampunk/SchematicWhirringDing.mp3"
+    },
+    {
+      "key": "steampunk-schematic-whistle",
+      "title": "Schematic Whistle",
+      "category": "Steampunk",
+      "filename": "SchematicWhistle.mp3",
+      "path": "SFX/Steampunk/SchematicWhistle.mp3"
+    },
+    {
+      "key": "steampunk-sci-fi-blast",
+      "title": "Sci Fi Blast",
+      "category": "Steampunk",
+      "filename": "SciFiBlast.mp3",
+      "path": "SFX/Steampunk/SciFiBlast.mp3"
+    },
+    {
+      "key": "steampunk-automaton-footprints",
+      "title": "Automaton Footprints",
+      "category": "Steampunk",
+      "filename": "SteampunkAutomatonFootprints.mp3",
+      "path": "SFX/Steampunk/SteampunkAutomatonFootprints.mp3"
+    },
+    {
+      "key": "steampunk-automaton-power-down",
+      "title": "Automaton Power Down",
+      "category": "Steampunk",
+      "filename": "SteampunkAutomatonPowerDown.mp3",
+      "path": "SFX/Steampunk/SteampunkAutomatonPowerDown.mp3"
+    },
+    {
+      "key": "steampunk-automaton-weapon",
+      "title": "Automaton Weapon",
+      "category": "Steampunk",
+      "filename": "SteampunkAutomatonWeapon.mp3",
+      "path": "SFX/Steampunk/SteampunkAutomatonWeapon.mp3"
+    },
+    {
+      "key": "steampunk-blueprint-deploy-chime",
+      "title": "Blueprint Deploy Chime",
+      "category": "Steampunk",
+      "filename": "SteampunkBlueprintDeployChime.mp3",
+      "path": "SFX/Steampunk/SteampunkBlueprintDeployChime.mp3"
+    },
+    {
+      "key": "steampunk-blueprint-loading",
+      "title": "Blueprint Loading",
+      "category": "Steampunk",
+      "filename": "SteampunkBlueprintLoading.mp3",
+      "path": "SFX/Steampunk/SteampunkBlueprintLoading.mp3"
+    },
+    {
+      "key": "steampunk-cannon-gun",
+      "title": "Cannon Gun",
+      "category": "Steampunk",
+      "filename": "SteampunkCannonGun.mp3",
+      "path": "SFX/Steampunk/SteampunkCannonGun.mp3"
+    },
+    {
+      "key": "steampunk-catapult-small",
+      "title": "Catapult Small",
+      "category": "Steampunk",
+      "filename": "SteampunkCatapultSmall.mp3",
+      "path": "SFX/Steampunk/SteampunkCatapultSmall.mp3"
+    },
+    {
+      "key": "steampunk-charge-ready",
+      "title": "Charge Ready",
+      "category": "Steampunk",
+      "filename": "SteampunkChargeReady.mp3",
+      "path": "SFX/Steampunk/SteampunkChargeReady.mp3"
+    },
+    {
+      "key": "steampunk-chronison-calibrating",
+      "title": "Chronison Calibrating",
+      "category": "Steampunk",
+      "filename": "SteampunkChronisonCalibrating.mp3",
+      "path": "SFX/Steampunk/SteampunkChronisonCalibrating.mp3"
+    },
+    {
+      "key": "steampunk-chronison-corrupted",
+      "title": "Chronison Corrupted",
+      "category": "Steampunk",
+      "filename": "SteampunkChronisonCorrupted.mp3",
+      "path": "SFX/Steampunk/SteampunkChronisonCorrupted.mp3"
+    },
+    {
+      "key": "steampunk-confused-robot",
+      "title": "Confused Robot",
+      "category": "Steampunk",
+      "filename": "SteampunkConfusedRobot.mp3",
+      "path": "SFX/Steampunk/SteampunkConfusedRobot.mp3"
+    },
+    {
+      "key": "steampunk-deploy-success",
+      "title": "Deploy Success",
+      "category": "Steampunk",
+      "filename": "SteampunkDeploySuccess.mp3",
+      "path": "SFX/Steampunk/SteampunkDeploySuccess.mp3"
+    },
+    {
+      "key": "steampunk-deployment-damaged",
+      "title": "Deployment Damaged",
+      "category": "Steampunk",
+      "filename": "SteampunkDeploymentDamaged.mp3",
+      "path": "SFX/Steampunk/SteampunkDeploymentDamaged.mp3"
+    },
+    {
+      "key": "steampunk-engine-running-low",
+      "title": "Engine Running Low",
+      "category": "Steampunk",
+      "filename": "SteampunkEngineRunningLow.mp3",
+      "path": "SFX/Steampunk/SteampunkEngineRunningLow.mp3"
+    },
+    {
+      "key": "steampunk-friendly-robot",
+      "title": "Friendly Robot",
+      "category": "Steampunk",
+      "filename": "SteampunkFriendlyRobot.mp3",
+      "path": "SFX/Steampunk/SteampunkFriendlyRobot.mp3"
+    },
+    {
+      "key": "steampunk-gadget-close",
+      "title": "Gadget Close",
+      "category": "Steampunk",
+      "filename": "SteampunkGadgetClose.mp3",
+      "path": "SFX/Steampunk/SteampunkGadgetClose.mp3"
+    },
+    {
+      "key": "steampunk-gear-startup-short",
+      "title": "Gear Startup Short",
+      "category": "Steampunk",
+      "filename": "SteampunkGearStartupShort.mp3",
+      "path": "SFX/Steampunk/SteampunkGearStartupShort.mp3"
+    },
+    {
+      "key": "steampunk-hack-attempt-fail",
+      "title": "Hack Attempt Fail",
+      "category": "Steampunk",
+      "filename": "SteampunkHackAttemptFail.mp3",
+      "path": "SFX/Steampunk/SteampunkHackAttemptFail.mp3"
+    },
+    {
+      "key": "steampunk-hydraulic",
+      "title": "Hydraulic",
+      "category": "Steampunk",
+      "filename": "SteampunkHydraulic.mp3",
+      "path": "SFX/Steampunk/SteampunkHydraulic.mp3"
+    },
+    {
+      "key": "steampunk-machine-blip",
+      "title": "Machine Blip",
+      "category": "Steampunk",
+      "filename": "SteampunkMachineBlip.mp3",
+      "path": "SFX/Steampunk/SteampunkMachineBlip.mp3"
+    },
+    {
+      "key": "steampunk-machine-hack",
+      "title": "Machine Hack",
+      "category": "Steampunk",
+      "filename": "SteampunkMachineHack.mp3",
+      "path": "SFX/Steampunk/SteampunkMachineHack.mp3"
+    },
+    {
+      "key": "steampunk-machine-sound",
+      "title": "Machine Sound",
+      "category": "Steampunk",
+      "filename": "SteampunkMachineSound.mp3",
+      "path": "SFX/Steampunk/SteampunkMachineSound.mp3"
+    },
+    {
+      "key": "steampunk-machine-tuning",
+      "title": "Machine Tuning",
+      "category": "Steampunk",
+      "filename": "SteampunkMachineTuning.mp3",
+      "path": "SFX/Steampunk/SteampunkMachineTuning.mp3"
+    },
+    {
+      "key": "steampunk-mechanical-gears-loud",
+      "title": "Mechanical Gears LOUD",
+      "category": "Steampunk",
+      "filename": "SteampunkMechanicalGearsLOUD.mp3",
+      "path": "SFX/Steampunk/SteampunkMechanicalGearsLOUD.mp3"
+    },
+    {
+      "key": "steampunk-phaser-fire",
+      "title": "Phaser Fire",
+      "category": "Steampunk",
+      "filename": "SteampunkPhaserFire.mp3",
+      "path": "SFX/Steampunk/SteampunkPhaserFire.mp3"
+    },
+    {
+      "key": "steampunk-plasma-impact",
+      "title": "Plasma Impact",
+      "category": "Steampunk",
+      "filename": "SteampunkPlasmaImpact.mp3",
+      "path": "SFX/Steampunk/SteampunkPlasmaImpact.mp3"
+    },
+    {
+      "key": "steampunk-plasma-shot",
+      "title": "Plasma Shot",
+      "category": "Steampunk",
+      "filename": "SteampunkPlasmaShot.mp3",
+      "path": "SFX/Steampunk/SteampunkPlasmaShot.mp3"
+    },
+    {
+      "key": "steampunk-recall-deployment",
+      "title": "Recall Deployment",
+      "category": "Steampunk",
+      "filename": "SteampunkRecallDeployment.mp3",
+      "path": "SFX/Steampunk/SteampunkRecallDeployment.mp3"
+    },
+    {
+      "key": "steampunk-robot-power-down",
+      "title": "Robot Power Down",
+      "category": "Steampunk",
+      "filename": "SteampunkRobotPowerDown.mp3",
+      "path": "SFX/Steampunk/SteampunkRobotPowerDown.mp3"
+    },
+    {
+      "key": "steampunk-robot-power-on",
+      "title": "Robot Power On",
+      "category": "Steampunk",
+      "filename": "SteampunkRobotPowerOn.mp3",
+      "path": "SFX/Steampunk/SteampunkRobotPowerOn.mp3"
+    },
+    {
+      "key": "steampunk-schematic-deploy",
+      "title": "Schematic Deploy",
+      "category": "Steampunk",
+      "filename": "SteampunkSchematicDeploy.mp3",
+      "path": "SFX/Steampunk/SteampunkSchematicDeploy.mp3"
+    },
+    {
+      "key": "steampunk-sending-correspondence",
+      "title": "Sending Correspondence",
+      "category": "Steampunk",
+      "filename": "SteampunkSendingCorrespondence.mp3",
+      "path": "SFX/Steampunk/SteampunkSendingCorrespondence.mp3"
+    },
+    {
+      "key": "steampunk-small-gear-wind",
+      "title": "Small Gear Wind",
+      "category": "Steampunk",
+      "filename": "SteampunkSmallGearWind.mp3",
+      "path": "SFX/Steampunk/SteampunkSmallGearWind.mp3"
+    },
+    {
+      "key": "steampunk-tinkertrick-deploy-large",
+      "title": "Tinkertrick Deploy Large",
+      "category": "Steampunk",
+      "filename": "SteampunkTinkertrickDeployLarge.mp3",
+      "path": "SFX/Steampunk/SteampunkTinkertrickDeployLarge.mp3"
+    },
+    {
+      "key": "steampunk-tinkertrick-deploy-long",
+      "title": "Tinkertrick Deploy Long",
+      "category": "Steampunk",
+      "filename": "SteampunkTinkertrickDeployLong.mp3",
+      "path": "SFX/Steampunk/SteampunkTinkertrickDeployLong.mp3"
+    },
+    {
+      "key": "steampunk-tinkertrick-deploy-small",
+      "title": "Tinkertrick Deploy Small",
+      "category": "Steampunk",
+      "filename": "SteampunkTinkertrickDeploySmall.mp3",
+      "path": "SFX/Steampunk/SteampunkTinkertrickDeploySmall.mp3"
+    },
+    {
+      "key": "steampunk-upgrade-chime",
+      "title": "Upgrade Chime",
+      "category": "Steampunk",
+      "filename": "SteampunkUpgradeChime.mp3",
+      "path": "SFX/Steampunk/SteampunkUpgradeChime.mp3"
+    },
+    {
+      "key": "steampunk-warpshot",
+      "title": "Warpshot",
+      "category": "Steampunk",
+      "filename": "SteampunkWarpshot.mp3",
+      "path": "SFX/Steampunk/SteampunkWarpshot.mp3"
+    },
+    {
+      "key": "steampunk-weapon-equip",
+      "title": "Weapon Equip",
+      "category": "Steampunk",
+      "filename": "SteampunkWeaponEquip.mp3",
+      "path": "SFX/Steampunk/SteampunkWeaponEquip.mp3"
+    },
+    {
+      "key": "steampunk-white-noise-fail-5-min",
+      "title": "White Noise Fail 5 Min",
+      "category": "Steampunk",
+      "filename": "SteampunkWhiteNoiseFail-5Min.mp3",
+      "path": "SFX/Steampunk/SteampunkWhiteNoiseFail-5Min.mp3"
+    },
+    {
+      "key": "steampunk-windup-deploy",
+      "title": "Windup Deploy",
+      "category": "Steampunk",
+      "filename": "SteampunkWindupDeploy.mp3",
+      "path": "SFX/Steampunk/SteampunkWindupDeploy.mp3"
+    },
+    {
+      "key": "ui-cinema-whoosh",
+      "title": "Cinema Whoosh",
+      "category": "UI",
+      "filename": "CinemaWhoosh.mp3",
+      "path": "SFX/UI/CinemaWhoosh.mp3"
+    },
+    {
+      "key": "ui-coin-drop",
+      "title": "Coin Drop",
+      "category": "UI",
+      "filename": "CoinDrop.mp3",
+      "path": "SFX/UI/CoinDrop.mp3"
+    },
+    {
+      "key": "ui-game-start-lobby-checkin",
+      "title": "Game Start Lobby Checkin",
+      "category": "UI",
+      "filename": "GameStartLobbyCheckin.mp3",
+      "path": "SFX/UI/GameStartLobbyCheckin.mp3"
+    },
+    {
+      "key": "ui-level-up-chime",
+      "title": "Level Up Chime",
+      "category": "UI",
+      "filename": "LevelUpChime.mp3",
+      "path": "SFX/UI/LevelUpChime.mp3"
+    },
+    {
+      "key": "ui-notification1",
+      "title": "Notification1",
+      "category": "UI",
+      "filename": "Notification1.mp3",
+      "path": "SFX/UI/Notification1.mp3"
+    },
+    {
+      "key": "ui-skill-up",
+      "title": "Skill Up",
+      "category": "UI",
+      "filename": "SkillUp.mp3",
+      "path": "SFX/UI/SkillUp.mp3"
+    },
+    {
+      "key": "ui-swipe-confirm",
+      "title": "Swipe Confirm",
+      "category": "UI",
+      "filename": "SwipeConfirm.mp3",
+      "path": "SFX/UI/SwipeConfirm.mp3"
+    },
+    {
+      "key": "ui-ap-grant-chime",
+      "title": "AP Grant Chime",
+      "category": "UI",
+      "filename": "UIAPGrantChime.mp3",
+      "path": "SFX/UI/UIAPGrantChime.mp3"
+    },
+    {
+      "key": "ui-audio-file-playback-end",
+      "title": "Audio File Playback End",
+      "category": "UI",
+      "filename": "UIAudioFilePlaybackEnd.mp3",
+      "path": "SFX/UI/UIAudioFilePlaybackEnd.mp3"
+    },
+    {
+      "key": "ui-audio-file-playback-start",
+      "title": "Audio File Playback Start",
+      "category": "UI",
+      "filename": "UIAudioFilePlaybackStart.mp3",
+      "path": "SFX/UI/UIAudioFilePlaybackStart.mp3"
+    },
+    {
+      "key": "ui-blip",
+      "title": "Blip",
+      "category": "UI",
+      "filename": "UIBlip.mp3",
+      "path": "SFX/UI/UIBlip.mp3"
+    },
+    {
+      "key": "ui-blip2",
+      "title": "Blip2",
+      "category": "UI",
+      "filename": "UIBlip2.mp3",
+      "path": "SFX/UI/UIBlip2.mp3"
+    },
+    {
+      "key": "ui-blip3",
+      "title": "Blip3",
+      "category": "UI",
+      "filename": "UIBlip3.mp3",
+      "path": "SFX/UI/UIBlip3.mp3"
+    },
+    {
+      "key": "ui-blip4",
+      "title": "Blip4",
+      "category": "UI",
+      "filename": "UIBlip4.mp3",
+      "path": "SFX/UI/UIBlip4.mp3"
+    },
+    {
+      "key": "ui-campaign-dm-view-page-pop",
+      "title": "Campaign DM View Page Pop",
+      "category": "UI",
+      "filename": "UICampaignDMViewPagePop.mp3",
+      "path": "SFX/UI/UICampaignDMViewPagePop.mp3"
+    },
+    {
+      "key": "ui-chime-high",
+      "title": "Chime High",
+      "category": "UI",
+      "filename": "UIChimeHigh.mp3",
+      "path": "SFX/UI/UIChimeHigh.mp3"
+    },
+    {
+      "key": "ui-chime-low",
+      "title": "Chime Low",
+      "category": "UI",
+      "filename": "UIChimeLow.mp3",
+      "path": "SFX/UI/UIChimeLow.mp3"
+    },
+    {
+      "key": "ui-click",
+      "title": "Click",
+      "category": "UI",
+      "filename": "UIClick.mp3",
+      "path": "SFX/UI/UIClick.mp3"
+    },
+    {
+      "key": "ui-close-sound",
+      "title": "Close Sound",
+      "category": "UI",
+      "filename": "UICloseSound.mp3",
+      "path": "SFX/UI/UICloseSound.mp3"
+    },
+    {
+      "key": "ui-coin-payout-big",
+      "title": "Coin Payout Big",
+      "category": "UI",
+      "filename": "UICoinPayoutBig.mp3",
+      "path": "SFX/UI/UICoinPayoutBig.mp3"
+    },
+    {
+      "key": "ui-confirm-chime",
+      "title": "Confirm Chime",
+      "category": "UI",
+      "filename": "UIConfirmChime.mp3",
+      "path": "SFX/UI/UIConfirmChime.mp3"
+    },
+    {
+      "key": "ui-dm-sent-ding",
+      "title": "DM Sent Ding",
+      "category": "UI",
+      "filename": "UIDMSentDing.mp3",
+      "path": "SFX/UI/UIDMSentDing.mp3"
+    },
+    {
+      "key": "ui-delete",
+      "title": "Delete",
+      "category": "UI",
+      "filename": "UIDelete.mp3",
+      "path": "SFX/UI/UIDelete.mp3"
+    },
+    {
+      "key": "ui-dice-crit-fail",
+      "title": "Dice Crit Fail",
+      "category": "UI",
+      "filename": "UIDiceCritFail.mp3",
+      "path": "SFX/UI/UIDiceCritFail.mp3"
+    },
+    {
+      "key": "ui-dice-crit-success",
+      "title": "Dice Crit Success",
+      "category": "UI",
+      "filename": "UIDiceCritSuccess.mp3",
+      "path": "SFX/UI/UIDiceCritSuccess.mp3"
+    },
+    {
+      "key": "ui-grimoire-entry-unlock",
+      "title": "Grimoire Entry Unlock",
+      "category": "UI",
+      "filename": "UIGrimoireEntryUnlock.mp3",
+      "path": "SFX/UI/UIGrimoireEntryUnlock.mp3"
+    },
+    {
+      "key": "ui-loot-box-open",
+      "title": "Loot Box Open",
+      "category": "UI",
+      "filename": "UILootBoxOpen.mp3",
+      "path": "SFX/UI/UILootBoxOpen.mp3"
+    },
+    {
+      "key": "ui-menu-commit",
+      "title": "Menu Commit",
+      "category": "UI",
+      "filename": "UIMenuCommit.mp3",
+      "path": "SFX/UI/UIMenuCommit.mp3"
+    },
+    {
+      "key": "ui-message",
+      "title": "Message",
+      "category": "UI",
+      "filename": "UIMessage.mp3",
+      "path": "SFX/UI/UIMessage.mp3"
+    },
+    {
+      "key": "ui-navigate-deny",
+      "title": "Navigate Deny",
+      "category": "UI",
+      "filename": "UINavigateDeny.mp3",
+      "path": "SFX/UI/UINavigateDeny.mp3"
+    },
+    {
+      "key": "ui-new-quest",
+      "title": "New Quest",
+      "category": "UI",
+      "filename": "UINewQuest.mp3",
+      "path": "SFX/UI/UINewQuest.mp3"
+    },
+    {
+      "key": "ui-notify",
+      "title": "Notify",
+      "category": "UI",
+      "filename": "UINotify.mp3",
+      "path": "SFX/UI/UINotify.mp3"
+    },
+    {
+      "key": "ui-on-click",
+      "title": "On Click",
+      "category": "UI",
+      "filename": "UIOnClick.mp3",
+      "path": "SFX/UI/UIOnClick.mp3"
+    },
+    {
+      "key": "ui-quest-accept",
+      "title": "Quest Accept",
+      "category": "UI",
+      "filename": "UIQuestAccept.mp3",
+      "path": "SFX/UI/UIQuestAccept.mp3"
+    },
+    {
+      "key": "ui-quest-complete",
+      "title": "Quest Complete",
+      "category": "UI",
+      "filename": "UIQuestComplete.mp3",
+      "path": "SFX/UI/UIQuestComplete.mp3"
+    },
+    {
+      "key": "ui-quest-step-complete",
+      "title": "Quest Step Complete",
+      "category": "UI",
+      "filename": "UIQuestStepComplete.mp3",
+      "path": "SFX/UI/UIQuestStepComplete.mp3"
+    },
+    {
+      "key": "ui-reveal",
+      "title": "Reveal",
+      "category": "UI",
+      "filename": "UIReveal.mp3",
+      "path": "SFX/UI/UIReveal.mp3"
+    },
+    {
+      "key": "ui-scribe-token-grant",
+      "title": "Scribe Token Grant",
+      "category": "UI",
+      "filename": "UIScribeTokenGrant.mp3",
+      "path": "SFX/UI/UIScribeTokenGrant.mp3"
+    },
+    {
+      "key": "ui-scribe-token-spend",
+      "title": "Scribe Token Spend",
+      "category": "UI",
+      "filename": "UIScribeTokenSpend.mp3",
+      "path": "SFX/UI/UIScribeTokenSpend.mp3"
+    },
+    {
+      "key": "ui-select-confirm",
+      "title": "Select Confirm",
+      "category": "UI",
+      "filename": "UISelectConfirm.mp3",
+      "path": "SFX/UI/UISelectConfirm.mp3"
+    },
+    {
+      "key": "ui-spell-mote-chime",
+      "title": "Spell Mote Chime",
+      "category": "UI",
+      "filename": "UISpellMoteChime.mp3",
+      "path": "SFX/UI/UISpellMoteChime.mp3"
+    },
+    {
+      "key": "ui-strange-whoosh",
+      "title": "Strange Whoosh",
+      "category": "UI",
+      "filename": "UIStrangeWhoosh.mp3",
+      "path": "SFX/UI/UIStrangeWhoosh.mp3"
+    },
+    {
+      "key": "ui-tutorial",
+      "title": "Tutorial",
+      "category": "UI",
+      "filename": "UITutorial.mp3",
+      "path": "SFX/UI/UITutorial.mp3"
+    },
+    {
+      "key": "ui-unlock",
+      "title": "Unlock",
+      "category": "UI",
+      "filename": "UIUnlock.mp3",
+      "path": "SFX/UI/UIUnlock.mp3"
+    },
+    {
+      "key": "ui-warn",
+      "title": "Warn",
+      "category": "UI",
+      "filename": "UIWarn.mp3",
+      "path": "SFX/UI/UIWarn.mp3"
+    }
+  ]
+}

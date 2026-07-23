@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { grantAp } from './leveling';
+import { playSfxByKey } from './soundLibrary';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -68,6 +69,7 @@ export function QuestorPlayerPanel({ char, campaignId, embedded = false }) {
       content: `${char.name} has taken up the quest: ${quest.title}. ${quest.description || ''}`,
       is_dm: false,
     });
+    playSfxByKey('ui-quest-accept');
     showToast(`Quest accepted: ${quest.title}`);
     loadAll();
   };
@@ -322,6 +324,7 @@ export function QuestorDMPanel({ campaignId, onClose }) {
     });
     setSaving(false);
     if (!error) {
+      playSfxByKey('ui-new-quest');
       showToast(`Quest created: ${draft.title}`);
       setDraft(EMPTY_QUEST);
       setView('board');
@@ -330,8 +333,12 @@ export function QuestorDMPanel({ campaignId, onClose }) {
   };
 
   const toggleStep = async (quest, stepId) => {
+    const target = quest.steps.find(s => s.id === stepId);
+    const completing = !!target && !target.completed;
     const steps = quest.steps.map(s => s.id === stepId ? { ...s, completed: !s.completed, completed_at: !s.completed ? new Date().toISOString() : null } : s);
     await supabase.from('quests').update({ steps }).eq('id', quest.id);
+
+    if (completing) playSfxByKey('ui-quest-step-complete');
 
     // Check if all steps complete — offer to complete quest
     const allDone = steps.every(s => s.completed);
@@ -344,6 +351,7 @@ export function QuestorDMPanel({ campaignId, onClose }) {
   const completeQuest = async (quest) => {
     setSaving(true);
     await supabase.from('quests').update({ status: 'completed', updated_at: new Date().toISOString() }).eq('id', quest.id);
+    playSfxByKey('ui-quest-complete');
 
     // Award rewards to all characters on this quest
     const chars = quest.quest_characters || [];

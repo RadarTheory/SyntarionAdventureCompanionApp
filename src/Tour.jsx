@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { playSfxByKey } from './soundLibrary';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // TOUR — first-time "How to Play" walkthrough (extended edition)
@@ -332,7 +333,7 @@ export default function Tour({ isDM = false, onClose }) {
   );
  const [iconHover, setIconHover] = useState(false);
   const [previewShot, setPreviewShot] = useState(null);
-  useEffect(() => { setIconHover(false); setPreviewShot(null); }, [i]);
+  useEffect(() => { setIconHover(false); setPreviewShot(null); playSfxByKey('ui-tutorial'); }, [i]);
 
   const last = i === steps.length - 1;  const step = steps[i];
   const chapter = CHAPTERS[step.ch];

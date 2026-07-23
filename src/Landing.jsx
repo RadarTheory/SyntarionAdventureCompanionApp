@@ -14,6 +14,7 @@ import LegalGate, { LEGAL_VERSION } from './LegalGate';
 import Tour, { hasSeenTour } from './Tour';
 import ScribeLite from './ScribeLite';
 import MenuMusicPlayer from './MenuMusicPlayer';
+import { playSfxByKey } from './soundLibrary';
 import HandbookBookmark from './HandbookBookmark';
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MOVABLE DRIFTSTONE BUTTON Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -534,7 +535,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
 
   const goHome = () => { localStorage.setItem('syn_view', 'home'); setAppView('home'); fetchCharacters(); };
   const handlePlay = () => { localStorage.setItem('syn_view', 'character-select'); setAppView('character-select'); };
-  const handleDMSuccess = (module) => { setDmModule(module || null); setShowDMModal(false); localStorage.setItem('syn_view', 'dm'); setAppView('dm'); };
+  const handleDMSuccess = (module) => { setDmModule(module || null); setShowDMModal(false); localStorage.setItem('syn_view', 'dm'); setAppView('dm'); playSfxByKey('ui-campaign-dm-view-page-pop'); };
 
   // Ã¢â€â‚¬Ã¢â€â‚¬ Legal Gate Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   if (legalStatus === 'checking') return (
@@ -628,7 +629,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
           id: 'campaigns',
           label: 'CAMPAIGNS',
           sub: 'Enter the age of steam',
-          onClick: () => { localStorage.setItem('syn_view', 'campaigns'); setAppView('campaigns'); },
+          onClick: () => { localStorage.setItem('syn_view', 'campaigns'); setAppView('campaigns'); playSfxByKey('ui-campaign-dm-view-page-pop'); },
         }]
       : []),
     {

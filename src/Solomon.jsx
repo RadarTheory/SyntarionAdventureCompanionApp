@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
+import { playSfxByKey, playCoinSfx } from './soundLibrary';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -130,6 +131,7 @@ export default function Solomon({ campaignId, onClose }) {
     }).eq('id', box.id);
 
     // Broadcast toast to players on Loot tab via lootboxes realtime
+    playSfxByKey('ui-loot-box-open');
     showToast(`⬡ "${box.name}" revealed to players (${revealMode} mode)`);
     setSaving(null);
     load();
@@ -183,15 +185,17 @@ export default function Solomon({ campaignId, onClose }) {
       await supabase.from('characters').update({ data: { ...d, scribeTokens: newCount } }).eq('id', item.claimed_by);
     } else {
       // Write to character's pack
+      const description = `${item.item_category || 'Misc'}|${item.item_desc || ''}${item.note ? ' — ' + item.note : ''}`;
       await supabase.from('character_items').insert({
         character_id: item.claimed_by,
         slot: `pack__${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
         name: item.item_name,
-        description: `${item.item_category || 'Misc'}|${item.item_desc || ''}${item.note ? ' — ' + item.note : ''}`,
+        description,
         attuned: false,
         bonuses: {},
         weight: item.qty || 1,
       });
+      playCoinSfx({ name: item.item_name, description, weight: item.qty || 1 });
     }
 
     // Mark item approved

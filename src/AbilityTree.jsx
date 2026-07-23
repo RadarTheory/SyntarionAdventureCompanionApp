@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { COLORS } from './constants';
 import supabase from './lib/supabase';
+import { playSfxByKey } from './soundLibrary';
 
 const TREE = {
   magic: [
@@ -825,9 +826,11 @@ export default function AbilityTree({ char, onUpdateChar, user, isDM = false }) 
     const newSliders = { ...(char.sliders || {}), magicTech: Math.max(-4, Math.min(4, (char.sliders?.magicTech || 0) + sliderNudge(key.split('|')[0]))) };
     if (dmGrant) {
       await persist({ ability_overrides: [...abilityOverrides, key], sliders: newSliders });
+      playSfxByKey('ui-skill-up');
       flash(`DM granted: ${key.split('|')[3]}`);
     } else {
       await persist({ abilities: [...abilities, key], ability_pending: abilityPending.filter(k => k !== key) });
+      playSfxByKey('ui-skill-up');
       flash(`Approved: ${key.split('|')[3]}`);
     }
   }

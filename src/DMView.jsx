@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
 import { COLORS, CAMPAIGNS, ALL_CLASSES, ALL_STATS, getRaceDisplay } from './constants';
+import { DraggablePanel } from './DraggablePanel';
+import { MusicPanel } from './MusicPanel';
 import ItemCatalog from './ItemCatalog';
 import { RACES } from './constants';
 import { SOTERIA_LORE } from './soteria-lore';
@@ -34,9 +36,8 @@ import AssetsPanel from './AssetsPanel';
 import ChroniclePanel from './ChroniclePanel';
 import HandbookBookmark from './HandbookBookmark';
 import MenuMusicPlayer from './MenuMusicPlayer';
-import musicEngine from './musicEngine';
+import { playSfxByKey } from './soundLibrary';
 import { LEVEL_CAP, apForLevel, getLevelProgress, grantAp } from './leveling';
-import { MENU_MUSIC_TRACKS, buildMenuMusicQueue, getTrackFamilyKey, getTrackKey, loadMenuMusicTracks } from './musicLibrary';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe - an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -81,31 +82,6 @@ function StatusBadge({ status }) {
   );
 }
 
-function DraggablePanel({ defaultX, defaultY, onClose, title, width, accentColor, children, zIndex = 200000, isTop = true, onFocus }) {
-  const [pos, setPos] = useState({ x: defaultX, y: defaultY });
-  const dragging = useRef(false);
-  const offset = useRef({ x: 0, y: 0 });
-  const panelWidth = Math.min(width, Math.max(280, window.innerWidth - 24));
-  const focusPanel = () => onFocus?.();
-  const onMouseDown = (e) => { focusPanel(); dragging.current = true; offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }; e.preventDefault(); };
-  const onTouchStart = (e) => { focusPanel(); dragging.current = true; const t = e.touches[0]; offset.current = { x: t.clientX - pos.x, y: t.clientY - pos.y }; };
-  useEffect(() => { focusPanel(); }, []);
-  useEffect(() => {
-    const onMove = (e) => { if (!dragging.current) return; const p = e.touches ? e.touches[0] : e; setPos({ x: Math.max(8, Math.min(window.innerWidth - panelWidth - 8, p.clientX - offset.current.x)), y: Math.max(8, Math.min(window.innerHeight - 80, p.clientY - offset.current.y)) }); };
-    const onUp = () => { dragging.current = false; };
-    window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp); window.addEventListener('touchmove', onMove, { passive: false }); window.addEventListener('touchend', onUp);
-    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onUp); };
-  }, [panelWidth]);
-  return (
-    <div onMouseDownCapture={focusPanel} onTouchStartCapture={focusPanel} style={{ position: 'fixed', left: Math.min(pos.x, window.innerWidth - panelWidth - 8), top: pos.y, width: panelWidth, maxWidth: 'calc(100vw - 16px)', height: 'min(78vh, calc(100svh - 24px))', zIndex, display: 'flex', flexDirection: 'column', background: isTop ? '#100d0a' : 'rgba(16,13,10,0.82)', border: `1px solid ${isTop ? accentColor : 'rgba(201,185,145,0.16)'}`, borderRadius: 14, boxShadow: isTop ? '0 28px 90px rgba(0,0,0,0.78)' : '0 10px 36px rgba(0,0,0,0.42)', overflow: 'hidden', opacity: isTop ? 1 : 0.46, filter: isTop ? 'none' : 'saturate(0.72) brightness(0.72)', transform: isTop ? 'scale(1)' : 'scale(0.985)', transformOrigin: 'top left', transition: dragging.current ? 'none' : 'opacity 0.16s ease, filter 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease' }}>
-      <div onMouseDown={onMouseDown} onTouchStart={onTouchStart} style={{ padding: '10px 14px', borderBottom: `1px solid ${isTop ? accentColor : 'rgba(201,185,145,0.14)'}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'grab', background: isTop ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.015)', flexShrink: 0, userSelect: 'none' }}>
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: isTop ? '#e8d9a7' : 'rgba(232,217,167,0.52)', letterSpacing: '0.12em' }}>? {title}</div>
-        <button onClick={onClose} style={{ background: 'transparent', border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 4, padding: '3px 7px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>?</button>
-      </div>
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>{children}</div>
-    </div>
-  );
-}
 // CHAT PANEL (Player DM)
 function ChatPanel({ session, onClose, isDM }) {
   const [messages, setMessages] = useState([]);
@@ -403,6 +379,7 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
     setDeleting(true);
     await supabase.from('characters').delete().eq('id', char.id);
     setDeleting(false);
+    playSfxByKey('ui-delete');
     onSave();
     onClose();
   };
@@ -425,7 +402,9 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
     if (!amount || grantingAp) return;
     setGrantingAp(true);
     try {
+      const levelBefore = progress.level;
       const result = await grantAp(supabase, { targetType: 'character', targetId: char.id, amount, reason: apReason || 'DM award' });
+      if (result?.level_after && result.level_after > levelBefore) playSfxByKey('ui-level-up-chime');
       const nextAtCurrent = atCurrent + (result?.at_granted || 0);
       const nextAtTotal = atTotal + (result?.at_granted || 0);
       setData(prev => ({ ...prev, apTotal: result?.ap_after ?? apTotal + amount, apCurrent: result?.ap_after ?? apTotal + amount, charLevel: result?.level_after ?? prev.charLevel, atCurrent: nextAtCurrent, atTotal: nextAtTotal, at_current: nextAtCurrent, at_total: nextAtTotal }));
@@ -904,134 +883,6 @@ function MapManager({ campaign }) {
   );
 }
 // MUSIC PANEL
-function MusicPanel() {
-  const [tracks, setTracks] = useState(MENU_MUSIC_TRACKS);
-  const [search, setSearch] = useState('');
-  const [currentTrack, setCurrentTrack] = useState(MENU_MUSIC_TRACKS[0] || null);
-  const [libraryStatus, setLibraryStatus] = useState('');
-
-  useEffect(() => {
-    let cancelled = false;
-    loadMenuMusicTracks()
-      .then(rows => {
-        if (cancelled) return;
-        setTracks(rows);
-        setCurrentTrack(current => current || rows[0] || null);
-        setLibraryStatus('');
-      })
-      .catch(err => {
-        console.warn('Could not load R2 music manifest; no music tracks are available yet.', err);
-        setLibraryStatus('Using the confirmed R2 proof track.');
-      });
-    return () => { cancelled = true; };
-  }, []);
-
-  const filteredTracks = tracks.filter(t => {
-    const haystack = `${t.title || ''} ${t.artist || ''} ${t.filename || t.path || ''}`.toLowerCase();
-    return haystack.includes(search.toLowerCase());
-  });
-
-  const playInMenuPlayer = async (track) => {
-    if (!track) return;
-    setCurrentTrack(track);
-    musicEngine.setQueue(buildMenuMusicQueue(tracks, {
-      avoidFirstFamily: getTrackFamilyKey(track),
-    }));
-    const result = await musicEngine.play(track);
-    if (!result?.ok && result?.error?.name !== 'AbortError') {
-      console.warn('DM music play failed:', result?.error);
-    }
-  };
-
-  return (
-    <div>
-      <div style={{ ...label8(), marginBottom: 12 }}>Music Library</div>
-      <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', lineHeight: 1.45, marginBottom: 14 }}>
-        R2-backed music library loaded from music-manifest.json in the public bucket.
-      </div>
-      {libraryStatus && (
-        <div style={{ fontSize: 10, color: COLORS.magicText, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>{libraryStatus}</div>
-      )}
-      <input
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        placeholder="Search music..."
-        style={{ width: '100%', marginBottom: 16, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '10px 12px', color: COLORS.text, fontFamily: 'Georgia, serif', outline: 'none', boxSizing: 'border-box' }}
-      />
-      {currentTrack && (
-        <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: 16, marginBottom: 16 }}>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12 }}>
-            {currentTrack.artwork && (
-              <img src={currentTrack.artwork} alt="" style={{ width: 56, height: 56, borderRadius: 6, objectFit: 'cover', border: `1px solid ${COLORS.border}`, background: COLORS.surface }} />
-            )}
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, marginBottom: 4, letterSpacing: '0.04em' }}>{currentTrack.title}</div>
-              <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 3 }}>
-                {currentTrack.artist || 'Unknown artist'}
-              </div>
-              <div style={{ fontSize: 8, color: COLORS.magicText, fontFamily: "'Cinzel', serif", letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-                {currentTrack.album || 'Syntarion'}
-              </div>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => playInMenuPlayer(currentTrack)}
-            style={{
-              width: '100%',
-              background: COLORS.magicBg,
-              border: `1px solid ${COLORS.magic}`,
-              borderRadius: 6,
-              padding: '10px 12px',
-              cursor: 'pointer',
-              fontFamily: "'Cinzel', serif",
-              fontSize: 9,
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: COLORS.magicText,
-              fontWeight: 700,
-            }}
-          >
-            Play In Menu Player
-          </button>
-        </div>
-      )}
-      <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', marginBottom: 10 }}>
-        {filteredTracks.length} of {tracks.length} track{tracks.length !== 1 ? 's' : ''}
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {filteredTracks.map(track => {
-          const trackKey = getTrackKey(track);
-          const activeKey = currentTrack ? getTrackKey(currentTrack) : '';
-          return (
-            <button
-              key={trackKey}
-              onClick={() => playInMenuPlayer(track)}
-              style={{
-                textAlign: 'left',
-                background: activeKey === trackKey ? COLORS.magicBg : COLORS.card,
-                border: `1px solid ${activeKey === trackKey ? COLORS.magic : COLORS.border}`,
-                borderRadius: 6,
-                padding: '10px 12px',
-                color: COLORS.text,
-                cursor: 'pointer',
-                fontFamily: 'Georgia, serif',
-              }}
-            >
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                {track.artwork && <img src={track.artwork} alt="" style={{ width: 34, height: 34, borderRadius: 4, objectFit: 'cover', border: `1px solid ${COLORS.border}` }} />}
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11 }}>{track.title}</div>
-                  <div style={{ fontSize: 10, color: COLORS.dim, fontStyle: 'italic', marginTop: 3 }}>{track.artist || 'Unknown artist'} - {track.album || 'Syntarion'}</div>
-                </div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 function VitalsPanel({ row, onClose, campaignId }) {
   const isCreature = !row.character_id || row.character_id === row.character_name;
   const VITALS_KEY = `syntarion_vitals_${row.character_id}`;
@@ -1140,6 +991,7 @@ export default function DMView({ user, session, onHome, darkMode = true, module 
   const [headerClock, setHeaderClock] = useState(null);
   const [showSpeak, setShowSpeak] = useState(false);
   const [showProximity, setShowProximity] = useState(false);
+  const [soundboardOpen, setSoundboardOpen] = useState(false);
   const [activeGameSessionId, setActiveGameSessionId] = useState(null);
   const [vttMinimized, setVttMinimized] = useState(false);
 
@@ -1568,6 +1420,7 @@ const renderTab = () => {
     showLore && 'lore',
     showSpeak && 'speak',
     showProximity && 'proximity',
+    soundboardOpen && 'soundboard',
   ].filter(Boolean);
   const [topToolId, setTopToolId] = useState(null);
   const previousToolIds = useRef([]);
@@ -1589,7 +1442,7 @@ const renderTab = () => {
   return (
     <div style={{ minHeight: '100svh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text, overflowX: 'hidden' }}>
       <HandbookBookmark user={user} darkMode={darkMode} allowEdit />
-      <MenuMusicPlayer isMobile={isMobile} />
+      <MenuMusicPlayer isMobile={isMobile} restrictToMenu={false} isDM onSoundboardToggle={setSoundboardOpen} />
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');

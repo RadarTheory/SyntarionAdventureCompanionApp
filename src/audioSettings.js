@@ -2,9 +2,13 @@
 
 export const DEFAULT_AUDIO_SETTINGS = {
   musicVolume: 0.7,
-  soundsVolume: 0.85,
+  environmentVolume: 0.7,
+  ambienceVolume: 0.7,
+  sfxVolume: 0.85,
   musicEnabled: true,
-  soundsEnabled: true,
+  environmentEnabled: true,
+  ambienceEnabled: true,
+  sfxEnabled: true,
 };
 
 function clampVolume(value, fallback) {
@@ -16,9 +20,13 @@ function clampVolume(value, fallback) {
 export function normalizeAudioSettings(value = {}) {
   return {
     musicVolume: clampVolume(value.musicVolume, DEFAULT_AUDIO_SETTINGS.musicVolume),
-    soundsVolume: clampVolume(value.soundsVolume, DEFAULT_AUDIO_SETTINGS.soundsVolume),
+    environmentVolume: clampVolume(value.environmentVolume, DEFAULT_AUDIO_SETTINGS.environmentVolume),
+    ambienceVolume: clampVolume(value.ambienceVolume, DEFAULT_AUDIO_SETTINGS.ambienceVolume),
+    sfxVolume: clampVolume(value.sfxVolume, DEFAULT_AUDIO_SETTINGS.sfxVolume),
     musicEnabled: value.musicEnabled !== false,
-    soundsEnabled: value.soundsEnabled !== false,
+    environmentEnabled: value.environmentEnabled !== false,
+    ambienceEnabled: value.ambienceEnabled !== false,
+    sfxEnabled: value.sfxEnabled !== false,
   };
 }
 

@@ -1,0 +1,18 @@
+{
+  "id": "scene-brief",
+  "label": "Scene Brief",
+  "fields": [
+    "project",
+    "chapter",
+    "sceneGoal",
+    "pointOfView",
+    "location",
+    "charactersPresent",
+    "canonSources",
+    "draftSources",
+    "conflicts",
+    "emotionalTurn",
+    "worldbuildingConstraints",
+    "approvalNeeded"
+  ]
+}
