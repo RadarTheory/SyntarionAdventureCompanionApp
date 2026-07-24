@@ -24,6 +24,7 @@ import PartyProximityPanel from './PartyProximityPanel';
 import PortraitUpload from "./PortraitUpload";
 import ScribeTale from './ScribeTale';
 import HandbookBookmark from './HandbookBookmark';
+import GameSessionOverlay from './GameSessionOverlay';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -2080,15 +2081,51 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign, onUpdateChar,
   const [showLark, setShowLark] = useState(false);
   const [showBazaar, setShowBazaar] = useState(false);
   const [showQuestor, setShowQuestor] = useState(false);
+  const [showGameLauncher, setShowGameLauncher] = useState(false);
   const [clockState, setClockState] = useState(null);
   const [lobbyOpen, setLobbyOpen] = useState(false);
   const [authUser, setAuthUser] = useState(null);
   const [showIntent, setShowIntent] = useState(false);
   const [showProximity, setShowProximity] = useState(false);
+  const [gameLarkToast, setGameLarkToast] = useState(null);
+  const [incomingChallenge, setIncomingChallenge] = useState(null);
+  const [joinMatch, setJoinMatch] = useState(null);
 
 useEffect(() => {
   supabase.auth.getUser().then(({ data }) => setAuthUser(data?.user || null));
 }, []);
+
+useEffect(() => {
+  if (!gameLarkToast) return;
+  const timer = setTimeout(() => setGameLarkToast(null), 4200);
+  return () => clearTimeout(timer);
+}, [gameLarkToast]);
+
+// GameLark: watch for a DM challenging this character to a mini-game, the
+// same "DM writes, our client reacts over Realtime" pattern HerculesPlayer.jsx
+// uses for initiative — no manual refresh needed to see the invite.
+useEffect(() => {
+  if (!userChar?.id) return undefined;
+  const myId = String(userChar.id);
+  const channel = supabase.channel('gamelark-invites-' + myId)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'game_lark_matches' }, (payload) => {
+      const row = payload.new;
+      if (!row || String(row.challenged_character_id) !== myId) return;
+      if (row.status === 'pending') setIncomingChallenge(row);
+    })
+    .subscribe();
+  return () => supabase.removeChannel(channel);
+}, [userChar?.id]);
+
+const respondToChallenge = async (accept) => {
+  const row = incomingChallenge;
+  if (!row) return;
+  setIncomingChallenge(null);
+  const { data } = await supabase.from('game_lark_matches')
+    .update({ status: accept ? 'accepted' : 'declined', updated_at: new Date().toISOString() })
+    .eq('id', row.id).select().single();
+  if (accept && data) setJoinMatch(data);
+};
 
 useEffect(() => {
   if (!campaign?.id) return;
@@ -2403,6 +2440,26 @@ useEffect(() => {
           ),
         },
         {
+          id: 'games',
+          title: 'Gamelark - Challenge Player',
+          onClick: () => setShowGameLauncher(o => !o),
+          children: (
+            <img
+              src="/Lotjarrsbagofgames.png"
+              alt="Gamelark"
+              draggable={false}
+              style={{
+                width: '132%',
+                height: '132%',
+                objectFit: 'contain',
+                pointerEvents: 'none',
+                transform: 'scale(1.1)',
+                filter: 'sepia(1) saturate(0.72) hue-rotate(350deg) brightness(1.12) contrast(1.08)',
+              }}
+            />
+          ),
+        },
+        {
           id: 'castor',
           title: 'CASTOR — Cast Request',
           onClick: () => setShowCastor(o => !o),
@@ -2425,7 +2482,7 @@ useEffect(() => {
           id: 'scribe',
           title: 'The Scribe — Archives',
           onClick: () => setShowScribeCV(o => !o),
-          children: <img src="/scribe-emblem.png" alt="Scribe" draggable={false} style={{ width: '124%', height: '124%', objectFit: 'contain', pointerEvents: 'none' }} />,
+          children: <img src="/scribe-emblem.png" alt="Scribe" draggable={false} style={{ width: '148%', height: '148%', objectFit: 'contain', pointerEvents: 'none', transform: 'scale(1.08)' }} />,
         },
         {
           id: 'worldmap',
@@ -2468,9 +2525,32 @@ useEffect(() => {
         { id: 'lark', title: 'Lark — Send a Letter', onClick: () => setShowLark(o => !o),
           children: <img src="/Larkicon.png" alt="Lark" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
         { id: 'handbook', title: 'Player Handbook', onClick: () => setHandbookOpenSignal(n => n + 1),
-          children: <img src="/player-handbook.png" alt="Handbook" draggable={false} style={{ width: '142%', height: '142%', objectFit: 'contain', pointerEvents: 'none' }} /> },
+          children: <img src="/player-handbook.png" alt="Handbook" draggable={false} style={{ width: '160%', height: '160%', objectFit: 'contain', pointerEvents: 'none', transform: 'scale(1.06)' }} /> },
       ]} />
       <HandbookBookmark user={authUser} darkMode={false} trigger="external" openSignal={handbookOpenSignal} />
+      {gameLarkToast && (
+        <div role="status" style={{ position: 'fixed', right: isMobile ? 12 : 24, bottom: isMobile ? 16 : 24, zIndex: 320000, width: 'min(360px, calc(100vw - 24px))', border: '1px solid rgba(232,200,116,0.38)', borderRadius: 12, background: 'linear-gradient(155deg, rgba(28,22,12,0.96), rgba(8,6,4,0.96))', boxShadow: '0 24px 70px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,244,204,0.08)', padding: '14px 16px', color: '#ead9aa' }}>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#e8c84a', marginBottom: 6 }}>GameLark</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.08em', color: '#f0dfad', marginBottom: 4 }}>{gameLarkToast.title || 'Challenge Player'}</div>
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: 12, fontStyle: 'italic', lineHeight: 1.45, color: 'rgba(235,220,178,0.72)' }}>{gameLarkToast.body || gameLarkToast.message}</div>
+        </div>
+      )}
+      {incomingChallenge && (
+        <div role="alertdialog" style={{ position: 'fixed', right: isMobile ? 12 : 24, bottom: isMobile ? 16 : 24, zIndex: 320001, width: 'min(360px, calc(100vw - 24px))', border: '1px solid rgba(232,200,116,0.5)', borderRadius: 12, background: 'linear-gradient(155deg, rgba(28,22,12,0.98), rgba(8,6,4,0.98))', boxShadow: '0 24px 70px rgba(0,0,0,0.68), inset 0 1px 0 rgba(255,244,204,0.08)', padding: '14px 16px', color: '#ead9aa' }}>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#e8c84a', marginBottom: 6 }}>GameLark — Challenge</div>
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: 12, fontStyle: 'italic', lineHeight: 1.45, color: 'rgba(235,220,178,0.85)', marginBottom: 12 }}>
+            The DM has challenged you to {incomingChallenge.game_id === 'elddimgates' ? 'Elddimgates' : 'Driftstone'}
+            {incomingChallenge.game_id === 'elddimgates' ? ` as ${incomingChallenge.challenged_seat === 1 ? 'the Stone Council' : 'the Gold Council'}` : ` as Player ${incomingChallenge.challenged_seat}`}.
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => respondToChallenge(false)} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(232,200,116,0.3)', borderRadius: 7, padding: '9px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.08em', color: 'rgba(235,220,178,0.7)' }}>Decline</button>
+            <button onClick={() => respondToChallenge(true)} style={{ flex: 1, background: 'rgba(200,168,74,0.18)', border: '1px solid #c8a84a', borderRadius: 7, padding: '9px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: '#e8c84a' }}>Accept</button>
+          </div>
+        </div>
+      )}
+      {joinMatch && (
+        <GameSessionOverlay onClose={() => setJoinMatch(null)} joinMatch={joinMatch} onToast={setGameLarkToast} />
+      )}
       {showGrimoire && (
         <DraggablePanel {...panelPriority('grimoire')} defaultX={108} defaultY={80} onClose={() => setShowGrimoire(false)} title="GRIMOIRE · Adventure Journal" width={400} accentColor="rgba(121,245,167,0.35)">
           <GrimoirePanel char={userChar} campaignId={String(campaign.id)} isDM={false} embedded />
@@ -2520,6 +2600,10 @@ useEffect(() => {
         <DraggablePanel {...panelPriority('scribe')} defaultX={108} defaultY={80} onClose={() => setShowScribeCV(false)} title="THE SCRIBE · Soteria Archives" width={360} accentColor={`${COLORS.deity}55`}>
           <ScribePlayerPanel char={userChar} campaignId={String(campaign.id)} onUpdateChar={onUpdateChar} embedded />
         </DraggablePanel>
+      )}
+
+      {showGameLauncher && (
+        <GameSessionOverlay onClose={() => setShowGameLauncher(false)} campaignId={String(campaign.id)} onToast={setGameLarkToast} />
       )}
 
       {showBazaar && (
@@ -2927,12 +3011,12 @@ function ModuleTalesView({ module, userChar, onBack, onUpdateChar, darkMode = fa
     { id: 'hercules', label: 'Hercules', title: 'Hercules - Combat Tracker', icon: '/HerculesCombat.png', iconStyle: { width: '150%', height: '150%', objectFit: 'contain' } },
     { id: 'argus', label: 'Argus', title: 'Argus - Gear, Pack, and Equipment', icon: '/Backpackicon.png', iconStyle: { width: '105%', height: '105%', objectFit: 'contain' } },
     { id: 'castor', label: 'Castor', title: 'Castor - Cast Request', icon: '/castoricon.png', badge: castorBadge },
-    { id: 'scribe', label: 'Scribe', title: 'The Scribe - Archives', icon: '/scribe-emblem.png', iconStyle: { width: '124%', height: '124%', objectFit: 'contain' } },
+    { id: 'scribe', label: 'Scribe', title: 'The Scribe - Archives', icon: '/scribe-emblem.png', iconStyle: { width: '148%', height: '148%', objectFit: 'contain', transform: 'scale(1.08)' } },
     { id: 'bazaar', label: 'Bazaar', title: 'Bazaar - Trade and Loot', icon: '/Bazaaricon.png' },
     { id: 'questor', label: 'Questor', title: 'Questor - Quest Board', icon: '/Questoricon.png' },
     { id: 'grimoire', label: 'Grimoire', title: 'Grimoire - Adventure Journal', icon: '/Grimoireicon.png' },
     { id: 'lark', label: 'Lark', title: 'Lark - Letters and NPC Messages', icon: '/Larkicon.png' },
-    { id: 'handbook', label: 'Handbook', title: 'Player Handbook', icon: '/player-handbook.png', popup: true, iconStyle: { width: '142%', height: '142%', objectFit: 'contain' } },
+    { id: 'handbook', label: 'Handbook', title: 'Player Handbook', icon: '/player-handbook.png', popup: true, iconStyle: { width: '160%', height: '160%', objectFit: 'contain', transform: 'scale(1.06)' } },
     { id: 'party', label: 'Party', title: "Party - Who's Nearby", icon: '/party.png' },
     { id: 'bestiary', label: 'Bestiary', title: 'Bestiary - Creatures', icon: '/bestiaryicon.png' },
     { id: 'sheet', label: 'Sheet', title: 'Character Sheet', icon: '/npcicon.png' },

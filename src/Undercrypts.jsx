@@ -1,5 +1,7 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { RACES, PM_MAJ, PM_MIN, PM_AEON, PM_ASTRAL } from './constants';
+import { useDevice } from './useDevice';
+import { ComingSoonScreen } from './GameUI';
 
 const STORAGE_KEY = 'undercrypts_unlocks_v2';
 const START_UNLOCKS = ['rusted-sabre', 'knuckle-wraps', 'shortbow'];
@@ -88,6 +90,7 @@ function itemStats(inventory) { return inventory.reduce((m, item) => { if (item.
 function makeRoom(index, floor, unlocks) { const boss = index >= ROOM_GOAL - 1; const count = boss ? 1 : 4 + Math.floor(Math.random() * 3) + floor; const pool = boss ? BOSSES : ENEMY_TYPES; const enemies = Array.from({ length: count }, (_, i) => { const src = pick(pool); return { ...src, id: `${Date.now()}-${i}`, maxHp: src.hp + floor * (boss ? 18 : 5), hp: src.hp + floor * (boss ? 18 : 5), x: 150 + Math.random() * (W - 300), y: 120 + Math.random() * (H - 240), hit: 0, cd: 0, stun: 0 }; }); return { index, floor, boss, name: boss ? 'Undercrypt Heart' : pick(ROOM_NAMES), enemies, reward: pick(ITEMS.filter(i => unlocks.includes(i.id))) }; }
 
 export default function Undercrypts({ onExit }) {
+  const { isMobile } = useDevice();
   const canvasRef = useRef(null);
   const keys = useRef({});
   const mouse = useRef({ x: W / 2, y: H / 2, down: false, right: false });
@@ -164,6 +167,8 @@ export default function Undercrypts({ onExit }) {
     raf.current = requestAnimationFrame(loop);
     return () => { cancelAnimationFrame(raf.current); canvas.removeEventListener('mousemove', move); canvas.removeEventListener('mousedown', md); canvas.removeEventListener('contextmenu', context); };
   }, [screen, build]);
+
+  if (isMobile) return <ComingSoonScreen onExit={onExit} name="The Undercrypts" />;
 
   const stat = snapshot?.stats || itemStats([]);
   const p = snapshot?.player;

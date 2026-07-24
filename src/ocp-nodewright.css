@@ -3467,6 +3467,20 @@ pre {
   font-size: 9px;
 }
 
+/* The one-window density pass above shrinks these to a 28px touch target,
+   fine for a mouse but too small to reliably tap on a phone. Restore a real
+   touch target on narrow viewports without touching the desktop density. */
+@media (max-width: 760px) {
+  .nw-back,
+  .nw-top-actions > button,
+  .nw-canvas-command-dock button {
+    min-height: 40px;
+    padding: 0 12px;
+    font-size: 10px;
+    touch-action: manipulation;
+  }
+}
+
 .nw-top-actions .nw-rank {
   min-width: 72px;
   padding: 5px 7px;

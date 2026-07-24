@@ -110,8 +110,28 @@ function shuffleTracks(rows) {
   return shuffled;
 }
 
+// Matches the two tracks that should open a fresh listening session, in order.
+const INTRO_TRACK_MATCHERS = [
+  /disc of soteria/i,
+  /soteria awakened.*main theme/i,
+];
+
+function pullIntroTracks(playable) {
+  const remaining = [...playable];
+  const intro = [];
+  INTRO_TRACK_MATCHERS.forEach(matcher => {
+    const index = remaining.findIndex(track => matcher.test(track.title || track.filename || ''));
+    if (index === -1) return;
+    intro.push(remaining[index]);
+    remaining.splice(index, 1);
+  });
+  return { intro, remaining };
+}
+
 export function buildMenuMusicQueue(tracks, options = {}) {
-  const playable = [...tracks].filter(Boolean);
+  const allPlayable = [...tracks].filter(Boolean);
+  const { intro, remaining } = options.pinIntro ? pullIntroTracks(allPlayable) : { intro: [], remaining: allPlayable };
+  const playable = remaining;
   const groups = new Map();
 
   playable.forEach(track => {
@@ -128,7 +148,8 @@ export function buildMenuMusicQueue(tracks, options = {}) {
 
   const passes = Math.max(1, options.passes || Math.max(4, Math.ceil(playable.length / Math.max(1, families.length)) + 2));
   const queue = [];
-  let previousFamily = options.avoidFirstFamily || '';
+  const lastIntroTrack = intro[intro.length - 1];
+  let previousFamily = (lastIntroTrack ? getTrackFamilyKey(lastIntroTrack) : options.avoidFirstFamily) || '';
 
   for (let pass = 0; pass < passes; pass += 1) {
     const passFamilies = shuffleTracks(families).sort((a, b) => {
@@ -145,7 +166,7 @@ export function buildMenuMusicQueue(tracks, options = {}) {
     });
   }
 
-  return queue;
+  return [...intro, ...queue];
 }
 
 function extractTracks(payload) {
@@ -156,12 +177,19 @@ function extractTracks(payload) {
   return [];
 }
 
+const FALLBACK_PRIORITY_MATCHERS = [
+  ...INTRO_TRACK_MATCHERS,
+  /Soteria Rises - Secondary Theme/i,
+];
+
+function priorityRank(track) {
+  const text = track.filename || track.title || '';
+  const rank = FALLBACK_PRIORITY_MATCHERS.findIndex(matcher => matcher.test(text));
+  return rank === -1 ? FALLBACK_PRIORITY_MATCHERS.length : rank;
+}
+
 function prioritizeTracks(tracks) {
-  return [...tracks].sort((a, b) => {
-    const aProof = /Soteria Rises - Secondary Theme/i.test(a.filename || a.title || '') ? 0 : 1;
-    const bProof = /Soteria Rises - Secondary Theme/i.test(b.filename || b.title || '') ? 0 : 1;
-    return aProof - bProof;
-  });
+  return [...tracks].sort((a, b) => priorityRank(a) - priorityRank(b));
 }
 export async function loadMusicTracks({ menuOnly = true } = {}) {
   for (const manifestUrl of MANIFEST_URLS) {

@@ -50,14 +50,24 @@ class MusicEngine {
     this.queue = [...tracks];
   }
 
-  async play(track) {
+  async play(track, { seekSeconds } = {}) {
     this.init();
+
+    // Starting from silence (nothing was already playing) doesn't need the
+    // full crossfade ramp — that was reading as "there's a delay when I press
+    // play," since the track was audibly playing but silent for 4 seconds.
+    // The long fade is only worth it for an actual track-to-track transition.
+    const freshStart = !this.currentTrack;
+    const fadeInSeconds = freshStart ? 0.5 : CROSSFADE_SECONDS;
 
     const incoming = this.decks[1 - this.activeDeck];
     const outgoing = this.decks[this.activeDeck];
 
     incoming.audio.src = this.trackUrl(track);
     incoming.audio.volume = 0;
+    if (Number.isFinite(seekSeconds) && seekSeconds > 0) {
+      incoming.audio.currentTime = seekSeconds;
+    }
     try {
       await incoming.audio.play();
     } catch (err) {
@@ -67,7 +77,7 @@ class MusicEngine {
       return { ok: false, error: err, track };
     }
 
-    this._fadeAudio(incoming, this._effectiveVolume(), CROSSFADE_SECONDS);
+    this._fadeAudio(incoming, this._effectiveVolume(), fadeInSeconds);
 
     if (this.currentTrack) {
       const oldAudio = outgoing.audio;

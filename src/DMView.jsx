@@ -36,6 +36,7 @@ import AssetsPanel from './AssetsPanel';
 import ChroniclePanel from './ChroniclePanel';
 import HandbookBookmark from './HandbookBookmark';
 import MenuMusicPlayer from './MenuMusicPlayer';
+import GameSessionOverlay from './GameSessionOverlay';
 import { playSfxByKey } from './soundLibrary';
 import { LEVEL_CAP, apForLevel, getLevelProgress, grantAp } from './leveling';
 
@@ -995,6 +996,14 @@ export default function DMView({ user, session, onHome, darkMode = true, module 
   const [soundboardOpen, setSoundboardOpen] = useState(false);
   const [activeGameSessionId, setActiveGameSessionId] = useState(null);
   const [vttMinimized, setVttMinimized] = useState(false);
+  const [showGameLauncher, setShowGameLauncher] = useState(false);
+  const [gameLarkToast, setGameLarkToast] = useState(null);
+
+  useEffect(() => {
+    if (!gameLarkToast) return;
+    const timer = setTimeout(() => setGameLarkToast(null), 4200);
+    return () => clearTimeout(timer);
+  }, [gameLarkToast]);
 
   useEffect(() => {
     if (!activeCampaignTab) { setActiveGameSessionId(null); return; }
@@ -1444,6 +1453,13 @@ const renderTab = () => {
     <div style={{ minHeight: '100svh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text, overflowX: 'hidden' }}>
       <HandbookBookmark user={user} darkMode={darkMode} allowEdit trigger="external" openSignal={handbookOpenSignal} />
       <MenuMusicPlayer isMobile={isMobile} restrictToMenu={false} isDM onSoundboardToggle={setSoundboardOpen} />
+      {gameLarkToast && (
+        <div role="status" style={{ position: 'fixed', right: isMobile ? 12 : 24, bottom: isMobile ? 16 : 24, zIndex: 320000, width: 'min(360px, calc(100vw - 24px))', border: '1px solid rgba(232,200,116,0.38)', borderRadius: 12, background: 'linear-gradient(155deg, rgba(28,22,12,0.96), rgba(8,6,4,0.96))', boxShadow: '0 24px 70px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,244,204,0.08)', padding: '14px 16px', color: '#ead9aa' }}>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#e8c84a', marginBottom: 6 }}>GameLark</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.08em', color: '#f0dfad', marginBottom: 4 }}>{gameLarkToast.title || 'Challenge Player'}</div>
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: 12, fontStyle: 'italic', lineHeight: 1.45, color: 'rgba(235,220,178,0.72)' }}>{gameLarkToast.body || gameLarkToast.message}</div>
+        </div>
+      )}
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
@@ -1457,6 +1473,9 @@ const renderTab = () => {
         <DraggablePanel {...panelPriority('scribe')} defaultX={108} defaultY={80} onClose={() => setShowScribePanel(false)} title="THE SCRIBE - Architect Access" width={420} accentColor={`${COLORS.deity}55`}>
           <ScribeDMPanel embedded activeCampaignId={activeCampaignTab} />
         </DraggablePanel>
+      )}
+      {showGameLauncher && (
+        <GameSessionOverlay onClose={() => setShowGameLauncher(false)} campaignId={activeCampaignTab} sessionId={activeGameSessionId} onToast={setGameLarkToast} />
       )}
       <PlayersPanel
         variant="dm"
@@ -1672,7 +1691,7 @@ const renderTab = () => {
           id: 'scribe',
           title: 'The Scribe - Archives',
           onClick: () => setShowScribePanel(o => !o),
-          children: <img src="/scribe-emblem.png" alt="Scribe" draggable={false} style={{ width: '124%', height: '124%', objectFit: 'contain', pointerEvents: 'none' }} />,
+          children: <img src="/scribe-emblem.png" alt="Scribe" draggable={false} style={{ width: '148%', height: '148%', objectFit: 'contain', pointerEvents: 'none', transform: 'scale(1.08)' }} />,
         },
         {
           id: 'solomon',
@@ -1699,6 +1718,12 @@ const renderTab = () => {
           children: <img src="/Larkicon.png" alt="Lark" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
         },
         {
+          id: 'games',
+          title: 'Gamelark - Challenge Player',
+          onClick: () => setShowGameLauncher(o => !o),
+          children: <img src="/Lotjarrsbagofgames.png" alt="Gamelark" draggable={false} style={{ width: '132%', height: '132%', objectFit: 'contain', pointerEvents: 'none', transform: 'scale(1.1)', filter: 'sepia(1) saturate(0.72) hue-rotate(350deg) brightness(1.12) contrast(1.08)' }} />,
+        },
+        {
           id: 'bazaar',
           title: 'BAZAAR - Trade & Loot',
           onClick: () => setShowBazaar(o => !o),
@@ -1720,7 +1745,7 @@ const renderTab = () => {
           id: 'handbook',
           title: 'Player Handbook',
           onClick: () => setHandbookOpenSignal(n => n + 1),
-          children: <img src="/player-handbook.png" alt="Handbook" draggable={false} style={{ width: '142%', height: '142%', objectFit: 'contain', pointerEvents: 'none' }} />,
+          children: <img src="/player-handbook.png" alt="Handbook" draggable={false} style={{ width: '160%', height: '160%', objectFit: 'contain', pointerEvents: 'none', transform: 'scale(1.06)' }} />,
         },
         {
           id: 'lore',

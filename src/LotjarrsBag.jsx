@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import LoadingScreen from './LoadingScreen';
+import { useDevice } from './useDevice';
 
 const GAMES = [
   {
@@ -33,6 +34,7 @@ const GAMES = [
     icon: '/undercrypts-logo-lit.svg',
     dimIcon: '/undercrypts-logo.svg',
     iconScale: 1.08,
+    mobileLocked: true,
   },
   {
     id: 'ocp-nodewright',
@@ -58,20 +60,22 @@ function BagIcon({ size = 48 }) {
   );
 }
 
-function GameTile({ game, onClick }) {
+function GameTile({ game, onClick, locked }) {
   const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
-  const active = hovered || pressed;
+  const active = !locked && (hovered || pressed);
 
   return (
     <button
       type="button"
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
+      onClick={locked ? undefined : onClick}
+      disabled={locked}
+      aria-disabled={locked}
+      onMouseEnter={() => !locked && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onFocus={() => setHovered(true)}
+      onFocus={() => !locked && setHovered(true)}
       onBlur={() => { setHovered(false); setPressed(false); }}
-      onPointerDown={() => setPressed(true)}
+      onPointerDown={() => !locked && setPressed(true)}
       onPointerUp={() => setPressed(false)}
       onPointerCancel={() => setPressed(false)}
       style={{
@@ -85,13 +89,14 @@ function GameTile({ game, onClick }) {
         padding: '30px 28px 28px',
         border: '1px solid var(--tile-gold)',
         borderRadius: 10,
-        cursor: 'pointer',
+        cursor: locked ? 'default' : 'pointer',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 17,
         color: '#d7c8a8',
+        opacity: locked ? 0.5 : 1,
         background: active
           ? 'linear-gradient(155deg, rgba(239,211,122,0.12) 0%, rgba(38,31,16,0.68) 42%, rgba(8,6,4,0.95) 100%)'
           : 'linear-gradient(155deg, rgba(240,238,235,0.045) 0%, rgba(16,13,9,0.82) 48%, rgba(6,5,3,0.96) 100%)',
@@ -102,6 +107,26 @@ function GameTile({ game, onClick }) {
         transition: 'transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease',
       }}
     >
+      {locked && (
+        <div style={{
+          position: 'absolute',
+          top: 12,
+          right: 12,
+          zIndex: 2,
+          border: '1px solid rgba(215,180,90,0.4)',
+          borderRadius: 999,
+          padding: '4px 10px',
+          background: 'rgba(8,6,4,0.85)',
+          color: 'rgba(232,210,142,0.85)',
+          fontFamily: "'Cinzel', serif",
+          fontSize: 8,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          textAlign: 'center',
+        }}>
+          Mobile Coming Soon
+        </div>
+      )}
       <div style={{
         position: 'absolute',
         inset: 1,
@@ -215,10 +240,12 @@ function Stinger({ onDone }) {
 }
 
 export default function LotjarrsBag({ onHome, onLaunchGame }) {
+  const { isMobile } = useDevice();
   const [stinger, setStinger] = useState(false);
   const [pendingGame, setPendingGame] = useState(null);
 
-  const handleSelectGame = (gameId) => {
+  const handleSelectGame = (gameId, locked) => {
+    if (locked) return;
     setPendingGame(gameId);
     setStinger(true);
   };
@@ -302,13 +329,17 @@ export default function LotjarrsBag({ onHome, onLaunchGame }) {
 
       {/* Game tiles */}
       <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {GAMES.map(game => (
-          <GameTile
-            key={game.id}
-            game={game}
-            onClick={() => handleSelectGame(game.id)}
-          />
-        ))}
+        {GAMES.map(game => {
+          const locked = !!(game.mobileLocked && isMobile);
+          return (
+            <GameTile
+              key={game.id}
+              game={game}
+              locked={locked}
+              onClick={() => handleSelectGame(game.id, locked)}
+            />
+          );
+        })}
       </div>
 
       {/* Footer */}

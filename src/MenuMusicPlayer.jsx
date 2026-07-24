@@ -6,6 +6,8 @@ import { buildMenuMusicQueue, getMenuMusicTracks, getTrackFamilyKey, getTrackKey
 import { getAudioSettings, saveAudioSettings, subscribeAudioSettings } from './audioSettings';
 import { DraggablePanel } from './DraggablePanel';
 import DMSoundboard from './DMSoundboard';
+import { useActiveGameSession } from './lib/session';
+import { upsertBroadcast, useAudioBroadcast, useListeningMode, fetchBroadcastNow } from './lib/audioBroadcast';
 
 
 function isMissingSourceError(error) {
@@ -24,12 +26,15 @@ const ICONS = {
   decline: '\u00D7',
 };
 
-const MENU_MUSIC_POS_KEY = 'syntarion_menu_music_pos';
+// v2: pos.y is now the widget's distance from the BOTTOM of the viewport (not
+// the top), so expanding the player grows the card upward instead of pushing
+// its bottom edge further down toward other bottom-anchored UI.
+const MENU_MUSIC_POS_KEY = 'syntarion_menu_music_pos_v2';
 
 function getDefaultMenuMusicPos(mobile) {
   return {
     x: mobile ? 12 : 18,
-    y: window.innerHeight - (mobile ? 148 : 148),
+    y: mobile ? 84 : 84,
   };
 }
 
@@ -37,7 +42,7 @@ function pointFromEvent(e) {
   return e.touches ? e.touches[0] : e;
 }
 
-export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = true, isDM = false, onSoundboardToggle }) {
+export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = true, isDM = false, onSoundboardToggle, campaignId = null, char = null }) {
   const [tracks, setTracks] = useState(() => getMenuMusicTracks());
   const [audioSettings, setAudioSettings] = useState(getAudioSettings);
   const [currentTrack, setCurrentTrack] = useState(musicEngine.currentTrack || tracks[0] || null);
@@ -50,6 +55,17 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
   const [showSoundboard, setShowSoundboard] = useState(false);
   const playInFlightRef = useRef(false);
   const autoplayAttemptedRef = useRef(false);
+  // Once music has played once, "Decline" retires for good — only Play/Pause remain.
+  const [hasPlayedOnce, setHasPlayedOnce] = useState(!!musicEngine.currentTrack);
+
+  // Live DM broadcast: a checked-in, non-DM player marked "remote" for the
+  // active session mirrors the DM's soundboard instead of the ambient shuffle.
+  const sessionId = useActiveGameSession(campaignId);
+  const listeningMode = useListeningMode(sessionId, char?.id);
+  const broadcast = useAudioBroadcast(sessionId);
+  const isRemoteListener = !isDM && listeningMode === 'remote' && !!sessionId;
+  const lastAppliedTrackKeyRef = useRef(null);
+  const lastSfxFiredAtRef = useRef(null);
 
   const savedPos = useMemo(() => {
     try { return JSON.parse(localStorage.getItem(MENU_MUSIC_POS_KEY)); } catch { return null; }
@@ -76,7 +92,8 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
 
   const startDrag = (e) => {
     const p = pointFromEvent(e);
-    dragOffset.current = { x: p.clientX - pos.x, y: p.clientY - pos.y };
+    const bottomEdgeY = window.innerHeight - pos.y;
+    dragOffset.current = { x: p.clientX - pos.x, y: p.clientY - bottomEdgeY };
     dragMoved.current = false;
     setDragging(true);
   };
@@ -86,7 +103,8 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
     const onMove = (e) => {
       const p = pointFromEvent(e);
       dragMoved.current = true;
-      setPos(clampPos(p.clientX - dragOffset.current.x, p.clientY - dragOffset.current.y));
+      const bottomEdgeY = p.clientY - dragOffset.current.y;
+      setPos(clampPos(p.clientX - dragOffset.current.x, window.innerHeight - bottomEdgeY));
       if (e.cancelable) e.preventDefault();
     };
     const onUp = () => setDragging(false);
@@ -137,12 +155,15 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
     sfxEngine.setMuted(!audioSettings.sfxEnabled);
   }, [audioSettings.environmentVolume, audioSettings.environmentEnabled, audioSettings.ambienceVolume, audioSettings.ambienceEnabled, audioSettings.sfxVolume, audioSettings.sfxEnabled]);
 
+  // Queue-building is its own effect, deliberately NOT keyed on musicVolume —
+  // it used to be, which meant dragging the volume slider (which saves on
+  // every input tick) rebuilt and reshuffled the whole upcoming queue and
+  // reassigned onTrackChange dozens of times per second while dragging.
   useEffect(() => {
     musicEngine.setQueue(buildMenuMusicQueue(playableTracks, {
       avoidFirstFamily: getTrackFamilyKey(musicEngine.currentTrack),
+      pinIntro: !musicEngine.currentTrack,
     }));
-    musicEngine.setVolume(audioSettings.musicVolume);
-    musicEngine.setMuted(!audioSettings.musicEnabled);
 
     const previous = musicEngine.onTrackChange;
     musicEngine.onTrackChange = (track) => {
@@ -150,12 +171,21 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
       setCurrentTrack(track || playableTracks[0] || tracks[0] || null);
       setPlaying(!!track);
       if (track) setNeedsGesture(false);
+      if (isDM && sessionId && track) {
+        upsertBroadcast(sessionId, campaignId, { music_track: track, music_started_at: new Date().toISOString() });
+      }
     };
 
     return () => {
       musicEngine.onTrackChange = previous;
     };
-  }, [audioSettings.musicEnabled, audioSettings.musicVolume, playableTracks, tracks]);
+  }, [playableTracks, tracks, isDM, sessionId, campaignId]);
+
+  // Cheap, separate from queue-building: just pushes the current slider value.
+  useEffect(() => {
+    musicEngine.setVolume(audioSettings.musicVolume);
+    musicEngine.setMuted(!audioSettings.musicEnabled);
+  }, [audioSettings.musicVolume, audioSettings.musicEnabled]);
 
   const updateMediaSession = useCallback((track, playbackState = 'playing') => {
     if (!('mediaSession' in navigator)) return;
@@ -174,6 +204,7 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
 
   const handlePlayResult = useCallback(async (result, attemptedTrack) => {
     if (result?.ok) {
+      setHasPlayedOnce(true);
       const track = result.track || attemptedTrack;
       setPlaying(true);
       setNeedsGesture(false);
@@ -285,7 +316,10 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
   }, [currentTrack, playBack, playNext, startMusic, updateMediaSession]);
 
   useEffect(() => {
-    if (!audioSettings.musicEnabled || musicEngine.currentTrack || !playableTracks.length) return;
+    // A remote listener's music comes from the DM's broadcast, not the
+    // ambient shuffle queue — don't race the two for the deck.
+    if (isRemoteListener) return undefined;
+    if (!audioSettings.musicEnabled || musicEngine.currentTrack || !playableTracks.length) return undefined;
 
     let timer = null;
     if (!autoplayAttemptedRef.current) {
@@ -304,7 +338,35 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);
     };
-  }, [audioSettings.musicEnabled, playableTracks.length, startMusic]);
+  }, [audioSettings.musicEnabled, playableTracks.length, startMusic, isRemoteListener]);
+
+  // Mirror the DM's soundboard: new track (with a seek to "how far in" it
+  // already is), new environment/ambience bed + volumes, and one-shot SFX.
+  // A player marked 'table' never runs this — their device stays silent
+  // since the room already has the DM's real speakers.
+  useEffect(() => {
+    if (!isRemoteListener || !broadcast) return;
+
+    const incomingKey = broadcast.music_track ? getTrackKey(broadcast.music_track) : null;
+    if (incomingKey && incomingKey !== lastAppliedTrackKeyRef.current) {
+      lastAppliedTrackKeyRef.current = incomingKey;
+      const seekSeconds = broadcast.music_started_at ? (Date.now() - Date.parse(broadcast.music_started_at)) / 1000 : 0;
+      musicEngine.play(broadcast.music_track, { seekSeconds }).then(result => handlePlayResult(result, broadcast.music_track));
+    }
+
+    if (broadcast.environment_url) environmentEngine.play(broadcast.environment_url);
+    if (typeof broadcast.environment_volume === 'number') environmentEngine.setVolume(broadcast.environment_volume);
+    environmentEngine.setMuted(broadcast.environment_enabled === false);
+
+    if (broadcast.ambience_url) ambienceEngine.play(broadcast.ambience_url);
+    if (typeof broadcast.ambience_volume === 'number') ambienceEngine.setVolume(broadcast.ambience_volume);
+    ambienceEngine.setMuted(broadcast.ambience_enabled === false);
+
+    if (broadcast.sfx_url && broadcast.sfx_fired_at && broadcast.sfx_fired_at !== lastSfxFiredAtRef.current) {
+      lastSfxFiredAtRef.current = broadcast.sfx_fired_at;
+      sfxEngine.play(broadcast.sfx_url);
+    }
+  }, [isRemoteListener, broadcast, handlePlayResult]);
 
   const updateMusicVolume = (value) => {
     const next = saveAudioSettings({ ...audioSettings, musicVolume: Number(value), musicEnabled: true });
@@ -318,17 +380,42 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
     setAudioSettings(next);
     engine.setVolume(next[volumeKey]);
     engine.setMuted(false);
+    if (isDM && sessionId) {
+      const busName = volumeKey === 'environmentVolume' ? 'environment' : volumeKey === 'ambienceVolume' ? 'ambience' : null;
+      if (busName) upsertBroadcast(sessionId, campaignId, { [`${busName}_volume`]: next[volumeKey], [`${busName}_enabled`]: true });
+    }
   };
 
   const togglePlay = async () => {
     if (playing) {
       musicEngine.pause();
+      if (isRemoteListener) {
+        environmentEngine.setMuted(true);
+        ambienceEngine.setMuted(true);
+      }
       setPlaying(false);
       updateMediaSession(currentTrack, 'paused');
       return;
     }
 
     if (musicEngine.currentTrack) {
+      // Remote listeners resuming catch back up to whatever the DM is playing
+      // live right now, instead of continuing from wherever they paused —
+      // no accumulating delay like a TiVo-style buffer.
+      if (isRemoteListener) {
+        const fresh = await fetchBroadcastNow(sessionId);
+        if (fresh?.music_track) {
+          lastAppliedTrackKeyRef.current = getTrackKey(fresh.music_track);
+          const seekSeconds = fresh.music_started_at ? (Date.now() - Date.parse(fresh.music_started_at)) / 1000 : 0;
+          const result = await musicEngine.play(fresh.music_track, { seekSeconds });
+          await handlePlayResult(result, fresh.music_track);
+          if (fresh.environment_url) environmentEngine.play(fresh.environment_url);
+          environmentEngine.setMuted(fresh.environment_enabled === false);
+          if (fresh.ambience_url) ambienceEngine.play(fresh.ambience_url);
+          ambienceEngine.setMuted(fresh.ambience_enabled === false);
+          return;
+        }
+      }
       musicEngine.resume();
       setPlaying(true);
       updateMediaSession(currentTrack, 'playing');
@@ -368,7 +455,7 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
       style={{
         position: 'fixed',
         left: pos.x,
-        top: pos.y,
+        bottom: pos.y,
         zIndex: 48,
         width: expanded ? (isMobile ? 'min(calc(100vw - 24px), 304px)' : 292) : (isMobile ? 206 : 218),
         maxWidth: 'calc(100vw - 24px)',
@@ -471,14 +558,16 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
             <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>
               {playing ? (
                 <>
-                  <button onClick={playBack} style={controlButtonStyle} aria-label="Previous track" title="Back">{ICONS.back}</button>
+                  {!isRemoteListener && <button onClick={playBack} style={controlButtonStyle} aria-label="Previous track" title="Back">{ICONS.back}</button>}
                   <button onClick={togglePlay} style={primaryControlButtonStyle} aria-label="Pause music" title="Pause">{ICONS.pause}</button>
-                  <button onClick={playNext} style={controlButtonStyle} aria-label="Next track" title="Next">{ICONS.next}</button>
+                  {!isRemoteListener && <button onClick={playNext} style={controlButtonStyle} aria-label="Next track" title="Next">{ICONS.next}</button>}
                 </>
               ) : (
                 <>
                   <button onClick={togglePlay} style={primaryControlButtonStyle} aria-label="Play music" title="Play">{ICONS.play}</button>
-                  <button onClick={declineMusic} style={controlButtonStyle} aria-label="Decline menu music" title="Decline">{ICONS.decline}</button>
+                  {!hasPlayedOnce && (
+                    <button onClick={declineMusic} style={controlButtonStyle} aria-label="Decline menu music" title="Decline">{ICONS.decline}</button>
+                  )}
                 </>
               )}
               <div style={{ marginLeft: 'auto', fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.12em', color: 'rgba(226,207,145,0.58)', textTransform: 'uppercase' }}>
@@ -495,11 +584,13 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
               style={{ width: '100%', height: 3, accentColor: '#d7b75a' }}
               aria-label="Music volume"
             />
-            <div style={{ display: 'grid', gap: 5, marginTop: 2 }}>
-              <MixerSlider label="Environment" volume={audioSettings.environmentVolume} onChange={v => updateBusVolume('environmentVolume', 'environmentEnabled', environmentEngine, v)} />
-              <MixerSlider label="Ambience" volume={audioSettings.ambienceVolume} onChange={v => updateBusVolume('ambienceVolume', 'ambienceEnabled', ambienceEngine, v)} />
-              <MixerSlider label="SFX" volume={audioSettings.sfxVolume} onChange={v => updateBusVolume('sfxVolume', 'sfxEnabled', sfxEngine, v)} />
-            </div>
+            {isDM && (
+              <div style={{ display: 'grid', gap: 5, marginTop: 2 }}>
+                <MixerSlider label="Environment" volume={audioSettings.environmentVolume} onChange={v => updateBusVolume('environmentVolume', 'environmentEnabled', environmentEngine, v)} />
+                <MixerSlider label="Ambience" volume={audioSettings.ambienceVolume} onChange={v => updateBusVolume('ambienceVolume', 'ambienceEnabled', ambienceEngine, v)} />
+                <MixerSlider label="SFX" volume={audioSettings.sfxVolume} onChange={v => updateBusVolume('sfxVolume', 'sfxEnabled', sfxEngine, v)} />
+              </div>
+            )}
             {isDM && (
               <button
                 onClick={() => { setShowSoundboard(true); onSoundboardToggle?.(true); }}
@@ -535,7 +626,7 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
         width={Math.min(window.innerWidth - 24, 520)}
         accentColor="rgba(226,207,145,0.4)"
       >
-        <DMSoundboard />
+        <DMSoundboard sessionId={sessionId} campaignId={campaignId} />
       </DraggablePanel>
     )}
     </>

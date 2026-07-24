@@ -505,9 +505,6 @@ function HandbookPdfContent({ content, darkMode, isMobile, theme }) {
     return <LiveBlockHeader title="Loading PDF..." subtitle="Requesting a secure link for this page." theme={theme} />;
   }
 
-  const pageLabel = meta.page
-    ? 'Page ' + meta.page + (meta.total_pages ? ' of ' + meta.total_pages : '')
-    : 'Full PDF';
   return (
     <section
       onContextMenu={e => e.preventDefault()}
@@ -519,17 +516,6 @@ function HandbookPdfContent({ content, darkMode, isMobile, theme }) {
         boxShadow: darkMode ? '0 18px 42px rgba(0,0,0,0.45)' : '0 12px 28px rgba(26,23,20,0.12)',
       }}
     >
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center',
-        padding: '10px 14px', borderBottom: '1px solid ' + theme.border,
-        background: darkMode ? 'rgba(240,238,235,0.035)' : '#f8f0e4',
-      }}>
-        <div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: theme.sectionColor }}>Protected PDF View</div>
-          <div style={{ marginTop: 3, fontSize: 11, color: theme.muted, fontStyle: 'italic' }}>{pageLabel} | {meta.name || 'Player Handbook PDF'}</div>
-        </div>
-        <div style={{ fontSize: 10, color: theme.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'right' }}>Rendered in-app without browser save controls.</div>
-      </div>
       <div
         ref={canvasShellRef}
         style={{
@@ -834,6 +820,13 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
   }, [open]);
 
   const active = (chapters || []).find(c => c.slug === activeSlug) || null;
+  const activeIndex = (chapters || []).findIndex(c => c.slug === activeSlug);
+  const goToChapter = (index) => {
+    const target = (chapters || [])[index];
+    if (!target) return;
+    setActiveSlug(target.slug);
+    contentRef.current?.scrollTo({ top: 0 });
+  };
 
   const sections = useMemo(() => {
     if (!active?.content || editing) return [];
@@ -1372,6 +1365,29 @@ export default function HandbookBookmark({ user, darkMode, trigger = 'bookmark',
                   <option key={c.slug} value={c.slug}>{c.title}{!c.is_published ? ' (Draft)' : ''}</option>
                 ))}
               </select>
+
+              <button
+                onClick={() => goToChapter(activeIndex - 1)}
+                disabled={editing || activeIndex <= 0}
+                title="Previous page"
+                style={{
+                  background: 'transparent', border: `1px solid ${borderMid}`, borderRadius: 6,
+                  padding: '9px 12px', cursor: editing || activeIndex <= 0 ? 'default' : 'pointer',
+                  fontFamily: "'Cinzel', serif", fontSize: 8.5, letterSpacing: '0.1em', textTransform: 'uppercase',
+                  color: ink, opacity: editing || activeIndex <= 0 ? 0.4 : 1,
+                }}
+              >‹ Prev</button>
+              <button
+                onClick={() => goToChapter(activeIndex + 1)}
+                disabled={editing || activeIndex < 0 || activeIndex >= (chapters || []).length - 1}
+                title="Next page"
+                style={{
+                  background: 'transparent', border: `1px solid ${borderMid}`, borderRadius: 6,
+                  padding: '9px 12px', cursor: editing || activeIndex < 0 || activeIndex >= (chapters || []).length - 1 ? 'default' : 'pointer',
+                  fontFamily: "'Cinzel', serif", fontSize: 8.5, letterSpacing: '0.1em', textTransform: 'uppercase',
+                  color: ink, opacity: editing || activeIndex < 0 || activeIndex >= (chapters || []).length - 1 ? 0.4 : 1,
+                }}
+              >Next ›</button>
 
               {canEdit && active && !editing && (
                 renaming ? (

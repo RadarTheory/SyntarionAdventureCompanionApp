@@ -334,7 +334,8 @@ function ShellUI(props) {
       background: 'radial-gradient(ellipse at 40% 30%, #1a1208 0%, #0d0b08 55%, #060504 100%)',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       fontFamily: "'Crimson Pro', serif",
-      overflow: 'hidden',
+      overflow: 'hidden auto',
+      padding: '16px', boxSizing: 'border-box',
     },
     backBtn: {
       position: 'absolute', top: 24, left: 24,
@@ -349,7 +350,7 @@ function ShellUI(props) {
       border: '1px solid rgba(184,137,42,0.2)',
       borderRadius: 8, padding: '36px 40px',
       boxShadow: '0 0 60px rgba(184,137,42,0.07), 0 24px 80px rgba(0,0,0,0.8)',
-      width: '100%', maxWidth: 460, position: 'relative',
+      width: '100%', maxWidth: 460, maxHeight: '100%', overflowY: 'auto', boxSizing: 'border-box', position: 'relative',
     },
     title: {
       fontFamily: "'Cinzel', serif", fontSize: 48, fontWeight: 900,
@@ -372,6 +373,7 @@ function ShellUI(props) {
       color: '#1a0e04', fontWeight: 700,
       boxShadow: '0 4px 20px rgba(184,137,42,0.3)',
       transition: 'all 0.2s', marginBottom: 12,
+      minHeight: 44, touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
     },
     btnSecondary: {
       width: '100%', padding: '14px 24px',
@@ -382,6 +384,7 @@ function ShellUI(props) {
       letterSpacing: '0.16em', textTransform: 'uppercase',
       color: 'rgba(200,190,170,0.8)', fontWeight: 600,
       transition: 'all 0.2s', marginBottom: 12,
+      minHeight: 44, touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
     },
     btnGhost: {
       width: '100%', padding: '12px 24px',
@@ -392,13 +395,14 @@ function ShellUI(props) {
       letterSpacing: '0.14em', textTransform: 'uppercase',
       color: 'rgba(138,154,160,0.7)',
       transition: 'all 0.2s', marginBottom: 10,
+      minHeight: 40, touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
     },
     input: {
       width: '100%', padding: '12px 16px',
       background: 'rgba(13,11,8,0.9)',
       border: '1px solid rgba(184,137,42,0.2)',
       borderRadius: 4, color: 'rgba(220,210,190,0.9)',
-      fontFamily: "'Crimson Pro', serif", fontSize: 15,
+      fontFamily: "'Crimson Pro', serif", fontSize: 16,
       outline: 'none', marginBottom: 12, boxSizing: 'border-box',
     },
     divider: {
@@ -442,11 +446,11 @@ function ShellUI(props) {
         }}/>
       ))}
 
-      <div style={S.panel}>
+      <div className="fubin-panel" style={S.panel}>
         {/* Top divider line */}
         <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(232,192,64,0.4),transparent)' }}/>
 
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+        <div className="fubin-menu-logo" style={{ textAlign: 'center', marginBottom: 40 }}>
           <h1 style={S.title}>FUBIN</h1>
           <p style={S.subtitle}>Arcane–Industrial Edition · The board remembers</p>
         </div>
@@ -476,7 +480,7 @@ function ShellUI(props) {
   if (screen === 'difficulty') return (
     <div style={S.shell}>
       <button style={S.backBtn} onClick={() => setScreen('menu')}>← Back</button>
-      <div style={S.panel}>
+      <div className="fubin-panel" style={S.panel}>
         <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(232,192,64,0.4),transparent)' }}/>
         <p style={S.sectionLabel}>Choose Your Trial</p>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
@@ -512,7 +516,7 @@ function ShellUI(props) {
   if (screen === 'lobby_entry') return (
     <div style={S.shell}>
       <button style={S.backBtn} onClick={() => setScreen('menu')}>← Back</button>
-      <div style={S.panel}>
+      <div className="fubin-panel" style={S.panel}>
         <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(232,192,64,0.4),transparent)' }}/>
         <p style={S.sectionLabel}>Challenge a Rival</p>
 
@@ -552,7 +556,7 @@ function ShellUI(props) {
   if (screen === 'lobby') return (
     <div style={S.shell}>
       <button style={S.backBtn} onClick={() => setScreen('menu')}>← Abandon</button>
-      <div style={S.panel}>
+      <div className="fubin-panel" style={S.panel}>
         <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(232,192,64,0.4),transparent)' }}/>
         <p style={S.sectionLabel}>{lobbyState?.isHost ? 'Awaiting Challenger' : 'Joining Room'}</p>
 
@@ -602,12 +606,12 @@ function ShellUI(props) {
     return (
       <div style={S.shell}>
         <button style={S.backBtn} onClick={() => setScreen('menu')}>← Back</button>
-        <div style={{ ...S.panel, maxWidth: 560, maxHeight: '90vh', overflowY: 'auto' }}>
+        <div className="fubin-panel" style={{ ...S.panel, maxWidth: 560, maxHeight: '90vh', overflowY: 'auto' }}>
           <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(232,192,64,0.4),transparent)' }}/>
           <p style={S.sectionLabel}>Chronicles</p>
 
           {/* Stat tablets */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
+          <div className="fubin-stats-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
             {jewels.map((j, i) => (
               <div key={i} style={{
                 background: 'rgba(13,11,8,0.9)', border: `1px solid ${j.color}33`,

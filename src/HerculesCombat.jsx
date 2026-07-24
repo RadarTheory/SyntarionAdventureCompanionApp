@@ -267,6 +267,8 @@ useEffect(() => {
   const [creatureSearch, setCreatureSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [rollTokensModal, setRollTokensModal] = useState(null); // null | array of token candidates
+  const [actionPromptRow, setActionPromptRow] = useState(null); // null | combatant row awaiting an action
+  const [actionPromptValue, setActionPromptValue] = useState('Attack');
   const eventsBottomRef = useRef(null);
 
   useEffect(() => {
@@ -996,16 +998,22 @@ const denyEvent = async event => {
     await loadEvents();
   };
 
-  const rollCombatantAction = async row => {
-    const sid = session?.id || activeSessionIdRef.current;
+  const rollCombatantAction = row => {
+    if (!row) return;
+    setActionPromptValue('Attack');
+    setActionPromptRow(row);
+  };
 
-    if (!sid || !row) return;
+  const confirmCombatantAction = async () => {
+    const row = actionPromptRow;
+    const sid = session?.id || activeSessionIdRef.current;
+    const actionName = actionPromptValue;
+
+    setActionPromptRow(null);
+
+    if (!sid || !row || !actionName?.trim()) return;
 
     const actorName = row.character_name || row.actor_name || 'Combatant';
-    const actionName = window.prompt(`What is ${actorName} doing?`, 'Attack');
-
-    if (!actionName?.trim()) return;
-
     const roll = Math.floor(Math.random() * 20) + 1;
     const modifier = 0;
     const total = roll + modifier;
@@ -1684,6 +1692,33 @@ const denyEvent = async event => {
                   setSaving(false);
                 }} style={goldButton()}>Roll Selected</button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {actionPromptRow && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200010, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#100d0a', border: '1px solid rgba(200,168,74,0.4)', borderRadius: 14, padding: 20, minWidth: 320, maxWidth: 420, boxShadow: '0 24px 80px rgba(0,0,0,0.8)' }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#e8d9a7', letterSpacing: '0.14em', marginBottom: 4 }}>Roll an Action</div>
+            <div style={{ color: COLORS.dim, fontSize: 11, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 14 }}>
+              What is {actionPromptRow.character_name || actionPromptRow.actor_name || 'this combatant'} doing?
+            </div>
+            <input
+              type="text"
+              value={actionPromptValue}
+              onChange={e => setActionPromptValue(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') confirmCombatantAction(); if (e.key === 'Escape') setActionPromptRow(null); }}
+              autoFocus
+              style={{
+                width: '100%', boxSizing: 'border-box', background: COLORS.card, border: `1px solid ${COLORS.border}`,
+                borderRadius: 7, padding: '9px 11px', color: COLORS.text, fontFamily: 'Georgia, serif',
+                fontSize: 13, marginBottom: 16, outline: 'none',
+              }}
+            />
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button type="button" onClick={() => setActionPromptRow(null)} style={plainButton()}>Cancel</button>
+              <button type="button" onClick={confirmCombatantAction} disabled={!actionPromptValue?.trim()} style={goldButton()}>Roll d20</button>
             </div>
           </div>
         </div>
