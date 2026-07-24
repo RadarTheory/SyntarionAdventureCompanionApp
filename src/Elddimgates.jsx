@@ -4,6 +4,7 @@ import supabase from './lib/supabase';
 import { GameButton, GameBackButton } from './GameUI';
 import { chooseScribeElddimgatesAction } from './lib/scribeSeat';
 import { describeAction } from './lib/elddimgatesDescribe';
+import { recordLotjarrsGameResult } from './gameStats';
 
 const CELL = 68;
 const CH = 12;
@@ -254,6 +255,7 @@ export default function Elddimgates({ onExit, embedded = false, seatConfig = nul
   const [autoFlip, setAutoFlip] = useState(true);
   const [manualPov, setManualPov] = useState(1);
   const [message, setMessage] = useState('Select a council piece or place a reserve gate.');
+  const recordedResultRef = useRef(null);
 
   const setSeat = (player, name) => {
     setSeats(prev => ({ ...prev, [player]: name }));
@@ -329,6 +331,23 @@ export default function Elddimgates({ onExit, embedded = false, seatConfig = nul
   const selectedGate = gateMode ? state.gates.find(g => g.id === gateMode) : null;
 
   const statusText = ended ? (state.status.winner ? `${PLAYERS[state.status.winner].name} wins by ${state.status.reason === 'passage' ? 'Passage' : 'Political Victory'}` : `Draw - ${state.status.reason}`) : pendingMain ? 'Charter pending - choose one unanswered gate action' : `${PLAYERS[state.toMove].council} to move${inCheck ? ' - CHECK' : ''}`;
+
+  useEffect(() => {
+    if (!matchStarted || !ended) {
+      if (!ended) recordedResultRef.current = null;
+      return;
+    }
+    const key = `${state.turn}:${state.status.winner || 'draw'}:${state.status.reason}`;
+    if (recordedResultRef.current === key) return;
+    recordedResultRef.current = key;
+    recordLotjarrsGameResult('elddimgates', {
+      playerName: state.status.winner ? (seats[state.status.winner] || PLAYERS[state.status.winner].name) : 'Draw',
+      outcome: state.status.winner ? 'win' : 'draw',
+      score: state.status.winner ? 1 : 0,
+      scoreLabel: state.status.winner ? (state.status.reason === 'passage' ? 'Passage' : 'Political') : state.status.reason,
+      meta: { mode: matchMode, reason: state.status.reason },
+    });
+  }, [matchStarted, ended, state.turn, state.status.winner, state.status.reason, seats, matchMode]);
 
   const seatAiControlled = !!seatConfig?.[state.toMove]?.aiControlled;
   const aiTurn = matchStarted && !ended && !pendingMain && ((matchMode === 'ai' && state.toMove === AI_PLAYER) || seatAiControlled);

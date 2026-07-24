@@ -47,6 +47,15 @@ class SfxEngine {
     this._active.clear();
   }
 
+  // Stops one specific one-shot (the Audio instance returned from play()'s
+  // { ok, audio }) without touching any others still in flight.
+  stop(audio) {
+    if (!audio || !this._active.has(audio)) return;
+    audio.pause();
+    audio.removeAttribute('src');
+    this._active.delete(audio);
+  }
+
   setVolume(v) {
     this._volume = v;
     if (!this._muted) {

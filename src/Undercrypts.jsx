@@ -2,6 +2,7 @@
 import { RACES, PM_MAJ, PM_MIN, PM_AEON, PM_ASTRAL } from './constants';
 import { useDevice } from './useDevice';
 import { ComingSoonScreen } from './GameUI';
+import { recordLotjarrsGameResult } from './gameStats';
 
 const STORAGE_KEY = 'undercrypts_unlocks_v2';
 const START_UNLOCKS = ['rusted-sabre', 'knuckle-wraps', 'shortbow'];
@@ -123,14 +124,14 @@ export default function Undercrypts({ onExit }) {
   };
   const nextRoom = () => {
     const g = game.current; if (!g || g.room.enemies.length) return;
-    if (g.room.boss) { g.ended = 'You return changed. Inventory resets; unlocks remain.'; setScreen('ended'); sync(); return; }
+    if (g.room.boss) { recordLotjarrsGameResult('undercrypts', { playerName: raceLabel(race, bloodline), outcome: 'complete', score: g.floor, scoreLabel: `Floor ${g.floor}`, meta: { origin } }); g.ended = 'You return changed. Inventory resets; unlocks remain.'; setScreen('ended'); sync(); return; }
     g.roomIndex += 1; g.room = makeRoom(g.roomIndex, g.floor, unlocks); g.projectiles = []; g.slashes = []; g.drops = []; g.player.x = W / 2; g.player.y = H - 90; g.player.hp = Math.min(g.player.maxHp, g.player.hp + 6); g.log = [`Room ${g.roomIndex + 1} re-forms: ${g.room.name}.`, ...g.log].slice(0, 7); sync();
   };
   const takeReward = (drop) => {
     const g = game.current; const item = drop.item; const alreadyHeld = g.inventory.some(i => i.id === item.id); const alreadyUnlocked = unlocks.includes(item.id); if (!alreadyHeld) g.inventory.push(item); g.inventory = uniqueItems(g.inventory); g.stats = itemStats(g.inventory); g.player.maxHp = BASE_HP + g.stats.hp; g.player.hp = Math.min(g.player.maxHp, g.player.hp + (alreadyHeld ? 12 : 8)); const ids = alreadyUnlocked ? unlocks : [...unlocks, item.id]; setUnlocks([...new Set(ids)]); saveUnlocks(ids); g.drops = g.drops.filter(d => d !== drop); append(alreadyHeld ? `${item.name} is already in your kit. You salvage it for breath and binding.` : alreadyUnlocked ? `Recovered ${item.name}. It joins this crawl's kit.` : `Unlocked ${item.name}. It can appear in future crawls.`);
   };
   const hurtPlayer = (amount) => {
-    const g = game.current; const p = g.player; if (p.invuln > 0 || p.roll > 0) return; const dmg = Math.max(1, amount + g.stats.curse - (build.armor || 0) - g.stats.armor); p.hp -= dmg; p.invuln = 500; g.log = [`Hit for ${dmg}.`, ...g.log].slice(0, 7); if (p.hp <= 0 && g.stats.seal && !p.sealSpent) { p.hp = 1; p.sealSpent = true; g.log.unshift('The Cracked Charter Seal refuses the end.'); } if (p.hp <= 0) { g.ended = 'The Undercrypts close over you. Inventory lost; unlocks remain.'; setScreen('ended'); } sync();
+    const g = game.current; const p = g.player; if (p.invuln > 0 || p.roll > 0) return; const dmg = Math.max(1, amount + g.stats.curse - (build.armor || 0) - g.stats.armor); p.hp -= dmg; p.invuln = 500; g.log = [`Hit for ${dmg}.`, ...g.log].slice(0, 7); if (p.hp <= 0 && g.stats.seal && !p.sealSpent) { p.hp = 1; p.sealSpent = true; g.log.unshift('The Cracked Charter Seal refuses the end.'); } if (p.hp <= 0) { recordLotjarrsGameResult('undercrypts', { playerName: raceLabel(race, bloodline), outcome: 'loss', score: Math.max(0, g.floor - 1), scoreLabel: `Floor ${g.floor}`, meta: { origin } }); g.ended = 'The Undercrypts close over you. Inventory lost; unlocks remain.'; setScreen('ended'); } sync();
   };
   const doMelee = () => {
     const g = game.current; const p = g.player; if (p.attackCd > 0) return; const a = Math.atan2(mouse.current.y - p.y, mouse.current.x - p.x); const atk = { x: p.x, y: p.y, angle: a, life: build.wind, max: build.wind, reach: build.reach, arc: build.arc, color: build.color }; p.attack = build.wind; p.attackCd = build.wind + 120; g.slashes.push(atk); const dmg = build.damage + g.stats.melee; let hit = false; g.room.enemies.forEach(e => { const d = Math.hypot(e.x - p.x, e.y - p.y); const da = Math.abs(normAngle(Math.atan2(e.y - p.y, e.x - p.x) - a)); if (d <= build.reach + e.r && da <= build.arc / 2) { e.hp -= dmg; e.hit = 140; e.stun = Math.max(e.stun, 120 + g.stats.stagger * 160); hit = true; } }); if (hit && build.heal) p.hp = Math.min(p.maxHp, p.hp + build.heal); g.room.enemies = g.room.enemies.filter(e => e.hp > 0); if (hit) g.log = [`${build.name} lands for ${dmg}.`, ...g.log].slice(0, 7); finishRoom(); sync();

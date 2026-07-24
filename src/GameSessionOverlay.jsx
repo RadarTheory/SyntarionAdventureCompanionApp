@@ -35,11 +35,31 @@ const GAMES = [
   { id: 'driftstone', name: 'Driftstone', subtitle: 'A two-player strategy of stone and tide', enabled: true, seated: true, supportsAi: false },
 ];
 
-function seatOptions(characters, npcs, supportsAi) {
+function checkedInOption(character) {
+  return { key: `character:${character.character_id}`, kind: 'character', id: character.character_id, label: character.character_name || 'Unnamed character' };
+}
+
+function playerCharacterOption(character) {
+  if (!character?.id) return null;
+  return { key: `character:${character.id}`, kind: 'character', id: String(character.id), label: character.name || character.character_name || 'Your Character' };
+}
+
+function uniqueSeatOptions(options) {
+  const seen = new Set();
+  return options.filter(option => {
+    if (!option?.key || seen.has(option.key)) return false;
+    seen.add(option.key);
+    return true;
+  });
+}
+
+function seatOptions(characters, npcs, supportsAi, mode = 'dm', playerCharacter = null) {
+  const checkedInOptions = characters.map(checkedInOption);
+  if (mode === 'player') return uniqueSeatOptions([playerCharacterOption(playerCharacter), ...checkedInOptions].filter(Boolean));
   return [
     { key: 'dm', kind: 'dm', label: 'Myself (DM)' },
     ...(supportsAi ? [{ key: 'scribe', kind: 'scribe', label: 'The Scribe (AI plays this seat)' }] : []),
-    ...characters.map(c => ({ key: `character:${c.character_id}`, kind: 'character', id: c.character_id, label: c.character_name || 'Unnamed character' })),
+    ...checkedInOptions,
     ...npcs.map(n => ({ key: `npc:${n.id}`, kind: 'npc', id: n.id, label: n.name || 'Unnamed NPC' })),
   ];
 }
@@ -68,19 +88,20 @@ function seatConfigFromDbShape(dbSeat) {
   return { label: dbSeat.label, aiControlled: dbSeat.kind === 'scribe' };
 }
 
-function SeatSelect({ label, options, value, onChange }) {
+function SeatSelect({ label, options, value, onChange, disabled = false, emptyLabel = 'Choose who plays this seat...' }) {
   return (
     <div>
       <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(215,180,90,0.7)', marginBottom: 8 }}>{label}</div>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
         style={{
           width: '100%', minHeight: 44, borderRadius: 8, border: '1px solid rgba(215,180,90,0.28)',
           background: '#100c07', color: '#ead9aa', padding: '0 12px', boxSizing: 'border-box', fontSize: 15,
         }}
       >
-        <option value="">Choose who plays this seat...</option>
+        <option value="">{emptyLabel}</option>
         {options.map(opt => <option key={opt.key} value={opt.key}>{opt.label}</option>)}
       </select>
     </div>
@@ -111,7 +132,7 @@ function CloseButton({ onClick, isMobile }) {
 //
 // Pass `joinMatch` (an accepted game_lark_matches row) instead of campaignId/sessionId to mount
 // this in the player's "I accepted a challenge" view — it skips straight to play.
-export default function GameSessionOverlay({ onClose, campaignId, sessionId, onToast, joinMatch = null }) {
+export default function GameSessionOverlay({ onClose, campaignId, sessionId, onToast, joinMatch = null, mode = 'dm', playerCharacter = null }) {
   const { isMobile } = useDevice();
   const derivedSessionId = useActiveGameSession(campaignId);
   const effectiveSessionId = sessionId || derivedSessionId;
@@ -127,17 +148,15 @@ export default function GameSessionOverlay({ onClose, campaignId, sessionId, onT
     if (joinMatch) return undefined;
     let cancelled = false;
     (async () => {
-      const [checkins, npcResult] = await Promise.all([
-        getCheckedInCharacterIds(effectiveSessionId),
-        supabase.from('npcs').select('id, name').order('name'),
-      ]);
+      const checkins = await getCheckedInCharacterIds(effectiveSessionId);
+      const npcResult = mode === 'player' ? null : await supabase.from('npcs').select('id, name').order('name');
       if (cancelled) return;
       setCharacters(checkins || []);
       if (npcResult?.error) console.warn('[GameSessionOverlay] Failed to load NPCs:', npcResult.error.message);
       setNpcs(npcResult?.data || []);
     })();
     return () => { cancelled = true; };
-  }, [effectiveSessionId, joinMatch]);
+  }, [effectiveSessionId, joinMatch, mode]);
 
   // While waiting on a challenge, watch for the target player's response.
   useEffect(() => {
@@ -153,9 +172,13 @@ export default function GameSessionOverlay({ onClose, campaignId, sessionId, onT
   }, [step, matchRow?.id]);
 
   const currentGame = GAMES.find(g => g.id === selectedGame);
-  const options = seatOptions(characters, npcs, !!currentGame?.supportsAi);
-  const seat1 = options.find(o => o.key === seat1Key) || null;
-  const seat2 = options.find(o => o.key === seat2Key) || null;
+  const playerMode = mode === 'player';
+  const selfOption = playerCharacterOption(playerCharacter);
+  const options = seatOptions(characters, npcs, !!currentGame?.supportsAi, mode, playerCharacter);
+  const seat1Options = playerMode && selfOption ? [selfOption] : options;
+  const seat2Options = playerMode && selfOption ? options.filter(o => o.key !== selfOption.key) : options;
+  const seat1 = seat1Options.find(o => o.key === seat1Key) || null;
+  const seat2 = seat2Options.find(o => o.key === seat2Key) || null;
   const canStart = !!seat1 && !!seat2;
 
   const activeMatch = joinMatch || matchRow;
@@ -170,9 +193,16 @@ export default function GameSessionOverlay({ onClose, campaignId, sessionId, onT
     ? joinMatch.challenged_seat
     : (matchRow ? (matchRow.challenged_seat === 1 ? 2 : 1) : null);
 
+  useEffect(() => {
+    if (!playerMode || !selfOption || joinMatch) return;
+    setSeat1Key(selfOption.key);
+    setSeat2Key(prev => (prev === selfOption.key ? '' : prev));
+  }, [playerMode, selfOption?.key, joinMatch]);
+
   const beginMatch = async () => {
     const gameName = currentGame?.name || 'a game';
-    const challengedEntry = [[1, seat1], [2, seat2]].find(([, seat]) => seat?.kind === 'character');
+    const selfId = selfOption?.id ? String(selfOption.id) : null;
+    const challengedEntry = [[1, seat1], [2, seat2]].find(([, seat]) => seat?.kind === 'character' && (!playerMode || String(seat.id) !== selfId));
 
     if (!challengedEntry) {
       setStep('play');
@@ -284,8 +314,8 @@ export default function GameSessionOverlay({ onClose, campaignId, sessionId, onT
             {step === 'seats' && (
               <div style={{ maxWidth: 640, margin: '0 auto' }}>
                 <GamePanel style={{ display: 'grid', gap: 20 }}>
-                  <SeatSelect label={seatLabel(selectedGame, 1)} options={options} value={seat1Key} onChange={setSeat1Key} />
-                  <SeatSelect label={seatLabel(selectedGame, 2)} options={options} value={seat2Key} onChange={setSeat2Key} />
+                  <SeatSelect label={seatLabel(selectedGame, 1)} options={seat1Options} value={seat1Key} onChange={setSeat1Key} disabled={playerMode} emptyLabel={playerMode ? 'Your character is required...' : 'Choose who plays this seat...'} />
+                  <SeatSelect label={seatLabel(selectedGame, 2)} options={seat2Options} value={seat2Key} onChange={setSeat2Key} emptyLabel={playerMode ? 'Choose a checked-in player...' : 'Choose who plays this seat...'} />
                   <div style={{ display: 'flex', gap: 12 }}>
                     <GameButton variant="secondary" onClick={() => setStep('pick')}>Back</GameButton>
                     <GameButton variant="primary" full disabled={!canStart} onClick={beginMatch}>Begin Match</GameButton>

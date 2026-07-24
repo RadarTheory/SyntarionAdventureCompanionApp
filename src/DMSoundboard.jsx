@@ -11,6 +11,8 @@ import { getCheckedInCharacterIds } from './lib/sessionEvents';
 
 const CATEGORY_ORDER = ['Soundtrack', 'Environment', 'Ambience', 'Combat', 'Magic', 'Steampunk', 'Horror', 'UI', 'DMSoundboard', 'Creatures', 'Misc', 'Players'];
 
+const ROW_FADE_SECONDS = 3;
+
 const BUSES = {
   music: { volumeKey: 'musicVolume', enabledKey: 'musicEnabled', engine: musicEngine, label: 'Soundtrack' },
   environment: { volumeKey: 'environmentVolume', enabledKey: 'environmentEnabled', engine: environmentEngine, label: 'Environment' },
@@ -182,16 +184,112 @@ function SoundTile({ track, state, isBed, onClick }) {
   );
 }
 
-export default function DMSoundboard() {
+// Lets the DM mark each checked-in player as physically "at the table" (hears
+// the DM's real speakers, no local playback) or "remote" (streams the DM's
+// live soundboard to their own device) — see src/lib/audioBroadcast.js.
+function PlayersAtTableSection({ sessionId }) {
+  const [checkedIn, setCheckedIn] = useState([]);
+  const modes = useListeningModes(sessionId);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    getCheckedInCharacterIds(sessionId).then(setCheckedIn);
+  }, [sessionId]);
+
+  if (!sessionId) {
+    return <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No active session.</div>;
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', marginBottom: 2 }}>
+        Table players hear your speakers — remote players stream this soundboard live to their own device.
+      </div>
+      {checkedIn.length === 0 && (
+        <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No players checked in.</div>
+      )}
+      {checkedIn.map(c => {
+        const mode = modes.get(String(c.character_id)) || 'remote';
+        return (
+          <div key={c.character_id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '8px 10px', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text }}>{c.character_name || 'Player'}</div>
+            <div style={{ display: 'flex', gap: 4 }}>
+              <GoldButton onClick={() => setListeningMode(sessionId, c.character_id, 'table')} title="Hears your speakers, no local playback">
+                {mode === 'table' ? '● Table' : 'Table'}
+              </GoldButton>
+              <GoldButton onClick={() => setListeningMode(sessionId, c.character_id, 'remote')} title="Streams this soundboard to their own device">
+                {mode === 'remote' ? '● Remote' : 'Remote'}
+              </GoldButton>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Every currently-playing sound, across every category — not just whichever
+// tab is active — so the DM can pause or stop any noise from one place.
+// Stopping a row removes it; pausing (music/beds) keeps it listed, paused.
+function NowPlayingRow({ label, sub, playing, onToggle, onFade, onStop }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 6, background: 'rgba(240,238,235,0.035)' }}>
+      <div style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: playing ? COLORS.magic : COLORS.dim, boxShadow: playing ? `0 0 6px ${COLORS.magic}` : 'none' }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</div>
+        <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.06em', textTransform: 'uppercase' }}>{sub}</div>
+      </div>
+      <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+        {onToggle && <GoldButton onClick={onToggle} title={playing ? 'Pause' : 'Resume'}>{playing ? 'Pause' : 'Resume'}</GoldButton>}
+        {onFade && <GoldButton onClick={onFade} title={`Fade out over ${ROW_FADE_SECONDS}s`}>Fade Out</GoldButton>}
+        <GoldButton onClick={onStop} title="Stop">Stop</GoldButton>
+      </div>
+    </div>
+  );
+}
+
+function NowPlayingPanel({ rows }) {
+  if (!rows.length) return null;
+  return (
+    <div style={{ padding: '10px 15px', borderBottom: '1px solid rgba(226,207,145,0.1)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
+      <div style={label8()}>Now Playing ({rows.length})</div>
+      {rows.map(row => <NowPlayingRow key={row.key} {...row} />)}
+    </div>
+  );
+}
+
+export default function DMSoundboard({ sessionId = null, campaignId = null }) {
   const [settings, setSettings] = useState(getAudioSettings);
   const [library, setLibrary] = useState([]);
   const [activeCategory, setActiveCategory] = useState('Soundtrack');
   const [search, setSearch] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const [status, setStatus] = useState({}); // trackKey -> 'loading' | 'error'
-  const [activeBeds, setActiveBeds] = useState({ environment: null, ambience: null }); // busKey -> trackKey
+  const [activeBeds, setActiveBeds] = useState({ environment: null, ambience: null }); // busKey -> track
+  // Pausing a bed's Now Playing row mutes just that clip's engine directly —
+  // deliberately NOT the same as the Mixer's bus-wide enabled toggle above,
+  // which persists to audioSettings and affects every future sound on that
+  // bus. Muting the engine twice (once per-clip, once bus-wide) is harmless;
+  // this local flag only drives this row's own Pause/Resume label.
+  const [pausedBeds, setPausedBeds] = useState({ environment: false, ambience: false });
+  const [activeOneShots, setActiveOneShots] = useState(new Map()); // trackKey -> { track, audio }
+  const [musicTrack, setMusicTrack] = useState(musicEngine.currentTrack);
+  const [musicPlaying, setMusicPlaying] = useState(!!musicEngine.currentTrack);
 
   useEffect(() => subscribeAudioSettings(setSettings), []);
+
+  // Chains onto whatever handler is already there (MenuMusicPlayer.jsx does
+  // the same) so both consumers see every track change without stomping
+  // each other's handler.
+  useEffect(() => {
+    const previous = musicEngine.onTrackChange;
+    musicEngine.onTrackChange = (track) => {
+      previous?.(track);
+      setMusicTrack(track);
+      setMusicPlaying(!!track);
+    };
+    return () => { musicEngine.onTrackChange = previous; };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -201,7 +299,7 @@ export default function DMSoundboard() {
 
   const categories = useMemo(() => {
     const found = getCategories(library);
-    const ordered = CATEGORY_ORDER.filter(cat => cat === 'Soundtrack' || found.includes(cat));
+    const ordered = CATEGORY_ORDER.filter(cat => cat === 'Soundtrack' || cat === 'Players' || found.includes(cat));
     const extra = found.filter(cat => !CATEGORY_ORDER.includes(cat));
     return [...ordered, ...extra];
   }, [library]);
@@ -252,10 +350,21 @@ export default function DMSoundboard() {
 
     clearStatus(key);
 
+    if (sessionId) {
+      const url = getTrackUrl(track);
+      if (isBed) {
+        upsertBroadcast(sessionId, campaignId, { [`${busKey}_url`]: url });
+      } else {
+        upsertBroadcast(sessionId, campaignId, { sfx_url: url, sfx_fired_at: new Date().toISOString() });
+      }
+    }
+
     if (isBed) {
-      setActiveBeds(prev => ({ ...prev, [busKey]: key }));
+      setActiveBeds(prev => ({ ...prev, [busKey]: track }));
+      setPausedBeds(prev => ({ ...prev, [busKey]: false }));
     } else {
       setStatus(prev => ({ ...prev, [key]: 'playing' }));
+      setActiveOneShots(prev => new Map(prev).set(key, { track, audio: result.audio }));
       result.audio?.addEventListener('ended', () => {
         setStatus(prev => {
           if (prev[key] !== 'playing') return prev;
@@ -263,9 +372,59 @@ export default function DMSoundboard() {
           delete next[key];
           return next;
         });
+        setActiveOneShots(prev => { const next = new Map(prev); next.delete(key); return next; });
       }, { once: true });
     }
   };
+
+  // "Now Playing" controls — a sound started from any category tab still
+  // shows up here and can be paused/stopped without switching back to it.
+  const pauseMusic = () => { musicEngine.pause(); setMusicPlaying(false); };
+  const resumeMusic = () => { musicEngine.resume(); setMusicPlaying(true); };
+  const stopMusic = () => musicEngine.stop(); // fires onTrackChange(null), which clears musicTrack/musicPlaying above
+  const fadeMusic = () => musicEngine.fadeTo(0, ROW_FADE_SECONDS);
+
+  // Pausing here mutes just this one bed engine directly — NOT the Mixer's
+  // bus-wide enabled toggle above (that persists to audioSettings and would
+  // silence every future sound on the bus, not just this clip).
+  const toggleBedPause = (busKey) => {
+    const next = !pausedBeds[busKey];
+    BUSES[busKey].engine.setMuted(next);
+    setPausedBeds(prev => ({ ...prev, [busKey]: next }));
+  };
+
+  const fadeBed = (busKey) => BUSES[busKey].engine.fadeTo(0, ROW_FADE_SECONDS);
+
+  const stopBed = (busKey) => {
+    BUSES[busKey].engine.stop();
+    setActiveBeds(prev => ({ ...prev, [busKey]: null }));
+    setPausedBeds(prev => ({ ...prev, [busKey]: false }));
+  };
+
+  const nowPlayingRows = useMemo(() => {
+    const rows = [];
+    if (musicTrack) {
+      rows.push({ key: 'music', label: musicTrack.title || 'Soundtrack', sub: 'Music', playing: musicPlaying, onToggle: musicPlaying ? pauseMusic : resumeMusic, onFade: fadeMusic, onStop: stopMusic });
+    }
+    if (activeBeds.environment) {
+      rows.push({ key: 'environment', label: activeBeds.environment.title || 'Environment', sub: 'Environment', playing: !pausedBeds.environment, onToggle: () => toggleBedPause('environment'), onFade: () => fadeBed('environment'), onStop: () => stopBed('environment') });
+    }
+    if (activeBeds.ambience) {
+      rows.push({ key: 'ambience', label: activeBeds.ambience.title || 'Ambience', sub: 'Ambience', playing: !pausedBeds.ambience, onToggle: () => toggleBedPause('ambience'), onFade: () => fadeBed('ambience'), onStop: () => stopBed('ambience') });
+    }
+    activeOneShots.forEach((entry, key) => {
+      rows.push({
+        key, label: entry.track.title || 'Sound', sub: entry.track.category || 'SFX', playing: true, onToggle: null,
+        onStop: () => {
+          if (entry.audio) sfxEngine.stop(entry.audio);
+          clearStatus(key);
+          setActiveOneShots(prev => { const next = new Map(prev); next.delete(key); return next; });
+        },
+      });
+    });
+    return rows;
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- toggleBedPause/fadeBed/stopBed close over `pausedBeds`/engines directly, not worth memoizing them just to satisfy this list
+  }, [musicTrack, musicPlaying, activeBeds, pausedBeds, activeOneShots]);
 
   const FADE_ALL_SECONDS = 3;
 
@@ -316,6 +475,8 @@ export default function DMSoundboard() {
         <MixerRow label={BUSES.sfx.label} volume={settings.sfxVolume} enabled={settings.sfxEnabled} onVolumeChange={v => applyBusVolume('sfx', v)} onToggle={() => toggleBus('sfx')} />
       </div>
 
+      <NowPlayingPanel rows={nowPlayingRows} />
+
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, padding: '11px 15px', borderBottom: '1px solid rgba(226,207,145,0.1)', flexShrink: 0 }}>
         {categories.map(cat => (
           <CategoryTab key={cat} label={cat} active={activeCategory === cat} onClick={() => setActiveCategory(cat)} />
@@ -325,6 +486,8 @@ export default function DMSoundboard() {
       <div style={{ flex: 1, overflowY: 'auto', padding: 15 }}>
         {activeCategory === 'Soundtrack' ? (
           <MusicPanel />
+        ) : activeCategory === 'Players' ? (
+          <PlayersAtTableSection sessionId={sessionId} />
         ) : (
           <>
             <input
@@ -357,7 +520,7 @@ export default function DMSoundboard() {
                 const busKey = getBusKey(track.category);
                 const isBed = busKey === 'environment' || busKey === 'ambience';
                 const state = isBed
-                  ? (activeBeds[busKey] === key ? 'playing' : (status[key] || 'idle'))
+                  ? (activeBeds[busKey] && getTrackKey(activeBeds[busKey]) === key ? 'playing' : (status[key] || 'idle'))
                   : (status[key] || 'idle');
 
                 return (

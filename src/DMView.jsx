@@ -1452,7 +1452,7 @@ const renderTab = () => {
   return (
     <div style={{ minHeight: '100svh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text, overflowX: 'hidden' }}>
       <HandbookBookmark user={user} darkMode={darkMode} allowEdit trigger="external" openSignal={handbookOpenSignal} />
-      <MenuMusicPlayer isMobile={isMobile} restrictToMenu={false} isDM onSoundboardToggle={setSoundboardOpen} />
+      <MenuMusicPlayer isMobile={isMobile} restrictToMenu={false} isDM onSoundboardToggle={setSoundboardOpen} campaignId={activeCampaignTab} />
       {gameLarkToast && (
         <div role="status" style={{ position: 'fixed', right: isMobile ? 12 : 24, bottom: isMobile ? 16 : 24, zIndex: 320000, width: 'min(360px, calc(100vw - 24px))', border: '1px solid rgba(232,200,116,0.38)', borderRadius: 12, background: 'linear-gradient(155deg, rgba(28,22,12,0.96), rgba(8,6,4,0.96))', boxShadow: '0 24px 70px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,244,204,0.08)', padding: '14px 16px', color: '#ead9aa' }}>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#e8c84a', marginBottom: 6 }}>GameLark</div>

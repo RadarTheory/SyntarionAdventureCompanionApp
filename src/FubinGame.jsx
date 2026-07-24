@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react';
 import supabase from './lib/supabase';
+import { recordLotjarrsGameResult } from './gameStats';
 
 // ── Google Font injection ────────────────────────────────────────────────────
 const injectFonts = () => {
@@ -225,13 +226,20 @@ export default function Fubin({ onHome }) {
   const goToStats = () => { loadLeaderboard(); setScreen('stats'); };
 
   const handleWin = useCallback(async (data) => {
+    recordLotjarrsGameResult('fubin', {
+      playerName: data.won ? 'You' : 'Opponent',
+      outcome: data.won ? 'win' : 'loss',
+      score: data.won ? 1 : 0,
+      scoreLabel: Number.isFinite(data.scoreLeft) && Number.isFinite(data.scoreRight) ? `${data.scoreLeft}-${data.scoreRight}` : (data.won ? 'Win' : 'Loss'),
+      meta: { mode: gameMode, difficulty, abandoned: !!data.abandoned },
+    });
     setWinData(data);
     setScreen('win');
     if (user) {
       const next = await recordGameResult(user.id, data);
       if (next) setStats(next);
     }
-  }, [user]);
+  }, [user, gameMode, difficulty]);
 
   const handleAbandon = useCallback(async () => {
     if (user && gameMode === 'ai') {

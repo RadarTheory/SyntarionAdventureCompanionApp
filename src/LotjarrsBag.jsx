@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import LoadingScreen from './LoadingScreen';
 import { useDevice } from './useDevice';
+import { gameSummary, getGameLeaderboard, loadGameStats } from './gameStats';
 
 const GAMES = [
   {
@@ -52,7 +53,7 @@ function BagIcon({ size = 48 }) {
   return (
     <img
       src="/Lotjarrsbagofgames.png"
-      alt="Lótjarr's Bag"
+      alt="Lotjarr's Bag"
       draggable={false}
       onError={() => setFailed(true)}
       style={{ width: size, height: size, objectFit: 'contain', display: 'block' }}
@@ -60,7 +61,13 @@ function BagIcon({ size = 48 }) {
   );
 }
 
-function GameTile({ game, onClick, locked }) {
+function formatSummary(summary) {
+  if (!summary) return 'No score yet';
+  const clears = (summary.wins || 0) + (summary.completions || 0);
+  return `${summary.plays} played / ${clears} cleared / ${summary.score} pts`;
+}
+
+function GameTile({ game, onClick, locked, summary }) {
   const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
   const active = !locked && (hovered || pressed);
@@ -224,6 +231,19 @@ function GameTile({ game, onClick, locked }) {
         }}>
           {game.subtitle}
         </div>
+        <div style={{
+          marginTop: 10,
+          paddingTop: 9,
+          borderTop: active ? '1px solid rgba(232,200,116,0.32)' : '1px solid rgba(200,168,74,0.14)',
+          fontFamily: "'Cinzel', serif",
+          fontSize: 8,
+          letterSpacing: '0.1em',
+          color: active ? 'rgba(244,216,118,0.82)' : 'rgba(232,210,142,0.42)',
+          textTransform: 'uppercase',
+          transition: 'color 180ms ease, border-color 180ms ease',
+        }}>
+          {formatSummary(summary)}
+        </div>
       </div>
     </button>
   );
@@ -243,6 +263,32 @@ export default function LotjarrsBag({ onHome, onLaunchGame }) {
   const { isMobile } = useDevice();
   const [stinger, setStinger] = useState(false);
   const [pendingGame, setPendingGame] = useState(null);
+  const [stats, setStats] = useState(() => loadGameStats());
+  const [leaderIndex, setLeaderIndex] = useState(0);
+
+  useEffect(() => {
+    const refresh = () => setStats(loadGameStats());
+    window.addEventListener('storage', refresh);
+    window.addEventListener('focus', refresh);
+    window.addEventListener('lotjarrs:game-stats-updated', refresh);
+    return () => {
+      window.removeEventListener('storage', refresh);
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('lotjarrs:game-stats-updated', refresh);
+    };
+  }, []);
+
+  const leaderboard = getGameLeaderboard(stats, 6);
+
+  useEffect(() => {
+    if (leaderboard.length < 2) return undefined;
+    const timer = window.setInterval(() => {
+      setLeaderIndex((index) => (index + 1) % leaderboard.length);
+    }, 3400);
+    return () => window.clearInterval(timer);
+  }, [leaderboard.length]);
+
+  const featuredLeader = leaderboard[leaderIndex % Math.max(leaderboard.length, 1)];
 
   const handleSelectGame = (gameId, locked) => {
     if (locked) return;
@@ -297,7 +343,7 @@ export default function LotjarrsBag({ onHome, onLaunchGame }) {
           zIndex: 100,
           boxShadow: '0 12px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,236,176,0.12)',
         }}
-      >← Back</button>
+      >Back</button>
 
       {/* Header */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginBottom: 56 }}>
@@ -312,7 +358,7 @@ export default function LotjarrsBag({ onHome, onLaunchGame }) {
             textAlign: 'center',
             marginBottom: 8,
           }}>
-            LÓTJARR'S BAG OF GAMES
+            LOTJARR'S BAG OF GAMES
           </div>
           <div style={{
             fontFamily: 'Georgia, serif',
@@ -327,6 +373,49 @@ export default function LotjarrsBag({ onHome, onLaunchGame }) {
         </div>
       </div>
 
+
+
+      <section style={{
+        width: 'min(980px, 100%)',
+        minHeight: 104,
+        margin: isMobile ? '-20px 0 28px' : '-24px 0 34px',
+        border: '1px solid rgba(232,200,116,0.24)',
+        borderRadius: 12,
+        background: 'linear-gradient(135deg, rgba(34,25,12,0.68), rgba(7,5,3,0.9))',
+        boxShadow: '0 24px 64px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,236,176,0.07)',
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : 'minmax(180px, 0.7fr) minmax(240px, 1fr) minmax(220px, 1.2fr)',
+        gap: 18,
+        alignItems: 'center',
+        padding: '16px 18px',
+        boxSizing: 'border-box',
+      }}>
+        <div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.18em', color: 'rgba(200,168,74,0.58)', textTransform: 'uppercase', marginBottom: 7 }}>Scoreboard</div>
+          <div style={{ color: '#e8d9a7', fontFamily: "'Cinzel', serif", fontSize: 18, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Bag Ledger</div>
+        </div>
+        {featuredLeader ? (
+          <div style={{ border: '1px solid rgba(244,216,118,0.28)', borderRadius: 10, padding: '11px 13px', background: 'radial-gradient(circle at 18% 50%, rgba(244,216,118,0.14), transparent 42%), rgba(0,0,0,0.24)' }}>
+            <div style={{ fontFamily: "'Cinzel', serif", color: '#f2d96f', fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase' }}>{featuredLeader.gameName}</div>
+            <div style={{ marginTop: 6, color: 'rgba(232,210,142,0.68)', fontSize: 12 }}>{featuredLeader.plays} plays / {featuredLeader.wins + featuredLeader.completions} clears / {featuredLeader.score} pts</div>
+          </div>
+        ) : (
+          <div style={{ color: 'rgba(232,210,142,0.48)', fontStyle: 'italic', fontSize: 13 }}>No records yet. First victory writes the board.</div>
+        )}
+        <div style={{ display: 'grid', gap: 6 }}>
+          {(leaderboard.length ? leaderboard.slice(0, 3) : GAMES.slice(0, 3)).map((entry, index) => {
+            const row = entry.gameId ? entry : { gameId: entry.id, gameName: entry.name, score: 0, plays: 0 };
+            return (
+              <div key={row.gameId} style={{ display: 'grid', gridTemplateColumns: '24px 1fr auto', gap: 10, alignItems: 'center', color: index === leaderIndex % Math.max(leaderboard.length, 1) ? '#f2d96f' : 'rgba(232,210,142,0.56)', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <b style={{ fontWeight: 700 }}>{row.gameName}</b>
+                <span>{row.score || 0} pts</span>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       {/* Game tiles */}
       <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
         {GAMES.map(game => {
@@ -336,6 +425,7 @@ export default function LotjarrsBag({ onHome, onLaunchGame }) {
               key={game.id}
               game={game}
               locked={locked}
+              summary={gameSummary(game.id, stats)}
               onClick={() => handleSelectGame(game.id, locked)}
             />
           );
@@ -352,7 +442,7 @@ export default function LotjarrsBag({ onHome, onLaunchGame }) {
         color: 'rgba(200,168,74,0.2)',
         textTransform: 'uppercase',
       }}>
-        Syntarion · Games of Soteria
+        Syntarion - Games of Soteria
       </div>
     </div>
   );

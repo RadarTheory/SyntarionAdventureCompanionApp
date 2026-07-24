@@ -50,7 +50,7 @@ export function MusicPanel() {
     <div>
       <div style={{ ...label8(), marginBottom: 12 }}>Music Library</div>
       <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', lineHeight: 1.45, marginBottom: 14 }}>
-        R2-backed music library loaded from music-manifest.json in the public bucket.
+        The sounds of your world. Are you listening?
       </div>
       {libraryStatus && (
         <div style={{ fontSize: 10, color: COLORS.magicText, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>{libraryStatus}</div>

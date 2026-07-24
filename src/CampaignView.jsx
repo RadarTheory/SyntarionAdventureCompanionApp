@@ -24,6 +24,7 @@ import PartyProximityPanel from './PartyProximityPanel';
 import PortraitUpload from "./PortraitUpload";
 import ScribeTale from './ScribeTale';
 import HandbookBookmark from './HandbookBookmark';
+import MenuMusicPlayer from './MenuMusicPlayer';
 import GameSessionOverlay from './GameSessionOverlay';
 
 function label8() {
@@ -2528,6 +2529,7 @@ useEffect(() => {
           children: <img src="/player-handbook.png" alt="Handbook" draggable={false} style={{ width: '160%', height: '160%', objectFit: 'contain', pointerEvents: 'none', transform: 'scale(1.06)' }} /> },
       ]} />
       <HandbookBookmark user={authUser} darkMode={false} trigger="external" openSignal={handbookOpenSignal} />
+      <MenuMusicPlayer isMobile={isMobile} campaignId={String(campaign.id)} char={userChar} />
       {gameLarkToast && (
         <div role="status" style={{ position: 'fixed', right: isMobile ? 12 : 24, bottom: isMobile ? 16 : 24, zIndex: 320000, width: 'min(360px, calc(100vw - 24px))', border: '1px solid rgba(232,200,116,0.38)', borderRadius: 12, background: 'linear-gradient(155deg, rgba(28,22,12,0.96), rgba(8,6,4,0.96))', boxShadow: '0 24px 70px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,244,204,0.08)', padding: '14px 16px', color: '#ead9aa' }}>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#e8c84a', marginBottom: 6 }}>GameLark</div>
@@ -2603,7 +2605,7 @@ useEffect(() => {
       )}
 
       {showGameLauncher && (
-        <GameSessionOverlay onClose={() => setShowGameLauncher(false)} campaignId={String(campaign.id)} onToast={setGameLarkToast} />
+        <GameSessionOverlay onClose={() => setShowGameLauncher(false)} campaignId={String(campaign.id)} onToast={setGameLarkToast} mode="player" playerCharacter={userChar} />
       )}
 
       {showBazaar && (

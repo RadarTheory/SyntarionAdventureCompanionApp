@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import './ocp-nodewright.css';
+import { recordLotjarrsGameResult } from './gameStats';
 
 const STORAGE_KEY = 'soteria_ocp_nodewright_v1';
 const TUTORIAL_KEY = 'soteria_ocp_nodewright_tutorial_v1';
@@ -502,6 +503,7 @@ export default function OcpNodewright({ onExit }) {
     };
     setProgress(updated);
     saveProgress(updated);
+    recordLotjarrsGameResult('ocp-nodewright', { playerName: 'Nodewright', outcome: 'complete', score: mission.xp, scoreLabel: `${mission.xp} XP`, meta: { mission: mission.id } });
     setToast(`Mission complete: +${mission.xp} XP. ${getRank(updated.xp).item} added to your vault.`);
   };
 

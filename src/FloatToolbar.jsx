@@ -22,6 +22,10 @@ function wrapIndex(index, length) {
   return ((index % length) + length) % length;
 }
 
+function circleFadeMask(inner = '64%', feather = '100%') {
+  return `radial-gradient(circle, #000 0 ${inner}, rgba(0,0,0,0.78) 78%, transparent ${feather})`;
+}
+
 function clampPos(x, y, width, height) {
   return {
     x: Math.max(0, Math.min(window.innerWidth - width - 8, x)),
@@ -47,7 +51,7 @@ function ToolGlyph({ children, badge, active, focused, dimmed, size, onClick, ti
         color: '#ead9aa',
         padding: 0,
         cursor: 'pointer',
-        overflow: open ? 'visible' : 'hidden',
+        overflow: 'hidden',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -66,22 +70,29 @@ function ToolGlyph({ children, badge, active, focused, dimmed, size, onClick, ti
         aria-hidden="true"
         style={{
           position: 'absolute',
-          inset: 4,
+          inset: focused ? 5 : 4,
           borderRadius: '50%',
-          border: '1px solid rgba(210,178,96,0.3)',
-          boxShadow: 'inset 0 0 0 1px rgba(255,245,198,0.05)',
+          border: focused ? '1px solid rgba(247,220,142,0.54)' : '1px solid rgba(210,178,96,0.34)',
+          background: 'repeating-conic-gradient(from 8deg, rgba(238,204,116,0.16) 0deg 7deg, transparent 7deg 15deg)',
+          boxShadow: focused ? 'inset 0 0 0 1px rgba(255,245,198,0.1), inset 0 0 22px rgba(247,220,142,0.08)' : 'inset 0 0 0 1px rgba(255,245,198,0.05)',
           pointerEvents: 'none',
         }}
       />
       <span
         style={{
-          width: '100%',
-          height: '100%',
+          width: focused ? '76%' : '74%',
+          height: focused ? '76%' : '74%',
+          borderRadius: '50%',
+          overflow: 'hidden',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          background: focused ? 'radial-gradient(circle, rgba(6,5,3,0.96), rgba(0,0,0,0.98))' : 'radial-gradient(circle, rgba(8,6,4,0.92), rgba(0,0,0,0.96))',
+          boxShadow: focused ? '0 0 16px rgba(247,220,142,0.18), inset 0 0 18px rgba(0,0,0,0.66)' : 'inset 0 0 14px rgba(0,0,0,0.68)',
           transform: focused ? 'scale(1.03)' : 'none',
-          transition: 'transform 0.2s ease',
+          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+          WebkitMaskImage: circleFadeMask(focused ? '66%' : '64%'),
+          maskImage: circleFadeMask(focused ? '66%' : '64%'),
         }}
       >
         {children}
@@ -295,6 +306,10 @@ export default function FloatToolbar({ buttons, activeIds = [], storageKey = TOO
 
   if (!buttons.length) return null;
 
+  const launcherIcon = focusButton?.children || (
+    <span style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.14em', color: '#e6cb82' }}>TOOLS</span>
+  );
+
   const launcher = (
     <button
       type="button"
@@ -306,23 +321,37 @@ export default function FloatToolbar({ buttons, activeIds = [], storageKey = TOO
         width: launcherSize,
         height: launcherSize,
         borderRadius: '50%',
-        border: open ? '1px solid rgba(230,196,103,0.22)' : '1px solid rgba(205,178,105,0.44)',
-        background: open ? 'radial-gradient(circle at 50% 50%, rgba(230,196,103,0.08), rgba(0,0,0,0) 68%)' : 'radial-gradient(circle at 48% 42%, rgba(229,197,116,0.2), rgba(15,11,7,0.96) 58%, rgba(4,3,2,0.98))',
-        boxShadow: open ? '0 0 18px rgba(215,170,58,0.08)' : '0 18px 42px rgba(0,0,0,0.65), inset 0 0 18px rgba(245,211,126,0.08)',
+        border: open ? '1px solid rgba(230,196,103,0.1)' : '1px solid rgba(205,178,105,0.34)',
+        background: open ? 'transparent' : 'radial-gradient(circle at 48% 42%, rgba(229,197,116,0.1), rgba(15,11,7,0.58) 58%, rgba(4,3,2,0.46))',
+        boxShadow: open ? 'none' : '0 18px 42px rgba(0,0,0,0.65), inset 0 0 18px rgba(245,211,126,0.08)',
         cursor: dragging ? 'grabbing' : 'grab',
         padding: 0,
         position: 'relative',
-        overflow: open ? 'visible' : 'hidden',
+        overflow: 'visible',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         touchAction: 'none',
       }}
     >
-      <span aria-hidden="true" style={{ position: 'absolute', inset: 6, borderRadius: '50%', border: open ? '1px solid rgba(220,184,92,0.16)' : '1px solid rgba(220,184,92,0.36)', opacity: open ? 0.45 : 1 }} />
-      <span aria-hidden="true" style={{ position: 'absolute', inset: 13, borderRadius: '50%', border: open ? '1px dashed rgba(220,184,92,0.13)' : '1px dashed rgba(220,184,92,0.38)', opacity: open ? 0.4 : 1, transform: open ? `rotate(${motionTick * 13}deg)` : 'none', transition: 'transform 0.24s ease' }} />
-      <span style={{ width: open ? '88%' : '78%', height: open ? '88%' : '78%', display: 'flex', alignItems: 'center', justifyContent: 'center', filter: open ? 'drop-shadow(0 0 10px rgba(234,205,126,0.42))' : 'none' }}>
-        {focusButton?.children}
+      <span aria-hidden="true" style={{ position: 'absolute', inset: 6, borderRadius: '50%', border: open ? '1px solid rgba(220,184,92,0.08)' : '1px solid rgba(220,184,92,0.28)', opacity: open ? 0.18 : 1 }} />
+      <span aria-hidden="true" style={{ position: 'absolute', inset: 13, borderRadius: '50%', border: open ? '1px dashed rgba(220,184,92,0.08)' : '1px dashed rgba(220,184,92,0.34)', opacity: open ? 0.16 : 1, transform: open ? `rotate(${motionTick * 13}deg)` : 'none', transition: 'transform 0.24s ease' }} />
+      <span
+        style={{
+          width: open ? '88%' : '82%',
+          height: open ? '88%' : '82%',
+          borderRadius: '50%',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: open ? 'rgba(0,0,0,0.08)' : 'radial-gradient(circle, rgba(7,5,3,0.82), rgba(0,0,0,0.92))',
+          WebkitMaskImage: circleFadeMask('65%'),
+          maskImage: circleFadeMask('65%'),
+          filter: open ? 'drop-shadow(0 0 10px rgba(234,205,126,0.22))' : 'drop-shadow(0 0 10px rgba(234,205,126,0.28))',
+        }}
+      >
+        {launcherIcon}
       </span>
     </button>
   );
@@ -341,12 +370,12 @@ export default function FloatToolbar({ buttons, activeIds = [], storageKey = TOO
             maxWidth: 'calc(100vw - 16px)',
             maxHeight: 'calc(100svh - 16px)',
             position: 'relative',
-            borderRadius: 28,
+            borderRadius: 0,
             overflow: open ? 'visible' : 'hidden',
-            background: 'radial-gradient(circle at 3% 50%, rgba(201,162,78,0.12), rgba(0,0,0,0) 34%), radial-gradient(circle at 80% 12%, rgba(123,84,28,0.12), rgba(0,0,0,0) 38%), linear-gradient(90deg, rgba(7,5,3,0.98), rgba(13,9,5,0.96) 54%, rgba(6,4,3,0.72))',
-            border: '1px solid rgba(205,178,105,0.24)',
-            boxShadow: '0 30px 90px rgba(0,0,0,0.72), inset 0 1px 0 rgba(255,244,203,0.06)',
-            backdropFilter: 'blur(14px)',
+            background: 'transparent',
+            border: 'none',
+            boxShadow: 'none',
+            backdropFilter: 'none',
           }}
         >
           <div style={{ position: 'absolute', left: -panelHeight * 0.62, top: -panelHeight * 0.12, width: panelHeight * 1.22, height: panelHeight * 1.22, borderRadius: '50%', background: 'repeating-conic-gradient(from 8deg, rgba(201,162,78,0.15) 0deg 4deg, rgba(72,52,19,0.08) 4deg 6deg, rgba(7,5,3,0.95) 6deg 15deg), repeating-radial-gradient(circle, rgba(230,196,103,0.08) 0 1px, rgba(0,0,0,0) 1px 18px), radial-gradient(circle, rgba(229,198,126,0.13), rgba(9,7,4,0.92) 48%, rgba(3,2,1,0.98) 70%)', border: '1px solid rgba(205,178,105,0.22)', boxShadow: 'inset 0 0 55px rgba(0,0,0,0.8), 0 0 44px rgba(0,0,0,0.5)', transform: `rotate(${motionTick * -5}deg)`, transition: 'transform 0.24s ease', pointerEvents: 'none' }} />
@@ -389,10 +418,10 @@ export default function FloatToolbar({ buttons, activeIds = [], storageKey = TOO
                   style={{
                     width: mobile ? 164 : 220,
                     height: focused ? 44 : 36,
-                    border: focused ? '1px solid rgba(224,190,99,0.38)' : '1px solid rgba(205,178,105,0.18)',
-                    borderLeft: 'none',
-                    borderRadius: '0 18px 18px 0',
-                    background: focused ? 'linear-gradient(90deg, rgba(78,56,20,0.45), rgba(11,8,5,0.76))' : 'linear-gradient(90deg, rgba(46,34,16,0.2), rgba(7,5,3,0.48))',
+                    border: 'none',
+                    borderBottom: focused ? '1px solid rgba(224,190,99,0.36)' : '1px solid rgba(205,178,105,0.12)',
+                    borderRadius: 0,
+                    background: 'transparent',
                     color: focused ? '#f0dfad' : 'rgba(226,201,142,0.65)',
                     fontFamily: "'Cinzel', serif",
                     fontSize: focused ? 13 : 10,
@@ -403,8 +432,9 @@ export default function FloatToolbar({ buttons, activeIds = [], storageKey = TOO
                     overflow: open ? 'visible' : 'hidden',
                     textOverflow: 'ellipsis',
                     cursor: 'pointer',
-                    boxShadow: focused ? '0 0 24px rgba(205,162,55,0.14)' : 'none',
-                    transition: 'height 0.2s ease, font-size 0.2s ease, color 0.2s ease, background 0.2s ease',
+                    textShadow: focused ? '0 0 14px rgba(224,190,99,0.28)' : 'none',
+                    boxShadow: 'none',
+                    transition: 'height 0.2s ease, font-size 0.2s ease, color 0.2s ease, border-color 0.2s ease',
                   }}
                 >
                   {button.title?.split(' - ')[0]?.split(' - ')[0] || button.id}
@@ -414,8 +444,8 @@ export default function FloatToolbar({ buttons, activeIds = [], storageKey = TOO
           })}
 
           <div style={{ position: 'absolute', right: 16, bottom: 14, zIndex: 3, display: 'flex', gap: 8, alignItems: 'center' }}>
-            <button type="button" aria-label="Previous tool" onClick={(e) => { e.stopPropagation(); rotate(-1); }} style={{ width: 34, height: 34, borderRadius: '50%', border: '1px solid rgba(205,178,105,0.32)', background: 'rgba(12,9,5,0.58)', color: '#d7bd74', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}><svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true"><path d="M14.5 6.5 9 12l5.5 5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M9.5 12H18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg></button>
-            <button type="button" aria-label="Next tool" onClick={(e) => { e.stopPropagation(); rotate(1); }} style={{ width: 34, height: 34, borderRadius: '50%', border: '1px solid rgba(205,178,105,0.32)', background: 'rgba(12,9,5,0.58)', color: '#d7bd74', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}><svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true"><path d="m9.5 6.5 5.5 5.5-5.5 5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 12h8.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg></button>
+            <button type="button" aria-label="Previous tool" onClick={(e) => { e.stopPropagation(); rotate(-1); }} style={{ width: 34, height: 34, borderRadius: '50%', border: '1px solid rgba(224,190,99,0.46)', background: 'transparent', color: '#e4c46d', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, boxShadow: '0 0 14px rgba(224,190,99,0.16)', backdropFilter: 'none' }}><svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true"><path d="M14.5 6.5 9 12l5.5 5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M9.5 12H18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg></button>
+            <button type="button" aria-label="Next tool" onClick={(e) => { e.stopPropagation(); rotate(1); }} style={{ width: 34, height: 34, borderRadius: '50%', border: '1px solid rgba(224,190,99,0.46)', background: 'transparent', color: '#e4c46d', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, boxShadow: '0 0 14px rgba(224,190,99,0.16)', backdropFilter: 'none' }}><svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true"><path d="m9.5 6.5 5.5 5.5-5.5 5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 12h8.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg></button>
           </div>
         </section>
       )}
