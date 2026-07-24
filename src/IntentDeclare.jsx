@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { getOrCreateConversation, postDialogueLine } from './lib/dialogue';
+import { logSessionEvent } from './lib/sessionEvents';
 import { useActiveGameSession, useProximity, entitiesNearCharacter } from "./lib/session";
 
 function useDraggable(initial = { x: 24, y: 24 }) {
@@ -216,6 +217,13 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
     await supabase.from('dm_memory').insert({
       campaign_id: String(campaignId), category: 'intent',
       content: `[INTENT] ${actorName}: ${text}`,
+    });
+    await logSessionEvent(campaignId, sessionId, 'intent', {
+      actor_id: actorId,
+      actor_name: actorName,
+      intent: text,
+      source: 'declare_intent',
+      visibility: 'dm',
     });
 
     const { data: hsession } = await supabase.from('hercules_sessions').select('id')
