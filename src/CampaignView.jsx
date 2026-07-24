@@ -2425,7 +2425,7 @@ useEffect(() => {
           id: 'scribe',
           title: 'The Scribe — Archives',
           onClick: () => setShowScribeCV(o => !o),
-          children: <img src="/scribe-emblem.png" alt="Scribe" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+          children: <img src="/scribe-emblem.png" alt="Scribe" draggable={false} style={{ width: '124%', height: '124%', objectFit: 'contain', pointerEvents: 'none' }} />,
         },
         {
           id: 'worldmap',
@@ -2468,7 +2468,7 @@ useEffect(() => {
         { id: 'lark', title: 'Lark — Send a Letter', onClick: () => setShowLark(o => !o),
           children: <img src="/Larkicon.png" alt="Lark" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
         { id: 'handbook', title: 'Player Handbook', onClick: () => setHandbookOpenSignal(n => n + 1),
-          children: <img src="/player-handbook.png" alt="Handbook" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
+          children: <img src="/player-handbook.png" alt="Handbook" draggable={false} style={{ width: '142%', height: '142%', objectFit: 'contain', pointerEvents: 'none' }} /> },
       ]} />
       <HandbookBookmark user={authUser} darkMode={false} trigger="external" openSignal={handbookOpenSignal} />
       {showGrimoire && (
@@ -2927,12 +2927,12 @@ function ModuleTalesView({ module, userChar, onBack, onUpdateChar, darkMode = fa
     { id: 'hercules', label: 'Hercules', title: 'Hercules - Combat Tracker', icon: '/HerculesCombat.png', iconStyle: { width: '150%', height: '150%', objectFit: 'contain' } },
     { id: 'argus', label: 'Argus', title: 'Argus - Gear, Pack, and Equipment', icon: '/Backpackicon.png', iconStyle: { width: '105%', height: '105%', objectFit: 'contain' } },
     { id: 'castor', label: 'Castor', title: 'Castor - Cast Request', icon: '/castoricon.png', badge: castorBadge },
-    { id: 'scribe', label: 'Scribe', title: 'The Scribe - Archives', icon: '/scribe-emblem.png' },
+    { id: 'scribe', label: 'Scribe', title: 'The Scribe - Archives', icon: '/scribe-emblem.png', iconStyle: { width: '124%', height: '124%', objectFit: 'contain' } },
     { id: 'bazaar', label: 'Bazaar', title: 'Bazaar - Trade and Loot', icon: '/Bazaaricon.png' },
     { id: 'questor', label: 'Questor', title: 'Questor - Quest Board', icon: '/Questoricon.png' },
     { id: 'grimoire', label: 'Grimoire', title: 'Grimoire - Adventure Journal', icon: '/Grimoireicon.png' },
     { id: 'lark', label: 'Lark', title: 'Lark - Letters and NPC Messages', icon: '/Larkicon.png' },
-    { id: 'handbook', label: 'Handbook', title: 'Player Handbook', icon: '/player-handbook.png', popup: true },
+    { id: 'handbook', label: 'Handbook', title: 'Player Handbook', icon: '/player-handbook.png', popup: true, iconStyle: { width: '142%', height: '142%', objectFit: 'contain' } },
     { id: 'party', label: 'Party', title: "Party - Who's Nearby", icon: '/party.png' },
     { id: 'bestiary', label: 'Bestiary', title: 'Bestiary - Creatures', icon: '/bestiaryicon.png' },
     { id: 'sheet', label: 'Sheet', title: 'Character Sheet', icon: '/npcicon.png' },

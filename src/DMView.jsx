@@ -1672,7 +1672,7 @@ const renderTab = () => {
           id: 'scribe',
           title: 'The Scribe - Archives',
           onClick: () => setShowScribePanel(o => !o),
-          children: <img src="/scribe-emblem.png" alt="Scribe" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+          children: <img src="/scribe-emblem.png" alt="Scribe" draggable={false} style={{ width: '124%', height: '124%', objectFit: 'contain', pointerEvents: 'none' }} />,
         },
         {
           id: 'solomon',
@@ -1720,7 +1720,7 @@ const renderTab = () => {
           id: 'handbook',
           title: 'Player Handbook',
           onClick: () => setHandbookOpenSignal(n => n + 1),
-          children: <img src="/player-handbook.png" alt="Handbook" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+          children: <img src="/player-handbook.png" alt="Handbook" draggable={false} style={{ width: '142%', height: '142%', objectFit: 'contain', pointerEvents: 'none' }} />,
         },
         {
           id: 'lore',
