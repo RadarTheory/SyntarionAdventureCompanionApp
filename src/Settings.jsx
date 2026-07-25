@@ -5,6 +5,7 @@ import LegalGate from './LegalGate';
 import { getPWAInstallState, promptPWAInstall, subscribePWAInstall } from './pwaInstall';
 import { getAudioSettings, saveAudioSettings, subscribeAudioSettings } from './audioSettings';
 import musicEngine from './musicEngine';
+import sfxEngine from './sfxEngine';
 
 export default function Settings({ user, darkMode, setDarkMode, onHome }) {
   const [displayName, setDisplayName] = useState(user?.user_metadata?.nickname || user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '');
@@ -51,6 +52,8 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
     setAudioSettings(next);
     musicEngine.setVolume(next.musicVolume);
     musicEngine.setMuted(!next.musicEnabled);
+    sfxEngine.setVolume(next.sfxVolume);
+    sfxEngine.setMuted(!next.sfxEnabled);
   };
 
   const handleSaveName = async () => {
@@ -562,17 +565,17 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
                   </label>
                 </div>
 
-                <div className="settings-audio-tile" data-active={audioSettings.soundsEnabled} onClick={() => updateAudioSettings({ soundsEnabled: !audioSettings.soundsEnabled })} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') updateAudioSettings({ soundsEnabled: !audioSettings.soundsEnabled }); }}>
+                <div className="settings-audio-tile" data-active={audioSettings.sfxEnabled} onClick={() => updateAudioSettings({ sfxEnabled: !audioSettings.sfxEnabled })} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') updateAudioSettings({ sfxEnabled: !audioSettings.sfxEnabled }); }}>
                   <div className="settings-audio-topline">
                     <div>
                       <div className="settings-name">Main Sounds</div>
                       <div className="settings-copy">Interface and combat</div>
                     </div>
-                    <span className="settings-mini-toggle">{audioSettings.soundsEnabled ? 'On' : 'Off'}</span>
+                    <span className="settings-mini-toggle">{audioSettings.sfxEnabled ? 'On' : 'Off'}</span>
                   </div>
                   <label className="settings-audio-slider" onClick={e => e.stopPropagation()}>
-                    <span className="settings-field-label">Volume {Math.round(audioSettings.soundsVolume * 100)}</span>
-                    <input className="settings-range" type="range" min="0" max="1" step="0.01" value={audioSettings.soundsVolume} onChange={e => updateAudioSettings({ soundsVolume: Number(e.target.value), soundsEnabled: true })} />
+                    <span className="settings-field-label">Volume {Math.round(audioSettings.sfxVolume * 100)}</span>
+                    <input className="settings-range" type="range" min="0" max="1" step="0.01" value={audioSettings.sfxVolume} onChange={e => updateAudioSettings({ sfxVolume: Number(e.target.value), sfxEnabled: true })} />
                   </label>
                 </div>
               </div>

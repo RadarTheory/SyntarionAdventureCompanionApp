@@ -198,6 +198,7 @@ export default function FloatToolbar({ buttons, activeIds = [], storageKey = TOO
   const wheelAccumulator = useRef(0);
   const dragStart = useRef(null);
   const dragFocusStart = useRef(0);
+  const panelRef = useRef(null);
   const activeSet = useMemo(() => new Set(activeIds), [activeIds]);
   const hasActive = activeIds.length > 0;
   const visibleCount = Math.min(buttons.length, mobile ? 4 : 5);
@@ -259,14 +260,24 @@ export default function FloatToolbar({ buttons, activeIds = [], storageKey = TOO
     });
   }, [buttons, clampedFocus, visibleCount]);
 
-  const onWheel = (e) => {
-    if (!open) return;
+  const onWheel = useCallback((e) => {
     e.preventDefault();
     wheelAccumulator.current += e.deltaY;
     if (Math.abs(wheelAccumulator.current) < 28) return;
     rotate(wheelAccumulator.current > 0 ? 1 : -1);
     wheelAccumulator.current = 0;
-  };
+  }, [rotate]);
+
+  // React attaches its synthetic onWheel as a passive listener, which silently
+  // ignores preventDefault() - so the page kept scrolling behind the wheel.
+  // A real listener with { passive: false } is required to actually stop it.
+  useEffect(() => {
+    if (!open) return undefined;
+    const el = panelRef.current;
+    if (!el) return undefined;
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [open, onWheel]);
 
   const startWheelDrag = (e) => {
     const p = pointFromEvent(e);
@@ -361,7 +372,7 @@ export default function FloatToolbar({ buttons, activeIds = [], storageKey = TOO
       {!open && launcher}
       {open && (
         <section
-          onWheel={onWheel}
+          ref={panelRef}
           onMouseDown={startWheelDrag}
           onTouchStart={startWheelDrag}
           style={{
