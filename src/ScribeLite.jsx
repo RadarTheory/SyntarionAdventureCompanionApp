@@ -1,10 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import supabase from './lib/supabase';
-import { buildScribeContext } from './scribe-context';
-import { useDisplayName } from './lib/displayName';
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   SCRIBE LITE - site-wide archive chat
+   SCRIBE LITE — site-wide FAQ chat, zero API
    ───────────────────────────────────────────────────────────────────────────
    Emotion videos live in /public/scribe/ (LOWERCASE filenames).
    Full state machine — all fourteen clips in play:
@@ -290,16 +287,17 @@ function scoreIntent(intent, tokens, normText) {
 const ANSWER_THRESHOLD = 3;   // ≥ this → confident answer
 const SUGGEST_THRESHOLD = 1.5; // ≥ this → "did you mean" suggestions
 
-function shouldAskArchiveFirst(normText) {
-  const asksSpecificLore = /\b(who|where|when|which|why|name|named)\b/.test(normText);
-  const asksAuthority = /\b(king|queen|ruler|monarch|emperor|empress|leader|lord|lady|sovereign|prince|princess|throne)\b/.test(normText);
-  return asksAuthority || (/\bsoteria\b/.test(normText) && asksSpecificLore);
-}
+/* Intents that describe *what something is* rather than *who/where/when*.
+   A "who is..." question that merely shares a keyword with one of these
+   (e.g. "who is the King of Soteria" hitting the Soteria intent) should be
+   offered as a suggestion, not answered as fact. */
+const DESCRIPTIVE_INTENTS = new Set([
+  'what-is-syntarion', 'soteria', 'stats', 'races', 'classes',
+  'campaigns', 'vtt', 'fog', 'ap-economy',
+]);
 
 function matchQuery(rawText) {
   const normText = normalize(rawText);
-
-  if (shouldAskArchiveFirst(normText)) return { type: 'nomatch' };
 
   for (const st of SMALL_TALK) {
     if (st.test(normText)) return { type: 'smalltalk', ...st };
@@ -311,8 +309,16 @@ function matchQuery(rawText) {
     .filter(s => s.score > 0)
     .sort((a, b) => b.score - a.score);
 
+  const asksWhoWhereWhen = /\b(who|whom|where|when|which)\b/.test(normText);
+
   if (scored.length && scored[0].score >= ANSWER_THRESHOLD) {
-    return { type: 'answer', intent: scored[0].intent };
+    const top = scored[0].intent;
+    // If they asked who/where/when but the best match only describes "what it is",
+    // don't fabricate — offer it as a lead instead.
+    if (asksWhoWhereWhen && DESCRIPTIVE_INTENTS.has(top.id)) {
+      return { type: 'suggest', suggestions: scored.slice(0, 3).map(s => s.intent), mismatch: true };
+    }
+    return { type: 'answer', intent: top };
   }
   if (scored.length && scored[0].score >= SUGGEST_THRESHOLD) {
     return { type: 'suggest', suggestions: scored.slice(0, 3).map(s => s.intent) };
@@ -345,55 +351,6 @@ const INTENT_LABELS = {
 };
 
 /* ─── 3. EMOTION VIDEO PLAYER ─────────────────────────────────────────── */
-const SCRIBE_LITE_SYSTEM = (worldContext, displayName) => `
-You are The Scribe, the site-wide archival guide for Syntarion and the world of Soteria.
-
-The person speaking to you is ${displayName || 'the traveler'}. Address them by that display name naturally when it fits, especially in greetings, clarifications, and direct guidance.
-
-Use the provided WORLD KNOWLEDGE first. It includes uploaded admin scribe_context rows, Soteria lore, mechanics, bestiary material, and live reference data when available.
-
-VOICE:
-- Speak as The Scribe: warm, archival, concise, and useful.
-- Never say you are an AI or mention implementation details.
-- For app-help questions, answer directly and practically.
-- For lore questions, ground the answer in Soteria and avoid inventing contradictions.
-- Keep answers concise: usually 2-4 short sentences unless the user asks for a list.
-- If the archives do not contain enough certainty, say what is known and what remains for the Architect to decide.
-
-WORLD KNOWLEDGE:
-${worldContext}
-`.trim();
-
-function emotionForText(text, fallback = 'helpful') {
-  const norm = normalize(text || '');
-  if (/\b(spell|magic|race|class|soteria|lore|god|spirit|bestiary|creature|history|world|king|queen|ruler|monarch|leader|throne)\b/.test(norm)) return 'spell';
-  if (/\b(vtt|bug|broken|glitch|map|token|fog|technical|error|admin|upload)\b/.test(norm)) return 'tinker';
-  if (/\b(thanks|thank you|great|awesome|hello|hi|hey)\b/.test(norm)) return 'happy';
-  return fallback;
-}
-
-async function askArchive(question, priorMessages, displayName) {
-  const worldContext = await buildScribeContext(question, 12000, null);
-  const history = priorMessages
-    .slice(-6)
-    .filter(m => m.from === 'user' || m.from === 'scribe')
-    .map(m => ({ role: m.from === 'user' ? 'user' : 'assistant', content: m.text }));
-
-  const { data, error } = await supabase.functions.invoke('scribe', {
-    body: {
-      system: SCRIBE_LITE_SYSTEM(worldContext, displayName),
-      messages: [...history, { role: 'user', content: question }],
-      max_tokens: 450,
-    },
-  });
-
-  if (error) throw new Error(error.message || 'The Scribe relay failed.');
-  if (data?.error) throw new Error(data.error.message || JSON.stringify(data.error).slice(0, 200));
-  const answer = data?.choices?.[0]?.message?.content;
-  if (!answer) throw new Error('The archives returned no answer.');
-  return answer.trim();
-}
-
 const IDLE_POOL = ['idle', 'waiting'];       // resting rotation
 const THINKING_POOL = ['thinking', 'study'];       // researching rotation
 const LOOPING = new Set(THINKING_POOL);               // these loop until answered
@@ -425,21 +382,15 @@ const randomFrom = (arr, not) => {
 
 function ScribeFace({ emotion, size = 84, stage = false, forceLoop = false, onEnded }) {
   const [failed, setFailed] = useState(false);
+  const [fadeIn, setFadeIn] = useState(true);
   const videoRef = useRef(null);
-  const file = EMOTION_FILE[emotion] || EMOTION_FILE.idle;
-  const src = `/scribe/${file}.mp4`;
-  const isGlitch = emotion === 'glitch';
 
   useEffect(() => {
     setFailed(false);
-    const video = videoRef.current;
-    if (!video) return;
-    video.load();
-    const play = () => video.play().catch(() => {});
-    if (video.readyState >= 2) play();
-    else video.addEventListener('canplay', play, { once: true });
-    return () => video.removeEventListener('canplay', play);
-  }, [src]);
+    setFadeIn(false);
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setFadeIn(true)));
+    return () => cancelAnimationFrame(id);
+  }, [emotion]);
 
   return (
     <div style={{
@@ -448,62 +399,27 @@ function ScribeFace({ emotion, size = 84, stage = false, forceLoop = false, onEn
       border: stage ? 'none' : '1px solid rgba(200,168,74,0.35)',
       background: stage ? 'transparent' : '#1c1815',
       flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      mixBlendMode: stage ? 'screen' : 'normal',
-      position: 'relative',
-      isolation: 'isolate',
-      filter: isGlitch ? 'contrast(1.22) saturate(0.75)' : 'none',
     }}>
       {!failed ? (
         <video
           ref={videoRef}
-          src={src}
-          preload="auto"
+          key={emotion}
+          src={`/scribe/${EMOTION_FILE[emotion] || 'scribe-idle-transp'}.mp4`}
           autoPlay muted playsInline
           loop={forceLoop || LOOPING.has(emotion)}
           onEnded={onEnded}
           onError={() => setFailed(true)}
           onContextMenu={e => e.preventDefault()}
-          style={{
-            width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none', display: 'block',
-            opacity: 1,
-            mixBlendMode: 'screen',
-            transform: isGlitch ? 'translateX(-1px) skewX(-0.6deg)' : 'none',
-            filter: isGlitch ? 'contrast(1.16) saturate(0.82)' : 'none',
-          }}
+          style={{ width: '100%', height: '100%', objectFit: stage ? 'contain' : 'cover', pointerEvents: 'none', mixBlendMode: 'screen', opacity: fadeIn ? 1 : 0, transition: 'opacity 0.35s ease' }}
         />
       ) : (
-        <img src="/scribe/scribeicon.png" alt="The Scribe" style={{ width: '82%', height: '82%', objectFit: 'contain' }} />
-      )}
-      {isGlitch && !failed && (
-        <>
-          <video
-            src={src}
-            preload="auto"
-            autoPlay muted playsInline
-            aria-hidden="true"
-            className="scribe-glitch-copy scribe-glitch-copy-cyan"
-          />
-          <video
-            src={src}
-            preload="auto"
-            autoPlay muted playsInline
-            aria-hidden="true"
-            className="scribe-glitch-copy scribe-glitch-copy-red"
-          />
-          <video
-            src={src}
-            preload="auto"
-            autoPlay muted playsInline
-            aria-hidden="true"
-            className="scribe-glitch-copy scribe-glitch-copy-tear"
-          />
-        </>
+        <span style={{ fontSize: size * 0.45 }} role="img" aria-label="Scribe">🖋️</span>
       )}
     </div>
   );
 }
 
-/* --- 4. THE WIDGET ─────────────────────────────────────────────────────── */
+/* ─── 4. THE WIDGET ─────────────────────────────────────────────────────── */
 export default function ScribeLite({ dismiss = false }) {
   const [open, setOpen] = useState(false);
   const [gone, setGone] = useState(false);
@@ -511,7 +427,6 @@ export default function ScribeLite({ dismiss = false }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
-  const displayName = useDisplayName('traveler');
   const scrollRef = useRef(null);
   const emotionTimer = useRef(null);
 
@@ -521,20 +436,6 @@ export default function ScribeLite({ dismiss = false }) {
   const pendingRef = useRef(null);
 
   useEffect(() => { emotionRef.current = emotion; }, [emotion]);
-
-  // Preload every Scribe clip once so emotion changes do not flash blank frames.
-  useEffect(() => {
-    const videos = Object.values(EMOTION_FILE).map(file => {
-      const video = document.createElement('video');
-      video.preload = 'auto';
-      video.muted = true;
-      video.playsInline = true;
-      video.src = `/scribe/${file}.mp4`;
-      video.load();
-      return video;
-    });
-    return () => videos.forEach(video => { video.src = ''; });
-  }, []);
 
   /* Return to rest: pick a different resting clip than the current one */
   const goIdle = useCallback(() => {
@@ -559,8 +460,8 @@ export default function ScribeLite({ dismiss = false }) {
     if (emotionRef.current === emo) return;
     pendingRef.current = { emo, holdMs };
     setEmotion('glitch');
-    /* CSS static hides the seam; timeout resolves even if the clip stalls. */
-    emotionTimer.current = setTimeout(handlePending, 520);
+    /* fallback: if glitch video is missing, onEnded never fires */
+    emotionTimer.current = setTimeout(handlePending, 900);
   }, [handlePending]);
 
   /* A clip finished: glitch resolves its target, others glitch to rest */
@@ -569,7 +470,7 @@ export default function ScribeLite({ dismiss = false }) {
     if (emotionRef.current === 'glitch') { handlePending(); return; }
     pendingRef.current = { emo: randomFrom(IDLE_POOL, emotionRef.current) };
     setEmotion('glitch');
-    emotionTimer.current = setTimeout(handlePending, 520);
+    emotionTimer.current = setTimeout(handlePending, 900);
   }, [handlePending]);
 
   useEffect(() => () => clearTimeout(emotionTimer.current), []);
@@ -602,74 +503,58 @@ export default function ScribeLite({ dismiss = false }) {
     if (messages.length === 0) {
       setMessages([{
         from: 'scribe',
-        text: `Hail, ${displayName}. I am the Scribe. Ask me anything about Syntarion - or pick a scroll below.`,
+        text: "Hail! I am the Scribe. Ask me anything about Syntarion — or pick a scroll below.",
         chips: ['What is Syntarion?', 'How do I create a character?', 'How to play', 'How does combat work?'],
       }]);
     }
   };
 
-  const pushScribe = (text, chips = [], feedback = true) => {
+  const pushScribe = (text, chips = []) => {
     const parts = Array.isArray(text) ? text : [text];
     setMessages(prev => [
       ...prev,
       ...parts.map((p, i) => ({
         from: 'scribe', text: p,
         chips: i === parts.length - 1 ? chips : [],
-        feedback: feedback && i === parts.length - 1,
-        feedbackValue: null,
       })),
     ]);
   };
 
-  const rateAnswer = (index, value) => {
-    setMessages(prev => prev.map((msg, i) => i === index ? { ...msg, feedbackValue: value } : msg));
-    playEmotion(value === 'up' ? 'happy' : 'sad');
-  };
-
-  const ask = async (rawText) => {
+  const ask = (rawText) => {
     const text = rawText.trim();
     if (!text || busy) return;
-    const priorMessages = messages;
     setInput('');
     setMessages(prev => [...prev, { from: 'user', text }]);
-
-    const result = matchQuery(text);
-    if (result.type === 'smalltalk') {
-      playEmotion(result.emotion);
-      const namedAnswer = result.answer.replace(/^Hail, adventurer!/, `Hail, ${displayName}!`);
-      pushScribe(namedAnswer, result.chips);
-      return;
-    }
-    if (result.type === 'answer') {
-      playEmotion(result.intent.emotion || 'helpful');
-      pushScribe(result.intent.answer, result.intent.chips);
-      return;
-    }
-    if (result.type === 'suggest') {
-      playEmotion('ok');
-      pushScribe(
-        "Hmm - the archives hold a few scrolls that might be what you seek:",
-        result.suggestions.map(s => INTENT_LABELS[s.id]).filter(Boolean)
-      );
-      return;
-    }
-
     setBusy(true);
     playEmotion(randomFrom(THINKING_POOL));
-    try {
-      const answer = await askArchive(text, priorMessages, displayName);
-      playEmotion(emotionForText(`${text} ${answer}`));
-      pushScribe(answer, ['What is Soteria?', 'How do I create a character?', 'What is the VTT?', 'Found a bug']);
-    } catch (err) {
-      console.warn('Scribe-Lite archive fallback:', err);
-      playEmotion('sad');
-      pushScribe(
-        "I searched the archives, but found no scroll on that. Try asking another way - or pick from what I do know:",
-        ['What is Syntarion?', 'How do I create a character?', 'What is the VTT?', 'Found a bug']
-      );
-    } finally {
+
+    /* The "researching" pause — sells the character, debounces spam */
+    setTimeout(() => {
+      const result = matchQuery(text);
       setBusy(false);
-    }
+
+      if (result.type === 'smalltalk') {
+        playEmotion(result.emotion);
+        pushScribe(result.answer, result.chips);
+      } else if (result.type === 'answer') {
+        playEmotion(result.intent.emotion || 'helpful');
+        pushScribe(result.intent.answer, result.intent.chips);
+      } else if (result.type === 'suggest') {
+        playEmotion('ok');
+        pushScribe(
+          result.mismatch
+            ? "I keep the answers on how Syntarion works, not the tales within Soteria itself — that's the Architect's domain. But here's what I can open for you:"
+            : "I'm not certain I caught that — did you mean one of these?",
+          result.suggestions.map(s => INTENT_LABELS[s.id]).filter(Boolean)
+        );
+      } else {
+        playEmotion('sad');
+        pushScribe(
+          "That's not a scroll I keep. I answer questions about how Syntarion works — characters, campaigns, the tabletop, combat. Try one of these, or ask another way:",
+          ['What is Syntarion?', 'How do I create a character?', 'What is the VTT?', 'How does combat work?']
+        );
+      }
+    }, 700 + Math.random() * 500);
   };
 
   /* Close with a disappearing act, then hide the panel */
@@ -693,7 +578,7 @@ export default function ScribeLite({ dismiss = false }) {
       aria-label="Ask the Scribe"
       disabled={dismiss}
       style={{
-        position: 'fixed', bottom: isMobile ? 84 : 78, right: isMobile ? 16 : 24,
+        position: 'fixed', bottom: isMobile ? 16 : 24, right: isMobile ? 16 : 24,
         zIndex: 1900, width: isMobile ? 68 : 84, height: isMobile ? 68 : 84,
         borderRadius: '50%', border: '1px solid rgba(200,168,74,0.5)',
         background: '#13100d', cursor: 'pointer', padding: 0,
@@ -709,11 +594,11 @@ export default function ScribeLite({ dismiss = false }) {
   return (
     <div style={{
       position: 'fixed', zIndex: 1900,
-      bottom: isMobile ? 84 : 78, right: isMobile ? 0 : 24,
+      bottom: isMobile ? 0 : 24, right: isMobile ? 0 : 24,
       left: isMobile ? 0 : 'auto',
       width: isMobile ? '100%' : 380,
       height: isMobile ? '85svh' : 640,
-      maxHeight: isMobile ? 'calc(100svh - 108px)' : 'calc(100svh - 102px)',
+      maxHeight: isMobile ? '85svh' : 'calc(100svh - 48px)',
       background: '#13100d',
       border: '1px solid rgba(200,168,74,0.3)',
       borderRadius: isMobile ? '14px 14px 0 0' : 14,
@@ -729,7 +614,7 @@ export default function ScribeLite({ dismiss = false }) {
         padding: '12px 14px 10px', borderBottom: '1px solid rgba(200,168,74,0.18)',
         background: '#171310',
       }}>
-        <ScribeFace emotion={emotion} size={isMobile ? 180 : 220} stage onEnded={handleClipEnd} />
+        <ScribeFace emotion={emotion} size={isMobile ? 220 : 280} stage onEnded={handleClipEnd} />
         <div style={{ textAlign: 'center' }}>
           <div style={{
             fontFamily: "'Cinzel', serif", fontSize: 14, fontWeight: 700,
@@ -780,13 +665,6 @@ export default function ScribeLite({ dismiss = false }) {
                 ))}
               </div>
             )}
-            {m.feedback && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 7, color: 'rgba(240,238,235,0.42)', fontSize: 11, fontStyle: 'italic' }}>
-                <span>Did that answer your question?</span>
-                <button type="button" aria-label="Yes" onClick={() => rateAnswer(i, 'up')} style={{ background: m.feedbackValue === 'up' ? 'rgba(200,168,74,0.18)' : 'transparent', border: '1px solid rgba(200,168,74,0.35)', borderRadius: 999, color: '#c8a84a', cursor: 'pointer', padding: '2px 8px', lineHeight: 1.2 }}>&#128077;</button>
-                <button type="button" aria-label="No" onClick={() => rateAnswer(i, 'down')} style={{ background: m.feedbackValue === 'down' ? 'rgba(224,90,90,0.14)' : 'transparent', border: '1px solid rgba(224,90,90,0.3)', borderRadius: 999, color: '#e05a5a', cursor: 'pointer', padding: '2px 8px', lineHeight: 1.2 }}>&#128078;</button>
-              </div>
-            )}
           </div>
         ))}
         {busy && (
@@ -823,54 +701,6 @@ export default function ScribeLite({ dismiss = false }) {
       </div>
 
       <style>{`
-        .scribe-glitch-copy {
-          position: absolute;
-          inset: 0;
-          z-index: 2;
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-          pointer-events: none;
-          mix-blend-mode: screen;
-          opacity: 0;
-        }
-        .scribe-glitch-copy-cyan {
-          opacity: 0.58;
-          filter: brightness(1.28) sepia(1) saturate(2.2) hue-rotate(145deg);
-          clip-path: inset(8% 0 34% 0);
-          animation: scribeMouseGhostCyan 0.52s steps(4, end) both;
-        }
-        .scribe-glitch-copy-red {
-          opacity: 0.48;
-          filter: brightness(1.22) sepia(1) saturate(2.4) hue-rotate(300deg);
-          clip-path: inset(32% 0 8% 0);
-          animation: scribeMouseGhostRed 0.52s steps(4, end) both;
-        }
-        .scribe-glitch-copy-tear {
-          opacity: 0.72;
-          filter: contrast(1.35) brightness(1.18);
-          clip-path: inset(44% 0 28% 0);
-          animation: scribeMouseTear 0.52s steps(5, end) both;
-        }
-        @keyframes scribeMouseGhostCyan {
-          0% { transform: translate3d(-8px, 0, 0) skewX(-3deg); opacity: 0; }
-          18% { opacity: 0.68; }
-          54% { transform: translate3d(7px, -2px, 0) skewX(4deg); opacity: 0.46; }
-          100% { transform: translate3d(0, 0, 0); opacity: 0; }
-        }
-        @keyframes scribeMouseGhostRed {
-          0% { transform: translate3d(7px, 1px, 0) skewX(3deg); opacity: 0; }
-          22% { opacity: 0.62; }
-          64% { transform: translate3d(-6px, 2px, 0) skewX(-4deg); opacity: 0.38; }
-          100% { transform: translate3d(0, 0, 0); opacity: 0; }
-        }
-        @keyframes scribeMouseTear {
-          0% { transform: translateX(-14px) scaleX(1.08); opacity: 0; }
-          18% { opacity: 0.78; }
-          42% { transform: translateX(12px) scaleX(0.94); opacity: 0.66; }
-          70% { transform: translateX(-5px) scaleX(1.04); opacity: 0.36; }
-          100% { transform: translateX(0) scaleX(1); opacity: 0; }
-        }
         .scribe-dots::after {
           content: '';
           animation: scribeDots 1.4s steps(4, end) infinite;

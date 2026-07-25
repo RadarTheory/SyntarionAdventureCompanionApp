@@ -30,11 +30,18 @@ const ICONS = {
 // the top), so expanding the player grows the card upward instead of pushing
 // its bottom edge further down toward other bottom-anchored UI.
 const MENU_MUSIC_POS_KEY = 'syntarion_menu_music_pos_v2';
+// Whether the player starts life as a dim icon-only nub. Persisted separately
+// from pos so a user who's already opened it once doesn't get re-minimized.
+const MENU_MUSIC_MINIMIZED_KEY = 'syntarion_menu_music_minimized_v1';
+const MINIMIZED_SIZE = 46;
 
+// Default spawn point is the icon's home: tucked in the bottom-right corner,
+// clear of the bottom toolbar. Once a user drags it anywhere, that saved
+// position wins over this default from then on.
 function getDefaultMenuMusicPos(mobile) {
   return {
-    x: mobile ? 12 : 18,
-    y: mobile ? 84 : 84,
+    x: Math.max(4, window.innerWidth - (mobile ? 56 : 62)),
+    y: mobile ? 104 : 120,
   };
 }
 
@@ -47,6 +54,12 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
   const [audioSettings, setAudioSettings] = useState(getAudioSettings);
   const [currentTrack, setCurrentTrack] = useState(musicEngine.currentTrack || tracks[0] || null);
   const [expanded, setExpanded] = useState(false);
+  const [minimized, setMinimized] = useState(() => {
+    try {
+      const saved = localStorage.getItem(MENU_MUSIC_MINIMIZED_KEY);
+      return saved === null ? true : saved === 'true';
+    } catch { return true; }
+  });
   const [hovered, setHovered] = useState(false);
   const [playing, setPlaying] = useState(!!musicEngine.currentTrack);
   const [needsGesture, setNeedsGesture] = useState(false);
@@ -80,15 +93,34 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
     localStorage.setItem(MENU_MUSIC_POS_KEY, JSON.stringify(pos));
   }, [pos]);
 
-  const clampPos = useCallback((x, y) => {
+  useEffect(() => {
+    try { localStorage.setItem(MENU_MUSIC_MINIMIZED_KEY, String(minimized)); } catch { /* ignore */ }
+  }, [minimized]);
+
+  const clampPos = useCallback((x, y, widthOverride) => {
     const el = widgetRef.current;
-    const w = el?.offsetWidth || 220;
+    const w = widthOverride ?? el?.offsetWidth ?? 220;
     const h = el?.offsetHeight || 64;
     return {
       x: Math.max(4, Math.min(window.innerWidth - w - 4, x)),
       y: Math.max(4, Math.min(window.innerHeight - h - 4, y)),
     };
   }, []);
+
+  // The card's footprint jumps a lot between icon / pill / expanded. Growing
+  // it can push it off-screen if it was sitting near an edge (e.g. the
+  // default bottom-right icon spot), so re-clamp with the known target width
+  // right when a toggle grows the card — before the DOM even reflows.
+  const openFromIcon = () => {
+    setMinimized(false);
+    setPos(prev => clampPos(prev.x, prev.y, isMobile ? 206 : 218));
+  };
+
+  const toggleExpanded = () => {
+    const next = !expanded;
+    setExpanded(next);
+    if (next) setPos(prev => clampPos(prev.x, prev.y, isMobile ? 304 : 292));
+  };
 
   const startDrag = (e) => {
     const p = pointFromEvent(e);
@@ -457,9 +489,9 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
         left: pos.x,
         bottom: pos.y,
         zIndex: 48,
-        width: expanded ? (isMobile ? 'min(calc(100vw - 24px), 304px)' : 292) : (isMobile ? 206 : 218),
+        width: minimized ? MINIMIZED_SIZE : (expanded ? (isMobile ? 'min(calc(100vw - 24px), 304px)' : 292) : (isMobile ? 206 : 218)),
         maxWidth: 'calc(100vw - 24px)',
-        opacity: active ? 1 : 0.7,
+        opacity: minimized ? (hovered ? 0.85 : 0.42) : (active ? 1 : 0.7),
         transform: active ? 'translateY(0)' : 'translateY(2px)',
         transition: dragging ? 'none' : 'opacity 0.18s ease, transform 0.18s ease, width 0.18s ease',
         fontFamily: 'Georgia, serif',
@@ -475,8 +507,8 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
           position: 'absolute',
           top: -9,
           right: -9,
-          width: 22,
-          height: 22,
+          width: minimized ? 14 : 22,
+          height: minimized ? 14 : 22,
           borderRadius: 8,
           background: 'rgba(20,16,12,0.94)',
           border: '1px solid rgba(226,207,145,0.42)',
@@ -488,10 +520,66 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
           touchAction: 'none',
         }}
       >
-        <svg viewBox="0 0 16 16" width={9} height={9} fill="none">
-          <path d="M5 8h6M8 5v6" stroke="rgba(201,185,145,0.6)" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
+        {!minimized && (
+          <svg viewBox="0 0 16 16" width={9} height={9} fill="none">
+            <path d="M5 8h6M8 5v6" stroke="rgba(201,185,145,0.6)" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        )}
       </div>
+      {!minimized && (
+        <button
+          onClick={() => setMinimized(true)}
+          aria-label="Minimize menu music player"
+          title="Minimize"
+          style={{
+            position: 'absolute',
+            top: -9,
+            left: -9,
+            width: 22,
+            height: 22,
+            borderRadius: 8,
+            background: 'rgba(20,16,12,0.94)',
+            border: '1px solid rgba(226,207,145,0.42)',
+            color: 'rgba(226,207,145,0.78)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2,
+            fontSize: 10,
+            lineHeight: 1,
+            padding: 0,
+          }}
+        >
+          ♪
+        </button>
+      )}
+      {minimized ? (
+        <button
+          onClick={openFromIcon}
+          aria-label="Open menu music player"
+          title={`Menu music: ${title}`}
+          style={{
+            width: MINIMIZED_SIZE,
+            height: MINIMIZED_SIZE,
+            borderRadius: '50%',
+            background: 'linear-gradient(145deg, rgba(33,28,22,0.93), rgba(18,16,13,0.9))',
+            border: '1px solid rgba(214,184,91,0.34)',
+            boxShadow: '0 8px 20px rgba(0,0,0,0.26)',
+            backdropFilter: 'blur(10px)',
+            color: 'rgba(226,207,145,0.88)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            fontSize: 19,
+            lineHeight: 1,
+            padding: 0,
+          }}
+        >
+          {playing ? '♫' : '♪'}
+        </button>
+      ) : (
       <div style={{
         background: 'linear-gradient(145deg, rgba(33,28,22,0.93), rgba(18,16,13,0.9))',
         border: '1px solid rgba(214,184,91,0.34)',
@@ -501,7 +589,7 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
         backdropFilter: 'blur(10px)',
       }}>
         <button
-          onClick={() => setExpanded(!expanded)}
+          onClick={toggleExpanded}
           style={{
             width: '100%',
             background: 'transparent',
@@ -615,6 +703,7 @@ export default function MenuMusicPlayer({ isMobile = false, restrictToMenu = tru
           </div>
         )}
       </div>
+      )}
     </div>
 
     {isDM && showSoundboard && (

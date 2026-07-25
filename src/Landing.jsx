@@ -133,7 +133,7 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
             style={{
         display: 'block',
               width: logoMediaSize,
-              maxWidth: isMobile ? '108vw' : 'min(90vw, 790px)',
+              maxWidth: isMobile ? '108vw' : 'min(92vw, 880px)',
               height: 'auto',
               background: 'transparent',
               opacity: 1,
@@ -768,8 +768,8 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
           <div style={{
             position: 'relative',
             width: '100%',
-            maxWidth: isMobile ? 'min(100%, 390px)' : 900,
-            minHeight: isMobile ? 430 : 570,
+            maxWidth: isMobile ? 'min(100%, 390px)' : 940,
+            minHeight: isMobile ? 455 : 605,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -807,7 +807,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
               height: 1,
               background: isMobile ? 'linear-gradient(90deg, transparent, rgba(200,168,74,0.30), transparent)' : 'transparent',
             }} />
-            <SyntarionLogo size={isMobile ? 204 : 318} darkMode={false} useHeroVideo isMobile={isMobile} />
+            <SyntarionLogo size={isMobile ? 222 : 350} darkMode={false} useHeroVideo isMobile={isMobile} />
           </div>
 
           <div style={{
