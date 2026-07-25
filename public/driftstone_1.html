@@ -1274,6 +1274,27 @@ function doBotHeartstoneMove(){
 }
 
 function showMatchOver(player){
+  // Report the finished match back to the host app's Bag Ledger. In bot mode
+  // this is a real win/loss for the human account (host fills in the real
+  // username); in local pvp there's no account to attribute it to, so we
+  // send an explicit seat label and a neutral 'complete' outcome instead.
+  if(gameMode==='bot'){
+    const humanWon=player===(humanSide-1);
+    postGameResult({
+      outcome:humanWon?'win':'loss',
+      score:matchScores[player],
+      scoreLabel:matchScores[0]+' – '+matchScores[1],
+      meta:{mode:'bot',matchScores:matchScores.slice()},
+    });
+  } else {
+    postGameResult({
+      outcome:'complete',
+      score:matchScores[player],
+      scoreLabel:'Player '+(player+1)+' wins '+matchScores[0]+' – '+matchScores[1],
+      playerName:'Player '+(player+1),
+      meta:{mode:'pvp',matchScores:matchScores.slice()},
+    });
+  }
   // Text pop overlay first
   const overlay=document.createElement('div');
   overlay.className='win-overlay';
@@ -2358,6 +2379,14 @@ function postGameLarkToast(title,body){
   try{
     if(window.parent&&window.parent!==window){
       window.parent.postMessage({source:'driftstone',type:'toast',payload:{title,body}},window.location.origin);
+    }
+  }catch(e){}
+}
+
+function postGameResult(payload){
+  try{
+    if(window.parent&&window.parent!==window){
+      window.parent.postMessage({source:'driftstone',type:'result',payload},window.location.origin);
     }
   }catch(e){}
 }

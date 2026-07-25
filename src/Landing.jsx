@@ -17,7 +17,7 @@ import MenuMusicPlayer from './MenuMusicPlayer';
 import { playSfxByKey } from './soundLibrary';
 import HandbookBookmark from './HandbookBookmark';
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MOVABLE DRIFTSTONE BUTTON Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ─── MOVABLE DRIFTSTONE BUTTON ───────────────────────────────────────────────
 function DriftstoneButton({ onClick, isMobile }) {
   const [pos, setPos] = useState({ x: 40, y: 40 });
   const [isDragging, setIsDragging] = useState(false);
@@ -99,7 +99,7 @@ function DriftstoneButton({ onClick, isMobile }) {
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ SYNTARION LOGO Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ─── SYNTARION LOGO ──────────────────────────────────────────────────────────
 function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isMobile = false }) {
   const ink = darkMode ? '#f0eeeb' : '#050403';
   const logoMediaSize = useHeroVideo ? size * (isMobile ? 2.18 : 2.32) : size;
@@ -219,7 +219,7 @@ function SyntarionLogo({ size = 320, darkMode = false, useHeroVideo = false, isM
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ SUBMIT TO GREATER ARCHIVE MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ─── SUBMIT TO GREATER ARCHIVE MODAL ────────────────────────────────────────
 function SubmitToArchiveModal({ module, onClose, onSuccess }) {
   const [name, setName] = useState(module?.name || '');
   const [description, setDescription] = useState('');
@@ -286,7 +286,7 @@ function SubmitToArchiveModal({ module, onClose, onSuccess }) {
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ DM SIGIL MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ─── DM SIGIL MODAL ──────────────────────────────────────────────────────────
 function DMSigilModal({ onSuccess, onCancel }) {
   const [modules, setModules] = useState([]);
   const [moduleId, setModuleId] = useState(null);
@@ -470,7 +470,7 @@ function DMSigilModal({ onSuccess, onCancel }) {
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MAIN LANDING COMPONENT Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ─── MAIN LANDING COMPONENT ──────────────────────────────────────────────────
 export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onViewChange }) {
   const { isMobile } = useDevice();
   const [appView, setAppView] = useState(() => localStorage.getItem('syn_view') || 'home');
@@ -537,7 +537,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
   const handlePlay = () => { localStorage.setItem('syn_view', 'character-select'); setAppView('character-select'); };
   const handleDMSuccess = (module) => { setDmModule(module || null); setShowDMModal(false); localStorage.setItem('syn_view', 'dm'); setAppView('dm'); playSfxByKey('ui-campaign-dm-view-page-pop'); };
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Legal Gate Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ── Legal Gate ─────────────────────────────────────────────────────────────
   if (legalStatus === 'checking') return (
     <div style={{ minHeight: '100vh', background: darkMode ? '#14110c' : '#f0eeeb' }} />
   );
@@ -545,7 +545,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
     <LegalGate user={user} onAccept={() => setLegalStatus('accepted')} />
   );
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Render Views Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ── Render Views ───────────────────────────────────────────────────────────
   if (appView === 'character-select') return (
     <>
       <CharacterSelect
@@ -601,7 +601,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
     />
   );
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Home screen Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ── Home screen ────────────────────────────────────────────────────────────
   const landingDarkMode = false;
   const ink = landingDarkMode ? '#f0eeeb' : '#1a1714';
   const mutedInk = landingDarkMode ? 'rgba(240,238,235,0.64)' : 'rgba(26,23,20,0.46)';
@@ -761,7 +761,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
             bottom: isMobile ? 54 : 48,
             background: landingDarkMode
               ? 'radial-gradient(ellipse at center, rgba(200,168,74,0.08) 0%, rgba(20,17,12,0.22) 42%, rgba(5,4,3,0.50) 82%, transparent 100%)'
-              : 'radial-gradient(ellipse at center, rgba(255,255,255,0.54) 0%, rgba(219,220,223,0.26) 48%, transparent 82%)',
+              : 'radial-gradient(ellipse at center, rgba(255,255,255,0.14) 0%, rgba(219,220,223,0.06) 40%, transparent 62%)',
             pointerEvents: 'none',
           }} />
 
@@ -769,7 +769,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
             position: 'relative',
             width: '100%',
             maxWidth: isMobile ? 'min(100%, 390px)' : 940,
-            minHeight: isMobile ? 455 : 605,
+            minHeight: isMobile ? 380 : 510,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -783,12 +783,12 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
               top: isMobile ? 48 : 40,
               bottom: isMobile ? 174 : 208,
               background: `
-                linear-gradient(90deg, transparent 0%, rgba(240,239,236,0.08) 8%, rgba(240,239,236,0.30) 20%, rgba(240,239,236,0.42) 50%, rgba(240,239,236,0.30) 80%, rgba(240,239,236,0.08) 92%, transparent 100%),
-                linear-gradient(to bottom, transparent 0%, rgba(235,236,236,0.12) 14%, rgba(242,241,238,0.30) 42%, rgba(242,241,238,0.30) 58%, rgba(235,236,236,0.12) 86%, transparent 100%)
+                linear-gradient(90deg, transparent 0%, rgba(240,239,236,0.02) 8%, rgba(240,239,236,0.07) 20%, rgba(240,239,236,0.10) 50%, rgba(240,239,236,0.07) 80%, rgba(240,239,236,0.02) 92%, transparent 100%),
+                linear-gradient(to bottom, transparent 0%, rgba(235,236,236,0.03) 14%, rgba(242,241,238,0.07) 42%, rgba(242,241,238,0.07) 58%, rgba(235,236,236,0.03) 86%, transparent 100%)
               `,
               boxShadow: '0 14px 42px rgba(26,23,20,0.04)',
-              WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, #000 16%, #000 70%, rgba(0,0,0,0.72) 84%, transparent 100%)',
-              maskImage: 'linear-gradient(to bottom, transparent 0%, #000 16%, #000 70%, rgba(0,0,0,0.72) 84%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, #000 34%, #000 66%, rgba(0,0,0,0.6) 82%, transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, transparent 0%, #000 34%, #000 66%, rgba(0,0,0,0.6) 82%, transparent 100%)',
               pointerEvents: 'none',
             }} />
             <div aria-hidden="true" style={{
@@ -811,7 +811,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
           </div>
 
           <div style={{
-            marginTop: isMobile ? -6 : -8,
+            marginTop: isMobile ? 4 : 6,
             marginBottom: isMobile ? 22 : 30,
             display: 'flex',
             alignItems: 'center',
@@ -967,7 +967,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ STUB COMPONENT Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ─── STUB COMPONENT ──────────────────────────────────────────────────────────
 function Stub({ label, onHome, dark }) {
   return (
     <div style={{

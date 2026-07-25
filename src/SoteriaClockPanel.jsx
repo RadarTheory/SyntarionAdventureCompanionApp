@@ -46,7 +46,7 @@ export function CelestialOrbit({ clock, size = 36 }) {
           transform: 'translate(-50%, -50%)',
         }} />
       )}
-      {/* Orbiting bodies â€” each on its own ring, own speed, own starting angle */}
+      {/* Orbiting bodies — each on its own ring, own speed, own starting angle */}
       {orbiters.map((b, i) => (
         <div key={b.name} style={{
           position: 'absolute', top: center, left: center, width: 0, height: 0,
@@ -65,7 +65,7 @@ export function CelestialOrbit({ clock, size = 36 }) {
 }
 // A rounded track showing the 13 passes in order. The bodies actually visible at
 // the current pass (per the Sovereign Calendar) render as small glowing dots that
-// slide smoothly across as fragments tick by â€” Major/Green/White Suns by day,
+// slide smoothly across as fragments tick by — Major/Green/White Suns by day,
 // Yellow/Blue Moons by night.
 export function SunMoonCycleBar({ clock, width = 280, showBodyLabels = true }) {
   if (!clock) return null;
@@ -541,7 +541,7 @@ export default function SoteriaClockPanel({ campaignId }) {
                 {label('TURN (NAMED)')}
                 <select value={draft.turn} onChange={e => setDraft(d => ({ ...d, turn: parseInt(e.target.value) }))}
                   style={{ background: 'rgba(14,10,7,0.8)', border: '1px solid rgba(201,185,145,0.25)', borderRadius: 6, color: '#e6d2a0', fontFamily: "'Cinzel', serif", fontSize: 11, padding: '4px 8px', width: '100%' }}>
-                  <option value="1">1. Ãnanmturn</option>
+                  <option value="1">1. Inamturn</option>
                   <option value="2">2. Ixturn</option>
                   <option value="3">3. Silturn</option>
                   <option value="4">4. Halusturn</option>
