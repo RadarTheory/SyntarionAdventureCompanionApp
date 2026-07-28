@@ -8,9 +8,10 @@ import musicEngine from './musicEngine';
 import sfxEngine from './sfxEngine';
 
 export default function Settings({ user, darkMode, setDarkMode, onHome }) {
-  const [displayName, setDisplayName] = useState(user?.user_metadata?.nickname || user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '');
+  const initialDisplayName = user?.user_metadata?.nickname || user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '';
+  const [displayName, setDisplayName] = useState(initialDisplayName);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(!!initialDisplayName);
   const [legalTab, setLegalTab] = useState(null);
   const [installState, setInstallState] = useState(getPWAInstallState);
   const [showAppleInstall, setShowAppleInstall] = useState(false);
@@ -61,7 +62,6 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
     await supabase.auth.updateUser({ data: { nickname: displayName, display_name: displayName } });
     setSaving(false);
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
   };
 
   const handleSignOut = async () => {
@@ -326,16 +326,17 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
         .settings-toggle {
           width: 50px;
           height: 28px;
-          border-radius: 999px;
+          border-radius: 6px;
           border: 1px solid var(--settings-line-strong);
           background: rgba(126,115,98,0.22);
+          box-shadow: inset 2px 5px 10px rgba(0,0,0,0.24);
           padding: 3px;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
-        .settings-toggle[data-on='true'] { background: rgba(126,170,132,0.72); border-color: rgba(220,246,223,0.44); }
-        .settings-toggle-knob { width: 20px; height: 20px; border-radius: 999px; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.22); transform: translateX(0); transition: transform 0.2s ease; }
-        .settings-toggle[data-on='true'] .settings-toggle-knob { transform: translateX(21px); }
+        .settings-toggle[data-on='true'] { background: rgba(126,170,132,0.72); border-color: rgba(220,246,223,0.44); box-shadow: inset 2px 5px 10px transparent; }
+        .settings-toggle-knob { display: block; width: 9px; height: 20px; border-radius: 2px; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.22); transform: translateX(0) rotate(0turn); transition: transform 0.4s ease; }
+        .settings-toggle[data-on='true'] .settings-toggle-knob { transform: translateX(33px) rotate(1turn); }
         .settings-button, .settings-link, .settings-submit {
           border: 1px solid var(--settings-line-strong);
           background: var(--settings-pill);
@@ -529,7 +530,7 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
                 <div className="settings-input-row">
                   <input className="settings-input" value={displayName} onChange={e => { setDisplayName(e.target.value); setSaved(false); }} placeholder="Your name in Soteria" />
                   <button type="button" className="settings-button" data-active={saved} onClick={handleSaveName} disabled={saving || saved}>
-                    {saved ? 'Saved' : saving ? 'Saving...' : 'Save'}
+                    {saved ? '✓ Saved' : saving ? 'Saving...' : 'Save'}
                   </button>
                 </div>
               </div>
