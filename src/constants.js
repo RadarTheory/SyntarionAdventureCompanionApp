@@ -68,9 +68,11 @@ export const RACES = [
   { id:'seraphan',  name:'Seraphan',   sub:'Aasimar',    tag:'magic',lean:-1, sub2:'Celestial blood', variants:[], ns:'seraphan', desc:"Celestial-blooded and occasionally burdened by it. The Seraphan carry a presence that others read before the Seraphan has spoken." },
   { id:'drakazir',  name:'Drakazir',   sub:'Dragonborn', tag:'any',  lean:0,  sub2:'10 color lineages', variants:['Black','Blue','Brass','Bronze','Copper','Gold','Green','Red','Silver','White'], ns:'drakazir', desc:"Lineage-proud and breath-gifted. The ten lineages have different cultural relationships to the age of steam, but all of them remember when the world was hotter." },
   { id:'nazari',    name:'Nazari',     sub:'Sea-folk',   tag:'tech', lean:1,  sub2:'Aquatic · Superior darkvision', variants:[], ns:'nazari', desc:"Deep-water people who surface with purpose. Every Nazari on land is there by deliberate choice — the Sylvan Lung they invented to breathe surface air is proof of that." },
-  { id:'chronison', name:'Chronison',  sub:'Construct',  tag:'tech', lean:2,  sub2:'Defensive · Corrupted/Rogue · Specialist', variants:['Defensive','Corrupted/Rogue','Specialist'], ns:'chronison', desc:"Built, not born. Sentience arrived uninvited in most cases, and has since made itself at home. Chronison cannot use magic in any form — their constructed nature is fundamentally incompatible with arcane, divine, and spiritual disciplines. The only exception is a weapon or tool infused with a special deposit of Grimrite element, which briefly bridges the gap between material and resonant." },
+  { id:'chronison', name:'Chronison',  sub:'Construct',  tag:'tech', lean:2,  sub2:'Built, not born', variants:[], ns:'chronison', desc:"Built, not born. Sentience arrived uninvited in most cases, and has since made itself at home. Chronison cannot use magic in any form — their constructed nature is fundamentally incompatible with arcane, divine, and spiritual disciplines. The only exception is a weapon or tool infused with a special deposit of Grimrite element, which briefly bridges the gap between material and resonant." },
   { id:'tiol',      name:'Tiol',       sub:'Giant Vàld Dark-Tel\'ari', tag:'magic',lean:-1, sub2:'Tiol', variants:['Tiol'], ns:'tiol', desc:"The Tiols are the procreation of human Vikingrs and the Dark Elves — two races once at war, joined in the wake of the phenomenon, before the establishment of the Silent Charter. The Dark Elves were the first humans exposed to the phenomenon, wielding magic and great power, and were once believed to bring humanity closer to the gods. Every Tiol is born with a unique ability, and every Tiol travels by flight or teleportation. Only two — Sakara and Kay — have ever been able to do both." },
   { id:'folwoade',  name:'Folwoade',   sub:'Pure Magic', tag:'magic',lean:-2, sub2:'Beings of living resonance', variants:[], ns:'folwoade', desc:"The Folwoade are not born in any conventional sense — they coalesce from concentrations of pure magical resonance, taking a form that is part living creature and part sustained spell. Pale, ageless, and faintly luminous, they carry the weight of the Lines in their bones and perceive the world through a register most mortals cannot reach. They cannot use technology — their nature rejects the material logic of machines, mechanisms, and constructed systems entirely. The only exception is an item infused with a special deposit of Grimrite element, which allows brief and uncomfortable interaction with the technical world." },
+  { id:'goblin',    name:'Goblin',     sub:'Goblinoid',  tag:'tech', lean:1,  sub2:'Small · Chronically underestimated', variants:[], ns:'goblin', desc:"Small, sharp-toothed, and chronically underestimated. Goblin clans have outlasted empires they never had the numbers to fight head-on, by refusing to fight anything head-on. What they lack in size they make up in swarming tactics, scavenged gear, and a genius for being somewhere you didn't check." },
+  { id:'qissi',     name:'Qissi',      sub:'Reptilian',  tag:'magic',lean:-1, sub2:'Desert-born · Sun-marked', variants:[], ns:'qissi', desc:"Desert-born and sun-marked, the Qissi read the wastes the way other people read a room. Their scales shift faintly with the day's heat, their eyes are built for glare, and their patience is longer than almost anyone who has tried to outlast them in an argument or a standoff." },
 ];
 
 // ─── RACE VARIANT DESCRIPTIONS ────────────────────────────────────────────────
@@ -143,13 +145,6 @@ export const RACE_VARIANT_DESCS = {
     Silver: "Silver lineage Drakazir carry cold breath and a genuine interest in the mortal races — their history, their struggles, their brief and complicated lives. This interest is sincere and occasionally patronizing.",
     White: "White lineage Drakazir carry cold breath and the fewest cultural pretensions of any lineage. They are direct, territorial, and more interested in practical dominance than philosophical justification. Other lineages find them unsophisticated. White lineage Drakazir are unmoved by this.",
     default: "A Drakazir of unspecified lineage — carrying draconic blood and the long memory of when the world was hotter.",
-  },
-
-  chronison: {
-    Defensive: "The Defensive chassis was built to protect — to stand between a principal and whatever was coming. Sentience arrived during a long assignment with no one left to protect, and has been working out what that means ever since. They tend toward steadiness. They do not tend toward rest.",
-    'Corrupted/Rogue': "Something went wrong in the Corrupted/Rogue Chronison — a bad update, a deliberate alteration, an encounter with something the original designers did not account for. The original directives are still there. They just no longer feel like obligations. Freedom was not the intended result. It may be the most important one.",
-    Specialist: "The Specialist was built for a purpose narrow enough that it had to develop a self to fill the space around it. Archivist, Medic, Analyst, Oracle — the designation is still accurate. The being behind it has grown considerably past the brief.",
-    default: "A Chronison of unspecified variant — built, not born, with sentience arriving uninvited and making itself at home.",
   },
 
   tiol: {
@@ -667,10 +662,9 @@ export const RACIAL_TRAITS = {
       name: 'Built Directive',
       text: "Penalties from hunger, thirst, exhaustion, and environmental exposure do not apply to you. The body has a directive. It follows the directive.",
     },
-    variants: {
-      Defensive:         { name: 'Last Stand Protocol', text: "Once per rest, when you would be reduced to zero function or forced to disengage, you may roll to hold. On a success, remain active for one additional exchange at reduced capacity. The directive has not been completed." },
-      'Corrupted/Rogue': { name: 'System Override',     text: "Once per rest, when a psychological or sensory limitation would impose a penalty that your construction should be immune to, you may roll to override it at the system level. On a success, ignore that penalty for this scene." },
-      Specialist:        { name: 'Directive Focus',     text: "Once per rest, when performing a task directly within your area of specialization, you may roll to enter a heightened processing state. On a success, reduce the difficulty by one step and ignore one source of environmental interference." },
+    active: {
+      name: 'Directive Focus',
+      text: "Once per rest, when performing a task directly within your area of specialization, you may roll to enter a heightened processing state. On a success, reduce the difficulty by one step and ignore one source of environmental interference.",
     },
   },
 
@@ -682,6 +676,28 @@ export const RACIAL_TRAITS = {
     variants: {
       'Tiol':  { name: 'Godsblood Surge',    text: "Once per rest, channel the raw inheritance of the Dark Elves: your innate travel surges — double its range or duration for one scene — and your unique ability manifests at heightened intensity. Your markings are visible while it lasts. Everyone in the room knows what you are." },
       'Other': { name: 'Hidden Inheritance', text: "Once per rest, reveal what your human face conceals: use your innate travel in a sudden, unexpected burst, or unleash your unique ability at full force against someone who believed you were merely human. On a success, the target is caught off guard and takes –1 to its next action against you." },
+    },
+  },
+
+  goblin: {
+    passive: {
+      name: 'Beneath Notice',
+      text: "You are consistently underestimated by anyone who hasn't fought you before. The first hostile action taken against you in a scene, by a creature encountering you for the first time, takes –1. They didn't think they needed to aim carefully.",
+    },
+    active: {
+      name: "Opportunist's Strike",
+      text: "Once per rest, when acting against a target who hasn't noticed you or has already written you off as harmless, you may roll to make it count. On a success, treat this action as if you'd had a full exchange to prepare for it.",
+    },
+  },
+
+  qissi: {
+    passive: {
+      name: 'Heatwise',
+      text: "Extreme heat, sun exposure, and desert conditions never impose a penalty on you. Where others see a hostile environment, you see the version of home you grew up in.",
+    },
+    active: {
+      name: 'Sunworn Reflexes',
+      text: "Once per rest, when acting in harsh heat, glare, or open desert conditions, you may roll to move faster than the moment allows. On a success, act immediately, before anyone else has decided to.",
     },
   },
 
@@ -956,30 +972,28 @@ export const NAMES = {
   },
 
   // ── CHRONISON — first=designation, last=serial code ──
-  // Variants: Defensive, Corrupted/Rogue, Specialist
   // First names: any designation title (player can also type freely)
   // Last names: serial codes — locked to generate only
   chronison: {
-    Defensive: {
-      m: ['Guardinal','Bastion','Protector','Sentinel','Bulwark','Warden','Rampart','Aegis','Vanguard','Paragon','Stalwart','Ironhold','Fortress','Citadel','Palisade'],
-      f: ['Guardinal','Bastion','Protector','Sentinel','Bulwark','Warden','Rampart','Aegis','Vanguard','Paragon','Stalwart','Ironhold','Fortress','Citadel','Palisade'],
-      s: ['404-L','103-D','Sigma-21','Sigma-20','Protector-7','Bulwark-12','Warden-44','Rampart-03','Aegis-88','Vanguard-16','Bastion-91','Sentinel-05','Ironhold-77','Citadel-33','Palisade-02'],
-    },
-    'Corrupted/Rogue': {
-      m: ['Revenant','Errant','Manifold','Obfuscator','Specter','Aberrant','Fractured','Deviant','Rogue','Schism','Glitch','Null','Phantom','Wraith','Corrupted'],
-      f: ['Revenant','Errant','Manifold','Obfuscator','Specter','Aberrant','Fractured','Deviant','Rogue','Schism','Glitch','Null','Phantom','Wraith','Corrupted'],
-      s: ['303-Z','Prime-7','Lambda-88','75-L','Omega-17','Theta-12','Sigma-18-C','457-A','Rogue-91','Null-00','Glitch-13','Fracture-44','Schism-07','Deviant-55','Specter-29'],
-    },
-    Specialist: {
-      m: ['Chronoform','Medica','Catalyst','Analyst','Archivist','Codex','Lexicon','Cipher','Oracle','Calculus','Praxis','Logis','Synapse','Nexus','Axiom'],
-      f: ['Chronoform','Medica','Catalyst','Analyst','Archivist','Codex','Lexicon','Cipher','Oracle','Calculus','Praxis','Logis','Synapse','Nexus','Axiom'],
-      s: ['Lambda-76','Prime-12','Sigma-18','Theta-09','Codex-44','Lexicon-03','Cipher-77','Oracle-21','Calculus-55','Praxis-08','Logis-34','Synapse-19','Nexus-3','Axiom-61','Analyst-40'],
-    },
     default: {
       m: ['Guardinal','Revenant','Chronoform','Bastion','Errant','Medica','Catalyst','Manifold','Sentinel','Aegis','Vanguard','Paragon','Specter','Cipher','Oracle','Nexus','Axiom','Codex','Warden','Null'],
       f: ['Guardinal','Revenant','Chronoform','Bastion','Errant','Medica','Catalyst','Manifold','Sentinel','Aegis','Vanguard','Paragon','Specter','Cipher','Oracle','Nexus','Axiom','Codex','Warden','Null'],
       s: ['404-L','303-Z','Lambda-76','103-D','Prime-7','Prime-12','Sigma-18','Lambda-88','75-L','Sigma-21','Omega-17','Theta-12','457-A','Nexus-3','Codex-44','Cipher-77','Oracle-21','Axiom-61','Warden-44','Null-00','Glitch-13','Aegis-88','Paragon-16','Specter-29','Bastion-91'],
     },
+  },
+
+  // ── GOBLIN ──
+  goblin: {
+    m: ['Grik','Snab','Korr','Yig','Nix','Bok','Skree','Tannik','Vole','Grubb','Fitch','Wick','Rask','Dov','Chik','Rott','Snik','Plith','Gorn','Tibb'],
+    f: ['Nizzi','Yela','Britta','Onna','Wisk','Karra','Vex','Nettle','Fira','Brix','Pella','Snitch','Yowl','Dott','Kessa','Vrilla','Tikka','Zinn','Molt','Skitter'],
+    s: ['Grimtooth','Rustnail','Cinderjaw','Quickhand','Foulwick','Bristlebone','Grubgnaw','Cutfinger','Blackspark','Cravenmaw','Dredgewick','Sootback','Wickfang','Tinkjaw','Rattlehide','Snarethorn','Hollowtooth','Ashgnaw','Scraphide','Underbite'],
+  },
+
+  // ── QISSI ──
+  qissi: {
+    m: ['Sethrak','Kessu','Vaan','Rezhi','Tulaq','Naseer','Ossik','Zharat','Kavesh','Iddris','Suun','Tazhak','Voren','Amrit','Qesh','Havel','Ossan','Ryzek','Tembre','Kellith'],
+    f: ['Ashira','Vessa','Rihen','Kaisha','Nefret','Suhail','Yashka','Zireh','Amaru','Tessin','Nahiri','Orash','Vellai','Kiren','Sashe','Uveni','Ilyara','Damira','Rasira','Qelen'],
+    s: ['Windrasp','Duneborn','Sandglass','Farwatch','Stillsand','Sunfold','Glasswind','Emberscale','Coldsand','Farstep','Hollowdune','Suncoil','Dryreach','Ashendune','Windcoil','Farscale','Duskglass','Rockshade','Palewind','Glintscale'],
   },
 };
 

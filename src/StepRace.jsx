@@ -372,6 +372,27 @@ export default function StepRace({
               >
                 {!isExpanded && <RaceSigil raceDef={r} selected={isSelected} watermark />}
 
+                {isExpanded && (
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      backgroundImage: `url(${raceIconSrc(r.id)})`,
+                      backgroundSize: isMobile ? '260px' : '440px',
+                      backgroundPosition: isMobile ? 'top right' : 'top right',
+                      backgroundRepeat: 'no-repeat',
+                      filter: 'invert(1) sepia(0.25) saturate(0.6) brightness(0.9)',
+                      mixBlendMode: 'screen',
+                      opacity: 0.08,
+                      maskImage: 'linear-gradient(to bottom left, black 0%, transparent 65%)',
+                      WebkitMaskImage: 'linear-gradient(to bottom left, black 0%, transparent 65%)',
+                      pointerEvents: 'none',
+                      zIndex: 0,
+                    }}
+                  />
+                )}
+
                 {/* Card header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -412,7 +433,7 @@ export default function StepRace({
                 {isExpanded && (
                   <div
                     onClick={e => e.stopPropagation()}
-                    style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${COLORS.border}` }}
+                    style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${COLORS.border}`, position: 'relative', zIndex: 1 }}
                   >
                     {/* Description - resolveDesc handles Pa'morph lore + all other races */}
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(118px, 150px) 1fr', gap: 18, alignItems: 'start', marginBottom: 14 }}>

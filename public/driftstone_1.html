@@ -518,6 +518,7 @@ function initState(firstPlayer){
     selectedDir:null,
     selectedTokenKey:null,
     extraTurns:0,
+    seizeStep:0,
     pendingHSMove:false,
     hsWinner:null,
     heartstoneUnlocked:false,
@@ -1453,7 +1454,7 @@ function renderPlayers(){
     info.textContent='Tiles remaining: '+remaining+'/8';
     tokEl.appendChild(info);
     const placing=isActive&&(S.mode==='place-push-pick-dir'||S.mode==='place-push-pick-cell');
-    const canStartPlace=isActive&&(S.mode==='pick-action'||S.mode==='seize-action1'||S.mode==='seize-action2')&&remaining>0;
+    const canStartPlace=isActive&&S.mode==='pick-action'&&remaining>0;
     if(canStartPlace){
       const placeBtn=document.createElement('button');
       placeBtn.className='player-place-btn'+(i===1?' red':'');
@@ -1491,7 +1492,7 @@ function renderActions(){
   if(S.mode==='move-heartstone') return;
   if(S.winner!==null) return;
   const p=S.players[S.activePlayer];
-  const isSeize=S.mode==='seize-action1'||S.mode==='seize-action2';
+  const isSeize=S.seizeStep>0;
   if(S.mode==='pick-action'||isSeize){
     [
       {id:'pull-push',label:'Pull the Push',dis:p.pullThePushUsed||Object.keys(S.pushTiles).length===0},
@@ -1574,8 +1575,8 @@ function renderStatus(){
   winBanner.style.display='none';
   const isBot=gameMode==='bot'&&((humanSide===1&&S.activePlayer===1)||(humanSide===2&&S.activePlayer===0));
   let t=botThinking?'Bot is thinking...':'Turn '+S.turn+' — '+(isBot?'Bot':'Player '+(S.activePlayer+1))+"'s turn";
-  if(S.mode==='seize-action1') t+=' (Seize: action 1 of 2)';
-  if(S.mode==='seize-action2') t+=' (Seize: action 2 of 2)';
+  if(S.seizeStep===1) t+=' (Seize: action 1 of 2)';
+  if(S.seizeStep===2) t+=' (Seize: action 2 of 2)';
   status.textContent=t;
 }
 
@@ -1812,7 +1813,7 @@ function handleAction(id){
   else if(id==='bind'){if(!p.bindingUsed)S.mode='bind-pick-stone';}
   else if(id==='seize'){
     if(p.seizeUsed||S.turn<5) return;
-    p.seizeUsed=true;S.mode='seize-action1';
+    p.seizeUsed=true;S.seizeStep=1;
     addLog('P'+(S.activePlayer+1)+' uses Seize the Pull!');
   }
   else if(id==='move-hs'){if(!S.heartstoneUnlocked) return;S.mode='move-hs-pick-cell';}
@@ -1923,7 +1924,7 @@ function renderPlayers(){
     info.textContent='Tiles remaining: '+remaining+'/8';
     tokEl.appendChild(info);
     const placing=isActive&&(S.mode==='place-push-pick-dir'||S.mode==='place-push-pick-cell');
-    const canStartPlace=isActive&&(S.mode==='pick-action'||S.mode==='seize-action1'||S.mode==='seize-action2')&&remaining>0;
+    const canStartPlace=isActive&&S.mode==='pick-action'&&remaining>0;
     if(canStartPlace){
       const placeBtn=document.createElement('button');
       placeBtn.className='player-place-btn'+(i===1?' red':'');
@@ -1961,7 +1962,7 @@ function renderActions(){
   if(S.mode==='move-heartstone') return;
   if(S.winner!==null) return;
   const p=S.players[S.activePlayer];
-  const isSeize=S.mode==='seize-action1'||S.mode==='seize-action2';
+  const isSeize=S.seizeStep>0;
   if(S.mode==='pick-action'||isSeize){
     [
       {id:'pull-push',label:'Pull the Push',dis:p.pullThePushUsed||Object.keys(S.pushTiles).length===0},
@@ -2044,8 +2045,8 @@ function renderStatus(){
   winBanner.style.display='none';
   const isBot=gameMode==='bot'&&((humanSide===1&&S.activePlayer===1)||(humanSide===2&&S.activePlayer===0));
   let t=botThinking?'Bot is thinking...':'Turn '+S.turn+' — '+(isBot?'Bot':'Player '+(S.activePlayer+1))+"'s turn";
-  if(S.mode==='seize-action1') t+=' (Seize: action 1 of 2)';
-  if(S.mode==='seize-action2') t+=' (Seize: action 2 of 2)';
+  if(S.seizeStep===1) t+=' (Seize: action 1 of 2)';
+  if(S.seizeStep===2) t+=' (Seize: action 2 of 2)';
   status.textContent=t;
 }
 
@@ -2282,7 +2283,7 @@ function handleAction(id){
   else if(id==='bind'){if(!p.bindingUsed)S.mode='bind-pick-stone';}
   else if(id==='seize'){
     if(p.seizeUsed||S.turn<5) return;
-    p.seizeUsed=true;S.mode='seize-action1';
+    p.seizeUsed=true;S.seizeStep=1;
     addLog('P'+(S.activePlayer+1)+' uses Seize the Pull!');
   }
   else if(id==='move-hs'){if(!S.heartstoneUnlocked) return;S.mode='move-hs-pick-cell';}
@@ -2343,8 +2344,9 @@ function completeBinding(ds){
 
 function finishAction(){
   checkBinding();
-  if(S.mode==='seize-action1'){S.mode='seize-action2';render();return}
-  if(S.mode==='seize-action2'){
+  if(S.seizeStep===1){S.seizeStep=2;render();return}
+  if(S.seizeStep===2){
+    S.seizeStep=0;
     const opp=1-S.activePlayer;
     S.players[opp].seizeConsequencePending=true;
     addLog('Seize done. P'+(opp+1)+' gets 2 turns next.');
