@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import supabase from './lib/supabase';
+import medallion from './assets/medallion.png';
 import { useDevice } from './useDevice';
 import { COLORS, CAMPAIGNS, ALL_STATS, ALL_CLASSES, ACTIONS, getRaceDisplay } from './constants';
 import { LOCATIONS } from './MapPanel';
@@ -248,11 +249,14 @@ function DMSigilModal({ onSuccess, onCancel }) {
   };
 
   return (
-    <div onClick={onCancel} style={{ position: 'fixed', inset: 0, background: 'rgba(10,8,6,0.72)', backdropFilter: 'blur(6px)', zIndex: 300100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#13100d', border: error ? '1px solid #7f1d1d' : '1px solid rgba(240,238,235,0.12)', borderRadius: 14, padding: '36px 40px', maxWidth: 360, width: '100%', textAlign: 'center', boxShadow: '0 24px 64px rgba(0,0,0,0.6)', transform: shake ? 'translateX(-8px)' : 'none', transition: 'transform 0.08s, border-color 0.2s' }}>
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.28em', color: 'rgba(240,238,235,0.4)', textTransform: 'uppercase', marginBottom: 8 }}>DM Mode</div>
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 20, fontWeight: 700, color: '#f0eeeb', letterSpacing: '0.06em', marginBottom: 6 }}>Enter the Sigil</div>
-        <div style={{ fontSize: 12, color: 'rgba(240,238,235,0.32)', marginBottom: 18, lineHeight: 1.65, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+    <div onClick={onCancel} style={{ position: 'fixed', inset: 0, background: 'linear-gradient(rgba(10,8,6,0.74), rgba(10,8,6,0.74)), radial-gradient(ellipse at center, rgba(240,238,235,0.08), rgba(10,8,6,0.18) 62%, rgba(10,8,6,0.34))', backdropFilter: 'blur(6px)', zIndex: 300100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#13100d', border: error ? '1px solid #7f1d1d' : '1px solid rgba(240,238,235,0.12)', borderRadius: 14, padding: '34px 29px 32px', maxWidth: 374, width: '100%', textAlign: 'center', boxShadow: '0 24px 64px rgba(0,0,0,0.6)', transform: shake ? 'translateX(-8px)' : 'none', transition: 'transform 0.08s, border-color 0.2s' }}>
+        <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}>
+          <img src={medallion} alt="" aria-hidden="true" style={{ width: 76, height: 76, objectFit: 'contain', filter: 'invert(1)', opacity: 0.96 }} />
+        </div>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.28em', color: 'rgba(240,238,235,0.4)', textTransform: 'uppercase', marginBottom: 9 }}>DM Mode</div>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: '#f0eeeb', letterSpacing: '0.06em', marginBottom: 10 }}>Enter the Sigil</div>
+        <div style={{ fontSize: 12, color: 'rgba(240,238,235,0.32)', marginBottom: 20, lineHeight: 1.65, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
           {mode === 'create' ? <>Forge a new module.<br />Name it, and set its sigil.</> : <>The archives are sealed.<br />Prove you hold the key.</>}
         </div>
 
@@ -264,7 +268,7 @@ function DMSigilModal({ onSuccess, onCancel }) {
         ) : (
           <input value={newName} onChange={e => { setNewName(e.target.value); setError(''); }} placeholder="Module name" style={{ ...inputBase, fontSize: 13 }} />
         )}
-        <input autoFocus type="password" value={input} onChange={e => { setInput(e.target.value); setError(''); }} onKeyDown={e => e.key === 'Enter' && attempt()} placeholder={mode === 'create' ? 'Set the sigil (min 6 chars)' : '...'} style={{ ...inputBase, border: error ? '1px solid #ef4444' : '1px solid rgba(240,238,235,0.14)', fontSize: 16, letterSpacing: '0.3em', textAlign: 'center', marginBottom: 14 }} />
+        <input autoFocus type="password" value={input} onChange={e => { setInput(e.target.value); setError(''); }} onKeyDown={e => e.key === 'Enter' && attempt()} placeholder={mode === 'create' ? 'Set the sigil (min 6 chars)' : 'Enter sigil'} style={{ ...inputBase, border: error ? '1px solid #ef4444' : '1px solid rgba(240,238,235,0.14)', fontSize: 16, letterSpacing: '0.3em', textAlign: 'center', marginBottom: 14 }} />
         {error && <div style={{ fontSize: 11, color: '#ef4444', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12, fontFamily: "'Cinzel', serif" }}>{error}</div>}
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={onCancel} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 8, padding: '10px 0', color: 'rgba(240,238,235,0.32)', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', fontFamily: "'Cinzel', serif" }}>Retreat</button>

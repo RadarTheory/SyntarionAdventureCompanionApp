@@ -22,6 +22,8 @@ export default function App() {
   });
   const [inSession, setInSession] = useState(false);
   const [inCampaign, setInCampaign] = useState(false);
+  const [banStatus, setBanStatus] = useState({ checked: false, banned: false });
+  const [recoveryMode, setRecoveryMode] = useState(false);
 
   const goLandingHome = () => {
     localStorage.removeItem('syntarion_view');
@@ -68,8 +70,9 @@ export default function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
+      if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true);
       setSession(session);
       setAuthLoading(false);
     });
@@ -80,14 +83,41 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setBanStatus({ checked: false, banned: false });
+      return;
+    }
+    let active = true;
+    supabase
+      .from('profiles')
+      .select('banned')
+      .eq('id', session.user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active) setBanStatus({ checked: true, banned: !!data?.banned });
+      });
+    return () => {
+      active = false;
+    };
+  }, [session?.user?.id]);
+
   // Show splash screen first, regardless of auth state
   if (splashLoading) return <LoadingScreen />;
 
   // While auth resolves after splash, show nothing (avoids flash)
   if (authLoading) return null;
 
+  // A password-recovery link just signed this session in — finish that
+  // flow before anything else, gameplay or ban-check included.
+  if (recoveryMode) return <SetNewPasswordScreen onDone={() => setRecoveryMode(false)} />;
+
   // Not logged in → show login screen
   if (!session) return <LoginScreen />;
+
+  // Wait for the ban check before rendering anything gameplay-related
+  if (!banStatus.checked) return null;
+  if (banStatus.banned) return <BannedScreen onSignOut={() => supabase.auth.signOut()} />;
 
   // Bag / mini-game views (auth still required to reach these)
   if (view === 'bag') return <LotjarrsBag onHome={goLandingHome} onLaunchGame={launchGame} />;
@@ -113,6 +143,148 @@ export default function App() {
   );
 }
 
+
+function SetNewPasswordScreen({ onDone }) {
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const inputStyle = {
+    width: '100%',
+    padding: '12px 16px',
+    background: 'transparent',
+    border: '1px solid rgba(26,23,20,0.25)',
+    borderRadius: 6,
+    fontFamily: 'Georgia, serif',
+    fontSize: 13,
+    color: '#1a1714',
+    outline: 'none',
+    marginBottom: 10,
+    boxSizing: 'border-box',
+  };
+
+  const submit = async () => {
+    setError('');
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+    if (password !== confirm) {
+      setError('Passwords don’t match.');
+      return;
+    }
+    setBusy(true);
+    const { error: updateErr } = await supabase.auth.updateUser({ password });
+    setBusy(false);
+    if (updateErr) {
+      setError(updateErr.message);
+      return;
+    }
+    onDone();
+  };
+
+  return (
+    <div
+      style={{
+        minHeight: '100svh',
+        background: '#dbdcdf',
+        backgroundImage: `radial-gradient(circle at 50% 20%, rgba(255, 250, 240, 0.65) 0%, transparent 70%)`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+      }}
+    >
+      <div style={{ width: '100%', maxWidth: 380 }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#1a1714', marginBottom: 14, textAlign: 'center' }}>
+          Set A New Password
+        </div>
+        <input
+          type="password"
+          placeholder="New password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          style={inputStyle}
+        />
+        <input
+          type="password"
+          placeholder="Confirm new password"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && submit()}
+          style={inputStyle}
+        />
+        {error && <div style={{ fontFamily: 'Georgia, serif', fontSize: 12, color: '#b23b3b', marginBottom: 10 }}>{error}</div>}
+        <button
+          onClick={submit}
+          disabled={busy}
+          style={{
+            width: '100%',
+            background: '#1a1714',
+            border: 'none',
+            borderRadius: 6,
+            padding: '14px 32px',
+            cursor: busy ? 'default' : 'pointer',
+            fontFamily: "'Cinzel', serif",
+            fontSize: 11,
+            letterSpacing: '0.16em',
+            textTransform: 'uppercase',
+            color: '#f0eeeb',
+            fontWeight: 700,
+            opacity: busy ? 0.7 : 1,
+          }}
+        >
+          {busy ? 'Saving…' : 'Set Password'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function BannedScreen({ onSignOut }) {
+  return (
+    <div
+      style={{
+        minHeight: '100svh',
+        background: '#dbdcdf',
+        backgroundImage: `radial-gradient(circle at 50% 20%, rgba(255, 250, 240, 0.65) 0%, transparent 70%)`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+      }}
+    >
+      <div style={{ width: '100%', maxWidth: 380, textAlign: 'center' }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#1a1714', marginBottom: 14 }}>
+          Account Suspended
+        </div>
+        <p style={{ fontFamily: 'Georgia, serif', fontSize: 13, color: '#3a352e', lineHeight: 1.6, marginBottom: 22 }}>
+          This account has been banned from Syntarion. If you believe this is a mistake, contact your DM.
+        </p>
+        <button
+          onClick={onSignOut}
+          style={{
+            width: '100%',
+            background: '#1a1714',
+            border: 'none',
+            borderRadius: 6,
+            padding: '14px 32px',
+            cursor: 'pointer',
+            fontFamily: "'Cinzel', serif",
+            fontSize: 11,
+            letterSpacing: '0.16em',
+            textTransform: 'uppercase',
+            color: '#f0eeeb',
+            fontWeight: 700,
+          }}
+        >
+          Sign Out
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function LoginScreen() {
   const [email, setEmail] = useState('');

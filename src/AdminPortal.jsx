@@ -3,17 +3,12 @@ import supabase from './lib/supabase';
 import CompendiumUpload from './CompendiumUpload';
 import PlayersPanel from './PlayersPanel';
 import HandbookBookmark from './HandbookBookmark';
+import AdminSidebar from './AdminSidebar';
+import AdminDashboard from './AdminDashboard';
+import GatePanel from './GatePanel';
+import { ALL_TABLES } from './adminTables';
 
 const ADMIN_UUID = import.meta.env.VITE_DM_USER_ID || 'fd2b5a52-e179-4234-9265-9b5ab36d6ace';
-
-const TABLES = [
-  'campaigns', 'modules', 'characters', 'character_items', 'items',
-  'trades', 'trade_items', 'npc_inventory',
-  'lootboxes', 'lootbox_items', 'messages', 'sessions', 'session_checkins',
-  'session_logs', 'vtt_sessions', 'hercules_sessions', 'hercules_events',
-  'hercules_initiative', 'world_clock', 'npcs', 'beasts', 'grimoire_entries',
-  'larks', 'dm_memory', 'support_reports', 'legal_acceptances', 'scribe_context',
-];
 
 const PAGE_SIZE = 50;
 const STATUS_COLORS = {
@@ -42,7 +37,7 @@ export default function AdminPortal() {
   const [pw, setPw] = useState('');
   const [authErr, setAuthErr] = useState('');
 
-  const [table, setTable] = useState(TABLES[0]);
+  const [table, setTable] = useState(ALL_TABLES[0]);
   const [customTable, setCustomTable] = useState('');
   const [rows, setRows] = useState([]);
   const [page, setPage] = useState(0);
@@ -56,14 +51,16 @@ export default function AdminPortal() {
   const [inserting, setInserting] = useState(false);
   const [cellEdit, setCellEdit] = useState(null);
   const [cellVal_, setCellVal] = useState('');
-  const [view, setView] = useState('tables');
+  const [view, setView] = useState('dashboard');
   const [handbookOpenSignal, setHandbookOpenSignal] = useState(0);
   const [tlCampaign, setTlCampaign] = useState('4');
   const [tlEvents, setTlEvents] = useState([]);
   const [tlClock, setTlClock] = useState(null);
   const [tlCampaigns, setTlCampaigns] = useState([]);
+  const [gateRole, setGateRole] = useState(null);
+  const [gateRoleChecked, setGateRoleChecked] = useState(false);
 
-  const isAdmin = session?.user?.id === ADMIN_UUID;
+  const isAdmin = session?.user?.id === ADMIN_UUID || gateRole === 'creator';
   const activeTable = customTable.trim() || table;
 
   const resetTableView = useCallback(() => {
@@ -147,6 +144,29 @@ export default function AdminPortal() {
   }, []);
 
   useEffect(() => {
+    if (!session?.user?.id) {
+      setGateRole(null);
+      setGateRoleChecked(true);
+      return;
+    }
+    let active = true;
+    setGateRoleChecked(false);
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!active) return;
+        setGateRole(data?.role || null);
+        setGateRoleChecked(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [session?.user?.id]);
+
+  useEffect(() => {
     if (isAdmin && view === 'timeline') queueMicrotask(() => { void loadTimeline(tlCampaign); });
   }, [isAdmin, view, tlCampaign, loadTimeline]);
 
@@ -220,11 +240,13 @@ export default function AdminPortal() {
   const chooseTable = (t) => {
     setTable(t);
     setCustomTable('');
+    setView('tables');
     resetTableView();
   };
 
   const chooseCustomTable = (value) => {
     setCustomTable(value);
+    if (value.trim()) setView('tables');
     resetTableView();
   };
 
@@ -234,6 +256,7 @@ export default function AdminPortal() {
   };
 
   if (!authChecked) return null;
+  if (session && !gateRoleChecked) return null;
 
   if (!session || !isAdmin) {
     return (
@@ -287,23 +310,21 @@ export default function AdminPortal() {
         Handbook
       </button>
       <div style={{ minHeight: '100vh', background: '#0a0806', color: '#f0eeeb', fontFamily: 'monospace', display: 'flex' }}>
-      <div style={{ width: 200, borderRight: '1px solid #2a251e', padding: 12, display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, height: '100vh', overflowY: 'auto', position: 'sticky', top: 0 }}>
-        <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
-          {[[ 'tables', 'Tables' ], [ 'players', 'Players' ], [ 'timeline', 'Timeline' ], [ 'upload', 'Scribe' ]].map(([v, l]) => (
-            <button key={v} onClick={() => setView(v)}
-              style={{ flex: 1, background: view === v ? 'rgba(200,168,74,0.14)' : 'transparent', border: `1px solid ${view === v ? 'rgba(200,168,74,0.5)' : '#3a352e'}`, borderRadius: 5, padding: '5px 0', color: view === v ? '#e8c84a' : '#8a8378', fontSize: 10, cursor: 'pointer', fontFamily: 'monospace' }}>{l}</button>
-          ))}
-        </div>
-        <div style={{ color: '#e8c84a', fontSize: 11, letterSpacing: '0.15em', marginBottom: 8 }}>TABLES</div>
-        {TABLES.map((t) => (
-          <button key={t} onClick={() => chooseTable(t)}
-            style={{ textAlign: 'left', background: activeTable === t ? 'rgba(200,168,74,0.12)' : 'transparent', border: 'none', color: activeTable === t ? '#e8c84a' : '#8a8378', fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontFamily: 'monospace', borderRadius: 4 }}>{t}</button>
-        ))}
-        <input style={{ ...S.input, marginTop: 8, fontSize: 10 }} placeholder="other table..." value={customTable} onChange={(e) => chooseCustomTable(e.target.value)} />
-        <button onClick={() => supabase.auth.signOut()} style={{ ...S.btnDanger, marginTop: 'auto', fontSize: 10 }}>Sign out</button>
-      </div>
+      <AdminSidebar
+        view={view}
+        onSetView={setView}
+        activeTable={activeTable}
+        onChooseTable={chooseTable}
+        customTable={customTable}
+        onCustomTable={chooseCustomTable}
+        onSignOut={() => supabase.auth.signOut()}
+      />
 
       <div style={{ flex: 1, padding: 16, minWidth: 0 }}>
+        {view === 'dashboard' && <AdminDashboard onOpenTable={chooseTable} />}
+
+        {view === 'gate' && <GatePanel />}
+
         {view === 'upload' && <CompendiumUpload />}
 
         {view === 'players' && (

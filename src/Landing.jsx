@@ -351,16 +351,16 @@ function DMSigilModal({ onSuccess, onCancel }) {
           background: '#13100d',
           border: `1px solid ${error ? '#7f1d1d' : 'rgba(240,238,235,0.12)'}`,
           borderRadius: 14,
-          padding: '36px 40px',
-          maxWidth: 360, width: '100%',
+          padding: '34px 29px 32px',
+          maxWidth: 374, width: '100%',
           textAlign: 'center',
           boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
           transform: shake ? 'translateX(-8px)' : 'none',
           transition: 'transform 0.08s, border-color 0.2s',
         }}
       >
-        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
-          <SyntarionLogo size={72} darkMode />
+        <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}>
+          <SyntarionLogo size={76} darkMode />
         </div>
         <div style={{
           fontFamily: "'Cinzel', serif", fontSize: 12,
@@ -368,11 +368,11 @@ function DMSigilModal({ onSuccess, onCancel }) {
           textTransform: 'uppercase', marginBottom: 8,
         }}>DM Mode</div>
         <div style={{
-          fontFamily: "'Cinzel', serif", fontSize: 20, fontWeight: 700,
-          color: '#f0eeeb', letterSpacing: '0.06em', marginBottom: 6,
+          fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700,
+          color: '#f0eeeb', letterSpacing: '0.06em', marginBottom: 10,
         }}>Enter the Sigil</div>
         <div style={{
-          fontSize: 12, color: 'rgba(240,238,235,0.32)', marginBottom: 18,
+          fontSize: 12, color: 'rgba(240,238,235,0.32)', marginBottom: 20,
           lineHeight: 1.65, fontFamily: 'Georgia, serif', fontStyle: 'italic',
         }}>
           {mode === 'create'

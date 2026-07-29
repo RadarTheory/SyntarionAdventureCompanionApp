@@ -1,0 +1,63 @@
+/* Admin sidebar nav items — accent-bar reveal on active, sibling defocus on group hover. */
+/* Adapted from a Uiverse.io (FH638) input/nav concept, recolored to the admin amber palette. */
+
+.admin-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border-radius: 8px;
+  transition: background 300ms;
+}
+
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  position: relative;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  padding: 4px 8px;
+  margin: 0;
+  color: #8a8378;
+  font-size: 11px;
+  font-family: monospace;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: transform 250ms, filter 250ms, background 250ms, color 250ms, margin-left 250ms;
+}
+
+.admin-nav-item::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: -8px;
+  width: 3px;
+  height: calc(100% - 6px);
+  background: #e8c84a;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 250ms;
+}
+
+.admin-nav-item:hover {
+  color: #c9c2b6;
+}
+
+.admin-nav-item.active {
+  background: rgba(200, 168, 74, 0.12);
+  color: #e8c84a;
+  margin-left: 6px;
+}
+
+.admin-nav-item.active::before {
+  opacity: 1;
+}
+
+.admin-nav-group:hover .admin-nav-item:not(:hover) {
+  filter: blur(0.6px);
+  opacity: 0.72;
+  transform: scale(0.97);
+}
