@@ -557,15 +557,12 @@ export default function ScribeLite({ dismiss = false }) {
     }, 700 + Math.random() * 500);
   };
 
-  /* Close with a disappearing act, then hide the panel */
+  /* Close instantly */
   const closeChat = () => {
     clearTimeout(emotionTimer.current);
     pendingRef.current = null;
-    setEmotion('disappearing');
-    emotionTimer.current = setTimeout(() => {
-      setOpen(false);
-      goIdle();
-    }, 1100);
+    setOpen(false);
+    goIdle();
   };
 
   /* Fully dismissed — Scribe is unavailable here */

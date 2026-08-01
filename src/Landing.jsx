@@ -624,14 +624,12 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
           : 'Create your first adventurer',
       onClick: handlePlay,
     },
-    ...(campaignChars.length > 0
-      ? [{
-          id: 'campaigns',
-          label: 'CAMPAIGNS',
-          sub: 'Enter the age of steam',
-          onClick: () => { localStorage.setItem('syn_view', 'campaigns'); setAppView('campaigns'); playSfxByKey('ui-campaign-dm-view-page-pop'); },
-        }]
-      : []),
+    {
+      id: 'campaigns',
+      label: 'CAMPAIGNS',
+      sub: campaignChars.length > 0 ? 'Enter the age of steam' : 'Browse the world',
+      onClick: () => { localStorage.setItem('syn_view', 'campaigns'); setAppView('campaigns'); playSfxByKey('ui-campaign-dm-view-page-pop'); },
+    },
     {
       id: 'howtoplay',
       label: 'HOW TO PLAY',
