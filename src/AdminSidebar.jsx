@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TABLE_GROUPS } from './adminTables';
 import './adminSidebar.css';
 
@@ -26,6 +26,12 @@ function buildDefaultCollapsed(activeTable) {
 export default function AdminSidebar({ view, onSetView, activeTable, onChooseTable, customTable, onCustomTable, onSignOut }) {
   const [search, setSearch] = useState('');
   const [collapsed, setCollapsed] = useState(() => buildDefaultCollapsed(activeTable));
+  const [customDraft, setCustomDraft] = useState(customTable);
+
+  // Picking a table from the list below resets customTable on the parent
+  // (so that selection takes over from any pending custom-table text) —
+  // mirror that reset into the draft so the box doesn't show stale text.
+  useEffect(() => setCustomDraft(customTable), [customTable]);
 
   const query = search.trim().toLowerCase();
   const toggleCat = (key) => setCollapsed((c) => ({ ...c, [key]: !c[key] }));
@@ -122,8 +128,10 @@ export default function AdminSidebar({ view, onSetView, activeTable, onChooseTab
       <input
         style={{ ...inputStyle, marginTop: 8 }}
         placeholder="other table..."
-        value={customTable}
-        onChange={(e) => onCustomTable(e.target.value)}
+        value={customDraft}
+        onChange={(e) => setCustomDraft(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') onCustomTable(customDraft); }}
+        onBlur={() => onCustomTable(customDraft)}
       />
       <button
         onClick={onSignOut}
