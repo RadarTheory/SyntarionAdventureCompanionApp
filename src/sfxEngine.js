@@ -17,7 +17,6 @@ class SfxEngine {
     if (!url) return { ok: false };
 
     const audio = new Audio(url);
-    audio.crossOrigin = 'anonymous';
     audio.volume = this._effectiveVolume();
 
     const cleanup = () => {

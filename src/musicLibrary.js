@@ -112,8 +112,8 @@ function shuffleTracks(rows) {
 
 // Matches the two tracks that should open a fresh listening session, in order.
 const INTRO_TRACK_MATCHERS = [
-  /disc of soteria/i,
   /soteria awakened.*main theme/i,
+  /disc of soteria/i,
 ];
 
 function pullIntroTracks(playable) {

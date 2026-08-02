@@ -52,7 +52,6 @@ export function createBedEngine(busName, { crossfadeSeconds = DEFAULT_CROSSFADE_
     if (decks) return;
     decks = [0, 1].map(() => {
       const audio = new Audio();
-      audio.crossOrigin = 'anonymous';
       audio.preload = 'auto';
       audio.loop = true;
       audio.volume = 0;

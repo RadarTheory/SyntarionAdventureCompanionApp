@@ -25,7 +25,6 @@ class MusicEngine {
 
     this.decks = [0, 1].map((index) => {
       const audio = new Audio();
-      audio.crossOrigin = 'anonymous';
       audio.preload = 'auto';
       audio.loop = false;
       audio.volume = 0;
@@ -98,6 +97,13 @@ class MusicEngine {
 
   playNext() {
     if (this.queue.length === 0) return { ok: false };
+    // The very first track of a session is started via play() directly (not
+    // through here), so it's never shifted off the queue it was pulled from.
+    // If it's still sitting at the front, rotate it out before advancing —
+    // otherwise this would hand it right back out as "next" and replay it.
+    if (this.currentTrack && this.trackUrl(this.queue[0]) === this.trackUrl(this.currentTrack)) {
+      this.queue.push(this.queue.shift());
+    }
     const next = this.queue.shift();
     this.queue.push(next); // rotate so the pool loops
     return this.play(next);
