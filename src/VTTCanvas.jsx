@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { LOCATIONS } from './MapPanel';
@@ -99,7 +99,7 @@ function isTokenFogged(tok, fogZones) {
   return fogged;
 }
 
-function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId, onIconReady, showGrid, gridSize }) {
+function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId, onIconReady, showGrid, gridSize, dmFogOpacity = 1 }) {
   if (!canvas || !mapImg) return;
   const ctx = canvas.getContext('2d');
   const W = canvas.width;
@@ -173,9 +173,15 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   });
 
   // ── 3. Composite fog onto main canvas with the same transform ────────────
+  // dmFogOpacity dims/hides fog on the DM's screen ONLY — the stored fog_zones
+  // are untouched, so players always see full fog.
   ctx.save();
   ctx.setTransform(transform.scale, 0, 0, transform.scale, transform.x, transform.y);
-  ctx.drawImage(fogCanvas, 0, 0);
+  if (dmFogOpacity > 0) {
+    ctx.globalAlpha = dmFogOpacity;
+    ctx.drawImage(fogCanvas, 0, 0);
+    ctx.globalAlpha = 1;
+  }
 
   // ── 4. Draw tokens ───────────────────────────────────────────────────────
   tokens.forEach(tok => {
@@ -299,6 +305,12 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   const [showTokenForm, setShowTokenForm]     = useState(false);
   const [pendingClick, setPendingClick]       = useState(null);
   const [mapSearch, setMapSearch]             = useState('');
+  const [previewLoc, setPreviewLoc]           = useState(null);
+  const selectedRowRef                        = useRef(null);
+  const filteredLocations = useMemo(
+    () => LOCATIONS.filter(l => l.name.toLowerCase().includes(mapSearch.toLowerCase())),
+    [mapSearch]
+  );
   const [pinnedCampaignId, setPinnedCampaignId] = useState(() => localStorage.getItem('vtt_pinned_campaign') || campaignId);
   const [showCampaignPicker, setShowCampaignPicker] = useState(false);
   const activeCampaignId = pinnedCampaignId || campaignId;
@@ -308,8 +320,19 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   const [portraitFullscreen, setPortraitFullscreen] = useState(null);
   const [showGrid, setShowGrid] = useState(false);
   const [gridSize, setGridSize] = useState(40);
+  const [dmFogMode, setDmFogMode] = useState(() => localStorage.getItem('vtt_dm_fog_mode') || 'full');
+  const dmFogOpacity = dmFogMode === 'off' ? 0 : dmFogMode === 'dim' ? 0.5 : 1;
+  const cycleFog = () => {
+    const order = ['full', 'dim', 'off'];
+    const next = order[(order.indexOf(dmFogMode) + 1) % order.length];
+    setDmFogMode(next);
+    localStorage.setItem('vtt_dm_fog_mode', next);
+  };
   const [pendingMoves, setPendingMoves]       = useState([]);
   const fogHistoryRef = useRef([]);
+  // Saved zoom/pan is applied only on the first load per campaign — never on
+  // realtime refreshes — so the DM's live zoom never snaps back mid-session.
+  const hasLoadedTransformRef = useRef(false);
 
   useEffect(() => {
     if (!campaignId) return;
@@ -390,6 +413,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
 
   useEffect(() => {
     if (!activeCampaignId) return;
+    hasLoadedTransformRef.current = false; // allow the new campaign's saved view to apply once
     loadSession();
     const sub = supabase.channel(`vtt-${activeCampaignId}-${uid()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'vtt_sessions', filter: `campaign_id=eq.${activeCampaignId}` }, () => loadSession())
@@ -467,7 +491,10 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
       setFogZones(data.fog_zones || []);
       setTokens(await hydratePortraits(data.tokens || []));
       setMapFilename(data.map_filename);
-      if (data.view_transform) setTransform(data.view_transform);
+      if (!hasLoadedTransformRef.current) {
+        if (data.view_transform) setTransform(data.view_transform);
+        hasLoadedTransformRef.current = true;
+      }
     } else {
       const { data: camp } = await supabase.from('campaigns').select('map_url').eq('id', String(activeCampaignId)).single();
       const filename = camp?.map_url || null;
@@ -507,6 +534,30 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
     setMapFilename(filename); setMapSearch('');
   };
 
+  // Keep the highlighted row visible as you arrow through the list.
+  useEffect(() => { selectedRowRef.current?.scrollIntoView({ block: 'nearest' }); }, [previewLoc]);
+
+  // Arrow keys step the preview through the list; Enter loads the previewed map.
+  useEffect(() => {
+    if (mapFilename) return undefined; // only while the picker is open
+    const onKey = (e) => {
+      if (e.key === 'Enter') {
+        if (previewLoc) { e.preventDefault(); pickMap(previewLoc.filename); setPreviewLoc(null); }
+        return;
+      }
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      if (!filteredLocations.length) return;
+      e.preventDefault();
+      const idx = filteredLocations.findIndex(l => l.id === previewLoc?.id);
+      const next = e.key === 'ArrowDown'
+        ? (idx < 0 ? 0 : Math.min(filteredLocations.length - 1, idx + 1))
+        : (idx < 0 ? 0 : Math.max(0, idx - 1));
+      setPreviewLoc(filteredLocations[next]);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mapFilename, filteredLocations, previewLoc]);
+
   const save = async (targetCampaignId) => {
     setSaving(true);
     const { data: existing } = await supabase.from('vtt_sessions').select('id, map_states').eq('campaign_id', targetCampaignId).maybeSingle();
@@ -531,8 +582,8 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
 
   useEffect(() => {
     if (!mapLoaded) return;
-    drawCanvas({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId: hoveredToken?.id || null, onIconReady: () => setIconTick(t => t + 1), showGrid, gridSize });
-  }, [fogZones, tokens, brushPreview, mapLoaded, tool, transform, isDM, hoveredToken, iconTick]);
+    drawCanvas({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId: hoveredToken?.id || null, onIconReady: () => setIconTick(t => t + 1), showGrid, gridSize, dmFogOpacity });
+  }, [fogZones, tokens, brushPreview, mapLoaded, tool, transform, isDM, hoveredToken, iconTick, dmFogOpacity]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -742,6 +793,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         <button onClick={clearFog}  style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>Reset Fog</button>
         <button onClick={undoFog} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↩ Undo</button>
         <button onClick={() => setShowGrid(g => !g)} style={{ background: showGrid ? 'rgba(200,168,74,0.15)' : COLORS.card, border: `1px solid ${showGrid ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: showGrid ? '#e8c84a' : COLORS.text }}>⊞ Grid</button>
+        <button onClick={cycleFog} title="How fog looks on YOUR screen only — players always see full fog" style={{ background: dmFogMode !== 'full' ? 'rgba(200,168,74,0.15)' : COLORS.card, border: `1px solid ${dmFogMode !== 'full' ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: dmFogMode !== 'full' ? '#e8c84a' : COLORS.text }}>◑ Fog: {dmFogMode === 'full' ? 'Full' : dmFogMode === 'dim' ? 'Dim' : 'Off'}</button>
         <button onClick={resetView} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>⊡ Reset View</button>
         {isDM && (
           <div style={{ position: 'relative' }}>
@@ -760,7 +812,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
           </div>
         )}
         <button onClick={syncMapFromCampaign} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↺ Sync Map</button>
-        {mapFilename && <button onClick={() => { setMapFilename(null); setMapLoaded(false); setFogZones([]); setTokens([]); }} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↩ Change Map</button>}
+        {mapFilename && <button onClick={() => { setMapFilename(null); setMapLoaded(false); setFogZones([]); setTokens([]); setPreviewLoc(null); }} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↩ Change Map</button>}
         {mapLoaded && <div style={{ ...label8, color: COLORS.dim }}>Ctrl+drag to pan · Zoom: {Math.round(transform.scale * 100)}%</div>}
         <button onClick={() => setShowCommitPicker(true)} disabled={saving || !mapFilename} style={{ marginLeft: 'auto', background: mapFilename ? 'rgba(200,168,74,0.15)' : 'transparent', border: `1px solid ${mapFilename ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 16px', cursor: mapFilename ? 'pointer' : 'default', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: mapFilename ? '#e8c84a' : COLORS.dim, fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
           {saving ? 'Saving…' : '✦ Commit'}
@@ -769,13 +821,44 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
 
       <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: `1px solid ${COLORS.border}`, background: '#0d0b09', flex: 1, minHeight: 0, cursor: tool === 'pan' ? 'grab' : tool === 'fog-reveal' || tool === 'fog-hide' ? 'crosshair' : tool === 'erase-token' ? 'not-allowed' : 'default' }}>
         {!mapFilename ? (
-          <div style={{ padding: '28px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.muted, letterSpacing: '0.1em', textTransform: 'uppercase', textAlign: 'center' }}>Select a map to begin</div>
-            <input value={mapSearch} onChange={e => setMapSearch(e.target.value)} placeholder="Search locations…" style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 280, overflowY: 'auto' }}>
-              {LOCATIONS.filter(l => l.name.toLowerCase().includes(mapSearch.toLowerCase())).map(loc => (
-                <button key={loc.id} onClick={() => pickMap(loc.filename)} style={{ textAlign: 'left', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.06em', color: COLORS.text }}>{loc.name}</button>
-              ))}
+          <div style={{ padding: '24px 20px', display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+            {/* Left — search + location list (click previews, does not commit) */}
+            <div style={{ flex: '1 1 300px', minWidth: 260, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.muted, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Select a map — click to preview</div>
+              <input value={mapSearch} onChange={e => setMapSearch(e.target.value)} placeholder="Search locations…" style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 380, overflowY: 'auto' }}>
+                {filteredLocations.map(loc => {
+                  const selected = previewLoc?.id === loc.id;
+                  return (
+                    <button key={loc.id} ref={selected ? selectedRowRef : null} onClick={() => setPreviewLoc(loc)} style={{ textAlign: 'left', background: selected ? 'rgba(200,168,74,0.14)' : COLORS.card, border: `1px solid ${selected ? '#c8a84a88' : COLORS.border}`, borderRadius: 6, padding: '8px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.06em', color: selected ? '#e8c84a' : COLORS.text }}>
+                      {selected && <span style={{ marginRight: 6, opacity: 0.7 }}>✦</span>}{loc.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Right — preview pane; only "Load This Map" commits it live */}
+            <div style={{ flex: '1 1 340px', minWidth: 260 }}>
+              {previewLoc ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: 14, background: 'rgba(10,8,6,0.5)' }}>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#e8c84a', letterSpacing: '0.1em' }}>{previewLoc.name}</div>
+                  <div style={{ borderRadius: 8, overflow: 'hidden', background: '#0d0b09', border: `1px solid ${COLORS.border}` }}>
+                    <img src={`/Maps/${encodeURIComponent(previewLoc.filename)}`} alt={previewLoc.name} style={{ width: '100%', maxHeight: 380, objectFit: 'contain', display: 'block' }} />
+                  </div>
+                  <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Preview only — players won't see this until you press Load.</div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => { pickMap(previewLoc.filename); setPreviewLoc(null); }} style={{ flex: 1, background: 'rgba(200,168,74,0.16)', border: '1px solid #c8a84a', borderRadius: 6, padding: '10px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#e8c84a', fontWeight: 700 }}>✦ Load This Map</button>
+                    <button onClick={() => setPreviewLoc(null)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '10px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.dim }}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 220, border: `1px dashed ${COLORS.border}`, borderRadius: 10, padding: 24, textAlign: 'center' }}>
+                  <div style={{ fontSize: 26, opacity: 0.35 }}>🗺</div>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.muted, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Click a location to preview it</div>
+                  <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Nothing reaches players until you press Load.</div>
+                </div>
+              )}
             </div>
           </div>
         ) : !mapLoaded ? (

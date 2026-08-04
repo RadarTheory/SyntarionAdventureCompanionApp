@@ -124,7 +124,7 @@ export default function App() {
   if (view === 'driftstone') return <PlayDriftstone onHome={returnToBag} />;
   if (view === 'fubin') return <Fubin onHome={goLandingHome} />;
   if (view === 'elddimgates') return <Elddimgates onExit={returnToBag} />;
-  if (view === 'undercrypts') return <Undercrypts onExit={returnToBag} />;
+  if (view === 'undercrypts') return <Undercrypts onExit={returnToBag} userId={session.user.id} />;
   if (view === 'ocp-nodewright') return <OcpNodewright onExit={returnToBag} />;
 
   // Main app — pass real session user

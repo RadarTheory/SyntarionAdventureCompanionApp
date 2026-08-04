@@ -193,6 +193,8 @@ export default function FloatToolbar({ buttons, activeIds = [], storageKey = TOO
   const [dragging, setDragging] = useState(false);
   const [focusIndex, setFocusIndex] = useState(Number.isFinite(savedFocus) ? savedFocus : 0);
   const [motionTick, setMotionTick] = useState(0);
+  const [search, setSearch] = useState('');
+  const searchMountRef = useRef(true);
   const offset = useRef({ x: 0, y: 0 });
   const moved = useRef(false);
   const wheelAccumulator = useRef(0);
@@ -201,24 +203,37 @@ export default function FloatToolbar({ buttons, activeIds = [], storageKey = TOO
   const panelRef = useRef(null);
   const activeSet = useMemo(() => new Set(activeIds), [activeIds]);
   const hasActive = activeIds.length > 0;
-  const visibleCount = Math.min(buttons.length, mobile ? 4 : 5);
+  const query = search.trim().toLowerCase();
+  // The wheel reads from this list — filtered by name/description when searching.
+  const wheelButtons = useMemo(() => {
+    if (!query) return buttons;
+    return buttons.filter(b => `${b.title || ''} ${b.id || ''}`.toLowerCase().includes(query));
+  }, [buttons, query]);
+  const visibleCount = Math.min(wheelButtons.length, mobile ? 4 : 5);
   const launcherSize = mobile ? 54 : 64;
   const panelWidth = mobile ? Math.min(330, window.innerWidth - 16) : 392;
   const panelHeight = mobile ? Math.min(420, window.innerHeight - 24) : Math.min(540, window.innerHeight - 32);
   const centerY = panelHeight / 2;
 
   useEffect(() => { localStorage.setItem(storageKey, JSON.stringify(pos)); }, [pos, storageKey]);
-  useEffect(() => { localStorage.setItem(`${storageKey}_focus`, String(wrapIndex(focusIndex, buttons.length))); }, [focusIndex, buttons.length, storageKey]);
+  useEffect(() => { if (query) return; localStorage.setItem(`${storageKey}_focus`, String(wrapIndex(focusIndex, buttons.length))); }, [focusIndex, buttons.length, storageKey, query]);
   useEffect(() => { localStorage.setItem(dockedStorageKey, JSON.stringify({ wheel: true })); }, [dockedStorageKey]);
 
-  const clampedFocus = wrapIndex(focusIndex, buttons.length);
-  const focusButton = buttons[clampedFocus] || buttons[0];
+  // Snap the wheel back to the first match whenever the search term changes.
+  useEffect(() => {
+    if (searchMountRef.current) { searchMountRef.current = false; return; }
+    setFocusIndex(0);
+    setMotionTick(t => t + 1);
+  }, [search]);
+
+  const clampedFocus = wrapIndex(focusIndex, wheelButtons.length);
+  const focusButton = wheelButtons[clampedFocus] || wheelButtons[0];
 
   const rotate = useCallback((delta) => {
-    if (!buttons.length) return;
-    setFocusIndex(prev => wrapIndex(prev + delta, buttons.length));
+    if (!wheelButtons.length) return;
+    setFocusIndex(prev => wrapIndex(prev + delta, wheelButtons.length));
     setMotionTick(t => t + 1);
-  }, [buttons.length]);
+  }, [wheelButtons.length]);
 
   const startLauncherDrag = (e) => {
     const p = pointFromEvent(e);
@@ -251,14 +266,14 @@ export default function FloatToolbar({ buttons, activeIds = [], storageKey = TOO
   }, [dragging, open, panelWidth, panelHeight, launcherSize]);
 
   const visibleTools = useMemo(() => {
-    if (!buttons.length) return [];
+    if (!wheelButtons.length) return [];
     const half = Math.floor(visibleCount / 2);
     return Array.from({ length: visibleCount }, (_, slot) => {
       const offsetFromFocus = slot - half;
-      const index = wrapIndex(clampedFocus + offsetFromFocus, buttons.length);
-      return { button: buttons[index], index, offsetFromFocus, slot };
+      const index = wrapIndex(clampedFocus + offsetFromFocus, wheelButtons.length);
+      return { button: wheelButtons[index], index, offsetFromFocus, slot };
     });
-  }, [buttons, clampedFocus, visibleCount]);
+  }, [wheelButtons, clampedFocus, visibleCount]);
 
   const onWheel = useCallback((e) => {
     e.preventDefault();
@@ -291,7 +306,7 @@ export default function FloatToolbar({ buttons, activeIds = [], storageKey = TOO
     const dy = p.clientY - dragStart.current.y;
     const steps = Math.trunc(dy / 42);
     if (steps !== 0) {
-      setFocusIndex(wrapIndex(dragFocusStart.current + steps, buttons.length));
+      setFocusIndex(wrapIndex(dragFocusStart.current + steps, wheelButtons.length));
       setMotionTick(t => t + 1);
     }
     if (e.cancelable) e.preventDefault();
@@ -313,7 +328,7 @@ export default function FloatToolbar({ buttons, activeIds = [], storageKey = TOO
       window.removeEventListener('touchmove', moveWheelDrag);
       window.removeEventListener('touchend', endWheelDrag);
     };
-  }, [open, buttons.length, clampedFocus]);
+  }, [open, wheelButtons.length, clampedFocus]);
 
   if (!buttons.length) return null;
 
@@ -393,8 +408,8 @@ export default function FloatToolbar({ buttons, activeIds = [], storageKey = TOO
           <div style={{ position: 'absolute', left: 16, top: 16, zIndex: 3 }}>{launcher}</div>
           <div style={{ position: 'absolute', left: mobile ? 78 : 92, top: 18, right: 18, zIndex: 2, pointerEvents: 'none' }}>
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.22em', color: 'rgba(235,205,134,0.74)', textTransform: 'uppercase' }}>Tools</div>
-            <div style={{ fontFamily: "'Cinzel', serif", fontSize: mobile ? 15 : 18, letterSpacing: '0.08em', color: '#f2dfaa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 3 }}>{focusButton?.title?.split(' - ')[0] || focusButton?.id}</div>
-            <div style={{ fontFamily: 'Georgia, serif', fontSize: 11, fontStyle: 'italic', color: 'rgba(220,198,150,0.5)', marginTop: 3 }}>{clampedFocus + 1} of {buttons.length}</div>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: mobile ? 15 : 18, letterSpacing: '0.08em', color: '#f2dfaa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 3 }}>{focusButton ? (focusButton.title?.split(' - ')[0] || focusButton.id) : '—'}</div>
+            <div style={{ fontFamily: 'Georgia, serif', fontSize: 11, fontStyle: 'italic', color: 'rgba(220,198,150,0.5)', marginTop: 3 }}>{wheelButtons.length ? `${clampedFocus + 1} of ${wheelButtons.length}` : (query ? 'no matches' : '0 of 0')}{query && buttons.length ? ` · of ${buttons.length}` : ''}</div>
           </div>
 
           {visibleTools.map(({ button, index, offsetFromFocus }) => {
@@ -453,6 +468,34 @@ export default function FloatToolbar({ buttons, activeIds = [], storageKey = TOO
               </div>
             );
           })}
+
+          {query && wheelButtons.length === 0 && (
+            <div style={{ position: 'absolute', left: mobile ? 78 : 92, top: centerY - 18, right: 18, zIndex: 4, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(220,198,150,0.62)' }}>
+              No tools match “{search.trim()}”.
+            </div>
+          )}
+
+          <div
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+            style={{ position: 'absolute', left: mobile ? 16 : 18, right: mobile ? 90 : 100, bottom: 14, zIndex: 6, display: 'flex', alignItems: 'center', gap: 7, padding: '5px 10px', borderRadius: 9, background: 'rgba(6,4,2,0.74)', border: `1px solid ${query ? 'rgba(230,196,103,0.6)' : 'rgba(205,178,105,0.32)'}`, boxShadow: 'inset 0 0 14px rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)', transition: 'border-color 0.2s ease' }}
+          >
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden="true" style={{ flexShrink: 0, opacity: 0.7 }}>
+              <circle cx="10.5" cy="10.5" r="6.5" stroke="#e4c46d" strokeWidth="1.8" />
+              <path d="m15.5 15.5 4 4" stroke="#e4c46d" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Escape') setSearch(''); }}
+              placeholder="Search tools…"
+              style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', color: '#f0dfad', fontFamily: "'Cinzel', serif", fontSize: 11, letterSpacing: '0.05em' }}
+            />
+            {search && (
+              <button type="button" aria-label="Clear search" onClick={() => setSearch('')} style={{ flexShrink: 0, width: 18, height: 18, borderRadius: '50%', border: '1px solid rgba(205,178,105,0.34)', background: 'transparent', color: 'rgba(226,201,142,0.7)', cursor: 'pointer', fontSize: 10, lineHeight: 1, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+            )}
+          </div>
 
           <div style={{ position: 'absolute', right: 16, bottom: 14, zIndex: 3, display: 'flex', gap: 8, alignItems: 'center' }}>
             <button type="button" aria-label="Previous tool" onClick={(e) => { e.stopPropagation(); rotate(-1); }} style={{ width: 34, height: 34, borderRadius: '50%', border: '1px solid rgba(224,190,99,0.46)', background: 'transparent', color: '#e4c46d', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, boxShadow: '0 0 14px rgba(224,190,99,0.16)', backdropFilter: 'none' }}><svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true"><path d="M14.5 6.5 9 12l5.5 5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M9.5 12H18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg></button>

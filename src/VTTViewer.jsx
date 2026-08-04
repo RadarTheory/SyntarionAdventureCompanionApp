@@ -267,7 +267,7 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
   ctx.restore();
 }
 
-export default function VTTViewer({ campaignId, userChar }) {
+export default function VTTViewer({ campaignId, userChar, castMode = false }) {
   const canvasRef   = useRef(null);
   const mapImgRef   = useRef(null);
   const panRef      = useRef({ panning: false, lastX: 0, lastY: 0 });
@@ -511,16 +511,41 @@ useEffect(() => {
     // Don't clear hoveredToken on mousemove — let the hover card stay so user can click the portrait
   }, [clientToMapCoords, hitTestToken]);
 
-  const handleMouseUp = useCallback(() => {
-    if (dragRef.current.dragging && dragRef.current.moved && dragRef.current._lastDragPos) {
-      const dp = dragRef.current._lastDragPos;
-      addWaypoint(dp.x, dp.y);
+  const enlargeToken = (tok) => {
+    if (!tok || (!tok.sprite_url && !tok.portrait_url)) return;
+    setPortraitFullscreen({ name: tok.fullName || tok.creatureName || tok.label || '?', sprite_url: tok.sprite_url || null, portrait_url: tok.portrait_url || null });
+  };
+
+  const handleMouseUp = useCallback((e) => {
+    const clientX = e?.clientX;
+    const clientY = e?.clientY;
+    if (dragRef.current.dragging) {
+      if (dragRef.current.moved && dragRef.current._lastDragPos) {
+        addWaypoint(dragRef.current._lastDragPos.x, dragRef.current._lastDragPos.y);
+      } else {
+        // A click (no drag) on your own token → enlarge its portrait
+        enlargeToken(dragRef.current.token);
+      }
+      dragRef.current = { dragging: false, token: null, startX: 0, startY: 0, moved: false, _lastDragPos: null };
+      setDraggingToken(null);
+      setDragPos(null);
+      panRef.current.panning = false;
+      return;
+    }
+    // A click (no pan) on any visible token → enlarge its portrait
+    if (panRef.current.panning && clientX != null) {
+      const dx = clientX - (panRef.current.startX ?? clientX);
+      const dy = clientY - (panRef.current.startY ?? clientY);
+      if (Math.sqrt(dx * dx + dy * dy) < 5) {
+        const hit = hitTestToken(clientX, clientY);
+        if (hit && !isTokenFogged(hit, fogZones)) enlargeToken(hit);
+      }
     }
     dragRef.current = { dragging: false, token: null, startX: 0, startY: 0, moved: false, _lastDragPos: null };
     setDraggingToken(null);
     setDragPos(null);
     panRef.current.panning = false;
-  }, [clientToMapCoords]);
+  }, [clientToMapCoords, hitTestToken, fogZones]);
 
   // Track dragPos in ref so mouseUp can read it
   useEffect(() => {
@@ -648,7 +673,7 @@ useEffect(() => {
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           <button onClick={resetView} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 9, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>⊡ Reset</button>
-          <button onClick={() => setFullscreen(true)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 9, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>⛶ Expand</button>
+          {!castMode && <button onClick={() => setFullscreen(true)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 9, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>⛶ Expand</button>}
         </div>
       </div>
 

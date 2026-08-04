@@ -14,6 +14,7 @@ import Astragal from './Astragal';
 import SessionManager from './SessionManager';
 import { WorldMapPanel } from './WorldMapPanel';
 import VTTCanvas from './VTTCanvas';
+import MapCastWindow from './MapCastWindow';
 import HerculesCombat from './HerculesCombat';
 import FloatToolbar from './FloatToolbar';
 import CastorDMPanel from './CastorDMPanel';
@@ -996,6 +997,25 @@ export default function DMView({ user, session, onHome, darkMode = true, module 
   const [soundboardOpen, setSoundboardOpen] = useState(false);
   const [activeGameSessionId, setActiveGameSessionId] = useState(null);
   const [vttMinimized, setVttMinimized] = useState(false);
+  const [mapCasting, setMapCasting] = useState(false);
+  const mapCastWinRef = useRef(null);
+  const openMapcast = () => {
+    const existing = mapCastWinRef.current;
+    if (existing && !existing.closed) { existing.focus(); return; }
+    const win = window.open('', 'syntarion_mapcast', 'width=1280,height=800');
+    if (!win) {
+      alert('Mapcast could not open a new window — please allow pop-ups for Syntarion, then click Mapcast again.');
+      return;
+    }
+    mapCastWinRef.current = win;
+    setMapCasting(true);
+  };
+  const closeMapcast = () => {
+    const win = mapCastWinRef.current;
+    if (win && !win.closed) { try { win.close(); } catch { /* already gone */ } }
+    mapCastWinRef.current = null;
+    setMapCasting(false);
+  };
   const [showGameLauncher, setShowGameLauncher] = useState(false);
   const [gameLarkToast, setGameLarkToast] = useState(null);
 
@@ -1345,6 +1365,20 @@ const renderTab = () => {
             backdropFilter: 'blur(4px)',
           }}
         >{vttMinimized ? '+' : '-'}</button>
+        <button
+          onClick={openMapcast}
+          title="Mapcast — open the player view in a separate window for a second screen"
+          style={{
+            position: 'absolute', top: 8, left: 36, zIndex: 99999,
+            background: mapCasting ? 'rgba(200,168,74,0.22)' : 'rgba(16,13,10,0.85)',
+            border: `1px solid ${mapCasting ? 'rgba(200,168,74,0.6)' : 'rgba(240,238,235,0.18)'}`,
+            borderRadius: 5, height: 22, padding: '0 8px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 5,
+            color: mapCasting ? '#e8c84a' : 'rgba(240,238,235,0.6)',
+            fontSize: 10, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em',
+            backdropFilter: 'blur(4px)',
+          }}
+        >◈ Mapcast</button>
       </div>
     );
 
@@ -1467,6 +1501,13 @@ const renderTab = () => {
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
 
+      {mapCasting && (
+        <MapCastWindow
+          win={mapCastWinRef.current}
+          campaignId={localStorage.getItem('vtt_pinned_campaign') || activeCampaignTab}
+          onClose={closeMapcast}
+        />
+      )}
       {editingChar && <CharacterEditor char={editingChar} campaigns={dbCampaigns} onSave={() => { setEditingChar(null); fetchCharacters(); }} onClose={() => setEditingChar(null)} />}
       {activeSession && <ChatPanel session={activeSession} onClose={() => setActiveSession(null)} isDM={true} />}
       {showScribePanel && (

@@ -1,6 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
+import { buildLiveNpcRoster } from './scribe-context';
+import { LOCATIONS } from './MapPanel';
+
+const SpeechRecognitionImpl = typeof window !== 'undefined'
+  ? (window.SpeechRecognition || window.webkitSpeechRecognition)
+  : null;
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -18,6 +24,95 @@ export default function LoreAnnouncePanel({ campaignId, embedded }) {
   const [recentIntents, setRecentIntents] = useState([]);
   const [selectedIntent, setSelectedIntent] = useState(null);
   const [respondedIntentIds, setRespondedIntentIds] = useState(new Set());
+  const [listening, setListening] = useState(false);
+  const [polishing, setPolishing] = useState(false);
+  const [interim, setInterim] = useState('');
+  const [narratorMsg, setNarratorMsg] = useState(null);
+  const recognitionRef = useRef(null);
+  const finalTranscriptRef = useRef('');
+
+  // Stop the mic if the panel unmounts mid-listen.
+  useEffect(() => () => { try { recognitionRef.current?.stop(); } catch { /* already stopped */ } }, []);
+
+  // Send the rough speech transcript to Gemini to clean it into a lore announcement.
+  const polishTranscript = async (raw) => {
+    const clean = (raw || '').replace(/\s+/g, ' ').trim();
+    if (!clean) { setNarratorMsg('Nothing was heard — try again.'); return; }
+    setPolishing(true);
+    setNarratorMsg(null);
+    const appendToText = (val) => setText(prev => prev.trim() ? `${prev.trim()}\n\n${val}` : val);
+    try {
+      // Pull the live NPC roster + current scene so the AI can suggest real,
+      // location-appropriate NPCs when the GM refers to someone by role only.
+      let npcBlock = '';
+      try {
+        const [roster, { data: camp }] = await Promise.all([
+          buildLiveNpcRoster(80),
+          supabase.from('campaigns').select('map_url').eq('id', String(campaignId)).maybeSingle(),
+        ]);
+        const loc = camp?.map_url ? LOCATIONS.find(l => l.filename === camp.map_url) : null;
+        if (roster) {
+          npcBlock = `\n\nKNOWN NPC ROSTER (real, canonical NPCs from the campaign's records):\n${roster}\n\nWhen the GM refers to an unnamed local by role only (e.g. "the bartender", "a guard", "the innkeeper", "some merchant", "a priest"), look through this roster and, if a fitting NPC exists${loc ? ` for the current scene — ${loc.name} — (judge by their role/faction/notes)` : ''}, weave that NPC's real name in naturally. Never invent NPCs who are not in the roster; if none fit, keep the generic description as spoken.`;
+        }
+      } catch { /* roster is optional — never block the announcement */ }
+      const system = `You are the Narrator's scribe for a fantasy tabletop RPG set in the world of Soteria. The Game Master is speaking aloud and you receive a rough speech-to-text transcript. Rewrite it into a clean, vivid lore announcement addressed to the players, as it should appear in-world. Fix grammar, punctuation, and run-on sentences; remove filler words (um, uh, like, you know) and false starts. Preserve the GM's meaning, names, places, and intent — never invent new plot or facts. Keep the GM's voice; be concise and evocative. Return ONLY the polished announcement text — no preamble, no quotation marks, no notes.${npcBlock}`;
+      const { data, error } = await supabase.functions.invoke('scribe', {
+        body: { system, messages: [{ role: 'user', content: clean }], max_tokens: 800 },
+      });
+      if (error) throw new Error(error.message || 'relay failed');
+      if (data?.error) throw new Error(data.error.message || 'relay error');
+      const polished = data?.choices?.[0]?.message?.content?.trim();
+      appendToText(polished || clean);
+      setNarratorMsg(polished ? '✓ Narration cleaned & added' : 'Added transcript (no cleanup returned)');
+    } catch (err) {
+      // Never lose what was spoken — drop the raw transcript in if AI cleanup fails.
+      appendToText(clean);
+      setNarratorMsg(`Added raw transcript — AI cleanup unavailable (${err.message || 'error'})`);
+    } finally {
+      setPolishing(false);
+      setInterim('');
+      finalTranscriptRef.current = '';
+    }
+  };
+
+  const startNarrator = () => {
+    if (!SpeechRecognitionImpl) { setNarratorMsg('Speech recognition is not supported in this browser (use Chrome or Edge).'); return; }
+    const rec = new SpeechRecognitionImpl();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.lang = 'en-US';
+    finalTranscriptRef.current = '';
+    setInterim('');
+    setNarratorMsg(null);
+    rec.onresult = (e) => {
+      let live = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const chunk = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalTranscriptRef.current += chunk + ' ';
+        else live += chunk;
+      }
+      setInterim(live);
+    };
+    rec.onerror = (e) => {
+      setNarratorMsg(e.error === 'not-allowed' ? 'Microphone blocked — allow mic access and try again.' : `Mic error: ${e.error}`);
+    };
+    rec.onend = () => {
+      setListening(false);
+      recognitionRef.current = null;
+      polishTranscript(finalTranscriptRef.current);
+    };
+    recognitionRef.current = rec;
+    setListening(true);
+    try { rec.start(); } catch { /* start after an abrupt stop */ }
+  };
+
+  const stopNarrator = () => {
+    const rec = recognitionRef.current;
+    if (rec) { try { rec.stop(); } catch { setListening(false); } }
+    else setListening(false);
+  };
+
+  const toggleNarrator = () => { if (listening) stopNarrator(); else startNarrator(); };
 
   useEffect(() => {
     // Load approved characters for this campaign
@@ -275,7 +370,30 @@ export default function LoreAnnouncePanel({ campaignId, embedded }) {
 
       {/* Body */}
       <div>
-        <div style={{ ...label8(), marginBottom: 6 }}>Lore Text</div>
+        <style>{`@keyframes narratorPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }`}</style>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
+          <div style={{ ...label8() }}>Lore Text</div>
+          {SpeechRecognitionImpl && (
+            <button
+              type="button"
+              onClick={toggleNarrator}
+              disabled={polishing}
+              title="Narrator — speak your lore aloud; AI transcribes and cleans it up"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: listening ? 'rgba(224,90,90,0.16)' : 'rgba(200,168,74,0.12)',
+                border: `1px solid ${listening ? 'rgba(224,90,90,0.6)' : 'rgba(200,168,74,0.5)'}`,
+                borderRadius: 6, padding: '5px 10px',
+                cursor: polishing ? 'default' : 'pointer',
+                fontFamily: "'Cinzel', serif", fontSize: 8.5, letterSpacing: '0.1em', textTransform: 'uppercase',
+                color: listening ? '#e0776f' : '#e8c84a', opacity: polishing ? 0.6 : 1,
+              }}
+            >
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: listening ? '#e05a5a' : '#c8a84a', boxShadow: listening ? '0 0 8px rgba(224,90,90,0.9)' : 'none', animation: listening ? 'narratorPulse 1.1s ease-in-out infinite' : 'none' }} />
+              {polishing ? 'Cleaning…' : listening ? 'Stop & Transcribe' : '🎙 Narrator'}
+            </button>
+          )}
+        </div>
         <textarea
           value={text}
           onChange={e => setText(e.target.value)}
@@ -283,12 +401,24 @@ export default function LoreAnnouncePanel({ campaignId, embedded }) {
           placeholder="Write the lore event as it would appear to players…"
           style={{
             width: '100%', background: COLORS.card,
-            border: `1px solid ${COLORS.border}`, borderRadius: 7,
+            border: `1px solid ${listening ? 'rgba(224,90,90,0.4)' : COLORS.border}`, borderRadius: 7,
             padding: '9px 12px', fontFamily: 'Georgia, serif',
             fontSize: 12, color: COLORS.text, outline: 'none',
             resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.7,
+            transition: 'border-color 0.2s ease',
           }}
         />
+        {(listening || interim || polishing || narratorMsg) && (
+          <div style={{ marginTop: 6, fontSize: 10, fontFamily: 'Georgia, serif', lineHeight: 1.5 }}>
+            {listening && (
+              <span style={{ color: '#e0776f', fontStyle: 'italic' }}>
+                ● Listening… speak your lore, then press Stop.{interim ? ` “${interim}”` : ''}
+              </span>
+            )}
+            {!listening && polishing && <span style={{ color: '#e8c84a', fontStyle: 'italic' }}>Cleaning up your narration…</span>}
+            {!listening && !polishing && narratorMsg && <span style={{ color: narratorMsg.startsWith('✓') ? '#79f5a7' : COLORS.dim, fontStyle: 'italic' }}>{narratorMsg}</span>}
+          </div>
+        )}
       </div>
 
       {/* Character selector */}
