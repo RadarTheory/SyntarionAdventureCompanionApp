@@ -292,6 +292,9 @@ export default function VTTViewer({ campaignId, userChar, castMode = false }) {
   const tokensRef       = useRef(tokens);
   const pendingMovesRef = useRef(pendingMoves);
   const vttSessionRef   = useRef(vttSession);
+  // Saved zoom/pan applies only on the first load — never on realtime refreshes
+  // (commits, moves) — so a pan/zoom set on this window stays put.
+  const hasLoadedTransformRef = useRef(false);
 
   useEffect(() => { transformRef.current = transform; }, [transform]);
   useEffect(() => { tokensRef.current = tokens; }, [tokens]);
@@ -302,6 +305,7 @@ export default function VTTViewer({ campaignId, userChar, castMode = false }) {
 
   useEffect(() => {
     if (!campaignId) return;
+    hasLoadedTransformRef.current = false; // apply the saved view once for this campaign
     loadSession();
     const sub = supabase
       .channel(`vtt-viewer-${campaignId}`)
@@ -334,7 +338,10 @@ export default function VTTViewer({ campaignId, userChar, castMode = false }) {
       setTokens(await hydratePortraits(data.tokens || []));
       setPendingMoves(data.pending_moves || []);
       setMapFilename(data.map_filename);
-      if (data.view_transform) setTransform(data.view_transform);
+      if (!hasLoadedTransformRef.current) {
+        if (data.view_transform) setTransform(data.view_transform);
+        hasLoadedTransformRef.current = true;
+      }
     }
   };
 
