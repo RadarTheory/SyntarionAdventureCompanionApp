@@ -165,20 +165,27 @@ class MusicEngine {
   // playback first, then ramps the volume.
   fadeTo(volume, seconds) {
     if (!this.decks) return;
-    const deck = this.decks[this.activeDeck];
     const goingSilent = volume <= 0;
 
-    if (!goingSilent && deck.audio.paused && this.currentTrack) {
+    if (goingSilent) {
+      // Kill the outro auto-advance watcher up front so nothing can start a new
+      // track partway through the fade and "cancel" it. Fade EVERY deck, not
+      // just the one we think is active: if activeDeck ever drifts out of sync
+      // (mid-crossfade, or after an interrupted transition) the deck actually
+      // making sound is still caught — then pause it so it's genuinely silent.
+      window.clearInterval(this._watchTimer);
+      this.decks.forEach(deck => {
+        this._fadeAudio(deck, 0, seconds, () => { deck.audio.pause(); });
+      });
+      return;
+    }
+
+    const deck = this.decks[this.activeDeck];
+    if (deck.audio.paused && this.currentTrack) {
       deck.audio.play().catch(() => {});
       this._watchOutro();
     }
-
-    this._fadeAudio(deck, volume, seconds, () => {
-      if (goingSilent) {
-        window.clearInterval(this._watchTimer);
-        deck.audio.pause();
-      }
-    });
+    this._fadeAudio(deck, volume, seconds);
   }
 
   stop() {
