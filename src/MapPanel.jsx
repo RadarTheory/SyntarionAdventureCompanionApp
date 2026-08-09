@@ -50,6 +50,8 @@ export const LOCATIONS = [
   { id: 'rakesh',              name: "Ra'Kesh",                           filename: "Ra'Kesh.png" },
   { id: 'razors-point',        name: "Razor's Point",                     filename: "Razor'sPoint.png" },
   { id: 'rimehollow',          name: 'Rimehollow — Knoll Camp',           filename: 'Rimehollow-KnollCamp.png' },
+  { id: 'rimehollow-dungeon',  name: 'Rimehollow — Knoll Dungeon',        filename: 'Rimehollow-KnollDungeon.png' },
+  { id: 'rimehollow-edge',     name: 'Rimehollow — Edge',                 filename: 'RimehollowEdge.png' },
   { id: 'rookvale',            name: "Rookvale — Warman's Lake",          filename: "Rookvale,Warman'sLake.png" },
   { id: 'soteria-world',       name: 'Soteria — World Map',               filename: 'SoteriaWorldMap.jpg' },
   { id: 'sovereign-gale',      name: 'Sovereign Gale',                    filename: 'Sovereign Gale.png' },

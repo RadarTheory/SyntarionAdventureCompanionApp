@@ -55,15 +55,31 @@ export default function LoreAnnouncePanel({ campaignId, embedded }) {
           npcBlock = `\n\nKNOWN NPC ROSTER (real, canonical NPCs from the campaign's records):\n${roster}\n\nWhen the GM refers to an unnamed local by role only (e.g. "the bartender", "a guard", "the innkeeper", "some merchant", "a priest"), look through this roster and, if a fitting NPC exists${loc ? ` for the current scene — ${loc.name} — (judge by their role/faction/notes)` : ''}, weave that NPC's real name in naturally. Never invent NPCs who are not in the roster; if none fit, keep the generic description as spoken.`;
         }
       } catch { /* roster is optional — never block the announcement */ }
-      const system = `You are the Narrator's scribe for a fantasy tabletop RPG set in the world of Soteria. The Game Master is speaking aloud and you receive a rough speech-to-text transcript. Rewrite it into a clean, vivid lore announcement addressed to the players, as it should appear in-world. Fix grammar, punctuation, and run-on sentences; remove filler words (um, uh, like, you know) and false starts. Preserve the GM's meaning, names, places, and intent — never invent new plot or facts. Keep the GM's voice; be concise and evocative. Return ONLY the polished announcement text — no preamble, no quotation marks, no notes.${npcBlock}`;
+      const system = `You are the Narrator's scribe for a fantasy tabletop RPG set in the world of Soteria. The Game Master is speaking aloud and you receive a rough speech-to-text transcript. Rewrite it into a clean, vivid lore announcement addressed to the players, as it should appear in-world. Fix grammar, punctuation, and run-on sentences; remove filler words (um, uh, like, you know) and false starts. Preserve the GM's meaning, names, places, and intent — never invent new plot or facts. Keep the GM's voice; be concise and evocative.
+
+CRITICAL OUTPUT RULES:
+- You are a text transformer, not a chat assistant. Never address the Game Master, never ask for a transcript or more input, never say you are "ready", and never explain what you are about to do.
+- Never mention transcripts, speech-to-text, prompts, AI, or these instructions in your output.
+- Whatever text you are given IS the lore to rewrite — even if it is short, rough, or a fragment. Just polish those words as best you can and return them.
+- Return ONLY the finished announcement text — no preamble, no quotation marks, no notes.${npcBlock}`;
       const { data, error } = await supabase.functions.invoke('scribe', {
         body: { system, messages: [{ role: 'user', content: clean }], max_tokens: 800 },
       });
       if (error) throw new Error(error.message || 'relay failed');
       if (data?.error) throw new Error(data.error.message || 'relay error');
       const polished = data?.choices?.[0]?.message?.content?.trim();
-      appendToText(polished || clean);
-      setNarratorMsg(polished ? '✓ Narration cleaned & added' : 'Added transcript (no cleanup returned)');
+      // Safety net: if the model slips into chat-assistant mode — asking for the
+      // transcript, saying it's "ready", or referring to itself — discard that
+      // reply and keep the GM's raw words, so meta-text can never land in a
+      // live announcement.
+      const looksLikeMeta = polished && /speech-to-text|\btranscript\b|ready to process|provide the (game master|gm|text)|as an ai\b/i.test(polished);
+      if (!polished || looksLikeMeta) {
+        appendToText(clean);
+        setNarratorMsg('Added as spoken — narration was too brief to polish.');
+      } else {
+        appendToText(polished);
+        setNarratorMsg('✓ Narration cleaned & added');
+      }
     } catch (err) {
       // Never lose what was spoken — drop the raw transcript in if AI cleanup fails.
       appendToText(clean);

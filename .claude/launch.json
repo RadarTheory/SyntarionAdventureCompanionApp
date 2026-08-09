@@ -12,6 +12,17 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8843", "--directory", "C:/Users/Radar Theory/Downloads/F1rstSpace", "--bind", "127.0.0.1"],
       "port": 8843
+    },
+    {
+      "name": "f1rstspace-vite",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/Users/Radar Theory/Downloads/F1rstSpace", "run", "dev", "--", "--port", "5174", "--strictPort"],
+      "port": 5174
+    },
+    {
+      "name": "f1rstspace-attach",
+      "url": "http://localhost:5174",
+      "port": 5174
     }
   ]
 }

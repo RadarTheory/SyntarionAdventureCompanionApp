@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { COLORS } from './constants';
 import supabase from './lib/supabase';
 import PortraitUpload from './PortraitUpload';
+import { levelForAp } from './leveling';
 
 const CATEGORY_COLORS = {
   Undead:      '#9b7fbd',
@@ -21,6 +22,28 @@ const CATEGORY_COLORS = {
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
+}
+
+// ─── AUTO-SCALED VITALS ───────────────────────────────────────────────────────
+// A freshly-summoned beast has no stat block, so we derive a sensible starting
+// max-Vitals from the party it's about to face: higher average player level →
+// tougher beast, nudged by the creature's category (a Titan should outlast a
+// lone Beast) and a small bump for larger parties. The DM can still fine-tune
+// the max by hand in the Hercules Vitals panel — this just fills a smart default.
+const CATEGORY_TOUGHNESS = {
+  Titan: 3.0, Dragon: 2.6, Fiend: 1.8, Aberration: 1.7,
+  Construct: 1.6, Troll: 1.6, Undead: 1.3, Elemental: 1.3,
+  Beast: 1.0, Humanoid: 1.0, Fey: 1.0, Plant: 1.0, Creature: 0.8,
+};
+
+function scaledVitals(partyLevels, category) {
+  const levels = (partyLevels || []).filter(n => Number.isFinite(n) && n > 0);
+  const avg = levels.length ? levels.reduce((a, b) => a + b, 0) / levels.length : 1;
+  const partySize = Math.max(1, levels.length);
+  const toughness = CATEGORY_TOUGHNESS[category] ?? 1.0;
+  const base = 12 + avg * 5;                    // tracks players' ~16-at-L1 scale
+  const sizeBump = 1 + (partySize - 1) * 0.12;  // solo boss vs. full table
+  return Math.max(8, Math.round(base * toughness * sizeBump));
 }
 
 // ─── CREATURE CARD ────────────────────────────────────────────────────────────
@@ -59,11 +82,29 @@ function CreatureCard({ creature, isDM, campaignId, onAddedToCombat, onPortraitU
     const roll     = Math.floor(Math.random() * 20) + 1;
     const color    = col;
 
+    // Auto-detect the party's levels and set this beast's Vitals to match, so it
+    // enters combat with a fitting health pool instead of a blank bar. Best-effort:
+    // never block the spawn if the lookup fails.
+    let scaledMax = null;
+    try {
+      const { data: party } = await supabase.from('characters')
+        .select('level, ap_total, data')
+        .eq('campaign_id', String(campaignId))
+        .eq('status', 'approved');
+      const levels = (party || []).map(c =>
+        c.level ?? levelForAp(c.ap_total ?? c.data?.apTotal ?? 0)
+      );
+      scaledMax = scaledVitals(levels, creature.category);
+      // Vitals live in localStorage keyed by the combatant's id (= tokenId) —
+      // exactly where the Hercules Vitals panel reads them, so it shows pre-filled.
+      localStorage.setItem(`syntarion_vitals_${tokenId}`, JSON.stringify({ vitals: scaledMax, vitalsMax: scaledMax }));
+    } catch { /* vitals seeding is optional — never block the spawn */ }
+
     // Add to VTT — beast_id links the token back to its bestiary row (for Dialogue, etc.)
     const { data: vttSession } = await supabase.from('vtt_sessions').select('*')
       .eq('campaign_id', String(campaignId)).maybeSingle();
     const existingTokens = Array.isArray(vttSession?.tokens) ? vttSession.tokens : [];
-    const newToken = { id: tokenId, token_id: tokenId, name: creature.name, label: creature.name.slice(0, 4).toUpperCase(), creatureName: creature.name, beast_id: creature.id, type: 'enemy', color, portrait_url: creature.portrait_url || null, x: 50, y: 50 };
+    const newToken = { id: tokenId, token_id: tokenId, name: creature.name, label: creature.name.slice(0, 4).toUpperCase(), creatureName: creature.name, beast_id: creature.id, type: 'enemy', color, portrait_url: creature.portrait_url || null, x: 50, y: 50, vitalsMax: scaledMax };
     if (vttSession?.id) {
       await supabase.from('vtt_sessions').update({ tokens: [...existingTokens, newToken], updated_at: new Date().toISOString() }).eq('id', vttSession.id);
     } else {
@@ -74,7 +115,7 @@ function CreatureCard({ creature, isDM, campaignId, onAddedToCombat, onPortraitU
     await supabase.from('hercules_initiative').insert({ session_id: hsession.id, character_id: tokenId, character_name: creature.name, roll, modifier: 0, turn_order: roll });
 
     // Log event
-    await supabase.from('hercules_events').insert({ session_id: hsession.id, type: 'enemy_added', actor_name: creature.name, actor_id: tokenId, description: `${creature.name} enters the scene from the Bestiary. Initiative: d20 ${roll} = ${roll}.${note.trim() ? ` DM Note: ${note.trim()}` : ''}` });
+    await supabase.from('hercules_events').insert({ session_id: hsession.id, type: 'enemy_added', actor_name: creature.name, actor_id: tokenId, description: `${creature.name} enters the scene from the Bestiary. Initiative: d20 ${roll} = ${roll}.${scaledMax ? ` Vitals ${scaledMax} (scaled to party).` : ''}${note.trim() ? ` DM Note: ${note.trim()}` : ''}` });
 
     setAdded(true);
     setAdding(false);
