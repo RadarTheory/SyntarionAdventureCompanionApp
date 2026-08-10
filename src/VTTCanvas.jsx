@@ -207,17 +207,20 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
       if (inHideZone) ctx.globalAlpha = 0.4;
     }
 
+    // Enemies/creatures always read as red on the map; players keep their color.
+    const isEnemyTok = tok.type !== 'player';
+
     // Shape
     if (tok.type === 'player') {
       ctx.beginPath(); ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4);
     } else {
       ctx.beginPath(); ctx.arc(tx, ty, r, 0, Math.PI * 2);
     }
-    ctx.fillStyle = tok.color || '#4a9edd';
+    ctx.fillStyle = isEnemyTok ? '#e05a5a' : (tok.color || '#4a9edd');
     ctx.fill();
 
     // Border
-    ctx.strokeStyle = isHovered ? '#e8c84a' : (fogged ? '#e8c84a' : '#fff');
+    ctx.strokeStyle = isHovered ? '#e8c84a' : (fogged ? '#e8c84a' : (isEnemyTok ? '#e05a5a' : '#fff'));
     ctx.lineWidth = isHovered ? 3 : 2;
     if (fogged) ctx.setLineDash([3, 2]);
     ctx.stroke();

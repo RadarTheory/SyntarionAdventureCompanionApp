@@ -47,10 +47,12 @@ function scaledVitals(partyLevels, category) {
 }
 
 // ─── CREATURE CARD ────────────────────────────────────────────────────────────
-function CreatureCard({ creature, isDM, campaignId, onAddedToCombat, onPortraitUploaded }) {
+function CreatureCard({ creature, isDM, campaignId, onAddedToCombat, onAddedToVtt, onPortraitUploaded }) {
   const [expanded, setExpanded] = useState(false);
   const [adding, setAdding]     = useState(false);
   const [added, setAdded]       = useState(false);
+  const [addingVtt, setAddingVtt] = useState(false);
+  const [addedVtt, setAddedVtt]   = useState(false);
   const [note, setNote]         = useState('');
 
   const col      = CATEGORY_COLORS[creature.category] || COLORS.muted;
@@ -59,37 +61,28 @@ function CreatureCard({ creature, isDM, campaignId, onAddedToCombat, onPortraitU
     : '';
   const displayDesc = isDM ? creature.description : shortDesc;
 
-  const addToCombat = async (e) => {
-    e.stopPropagation();
-    if (!campaignId || adding) return;
-    setAdding(true);
+  // The VTT canvas and the Mapcast window render whichever campaign the DM has
+  // PINNED (localStorage 'vtt_pinned_campaign'), which can differ from this
+  // panel's campaign tab. Target that same session — otherwise the token is
+  // saved to a campaign whose map the DM isn't looking at, so it never appears.
+  // Matches DMView/MapCastWindow's own `pinned || tab` resolution.
+  const vttCampaignId = (isDM && localStorage.getItem('vtt_pinned_campaign')) || campaignId;
 
-    // Find or create active Hercules session
-    let { data: hsession } = await supabase.from('hercules_sessions').select('id')
-      .eq('campaign_id', String(campaignId)).eq('status', 'active')
-      .order('created_at', { ascending: false }).limit(1).maybeSingle();
-
-    if (!hsession?.id) {
-      const { data: newSession } = await supabase.from('hercules_sessions')
-        .insert({ campaign_id: String(campaignId), status: 'active', current_turn: 0 })
-        .select().single();
-      hsession = newSession;
-    }
-
-    if (!hsession?.id) { setAdding(false); return; }
-
-    const tokenId  = crypto.randomUUID();
-    const roll     = Math.floor(Math.random() * 20) + 1;
-    const color    = col;
+  // Drop a token on the VTT map and seed its scaled Vitals. Shared by both
+  // "Add to VTT" (map only) and "Add to Combat" (map + initiative). Returns the
+  // new token's id and its scaled max Vitals so the caller can wire up combat.
+  const placeOnVtt = async () => {
+    const tokenId = crypto.randomUUID();
+    const color   = col;
 
     // Auto-detect the party's levels and set this beast's Vitals to match, so it
-    // enters combat with a fitting health pool instead of a blank bar. Best-effort:
+    // arrives with a fitting health pool instead of a blank bar. Best-effort:
     // never block the spawn if the lookup fails.
     let scaledMax = null;
     try {
       const { data: party } = await supabase.from('characters')
         .select('level, ap_total, data')
-        .eq('campaign_id', String(campaignId))
+        .eq('campaign_id', String(vttCampaignId))
         .eq('status', 'approved');
       const levels = (party || []).map(c =>
         c.level ?? levelForAp(c.ap_total ?? c.data?.apTotal ?? 0)
@@ -102,14 +95,55 @@ function CreatureCard({ creature, isDM, campaignId, onAddedToCombat, onPortraitU
 
     // Add to VTT — beast_id links the token back to its bestiary row (for Dialogue, etc.)
     const { data: vttSession } = await supabase.from('vtt_sessions').select('*')
-      .eq('campaign_id', String(campaignId)).maybeSingle();
+      .eq('campaign_id', String(vttCampaignId)).maybeSingle();
     const existingTokens = Array.isArray(vttSession?.tokens) ? vttSession.tokens : [];
-    const newToken = { id: tokenId, token_id: tokenId, name: creature.name, label: creature.name.slice(0, 4).toUpperCase(), creatureName: creature.name, beast_id: creature.id, type: 'enemy', color, portrait_url: creature.portrait_url || null, x: 50, y: 50, vitalsMax: scaledMax };
+    // VTT token coords are normalized 0–1 fractions of the map (0.5 = center).
+    // Scatter near the middle so several beasts don't stack on the exact same spot.
+    const scatter = () => 0.38 + Math.random() * 0.24;
+    const newToken = { id: tokenId, token_id: tokenId, name: creature.name, label: creature.name.slice(0, 4).toUpperCase(), creatureName: creature.name, beast_id: creature.id, type: 'enemy', color, portrait_url: creature.portrait_url || null, x: scatter(), y: scatter(), visible: true, on_map: true, vitalsMax: scaledMax };
     if (vttSession?.id) {
       await supabase.from('vtt_sessions').update({ tokens: [...existingTokens, newToken], updated_at: new Date().toISOString() }).eq('id', vttSession.id);
     } else {
-      await supabase.from('vtt_sessions').insert({ campaign_id: String(campaignId), tokens: [newToken], fog_zones: [], pending_moves: [] });
+      await supabase.from('vtt_sessions').insert({ campaign_id: String(vttCampaignId), tokens: [newToken], fog_zones: [], pending_moves: [] });
     }
+
+    return { tokenId, scaledMax };
+  };
+
+  // Place the creature on the map only — no initiative, no combat session.
+  const addToVtt = async (e) => {
+    e.stopPropagation();
+    if (!vttCampaignId || addingVtt) return;
+    setAddingVtt(true);
+    await placeOnVtt();
+    setAddedVtt(true);
+    setAddingVtt(false);
+    onAddedToVtt?.();
+    setTimeout(() => setAddedVtt(false), 3000);
+  };
+
+  const addToCombat = async (e) => {
+    e.stopPropagation();
+    if (!vttCampaignId || adding) return;
+    setAdding(true);
+
+    // Find or create active Hercules session
+    let { data: hsession } = await supabase.from('hercules_sessions').select('id')
+      .eq('campaign_id', String(vttCampaignId)).eq('status', 'active')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+    if (!hsession?.id) {
+      const { data: newSession } = await supabase.from('hercules_sessions')
+        .insert({ campaign_id: String(vttCampaignId), status: 'active', current_turn: 0 })
+        .select().single();
+      hsession = newSession;
+    }
+
+    if (!hsession?.id) { setAdding(false); return; }
+
+    // Place the token on the map (shared with Add to VTT), then wire it into combat.
+    const { tokenId, scaledMax } = await placeOnVtt();
+    const roll = Math.floor(Math.random() * 20) + 1;
 
     // Add to initiative
     await supabase.from('hercules_initiative').insert({ session_id: hsession.id, character_id: tokenId, character_name: creature.name, roll, modifier: 0, turn_order: roll });
@@ -166,6 +200,10 @@ function CreatureCard({ creature, isDM, campaignId, onAddedToCombat, onPortraitU
                 rows={2}
                 style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 8px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} />
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button onClick={addToVtt} disabled={addingVtt}
+                style={{ background: addedVtt ? COLORS.magicBg : `${col}14`, border: `1px solid ${addedVtt ? COLORS.magic : col + '55'}`, borderRadius: 6, padding: '6px 12px', cursor: addingVtt ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: addedVtt ? COLORS.magicText : col, fontWeight: 700, letterSpacing: '0.1em', transition: 'all 0.15s' }}>
+                {addingVtt ? 'Adding…' : addedVtt ? '✓ Added to VTT' : '⬡ Add to VTT'}
+              </button>
               <button onClick={addToCombat} disabled={adding}
                 style={{ background: added ? COLORS.magicBg : `${col}14`, border: `1px solid ${added ? COLORS.magic : col + '55'}`, borderRadius: 6, padding: '6px 12px', cursor: adding ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, color: added ? COLORS.magicText : col, fontWeight: 700, letterSpacing: '0.1em', transition: 'all 0.15s' }}>
                 {adding ? 'Adding…' : added ? '✓ Added to Combat' : '⚔ Add to Combat'}
