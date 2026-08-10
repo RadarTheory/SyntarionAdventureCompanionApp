@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
+import { computeCrowdedKeys, tokenLayoutKey } from './lib/tokenLayout';
 
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 8;
@@ -157,7 +158,9 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
   }
 
  // Tokens
-  tokens.forEach(tok => {
+  // Tokens never move; where full portraits would collide we draw compact pins.
+  const crowdedKeys = computeCrowdedKeys(tokens, mapRect);
+  tokens.forEach((tok, tokIndex) => {
     const isOwn = String(tok.characterId) === String(userCharId);
     // Players never see fogged tokens — except their own, which they can always see.
     if (!isOwn && isTokenFogged(tok, fogZones)) return;
@@ -167,16 +170,32 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
     if (isDragging) return;
 
     const isHovered = hoveredTokenId && tok.id === hoveredTokenId;
+    // Enemies/creatures always read as red on the map; players keep their color.
+    // Mirrors VTTCanvas (the DM map) so both views agree on friend vs foe.
+    const isEnemyTok = tok.type !== 'player';
     const tx = mapRect.x + tok.x * mapRect.w;
     const ty = mapRect.y + tok.y * mapRect.h;
     const r = isHovered ? 22 : 14;
     ctx.save();
     ctx.globalAlpha = hasPending ? 0.4 : 1;
+
+    // Crowded tokens collapse to a small pin on their exact spot (hover shows the card).
+    if (crowdedKeys.has(tokenLayoutKey(tok, tokIndex)) && !isHovered) {
+      ctx.beginPath(); ctx.arc(tx, ty, 6, 0, Math.PI * 2);
+      ctx.fillStyle = isEnemyTok ? '#e05a5a' : (tok.color || '#e85d4a');
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = isOwn ? '#79f5a7' : (isEnemyTok ? '#7a1f1f' : 'rgba(8,6,4,0.85)');
+      ctx.stroke();
+      ctx.restore();
+      return;
+    }
+
     if (tok.type === 'player') { ctx.beginPath(); ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4); }
     else { ctx.beginPath(); ctx.arc(tx, ty, r, 0, Math.PI * 2); }
-    ctx.fillStyle = tok.color || '#e85d4a';
+    ctx.fillStyle = isEnemyTok ? '#e05a5a' : (tok.color || '#e85d4a');
     ctx.fill();
-    ctx.strokeStyle = isHovered ? '#e8c84a' : (isOwn ? '#79f5a7' : '#fff');
+    ctx.strokeStyle = isHovered ? '#e8c84a' : (isOwn ? '#79f5a7' : (isEnemyTok ? '#e05a5a' : '#fff'));
     ctx.lineWidth = isHovered ? 3 : (isOwn ? 2.5 : 2);
     ctx.stroke();
     ctx.globalAlpha = hasPending ? 0.5 : 1;

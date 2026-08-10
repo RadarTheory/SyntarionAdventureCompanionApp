@@ -480,6 +480,7 @@ export default function ItemCatalog() {
   const [items, setItems]              = useState([]);
   const [itemsLoading, setItemsLoading] = useState(true);
   const [showNewItem, setShowNewItem]  = useState(false);
+  const [expandedDescs, setExpandedDescs] = useState({});
 
   useEffect(() => {
     let cancelled = false;
@@ -615,7 +616,29 @@ export default function ItemCatalog() {
                 </div>
               </div>
 
-              <p style={{ color: COLORS.textSub || COLORS.muted, fontSize: 12, margin: '6px 0 4px' }}>{item.desc}</p>
+              {item.desc && (() => {
+                const key = `${item.category}-${item.type}-${item.name}-${index}`;
+                const isExpanded = !!expandedDescs[key];
+                const isLong = item.desc.length > 160;
+                return (
+                  <div style={{ margin: '6px 0 4px' }}>
+                    <p style={{
+                      color: COLORS.textSub || COLORS.muted, fontSize: 12, margin: 0,
+                      ...(isLong && !isExpanded ? {
+                        display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      } : {}),
+                    }}>{item.desc}</p>
+                    {isLong && (
+                      <button
+                        onClick={() => setExpandedDescs(prev => ({ ...prev, [key]: !isExpanded }))}
+                        style={{ background: 'none', border: 'none', padding: '2px 0 0', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: col, letterSpacing: '0.08em', opacity: 0.85 }}>
+                        {isExpanded ? '▴ show less' : '▾ show more'}
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
               <div style={{ color: COLORS.deity || '#C4A35A', fontSize: 9 }}>{item.meta}</div>
               {item.apBonus > 0 && <div style={{ color: COLORS.magic || '#7B68D8', fontSize: 9, marginTop: 4 }}>+{item.apBonus} AP once when held</div>}
             </div>

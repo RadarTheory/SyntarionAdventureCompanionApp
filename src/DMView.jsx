@@ -365,6 +365,7 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
   const [note, setNote] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [spriteDrafts, setSpriteDrafts] = useState([]);
   const [selectedSpriteUrl, setSelectedSpriteUrl] = useState(data.sprite_url || '');
   const [spriteGenerationCount, setSpriteGenerationCount] = useState(data.token?.generation_count || 0);
@@ -379,8 +380,24 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
 
   const handleDelete = async () => {
     setDeleting(true);
-    await supabase.from('characters').delete().eq('id', char.id);
+    setDeleteError('');
+    // Ask Supabase to return the rows it actually deleted. If RLS blocks the
+    // delete, PostgREST reports success with an empty array (no error) — so we
+    // must check the count, not just `error`, or a no-op looks like a success.
+    const { data: removed, error } = await supabase
+      .from('characters')
+      .delete()
+      .eq('id', char.id)
+      .select('id');
     setDeleting(false);
+    if (error) {
+      setDeleteError(`Delete failed: ${error.message}`);
+      return;
+    }
+    if (!removed || removed.length === 0) {
+      setDeleteError('Nothing was deleted — the database blocked this (likely a permissions/RLS rule). The character still exists.');
+      return;
+    }
     playSfxByKey('ui-delete');
     onSave();
     onClose();
@@ -636,7 +653,7 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
           {!confirmDelete ? (
             <button onClick={() => setConfirmDelete(true)}
               style={{ width: '100%', background: 'transparent', border: '1px solid rgba(224,90,90,0.4)', borderRadius: 6, padding: '9px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#e05a5a' }}>
-              Delete Delete Character Permanently
+              Delete Character Permanently
             </button>
           ) : (
             <div style={{ background: 'rgba(224,90,90,0.06)', border: '1px solid rgba(224,90,90,0.35)', borderRadius: 8, padding: '12px 14px' }}>
@@ -653,6 +670,11 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
                   Cancel
                 </button>
               </div>
+              {deleteError && (
+                <div style={{ marginTop: 10, fontSize: 11, color: '#e05a5a', fontFamily: 'Georgia, serif', lineHeight: 1.5 }}>
+                  {deleteError}
+                </div>
+              )}
             </div>
           )}
         </div>

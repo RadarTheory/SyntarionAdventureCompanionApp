@@ -1,15 +1,117 @@
 ﻿import { useMemo, useState } from 'react';
 import supabase from './lib/supabase';
-import { COLORS, ALL_CLASSES, RACES, getRaceDisplay } from './constants';
+import { COLORS, ALL_CLASSES, getRaceDisplay } from './constants';
 
 const TOKEN_SIZE = 512;
-const MAX_BATCHES = 2;
 
-const TOKEN_STYLES = [
-  { id: 'gilded', name: 'Gilded Standee', accent: '#d8bc5f', glow: 'rgba(216,188,95,0.42)', background: ['#1a130c', '#3b2d16'] },
-  { id: 'aether', name: 'Aether Sigil', accent: '#72c6d9', glow: 'rgba(114,198,217,0.38)', background: ['#07151a', '#163441'] },
-  { id: 'ember', name: 'Ember Mark', accent: '#d7734b', glow: 'rgba(215,115,75,0.36)', background: ['#1a0d0a', '#3d1812'] },
-];
+// ── Palette + color helpers ──────────────────────────────────────────────────
+const clamp01 = (n) => Math.min(1, Math.max(0, n));
+
+function hsl(h, s, l, a = 1) {
+  const hue = ((h % 360) + 360) % 360;
+  return `hsla(${Math.round(hue)}, ${Math.round(clamp01(s) * 100)}%, ${Math.round(clamp01(l) * 100)}%, ${a})`;
+}
+
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  let h = 0, s = 0;
+  const d = max - min;
+  if (d !== 0) {
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+  }
+  return [h, s, l];
+}
+
+function hueDelta(a, b) {
+  const d = Math.abs(((a - b) % 360 + 360) % 360);
+  return d > 180 ? 360 - d : d;
+}
+
+function hueName(h) {
+  const hue = ((h % 360) + 360) % 360;
+  const table = [[16, 'Crimson'], [45, 'Ember'], [68, 'Amber'], [90, 'Golden'],
+    [160, 'Verdant'], [200, 'Aether'], [250, 'Azure'], [292, 'Violet'], [335, 'Rose'], [361, 'Crimson']];
+  for (const [max, name] of table) if (hue < max) return name;
+  return 'Crimson';
+}
+
+function shuffled(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Read the portrait's prominent colors so tokens can be tinted from the photo.
+// Returns { dominant, accents } in HSL, or null if the image can't be sampled.
+function samplePalette(image) {
+  const size = 44;
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(image, 0, 0, size, size);
+  let pixels;
+  try { pixels = ctx.getImageData(0, 0, size, size).data; }
+  catch { return null; } // cross-origin taint — fall back to archetype colors
+  const buckets = new Map();
+  for (let i = 0; i < pixels.length; i += 4) {
+    if (pixels[i + 3] < 128) continue;
+    const [h, s, l] = rgbToHsl(pixels[i], pixels[i + 1], pixels[i + 2]);
+    if (l < 0.08 || l > 0.94) continue; // skip near-black / near-white
+    const key = `${Math.round(h / 22)}-${Math.round(s * 4)}`;
+    const bucket = buckets.get(key) || { h: 0, s: 0, l: 0, count: 0, w: 0 };
+    const weight = 0.25 + s; // bias toward vivid colors
+    bucket.h += h * weight; bucket.s += s; bucket.l += l; bucket.count++; bucket.w += weight;
+    buckets.set(key, bucket);
+  }
+  const list = [...buckets.values()]
+    .filter(b => b.count > 1)
+    .map(b => ({ h: b.h / b.w, s: b.s / b.count, l: b.l / b.count, count: b.count }));
+  if (!list.length) return null;
+  const dominant = [...list].sort((a, b) => b.count - a.count)[0];
+  const accents = [...list].sort((a, b) => (b.s * b.count) - (a.s * a.count));
+  return { dominant, accents };
+}
+
+// Build three distinct frame styles for one batch. Derived from the portrait
+// palette when available; each call re-shuffles + jitters the hues so pressing
+// "Regenerate Batch" always yields fresh options.
+function buildStyles(palette) {
+  const suffixes = ['Standee', 'Sigil', 'Mark'];
+  const jitter = Math.random() * 26 - 13;
+  let hues;
+  let baseL = 0.13;
+  if (palette && palette.accents.length) {
+    const primary = palette.accents[0];
+    const secondary = palette.accents.find(c => hueDelta(c.h, primary.h) > 35) || primary;
+    hues = [primary.h, primary.h + 180, secondary.h].map(h => h + jitter); // photo hue, its complement, a second accent
+    baseL = clamp01(palette.dominant.l * 0.6 + 0.05);
+  } else {
+    const start = Math.random() * 360; // no portrait: still rotate hues each batch
+    hues = [start, start + 42, start + 200];
+  }
+  const order = shuffled([0, 1, 2]);
+  return order.map((hueIdx, i) => {
+    const h = hues[hueIdx];
+    return {
+      id: `${suffixes[i]}-${Math.round(((h % 360) + 360) % 360)}-${Date.now()}-${i}`,
+      name: `${hueName(h)} ${suffixes[i]}`,
+      variant: i,
+      accent: hsl(h, 0.6, 0.62),
+      glow: hsl(h, 0.72, 0.55, 0.42),
+      tint: hsl(h, 0.55, 0.6, 0.07),
+      background: [hsl(h, 0.42, Math.max(0.05, baseL - 0.05)), hsl(h, 0.5, Math.min(0.3, baseL + 0.1))],
+    };
+  });
+}
 
 function fullName(char) {
   return char?.name || `${char?.fn || ''} ${char?.ln || ''}`.trim() || 'Adventurer';
@@ -40,7 +142,7 @@ function drawDiamond(ctx, cx, cy, r, color, width = 4) {
   ctx.restore();
 }
 
-function drawPortrait(ctx, image, style, seed) {
+function drawPortrait(ctx, image, tintCss) {
   const cx = TOKEN_SIZE / 2;
   const cy = TOKEN_SIZE / 2;
   const radius = TOKEN_SIZE * 0.34;
@@ -64,10 +166,29 @@ function drawPortrait(ctx, image, style, seed) {
   ctx.drawImage(image, sx, sy, sw, sh, cx - radius, cy - radius - 10, radius * 2, radius * 2);
   ctx.restore();
 
+  // Subtle wash in the frame's accent hue so the portrait reads as part of the token.
   ctx.save();
   ctx.globalCompositeOperation = 'source-atop';
-  ctx.fillStyle = seed % 2 ? 'rgba(255,241,205,0.08)' : 'rgba(120,210,255,0.08)';
+  ctx.fillStyle = tintCss;
   ctx.fillRect(0, 0, TOKEN_SIZE, TOKEN_SIZE);
+  ctx.restore();
+}
+
+function drawCornerTicks(ctx, color) {
+  const c = TOKEN_SIZE / 2;
+  const r = TOKEN_SIZE * 0.4;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 4;
+  ctx.globalAlpha = 0.85;
+  for (const a of [Math.PI * 0.25, Math.PI * 0.75, Math.PI * 1.25, Math.PI * 1.75]) {
+    const x = c + Math.cos(a) * r;
+    const y = c - 10 + Math.sin(a) * r;
+    ctx.beginPath();
+    ctx.moveTo(x - Math.cos(a) * 10, y - Math.sin(a) * 10);
+    ctx.lineTo(x + Math.cos(a) * 10, y + Math.sin(a) * 10);
+    ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -89,13 +210,12 @@ function drawInitials(ctx, char, style) {
   ctx.restore();
 }
 
-function renderToken({ char, portraitUrl, style, index }) {
-  return new Promise(async (resolve) => {
+function renderToken({ char, image, style }) {
+  return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
     canvas.width = TOKEN_SIZE;
     canvas.height = TOKEN_SIZE;
     const ctx = canvas.getContext('2d');
-    const seed = (char?.id || char?.name || '').split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0) + index;
 
     const grad = ctx.createRadialGradient(TOKEN_SIZE / 2, TOKEN_SIZE / 2, 30, TOKEN_SIZE / 2, TOKEN_SIZE / 2, TOKEN_SIZE * 0.56);
     grad.addColorStop(0, style.background[1]);
@@ -103,32 +223,44 @@ function renderToken({ char, portraitUrl, style, index }) {
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, TOKEN_SIZE, TOKEN_SIZE);
 
-    ctx.save();
-    ctx.shadowColor = style.glow;
-    ctx.shadowBlur = 34;
-    drawDiamond(ctx, TOKEN_SIZE / 2, TOKEN_SIZE / 2 + 6, TOKEN_SIZE * 0.3, style.accent, 5);
-    ctx.restore();
-
-    try {
-      if (!portraitUrl) throw new Error('No portrait');
-      const image = await loadImage(portraitUrl);
-      drawPortrait(ctx, image, style, seed);
-    } catch {
-      drawInitials(ctx, char, style);
+    // Variant 1 (Sigil): diamond aura behind the portrait.
+    if (style.variant === 1) {
+      ctx.save();
+      ctx.shadowColor = style.glow;
+      ctx.shadowBlur = 34;
+      drawDiamond(ctx, TOKEN_SIZE / 2, TOKEN_SIZE / 2 + 6, TOKEN_SIZE * 0.3, style.accent, 5);
+      ctx.restore();
     }
 
+    if (image) drawPortrait(ctx, image, style.tint);
+    else drawInitials(ctx, char, style);
+
+    // Outer double ring — thicker on the Standee variant.
     ctx.save();
     ctx.beginPath();
     ctx.arc(TOKEN_SIZE / 2, TOKEN_SIZE / 2 - 10, TOKEN_SIZE * 0.355, 0, Math.PI * 2);
     ctx.strokeStyle = 'rgba(10,8,6,0.9)';
-    ctx.lineWidth = 18;
+    ctx.lineWidth = style.variant === 0 ? 22 : 18;
     ctx.stroke();
     ctx.strokeStyle = style.accent;
-    ctx.lineWidth = 7;
+    ctx.lineWidth = style.variant === 0 ? 9 : 7;
     ctx.shadowColor = style.glow;
     ctx.shadowBlur = 16;
     ctx.stroke();
     ctx.restore();
+
+    // Variant 2 (Mark): thin inner ring + corner ticks.
+    if (style.variant === 2) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(TOKEN_SIZE / 2, TOKEN_SIZE / 2 - 10, TOKEN_SIZE * 0.3, 0, Math.PI * 2);
+      ctx.strokeStyle = style.accent;
+      ctx.globalAlpha = 0.5;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+      drawCornerTicks(ctx, style.accent);
+    }
 
     ctx.save();
     ctx.beginPath();
@@ -146,7 +278,7 @@ function renderToken({ char, portraitUrl, style, index }) {
 
     canvas.toBlob(blob => {
       const url = URL.createObjectURL(blob);
-      resolve({ id: `${Date.now()}-${style.id}`, styleId: style.id, styleName: style.name, url, blob });
+      resolve({ id: style.id, styleId: style.id, styleName: style.name, url, blob });
     }, 'image/png');
   });
 }
@@ -164,22 +296,27 @@ export default function CharacterTokenForge({ char, portraitUrl, drafts, setDraf
   const [busy, setBusy] = useState(false);
   const [savingId, setSavingId] = useState(null);
   const [error, setError] = useState('');
-  const remaining = Math.max(0, MAX_BATCHES - generationCount);
   const raceName = useMemo(() => getRaceDisplay(char?.race, char?.rv, char?.pmV) || 'adventurer', [char]);
   const className = useMemo(() => ALL_CLASSES.find(c => c.id === char?.cid)?.name || 'wanderer', [char]);
-  const raceLean = useMemo(() => RACES.find(r => r.id === char?.race)?.lean || 0, [char]);
 
   const generate = async () => {
-    if (busy || remaining <= 0) return;
+    if (busy) return;
     setBusy(true);
     setError('');
     try {
-      const orderedStyles = raceLean > 1
-        ? [TOKEN_STYLES[1], TOKEN_STYLES[0], TOKEN_STYLES[2]]
-        : raceLean < -1
-          ? [TOKEN_STYLES[0], TOKEN_STYLES[2], TOKEN_STYLES[1]]
-          : TOKEN_STYLES;
-      const next = await Promise.all(orderedStyles.map((style, i) => renderToken({ char, portraitUrl, style, index: i })));
+      // Load the portrait once, read its colors, then press three frames from them.
+      let image = null;
+      let palette = null;
+      if (portraitUrl) {
+        try {
+          image = await loadImage(portraitUrl);
+          palette = samplePalette(image);
+        } catch {
+          image = null;
+        }
+      }
+      const styles = buildStyles(palette);
+      const next = await Promise.all(styles.map(style => renderToken({ char, image, style })));
       setDrafts(next);
       setGenerationCount(generationCount + 1);
     } catch (err) {
@@ -218,7 +355,7 @@ export default function CharacterTokenForge({ char, portraitUrl, drafts, setDraf
           <div style={{ fontSize: 11, lineHeight: 1.6, color: COLORS.textSub, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
             {selectedUrl ? 'The Scribe has sealed this token for the VTT.' : `The Scribe can press ${fullName(char)} into a ${raceName} ${className} table token.`}
           </div>
-          <div style={{ marginTop: 5, fontSize: 9, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', textTransform: 'uppercase' }}>{remaining} generation batch{remaining === 1 ? '' : 'es'} remaining</div>
+          <div style={{ marginTop: 5, fontSize: 9, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', textTransform: 'uppercase' }}>{generationCount > 0 ? `${generationCount} batch${generationCount === 1 ? '' : 'es'} pressed · regenerate anytime` : 'Frames are drawn from your portrait'}</div>
         </div>
         <button type="button" onClick={() => setOpen(true)} style={{ background: selectedUrl ? 'rgba(87,170,102,0.12)' : COLORS.deityBg, border: `1px solid ${selectedUrl ? 'rgba(87,170,102,0.5)' : COLORS.deity}`, borderRadius: 3, padding: '9px 14px', color: selectedUrl ? '#80d58f' : COLORS.deityText, cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700 }}>{selectedUrl ? 'Review' : 'Ask Scribe'}</button>
       </div>
@@ -235,7 +372,7 @@ export default function CharacterTokenForge({ char, portraitUrl, drafts, setDraf
               <button type="button" onClick={() => setOpen(false)} style={{ background: 'transparent', border: 'none', color: COLORS.dim, fontSize: 24, cursor: 'pointer', lineHeight: 1 }}>x</button>
             </div>
 
-            <div style={{ padding: '10px 12px', border: `1px solid ${COLORS.border}`, borderRadius: 4, background: 'rgba(255,255,255,0.035)', color: COLORS.textSub, fontSize: 11, lineHeight: 1.6, fontFamily: 'Georgia, serif', marginBottom: 14 }}>Current guardrail: {MAX_BATCHES} total batches per character draft. Once you approve a token, it is saved with this submission.</div>
+            <div style={{ padding: '10px 12px', border: `1px solid ${COLORS.border}`, borderRadius: 4, background: 'rgba(255,255,255,0.035)', color: COLORS.textSub, fontSize: 11, lineHeight: 1.6, fontFamily: 'Georgia, serif', marginBottom: 14 }}>Each frame is tinted from your portrait's own colors. Press <em>Regenerate Batch</em> as often as you like — every batch offers fresh options. Approving a token saves it with this submission.</div>
             {error && <div style={{ marginBottom: 12, color: COLORS.warn, fontSize: 11, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{error}</div>}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 16 }}>
@@ -250,7 +387,7 @@ export default function CharacterTokenForge({ char, portraitUrl, drafts, setDraf
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-              <button type="button" onClick={generate} disabled={busy || remaining <= 0} style={{ background: remaining <= 0 ? 'rgba(255,255,255,0.04)' : COLORS.deityBg, border: `1px solid ${remaining <= 0 ? COLORS.border : COLORS.deity}`, borderRadius: 3, padding: '10px 16px', color: remaining <= 0 ? COLORS.dim : COLORS.deityText, cursor: busy || remaining <= 0 ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, opacity: busy ? 0.7 : 1 }}>{busy ? 'Pressing Tokens...' : drafts?.length ? 'Regenerate Batch' : 'Generate Drafts'}</button>
+              <button type="button" onClick={generate} disabled={busy} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 3, padding: '10px 16px', color: COLORS.deityText, cursor: busy ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, opacity: busy ? 0.7 : 1 }}>{busy ? 'Pressing Tokens...' : drafts?.length ? 'Regenerate Batch' : 'Generate Drafts'}</button>
               <button type="button" onClick={() => setOpen(false)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 3, padding: '10px 16px', color: COLORS.muted, cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Close</button>
             </div>
           </div>

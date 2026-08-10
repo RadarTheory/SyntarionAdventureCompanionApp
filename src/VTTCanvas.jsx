@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { LOCATIONS } from './MapPanel';
+import { computeCrowdedKeys, tokenLayoutKey } from './lib/tokenLayout';
 
 const BRUSH_SIZES = [20, 40, 70, 110];
 const TOKEN_COLORS = ['#e85d4a', '#4a9edd', '#79f5a7', '#e8c84a', '#c084fc', '#fb923c'];
@@ -184,7 +185,9 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   }
 
   // ── 4. Draw tokens ───────────────────────────────────────────────────────
-  tokens.forEach(tok => {
+  // Tokens never move; where full portraits would collide we draw compact pins.
+  const crowdedKeys = computeCrowdedKeys(tokens, mapRect);
+  tokens.forEach((tok, tokIndex) => {
     const fogged = isTokenFogged(tok, fogZones);
 
     // Players never see fogged tokens
@@ -209,6 +212,21 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
 
     // Enemies/creatures always read as red on the map; players keep their color.
     const isEnemyTok = tok.type !== 'player';
+
+    // Crowded tokens collapse to a small pin on their exact spot (hover shows the card).
+    if (crowdedKeys.has(tokenLayoutKey(tok, tokIndex)) && !isHovered) {
+      const pr = 6;
+      ctx.beginPath(); ctx.arc(tx, ty, pr, 0, Math.PI * 2);
+      ctx.fillStyle = isEnemyTok ? '#e05a5a' : (tok.color || '#4a9edd');
+      ctx.fill();
+      ctx.lineWidth = 2;
+      if (fogged) { ctx.setLineDash([2, 2]); ctx.strokeStyle = '#e8c84a'; }
+      else { ctx.strokeStyle = isEnemyTok ? '#7a1f1f' : 'rgba(8,6,4,0.85)'; }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+      return;
+    }
 
     // Shape
     if (tok.type === 'player') {
