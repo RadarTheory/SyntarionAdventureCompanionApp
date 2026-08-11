@@ -593,7 +593,7 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
           </div>
           <div style={{ width: 120 }}>
             <div style={{ ...label8(), marginBottom: 6 }}>Morality</div>
-            <input type="number" value={data.morality - 0} onChange={e => set('morality', parseInt(e.target.value) || 0)}
+            <input type="number" value={Number(data.morality) || 0} onChange={e => set('morality', parseInt(e.target.value) || 0)}
               style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }} />
           </div>
         </div>
@@ -934,7 +934,7 @@ function VitalsPanel({ row, onClose, campaignId }) {
   }));
 
   const Tracker = ({ label, color, state, setState, others }) => {
-    const cur = state.current - 0, max = state.max - 0;
+    const cur = Number(state.current) || 0, max = Number(state.max) || 0;
     const pct = max > 0 ? Math.max(0, Math.min(100, (cur / max) * 100)) : 0;
     const upd = (next) => { setState(next); save(label === 'Vitals' ? next : vitals, label === 'Stamina' ? next : stamina, label === 'Resolve' ? next : resolve); };
     return (
@@ -942,11 +942,11 @@ function VitalsPanel({ row, onClose, campaignId }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
           <div style={{ fontFamily: "'Cinzel',serif", fontSize: 9, color, letterSpacing: '0.1em' }}>{label}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <button onClick={() => upd({ ...state, current: Math.max(0, (state.current - 0) - 1) })} style={{ width: 20, height: 20, borderRadius: 4, background: 'rgba(224,90,90,0.15)', border: '1px solid rgba(224,90,90,0.4)', color: '#e05a5a', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
-            <input type="number" value={state.current - ''} onChange={e => upd({ ...state, current: parseInt(e.target.value) || 0 })} style={{ width: 36, textAlign: 'center', background: 'rgba(0,0,0,0.3)', border: `1px solid ${color}44`, borderRadius: 4, color, fontFamily: "'Cinzel',serif", fontSize: 13, fontWeight: 700, outline: 'none', padding: '2px 0' }} />
+            <button onClick={() => upd({ ...state, current: Math.max(0, (Number(state.current) || 0) - 1) })} style={{ width: 20, height: 20, borderRadius: 4, background: 'rgba(224,90,90,0.15)', border: '1px solid rgba(224,90,90,0.4)', color: '#e05a5a', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
+            <input type="number" value={Number(state.current) || 0} onChange={e => upd({ ...state, current: parseInt(e.target.value) || 0 })} style={{ width: 36, textAlign: 'center', background: 'rgba(0,0,0,0.3)', border: `1px solid ${color}44`, borderRadius: 4, color, fontFamily: "'Cinzel',serif", fontSize: 13, fontWeight: 700, outline: 'none', padding: '2px 0' }} />
             <span style={{ color: '#555', fontSize: 10 }}>/</span>
-            <input type="number" value={state.max - ''} onChange={e => upd({ ...state, max: parseInt(e.target.value) || 0 })} style={{ width: 36, textAlign: 'center', background: 'rgba(0,0,0,0.2)', border: `1px solid ${COLORS.border}`, borderRadius: 4, color: COLORS.dim, fontFamily: "'Cinzel',serif", fontSize: 11, outline: 'none', padding: '2px 0' }} />
-            <button onClick={() => upd({ ...state, current: Math.min(state.max - 999, (state.current - 0) + 1) })} style={{ width: 20, height: 20, borderRadius: 4, background: 'rgba(121,245,167,0.1)', border: '1px solid rgba(121,245,167,0.35)', color: '#79f5a7', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+            <input type="number" value={Number(state.max) || 0} onChange={e => upd({ ...state, max: parseInt(e.target.value) || 0 })} style={{ width: 36, textAlign: 'center', background: 'rgba(0,0,0,0.2)', border: `1px solid ${COLORS.border}`, borderRadius: 4, color: COLORS.dim, fontFamily: "'Cinzel',serif", fontSize: 11, outline: 'none', padding: '2px 0' }} />
+            <button onClick={() => upd({ ...state, current: Math.min(Number(state.max) || 0, (Number(state.current) || 0) + 1) })} style={{ width: 20, height: 20, borderRadius: 4, background: 'rgba(121,245,167,0.1)', border: '1px solid rgba(121,245,167,0.35)', color: '#79f5a7', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
           </div>
         </div>
         <div style={{ height: 4, background: `${color}22`, borderRadius: 3, overflow: 'hidden' }}>
