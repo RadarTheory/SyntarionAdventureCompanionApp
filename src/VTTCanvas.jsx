@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import supabase from './lib/supabase';
-import { COLORS } from './constants';
+import { COLORS, ALL_CLASSES } from './constants';
 import { LOCATIONS } from './MapPanel';
 import { computeCrowdedKeys, tokenLayoutKey } from './lib/tokenLayout';
+import { logSessionEvent } from './lib/sessionEvents';
+import { useActiveGameSession } from './lib/session';
 
 const BRUSH_SIZES = [20, 40, 70, 110];
 const TOKEN_COLORS = ['#e85d4a', '#4a9edd', '#79f5a7', '#e8c84a', '#c084fc', '#fb923c'];
@@ -11,33 +13,109 @@ const MAX_SCALE = 10;
 
 function uid() { return Math.random().toString(36).slice(2, 9); }
 
+function tokenName(token) {
+  return token?.fullName || token?.name || token?.creatureName || token?.character_name || token?.label || 'Token';
+}
+
+function tokenKey(token) {
+  return String(token?.id || token?.token_id || token?.characterId || token?.character_id || token?.npc_id || token?.beast_id || tokenName(token));
+}
+
+function coordText(pos) {
+  return `${Math.round(Number(pos?.x || 0) * 100)},${Math.round(Number(pos?.y || 0) * 100)}`;
+}
+
+function movedEnough(a, b) {
+  if (!a || !b) return false;
+  return Math.hypot(Number(a.x || 0) - Number(b.x || 0), Number(a.y || 0) - Number(b.y || 0)) > 0.002;
+}
+
+function moveIntentText(intent) {
+  return intent || 'Move';
+}
+
+function moveIntentVerb(intent) {
+  const verbs = {
+    Move: 'moved',
+    Sneak: 'sneaked',
+    Scout: 'scouted',
+    Approach: 'approached',
+    Retreat: 'retreated',
+    Follow: 'followed',
+    Guard: 'guarded',
+    Search: 'searched',
+    Interact: 'interacted',
+  };
+  return verbs[moveIntentText(intent)] || 'moved';
+}
+
 const raceIconCache = {};
+const classIconCache = {};
+
+function normalizeIconKey(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z]/g, '');
+}
+
+function tokenClassId(token) {
+  const raw = token?.cid || token?.classId || token?.class_id || token?.className || token?.class || token?.cp;
+  if (!raw) return null;
+  const direct = String(raw);
+  const matched = ALL_CLASSES?.find(cls => String(cls.id) === direct || normalizeIconKey(cls.name) === normalizeIconKey(direct));
+  return matched?.id || normalizeIconKey(direct);
+}
+
+function makeSilhouetteCanvas(img) {
+  const off = document.createElement('canvas');
+  off.width = img.width; off.height = img.height;
+  const octx = off.getContext('2d');
+  octx.drawImage(img, 0, 0);
+  const imgData = octx.getImageData(0, 0, off.width, off.height);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const sourceAlpha = d[i + 3];
+    const luminance = (d[i] + d[i + 1] + d[i + 2]) / 3;
+    d[i] = 255; d[i + 1] = 255; d[i + 2] = 255;
+    d[i + 3] = Math.round(sourceAlpha * ((255 - luminance) / 255));
+  }
+  octx.putImageData(imgData, 0, 0);
+  return off;
+}
+
 function getRaceIcon(race, onReady) {
   if (!race) return null;
-  const key = race.toLowerCase().replace(/[^a-z]/g, '');
+  const key = normalizeIconKey(race);
   if (raceIconCache[key] === undefined) {
     raceIconCache[key] = null;
     const img = new Image();
     img.onload = () => {
-      const off = document.createElement('canvas');
-      off.width = img.width; off.height = img.height;
-      const octx = off.getContext('2d');
-      octx.drawImage(img, 0, 0);
-      const imgData = octx.getImageData(0, 0, off.width, off.height);
-      const d = imgData.data;
-      for (let i = 0; i < d.length; i += 4) {
-        const luminance = (d[i] + d[i + 1] + d[i + 2]) / 3;
-        d[i] = 255; d[i + 1] = 255; d[i + 2] = 255;
-        d[i + 3] = 255 - luminance;
-      }
-      octx.putImageData(imgData, 0, 0);
-      raceIconCache[key] = off;
+      raceIconCache[key] = makeSilhouetteCanvas(img);
       onReady?.();
     };
     img.onerror = () => { raceIconCache[key] = false; };
     img.src = `/RaceIcons/${key}.png`;
   }
   return raceIconCache[key] || null;
+}
+
+function getClassIcon(classId, onReady) {
+  if (!classId) return null;
+  const key = tokenClassId({ cid: classId });
+  if (!key) return null;
+  if (classIconCache[key] === undefined) {
+    classIconCache[key] = null;
+    const img = new Image();
+    img.onload = () => {
+      classIconCache[key] = makeSilhouetteCanvas(img);
+      onReady?.();
+    };
+    img.onerror = () => { classIconCache[key] = false; };
+    img.src = `/ClassIcons/${key}.png`;
+  }
+  return classIconCache[key] || null;
+}
+
+function tokenSymbolIcon(token, onReady) {
+  return getClassIcon(tokenClassId(token), onReady) || (token?.race ? getRaceIcon(token.race, onReady) : null);
 }
 
 const rawIconCache = {};
@@ -69,6 +147,96 @@ function drawImageCover(ctx, img, x, y, w, h, alignY = 0.18) {
     sy = Math.max(0, Math.min(img.height - sh, (img.height - sh) * alignY));
   }
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+function drawBeastGlyph(ctx, token, x, y, size, color = '#fff1c6') {
+  const s = size;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = Math.max(1.2, s * 0.12);
+
+  ctx.beginPath();
+  ctx.moveTo(x - 0.36 * s, y - 0.2 * s);
+  ctx.lineTo(x - 0.1 * s, y - 0.08 * s);
+  ctx.moveTo(x + 0.36 * s, y - 0.2 * s);
+  ctx.lineTo(x + 0.1 * s, y - 0.08 * s);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x - 0.42 * s, y + 0.06 * s);
+  ctx.quadraticCurveTo(x, y + 0.34 * s, x + 0.42 * s, y + 0.06 * s);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x - 0.22 * s, y + 0.11 * s);
+  ctx.lineTo(x - 0.1 * s, y + 0.38 * s);
+  ctx.lineTo(x + 0.02 * s, y + 0.1 * s);
+  ctx.moveTo(x + 0.22 * s, y + 0.11 * s);
+  ctx.lineTo(x + 0.1 * s, y + 0.38 * s);
+  ctx.lineTo(x - 0.02 * s, y + 0.1 * s);
+  ctx.fill();
+  ctx.restore();
+}
+
+const TOKEN_STYLE = {
+  enemyFill: '#9f3f3f',
+  enemyRim: '#4b1918',
+  playerFallback: '#4f86ad',
+  playerRim: '#172536',
+  hover: '#d7b95f',
+  fogged: '#bda765',
+  own: '#79d69a',
+  iconLight: 'rgba(255,246,214,0.88)',
+  iconDark: 'rgba(20,11,9,0.72)',
+};
+
+function tokenFill(tok, isEnemyTok) {
+  return isEnemyTok ? TOKEN_STYLE.enemyFill : (tok.color || TOKEN_STYLE.playerFallback);
+}
+
+function tokenRim(tok, isEnemyTok, isOwn = false) {
+  if (isOwn) return '#1e4b35';
+  return isEnemyTok ? TOKEN_STYLE.enemyRim : TOKEN_STYLE.playerRim;
+}
+
+function drawTokenShape(ctx, tok, x, y, r, fill, rim, { hovered = false, dashed = false } = {}) {
+  const isPlayer = tok.type === 'player';
+  const inset = Math.max(2, r * 0.16);
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.6)';
+  ctx.shadowBlur = hovered ? 9 : 5;
+  ctx.shadowOffsetY = hovered ? 3 : 2;
+
+  if (isPlayer) { ctx.beginPath(); ctx.roundRect(x - r, y - r, r * 2, r * 2, 5); }
+  else { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); }
+  ctx.fillStyle = fill;
+  ctx.fill();
+
+  ctx.shadowColor = 'transparent';
+  ctx.lineWidth = hovered ? 2.4 : 1.8;
+  ctx.strokeStyle = rim;
+  if (dashed) ctx.setLineDash([3, 2]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  if (isPlayer) { ctx.beginPath(); ctx.roundRect(x - r + inset, y - r + inset, (r - inset) * 2, (r - inset) * 2, 4); }
+  else { ctx.beginPath(); ctx.arc(x, y, r - inset, 0, Math.PI * 2); }
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = hovered ? 'rgba(255,239,166,0.75)' : 'rgba(255,244,214,0.28)';
+  ctx.stroke();
+  ctx.restore();
+}
+
+function clipTokenShape(ctx, tok, x, y, r, inset = 2) {
+  if (tok.type === 'player') {
+    ctx.beginPath(); ctx.roundRect(x - r + inset, y - r + inset, r * 2 - inset * 2, r * 2 - inset * 2, 4);
+  } else {
+    ctx.beginPath(); ctx.arc(x, y, r - inset, 0, Math.PI * 2);
+  }
 }
 
 function getMapRect(canvas, mapImg) {
@@ -196,7 +364,7 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
     const isHovered = hoveredTokenId && tok.id === hoveredTokenId;
     const tx = mapRect.x + tok.x * mapRect.w;
     const ty = mapRect.y + tok.y * mapRect.h;
-    const r  = isHovered ? 22 : 14;
+    const r  = isHovered ? 19 : 13;
 
     ctx.save();
 
@@ -215,55 +383,49 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
 
     // Crowded tokens collapse to a small pin on their exact spot (hover shows the card).
     if (crowdedKeys.has(tokenLayoutKey(tok, tokIndex)) && !isHovered) {
-      const pr = 6;
-      ctx.beginPath(); ctx.arc(tx, ty, pr, 0, Math.PI * 2);
-      ctx.fillStyle = isEnemyTok ? '#e05a5a' : (tok.color || '#4a9edd');
-      ctx.fill();
-      ctx.lineWidth = 2;
-      if (fogged) { ctx.setLineDash([2, 2]); ctx.strokeStyle = '#e8c84a'; }
-      else { ctx.strokeStyle = isEnemyTok ? '#7a1f1f' : 'rgba(8,6,4,0.85)'; }
-      ctx.stroke();
-      ctx.setLineDash([]);
+      const pr = 5;
+      drawTokenShape(ctx, tok, tx, ty, pr, tokenFill(tok, isEnemyTok), fogged ? TOKEN_STYLE.fogged : tokenRim(tok, isEnemyTok), { dashed: fogged });
+      const pinIcon = tokenSymbolIcon(tok, onIconReady);
+      if (pinIcon) {
+        ctx.globalAlpha *= 0.78;
+        const iconSize = pr * 1.35;
+        ctx.drawImage(pinIcon, tx - iconSize / 2, ty - iconSize / 2, iconSize, iconSize);
+      } else if (isEnemyTok) {
+        drawBeastGlyph(ctx, tok, tx, ty, pr * 1.1, TOKEN_STYLE.iconDark);
+      }
       ctx.restore();
       return;
     }
 
-    // Shape
-    if (tok.type === 'player') {
-      ctx.beginPath(); ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4);
-    } else {
-      ctx.beginPath(); ctx.arc(tx, ty, r, 0, Math.PI * 2);
-    }
-    ctx.fillStyle = isEnemyTok ? '#e05a5a' : (tok.color || '#4a9edd');
-    ctx.fill();
-
-    // Border
-    ctx.strokeStyle = isHovered ? '#e8c84a' : (fogged ? '#e8c84a' : (isEnemyTok ? '#e05a5a' : '#fff'));
-    ctx.lineWidth = isHovered ? 3 : 2;
-    if (fogged) ctx.setLineDash([3, 2]);
-    ctx.stroke();
-    ctx.setLineDash([]);
+    const rim = isHovered ? TOKEN_STYLE.hover : (fogged ? TOKEN_STYLE.fogged : tokenRim(tok, isEnemyTok));
+    drawTokenShape(ctx, tok, tx, ty, r, tokenFill(tok, isEnemyTok), rim, { hovered: isHovered, dashed: fogged });
 
     // Sprite, icon, or label
     const tokenArt = tok.sprite_url || tok.portrait_url || null;
     const tokenImg = tokenArt ? getRawIcon(tokenArt, onIconReady) : null;
     if (tokenImg) {
       ctx.save();
-      if (tok.type === 'player') { ctx.beginPath(); ctx.roundRect(tx - r + 2, ty - r + 2, r * 2 - 4, r * 2 - 4, 4); }
-      else { ctx.beginPath(); ctx.arc(tx, ty, r - 2, 0, Math.PI * 2); }
+      clipTokenShape(ctx, tok, tx, ty, r, Math.max(2.5, r * 0.2));
       ctx.clip();
-      drawImageCover(ctx, tokenImg, tx - r, ty - r, r * 2, r * 2);
+      ctx.globalAlpha *= 0.86;
+      const imageInset = Math.max(2, r * 0.08);
+      drawImageCover(ctx, tokenImg, tx - r + imageInset, ty - r + imageInset, (r - imageInset) * 2, (r - imageInset) * 2);
       ctx.restore();
     } else {
-      const icon = tok.race ? getRaceIcon(tok.race, onIconReady) : null;
+      const icon = tokenSymbolIcon(tok, onIconReady);
       if (icon) {
-        const iconSize = r * 1.3;
+        ctx.globalAlpha *= 0.82;
+        const iconSize = r * 1.12;
         ctx.drawImage(icon, tx - iconSize / 2, ty - iconSize / 2, iconSize, iconSize);
       } else {
-        ctx.fillStyle = '#fff';
-        ctx.font = `bold ${isHovered ? 12 : 9}px sans-serif`;
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
+        if (isEnemyTok) {
+          drawBeastGlyph(ctx, tok, tx, ty, r * 0.92, TOKEN_STYLE.iconDark);
+        } else {
+          ctx.fillStyle = TOKEN_STYLE.iconLight;
+          ctx.font = `bold ${isHovered ? 12 : 9}px sans-serif`;
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
+        }
       }
     }
 
@@ -335,6 +497,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   const [pinnedCampaignId, setPinnedCampaignId] = useState(() => localStorage.getItem('vtt_pinned_campaign') || campaignId);
   const [showCampaignPicker, setShowCampaignPicker] = useState(false);
   const activeCampaignId = pinnedCampaignId || campaignId;
+  const activeGameSessionId = useActiveGameSession(activeCampaignId);
   const [showCommitPicker, setShowCommitPicker] = useState(false);
   const [feather, setFeather]                 = useState(0.35);
   const [localCampaigns, setLocalCampaigns]   = useState([]);
@@ -370,22 +533,52 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   }, [campaignId]);
 
   const approveMoves = async (characterId) => {
-    const approved = pendingMoves.find(m => m.characterId === characterId);
+    const movesForCharacter = pendingMoves.filter(m => String(m.characterId) === String(characterId));
+    const approved = movesForCharacter[movesForCharacter.length - 1];
     if (!approved) return;
+    const previousToken = tokens.find(t => String(t.characterId) === String(characterId));
     const next = tokens.map(t => String(t.characterId) === String(characterId) ? { ...t, x: approved.x, y: approved.y } : t);
     setTokens(next);
     const remaining = pendingMoves.filter(m => m.characterId !== characterId);
-    const { data: sess } = await supabase.from('vtt_sessions').select('id').eq('campaign_id', campaignId).maybeSingle();
+    const { data: sess } = await supabase.from('vtt_sessions').select('id').eq('campaign_id', String(activeCampaignId)).maybeSingle();
     if (sess?.id) {
       await supabase.from('vtt_sessions').update({ tokens: next, pending_moves: remaining, updated_at: new Date().toISOString() }).eq('id', sess.id);
     }
+    await logSessionEvent(activeCampaignId, activeGameSessionId, 'vtt_token_move_approved', {
+      actor_name: 'The Architect',
+      character_id: String(characterId),
+      character_name: approved.characterName || tokenName(previousToken),
+      token_name: tokenName(previousToken),
+      from: previousToken ? { x: previousToken.x, y: previousToken.y } : null,
+      to: { x: approved.x, y: approved.y },
+      intent: approved.intent || null,
+      note: approved.note || null,
+      waypoint_count: movesForCharacter.length,
+      description: `${approved.characterName || tokenName(previousToken)} ${moveIntentVerb(approved.intent)} on the VTT from ${coordText(previousToken)} to ${coordText(approved)}${approved.note ? `: ${approved.note}` : ''}.`,
+      source: 'vtt',
+    });
     setPendingMoves(remaining);
   };
 
   const denyMoves = async (characterId) => {
+    const movesForCharacter = pendingMoves.filter(m => String(m.characterId) === String(characterId));
     const remaining = pendingMoves.filter(m => m.characterId !== characterId);
-    const { data: sess } = await supabase.from('vtt_sessions').select('id').eq('campaign_id', campaignId).maybeSingle();
+    const { data: sess } = await supabase.from('vtt_sessions').select('id').eq('campaign_id', String(activeCampaignId)).maybeSingle();
     if (sess?.id) await supabase.from('vtt_sessions').update({ pending_moves: remaining }).eq('id', sess.id);
+    const denied = movesForCharacter[movesForCharacter.length - 1];
+    if (denied) {
+      await logSessionEvent(activeCampaignId, activeGameSessionId, 'vtt_token_move_denied', {
+        actor_name: 'The Architect',
+        character_id: String(characterId),
+        character_name: denied.characterName || 'Player',
+        to: { x: denied.x, y: denied.y },
+        intent: denied.intent || null,
+        note: denied.note || null,
+        waypoint_count: movesForCharacter.length,
+        description: `${denied.characterName || 'Player'} had a ${moveIntentText(denied.intent).toLowerCase()} move request denied at ${coordText(denied)}${denied.note ? `: ${denied.note}` : ''}.`,
+        source: 'vtt',
+      });
+    }
     setPendingMoves(remaining);
   };
 
@@ -411,6 +604,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
       label: token.label || token.name || 'Token', color: token.color || '#4a9edd',
       characterId: token.characterId || token.character_id || null,
       creatureName: token.creatureName || token.name || null, race: token.race || null,
+      cid: token.cid || token.classId || token.class_id || null,
       x: 0.5, y: 0.5, visible: true, on_map: true,
     }];
     setTokens(finalTokens);
@@ -455,7 +649,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
           characterId: tokenData.characterId || null, creatureName: tokenData.creatureName || null,
           fullName: tokenData.fullName || tokenData.name || tokenData.creatureName || tokenData.label || null,
           name: tokenData.fullName || tokenData.name || tokenData.creatureName || tokenData.label || null,
-          race: tokenData.race || null, sprite_url: tokenData.sprite_url || null, portrait_url: tokenData.portrait_url || null, x, y,
+          race: tokenData.race || null, cid: tokenData.cid || tokenData.classId || tokenData.class_id || null, sprite_url: tokenData.sprite_url || null, portrait_url: tokenData.portrait_url || null, x, y,
         }];
         if (vttSession?.id) {
           supabase.from('vtt_sessions').update({ tokens: next, updated_at: new Date().toISOString() }).eq('id', vttSession.id)
@@ -496,12 +690,12 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
     if (!chars) return toks;
     const map = Object.fromEntries(chars.map(c => {
       const data = typeof c.data === 'string' ? JSON.parse(c.data) : c.data || {};
-      return [String(c.id), { sprite_url: data.sprite_url || data.token?.sprite_url || null, portrait_url: data.portrait_url || null }];
+      return [String(c.id), { sprite_url: data.sprite_url || data.token?.sprite_url || null, portrait_url: data.portrait_url || null, race: data.race || null, cid: data.cid || null }];
     }));
     return toks.map(t => {
       if (!t.characterId || !map[String(t.characterId)]) return t;
       const art = map[String(t.characterId)];
-      return { ...t, sprite_url: art.sprite_url || t.sprite_url || null, portrait_url: art.portrait_url || t.portrait_url || null };
+      return { ...t, sprite_url: art.sprite_url || t.sprite_url || null, portrait_url: art.portrait_url || t.portrait_url || null, race: t.race || art.race || null, cid: t.cid || art.cid || null };
     });
   };
 
@@ -581,14 +775,38 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
 
   const save = async (targetCampaignId) => {
     setSaving(true);
-    const { data: existing } = await supabase.from('vtt_sessions').select('id, map_states').eq('campaign_id', targetCampaignId).maybeSingle();
+    const { data: existing } = await supabase.from('vtt_sessions').select('id, map_states, tokens').eq('campaign_id', targetCampaignId).maybeSingle();
     const states = { ...(existing?.map_states || vttSession?.map_states || {}) };
+    const previousTokens = Array.isArray(existing?.tokens) ? existing.tokens : [];
     if (mapFilename) states[mapFilename] = { fog_zones: fogZones, tokens, view_transform: transform };
     if (existing) {
       await supabase.from('vtt_sessions').update({ fog_zones: fogZones, tokens, map_filename: mapFilename, view_transform: transform, map_states: states, updated_at: new Date().toISOString() }).eq('id', existing.id);
     } else {
       await supabase.from('vtt_sessions').insert({ campaign_id: targetCampaignId, map_filename: mapFilename, fog_zones: fogZones, tokens, pending_moves: [], view_transform: transform, map_states: states });
     }
+    const previousByKey = new Map(previousTokens.map(token => [tokenKey(token), token]));
+    const movementEvents = tokens
+      .map(token => {
+        const before = previousByKey.get(tokenKey(token));
+        if (!before || !movedEnough(before, token)) return null;
+        return {
+          campaignId: targetCampaignId,
+          sessionId: String(targetCampaignId) === String(activeCampaignId) ? activeGameSessionId : null,
+          payload: {
+            actor_name: 'The Architect',
+            token_id: tokenKey(token),
+            token_name: tokenName(token),
+            character_id: token.characterId || token.character_id || null,
+            from: { x: before.x, y: before.y },
+            to: { x: token.x, y: token.y },
+            map_filename: mapFilename,
+            description: `${tokenName(token)} was moved on the VTT from ${coordText(before)} to ${coordText(token)}.`,
+            source: 'vtt',
+          },
+        };
+      })
+      .filter(Boolean);
+    await Promise.all(movementEvents.map(event => logSessionEvent(event.campaignId, event.sessionId, 'vtt_token_moved', event.payload)));
     await supabase.from('campaigns').update({ map_url: mapFilename }).eq('id', targetCampaignId);
     setSaving(false); setShowCommitPicker(false);
   };
@@ -891,7 +1109,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         )}
       </div>
 
-      {hoveredToken && (
+      {false && hoveredToken && (
         <div style={{ position: 'fixed', left: hoveredToken.clientX, top: hoveredToken.clientY - 160, transform: 'translateX(-50%)', background: 'rgba(8,6,4,0.82)', backdropFilter: 'blur(10px)', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 10, padding: 10, pointerEvents: (hoveredToken.sprite_url || hoveredToken.portrait_url) ? 'auto' : 'none', zIndex: 500, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: 110, boxShadow: '0 8px 32px rgba(0,0,0,0.6)', cursor: hoveredToken.portrait_url ? 'pointer' : 'default' }}
           onClick={() => (hoveredToken.sprite_url || hoveredToken.portrait_url) && setPortraitFullscreen(hoveredToken)}>
           {(hoveredToken.sprite_url || hoveredToken.portrait_url) ? (
@@ -936,7 +1154,12 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color: '#79f5a7', letterSpacing: '0.1em' }}>✥ MOVE REQUESTS — {pendingMoves.length} pending</div>
           {[...new Map(pendingMoves.map(m => [m.characterId, m])).values()].map(move => (
             <div key={move.characterId} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(121,245,167,0.05)', border: '1px solid rgba(121,245,167,0.2)', borderRadius: 6, padding: '7px 10px' }}>
-              <div style={{ flex: 1, fontFamily: "'Cinzel', serif", fontSize: 10, color: '#e8d9a7' }}>{move.characterName || 'Player'}</div>
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: '#e8d9a7' }}>{move.characterName || 'Player'} - {moveIntentText(move.intent)}</div>
+                <div style={{ marginTop: 2, fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+                  Final: {coordText(move)}{move.note ? ` - ${move.note}` : ''}
+                </div>
+              </div>
               <button onClick={() => approveMoves(move.characterId)} style={{ background: 'rgba(121,245,167,0.15)', border: '1px solid rgba(121,245,167,0.4)', borderRadius: 4, padding: '3px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: '#79f5a7', letterSpacing: '0.08em' }}>✓ Approve</button>
               <button onClick={() => denyMoves(move.characterId)} style={{ background: 'rgba(224,90,90,0.1)', border: '1px solid rgba(224,90,90,0.3)', borderRadius: 4, padding: '3px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: '#e05a5a', letterSpacing: '0.08em' }}>✕ Deny</button>
             </div>

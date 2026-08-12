@@ -2,6 +2,7 @@
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { fetchHerculesEventsForCampaign, eventsToTranscript, compileLocalSynopsis } from './lib/compileSession';
+import { getSessionEvents, logSessionEvent } from './lib/sessionEvents';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -56,6 +57,94 @@ function getCheckinOpenAt(scheduledAt, minutesBefore) {
   return date.toISOString();
 }
 
+function sessionEventToCombatShape(event) {
+  const payload = event.payload || {};
+  const description = payload.description
+    || payload.content
+    || payload.summary
+    || payload.detail
+    || payload.intent
+    || (payload.npc_name ? `Met ${payload.npc_name}${payload.city ? ` in ${payload.city}` : ''}.` : '')
+    || (payload.title && payload.content ? `${payload.title}: ${payload.content}` : '')
+    || event.event_type
+    || 'Session event recorded.';
+  return {
+    created_at: event.created_at,
+    type: event.event_type || 'session_event',
+    actor_name: payload.actor_name || payload.character_name || payload.player_name || payload.character || 'Session',
+    actor_id: payload.actor_id || payload.character_id || null,
+    description,
+    outcome: payload.outcome || null,
+  };
+}
+
+function artifactEvent({ created_at, type, actor_name = 'Session', actor_id = null, description, outcome = null }) {
+  if (!description) return null;
+  return { created_at, type, actor_name, actor_id, description, outcome };
+}
+
+function uniqueTimelineEvents(events) {
+  const seen = new Set();
+  return (events || []).filter(event => {
+    const key = [
+      event.type || '',
+      event.actor_name || '',
+      event.actor_id || '',
+      event.description || '',
+      event.created_at ? new Date(event.created_at).toISOString().slice(0, 16) : '',
+    ].join('|');
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+async function fetchLiveSessionArtifacts(session) {
+  if (!session?.campaign_id) return [];
+  const campaignId = String(session.campaign_id);
+  const startedAt = session.started_at || session.checkin_opened_at || session.created_at;
+  const endedAt = session.ended_at || new Date().toISOString();
+
+  const inWindow = query => query
+    .gte('created_at', startedAt)
+    .lte('created_at', endedAt)
+    .order('created_at', { ascending: true });
+
+  const [
+    { data: memories },
+    { data: messages },
+    { data: grimoires },
+  ] = await Promise.all([
+    inWindow(supabase.from('dm_memory').select('id, created_at, category, content, character_id').eq('campaign_id', campaignId)),
+    inWindow(supabase.from('messages').select('id, created_at, type, sender_name, character_id, content, lore_title, session_id, is_dm').eq('campaign_id', campaignId)),
+    inWindow(supabase.from('grimoire_entries').select('id, created_at, type, title, body, character_id, dm_note').eq('campaign_id', campaignId)),
+  ]);
+
+  return [
+    ...(memories || []).map(row => artifactEvent({
+      created_at: row.created_at,
+      type: `memory_${row.category || 'note'}`,
+      actor_name: row.character_id ? 'Character Memory' : 'The Architect',
+      actor_id: row.character_id ? String(row.character_id) : null,
+      description: row.content,
+    })),
+    ...(messages || []).map(row => artifactEvent({
+      created_at: row.created_at,
+      type: `message_${row.type || 'note'}`,
+      actor_name: row.sender_name || (row.is_dm ? 'The Architect' : 'Player'),
+      actor_id: row.character_id ? String(row.character_id) : null,
+      description: row.lore_title ? `${row.lore_title}: ${row.content}` : row.content,
+    })),
+    ...(grimoires || []).map(row => artifactEvent({
+      created_at: row.created_at,
+      type: `grimoire_${row.type || 'entry'}`,
+      actor_name: 'Grimoire',
+      actor_id: row.character_id ? String(row.character_id) : null,
+      description: [row.title, row.body, row.dm_note ? `DM note: ${row.dm_note}` : ''].filter(Boolean).join(' - '),
+    })),
+  ].filter(Boolean);
+}
+
 function sessionTitle(session) {
   if (!session) return 'No Session';
   if (session.status === 'scheduled') return 'Session Scheduled';
@@ -84,11 +173,20 @@ function ScribeDraftModal({ session, checkins, onClose }) {
         .maybeSingle();
       if (!cancelled && campaignRow) setCampaign(campaignRow);
 
-      const { events } = await fetchHerculesEventsForCampaign(session.campaign_id);
-      const local = compileLocalSynopsis(events, checkins);
+      const [{ events }, sessionEvents, liveArtifacts] = await Promise.all([
+        fetchHerculesEventsForCampaign(session.campaign_id),
+        getSessionEvents(session.id),
+        fetchLiveSessionArtifacts(session),
+      ]);
+      const allEvents = uniqueTimelineEvents([
+        ...(events || []),
+        ...(sessionEvents || []).map(sessionEventToCombatShape),
+        ...(liveArtifacts || []),
+      ]).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      const local = compileLocalSynopsis(allEvents, checkins);
 
       try {
-        const transcript = eventsToTranscript(events);
+        const transcript = eventsToTranscript(allEvents);
         const characterList = checkins.map(c => `${c.character_name} (id: ${c.character_id})`).join(', ');
         const chronicleShape = checkins
           .map(c => `"${c.character_id}": "A 2-4 paragraph narrative chronicle in third person for ${c.character_name}, using only what ${c.character_name} witnessed."`)
@@ -152,6 +250,13 @@ Produce raw JSON only:
     setSaving(true);
     const sessionDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
+    await logSessionEvent(session.campaign_id, session.id, 'session_ended', {
+      actor_name: 'The Architect',
+      description: `Session ended and was approved for synopsis on ${sessionDate}.`,
+      checked_in: checkins.map(c => ({ character_id: c.character_id, character_name: c.character_name })),
+      source: 'session_manager',
+    });
+
     await supabase.from('dm_memory').insert({
       campaign_id: session.campaign_id,
       category: 'session',
@@ -188,6 +293,12 @@ Produce raw JSON only:
   };
 
   const handleSkip = async () => {
+    await logSessionEvent(session.campaign_id, session.id, 'session_ended', {
+      actor_name: 'The Architect',
+      description: 'Session ended without a Scribe synopsis approval.',
+      checked_in: checkins.map(c => ({ character_id: c.character_id, character_name: c.character_name })),
+      source: 'session_manager',
+    });
     await supabase.from('sessions').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', session.id);
     onClose();
   };
@@ -283,6 +394,7 @@ function PlayModal({ onClose, onSessionStarted, existingSession }) {
   const createSession = async (status) => {
     if (!selectedCampaign) return null;
     const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.id) return null;
     const scheduledIso = mode === 'schedule' ? new Date(scheduledAt).toISOString() : null;
     const { data, error } = await supabase.from('sessions').insert({
       campaign_id: selectedCampaign,
@@ -294,6 +406,14 @@ function PlayModal({ onClose, onSessionStarted, existingSession }) {
       notes: notes.trim() || null,
     }).select().single();
     if (error) return null;
+    await logSessionEvent(selectedCampaign, data.id, status === 'scheduled' ? 'session_scheduled' : 'session_lobby_opened', {
+      actor_name: 'The Architect',
+      description: status === 'scheduled' ? `Session scheduled for ${scheduledIso}.` : 'Session lobby opened.',
+      scheduled_at: scheduledIso,
+      checkin_opens_at: scheduledIso ? getCheckinOpenAt(scheduledIso, checkinMinutes) : null,
+      notes: notes.trim() || null,
+      source: 'session_manager',
+    });
     setSession(data);
     setStep('lobby');
     return data;
@@ -305,19 +425,41 @@ function PlayModal({ onClose, onSessionStarted, existingSession }) {
   const handleOpenCheckIn = async () => {
     if (!session) return;
     const { data, error } = await supabase.from('sessions').update({ status: 'lobby', checkin_opened_at: new Date().toISOString() }).eq('id', session.id).select().single();
-    if (!error && data) setSession(data);
+    if (!error && data) {
+      await logSessionEvent(data.campaign_id, data.id, 'session_lobby_opened', {
+        actor_name: 'The Architect',
+        description: 'Scheduled session check-in opened.',
+        source: 'session_manager',
+      });
+      setSession(data);
+    }
   };
 
   const handleStart = async () => {
     if (!session) return;
     setStarting(true);
     const { data, error } = await supabase.from('sessions').update({ status: 'active', started_at: new Date().toISOString() }).eq('id', session.id).select().single();
-    if (!error && data) { onSessionStarted(data, checkins); onClose(); }
+    if (!error && data) {
+      await logSessionEvent(data.campaign_id, data.id, 'session_started', {
+        actor_name: 'The Architect',
+        description: `Session started with ${checkins.length} checked-in player${checkins.length === 1 ? '' : 's'}.`,
+        checked_in: checkins.map(c => ({ character_id: c.character_id, character_name: c.character_name })),
+        source: 'session_manager',
+      });
+      onSessionStarted(data, checkins); onClose();
+    }
     setStarting(false);
   };
 
   const handleCancel = async () => {
-    if (session) await supabase.from('sessions').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', session.id);
+    if (session) {
+      await logSessionEvent(session.campaign_id, session.id, 'session_cancelled', {
+        actor_name: 'The Architect',
+        description: 'Session was cancelled or closed before completion.',
+        source: 'session_manager',
+      });
+      await supabase.from('sessions').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', session.id);
+    }
     onClose();
   };
 

@@ -3,6 +3,7 @@ import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { buildLiveNpcRoster } from './scribe-context';
 import { LOCATIONS } from './MapPanel';
+import { logSessionEvent } from './lib/sessionEvents';
 
 const SpeechRecognitionImpl = typeof window !== 'undefined'
   ? (window.SpeechRecognition || window.webkitSpeechRecognition)
@@ -28,6 +29,9 @@ export default function LoreAnnouncePanel({ campaignId, embedded }) {
   const [polishing, setPolishing] = useState(false);
   const [interim, setInterim] = useState('');
   const [narratorMsg, setNarratorMsg] = useState(null);
+  const [rollDraft, setRollDraft] = useState({ playerName: '', purpose: '', roll: '', modifier: '0' });
+  const [rollSaving, setRollSaving] = useState(false);
+  const [rollSaved, setRollSaved] = useState(false);
   const recognitionRef = useRef(null);
   const finalTranscriptRef = useRef('');
 
@@ -185,6 +189,65 @@ CRITICAL OUTPUT RULES:
     );
   };
 
+  const commitSessionRoll = async () => {
+    if (!activeSession?.id || rollSaving) return;
+    const actorName = rollDraft.playerName.trim();
+    const purpose = rollDraft.purpose.trim();
+    const roll = Number(rollDraft.roll);
+    const rawModifier = Number(rollDraft.modifier || 0);
+    const modifier = Number.isFinite(rawModifier) ? rawModifier : 0;
+    if (!actorName || !purpose || !Number.isFinite(roll)) return;
+
+    const total = roll + modifier;
+    const modifierText = modifier ? ` ${modifier >= 0 ? '+' : '-'} ${Math.abs(modifier)}` : '';
+    const description = `${actorName} rolled for ${purpose}: d20 ${roll}${modifierText} = ${total}.`;
+    const matchingCharacter = characters.find(c => c.name.toLowerCase() === actorName.toLowerCase());
+
+    setRollSaving(true);
+    setRollSaved(false);
+
+    await logSessionEvent(campaignId, activeSession.id, 'player_roll', {
+      actor_name: actorName,
+      actor_id: matchingCharacter?.id ? String(matchingCharacter.id) : null,
+      purpose,
+      roll,
+      modifier,
+      total,
+      description,
+      source: 'lore_announce',
+    });
+
+    await supabase.from('dm_memory').insert({
+      campaign_id: String(campaignId),
+      category: 'roll',
+      content: `[PLAYER ROLL] ${description}`,
+    });
+
+    const { data: hSession } = await supabase.from('hercules_sessions')
+      .select('id').eq('campaign_id', String(campaignId)).eq('status', 'active')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+    if (hSession?.id) {
+      await supabase.from('hercules_events').insert({
+        session_id: hSession.id,
+        type: 'player_roll',
+        actor_name: actorName,
+        actor_id: matchingCharacter?.id ? String(matchingCharacter.id) : null,
+        description,
+        roll,
+        modifier,
+        total,
+        dm_approved: true,
+        outcome: 'Recorded by the DM.',
+      });
+    }
+
+    setRollDraft({ playerName: '', purpose: '', roll: '', modifier: '0' });
+    setRollSaved(true);
+    setRollSaving(false);
+    setTimeout(() => setRollSaved(false), 2400);
+  };
+
   useEffect(() => {
   if (campaignId) {
     supabase.from('characters').select('*')
@@ -247,6 +310,14 @@ CRITICAL OUTPUT RULES:
         campaign_id: String(campaignId),
         category: 'lore',
         content: `${replyTag}[LORE ANNOUNCEMENT] ${entryTitle}: ${text.trim()}`,
+      });
+
+      await logSessionEvent(campaignId, activeSession.id, 'lore_announcement', {
+        actor_name: 'The Architect',
+        title: entryTitle,
+        content: text.trim(),
+        character_ids: selected.map(String),
+        source: 'lore_announce',
       });
 
       // 2. Push to each selected character's Grimoire
@@ -329,6 +400,72 @@ CRITICAL OUTPUT RULES:
           letterSpacing: '0.12em',
         }}>
           {activeSession ? 'Active Session — Ready to Announce' : 'No Active Session — Start a session to announce'}
+        </div>
+      </div>
+
+      {/* Session roll recorder */}
+      <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <div style={{ ...label8() }}>Session Roll</div>
+          {rollSaved && <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, color: '#79f5a7', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Committed</div>}
+        </div>
+        <datalist id="lore-session-roll-characters">
+          {characters.map(c => <option key={c.id} value={c.name} />)}
+        </datalist>
+        <div style={{ display: 'grid', gap: 8 }}>
+          <input
+            type="text"
+            list="lore-session-roll-characters"
+            value={rollDraft.playerName}
+            onChange={e => setRollDraft(prev => ({ ...prev, playerName: e.target.value }))}
+            placeholder="Player or character..."
+            disabled={!activeSession || rollSaving}
+            style={{ width: '100%', background: 'rgba(10,8,6,0.35)', border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: '8px 10px', fontFamily: 'Georgia, serif', fontSize: 12, color: COLORS.text, outline: 'none', boxSizing: 'border-box' }}
+          />
+          <input
+            type="text"
+            value={rollDraft.purpose}
+            onChange={e => setRollDraft(prev => ({ ...prev, purpose: e.target.value }))}
+            placeholder="What did you make them roll for?"
+            disabled={!activeSession || rollSaving}
+            style={{ width: '100%', background: 'rgba(10,8,6,0.35)', border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: '8px 10px', fontFamily: 'Georgia, serif', fontSize: 12, color: COLORS.text, outline: 'none', boxSizing: 'border-box' }}
+          />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 8 }}>
+            <input
+              type="number"
+              min="1"
+              max="20"
+              value={rollDraft.roll}
+              onChange={e => setRollDraft(prev => ({ ...prev, roll: e.target.value }))}
+              onKeyDown={e => { if (e.key === 'Enter') commitSessionRoll(); }}
+              placeholder="d20"
+              disabled={!activeSession || rollSaving}
+              style={{ width: '100%', background: 'rgba(10,8,6,0.35)', border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: '8px 10px', fontFamily: 'Georgia, serif', fontSize: 12, color: COLORS.text, outline: 'none', boxSizing: 'border-box' }}
+            />
+            <input
+              type="number"
+              value={rollDraft.modifier}
+              onChange={e => setRollDraft(prev => ({ ...prev, modifier: e.target.value }))}
+              onKeyDown={e => { if (e.key === 'Enter') commitSessionRoll(); }}
+              placeholder="mod"
+              disabled={!activeSession || rollSaving}
+              style={{ width: '100%', background: 'rgba(10,8,6,0.35)', border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: '8px 10px', fontFamily: 'Georgia, serif', fontSize: 12, color: COLORS.text, outline: 'none', boxSizing: 'border-box' }}
+            />
+            <button
+              type="button"
+              onClick={commitSessionRoll}
+              disabled={!activeSession || rollSaving || !rollDraft.playerName.trim() || !rollDraft.purpose.trim() || !rollDraft.roll}
+              style={{
+                background: (!activeSession || rollSaving || !rollDraft.playerName.trim() || !rollDraft.purpose.trim() || !rollDraft.roll) ? 'transparent' : 'rgba(200,168,74,0.16)',
+                border: `1px solid ${(!activeSession || rollSaving || !rollDraft.playerName.trim() || !rollDraft.purpose.trim() || !rollDraft.roll) ? COLORS.border : 'rgba(200,168,74,0.55)'}`,
+                borderRadius: 7, padding: '8px 12px', cursor: (!activeSession || rollSaving || !rollDraft.playerName.trim() || !rollDraft.purpose.trim() || !rollDraft.roll) ? 'default' : 'pointer',
+                fontFamily: "'Cinzel', serif", fontSize: 8, color: (!activeSession || rollSaving || !rollDraft.playerName.trim() || !rollDraft.purpose.trim() || !rollDraft.roll) ? COLORS.dim : '#e8c84a',
+                letterSpacing: '0.1em', textTransform: 'uppercase',
+              }}
+            >
+              {rollSaving ? 'Saving' : 'Log'}
+            </button>
+          </div>
         </div>
       </div>
 

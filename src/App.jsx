@@ -73,6 +73,11 @@ export default function App() {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true);
+      if (event === 'SIGNED_OUT') {
+        localStorage.removeItem('syn_char');
+        localStorage.setItem('syn_view', 'home');
+        localStorage.removeItem('syntarion_view');
+      }
       setSession(session);
       setAuthLoading(false);
     });

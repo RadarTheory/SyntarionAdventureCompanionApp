@@ -1558,6 +1558,7 @@ const renderTab = () => {
               type: 'player',
               characterId: char.id,
               race: char.race || null,
+              cid: char.cid || null,
               sprite_url: spriteUrl,
               portrait_url: portraitUrl,
             });

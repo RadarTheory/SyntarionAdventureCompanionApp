@@ -257,6 +257,16 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
     });
 
     const text = speechText.trim();
+    await logSessionEvent(campaignId, sessionId, 'speech', {
+      actor_id: actorId,
+      actor_name: actorName,
+      target_id: String(target.id),
+      target_name: target.name,
+      target_type: target.type,
+      content: text,
+      true_intent: hasIntent ? intentText.trim() : null,
+      source: 'intent_declare',
+    });
     await supabase.from('grimoire_entries').insert({
       character_id: actorId, campaign_id: String(campaignId),
       type: 'event', title: 'Spoke to ' + target.name,
@@ -282,6 +292,13 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
   // Spoken aloud — no specific target, just said into the scene
   const logAloud = async () => {
     const text = speechText.trim();
+    await logSessionEvent(campaignId, sessionId, 'speech', {
+      actor_id: actorId,
+      actor_name: actorName,
+      content: text,
+      source: 'intent_declare',
+      visibility: 'scene',
+    });
     await supabase.from('grimoire_entries').insert({
       character_id: actorId, campaign_id: String(campaignId),
       type: 'event', title: 'Said Aloud',

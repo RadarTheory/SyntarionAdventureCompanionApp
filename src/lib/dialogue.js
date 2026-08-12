@@ -1,8 +1,17 @@
 import supabase from './supabase';
+import { logSessionEvent } from './sessionEvents';
 
 // ─── BROADCAST — same 4-destination pipe LoreAnnouncePanel uses ──────────────
 // Fires to: DM Memory · Player Grimoires (per participant) · Hercules Log (if combat active) · Player Inboxes
 export async function broadcastDialogueLine({ campaignId, sessionId, participantIds, speakerName, content, isDM }) {
+  await logSessionEvent(campaignId, sessionId, 'dialogue', {
+    actor_name: speakerName,
+    content,
+    participant_ids: participantIds || [],
+    source: 'dialogue',
+    visibility: isDM ? 'players' : 'table',
+  });
+
   // 1. DM Memory
   await supabase.from('dm_memory').insert({
     campaign_id: String(campaignId),

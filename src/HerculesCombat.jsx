@@ -220,6 +220,8 @@ useEffect(() => {
   }, []);
   const [manualLogText, setManualLogText] = useState('');
   const [manualCombatantName, setManualCombatantName] = useState('');
+  const [playerRollModalOpen, setPlayerRollModalOpen] = useState(false);
+  const [playerRollDraft, setPlayerRollDraft] = useState({ playerName: '', purpose: '', roll: '', modifier: '0' });
   const [vitalsOpen, setVitalsOpen] = useState(null);
   const [speakRow, setSpeakRow] = useState(null);
 
@@ -364,6 +366,18 @@ useEffect(() => {
   };
 
   const hasInitiativeTies = getTiedInitiativeGroups().length > 0;
+  const playerRollOptions = useMemo(() => {
+    const names = new Set();
+    initiative.forEach(row => {
+      const name = row.character_name || row.actor_name;
+      if (name) names.add(name);
+    });
+    events.forEach(event => {
+      const name = event.actor_name;
+      if (name && !['Dungeon Master', 'The Architect'].includes(name)) names.add(name);
+    });
+    return Array.from(names).sort();
+  }, [events, initiative]);
 
   const nextTurn = async () => {
     const sid = session?.id || activeSessionIdRef.current;
@@ -1107,6 +1121,46 @@ const denyEvent = async event => {
     setSaving(false);
   };
 
+  const commitPlayerRoll = async () => {
+    const sid = session?.id || activeSessionIdRef.current;
+    const actorName = playerRollDraft.playerName.trim();
+    const purpose = playerRollDraft.purpose.trim();
+    const roll = Number(playerRollDraft.roll);
+    const rawModifier = Number(playerRollDraft.modifier || 0);
+    const modifier = Number.isFinite(rawModifier) ? rawModifier : 0;
+
+    if (!sid || !actorName || !purpose || !Number.isFinite(roll)) return;
+
+    const total = roll + modifier;
+    const modifierText = modifier ? ` ${modifier >= 0 ? '+' : '-'} ${Math.abs(modifier)}` : '';
+
+    setSaving(true);
+
+    const { error } = await supabase.from('hercules_events').insert({
+      session_id: sid,
+      type: 'player_roll',
+      actor_name: actorName,
+      actor_id: null,
+      description: `${actorName} rolled for ${purpose}: d20 ${roll}${modifierText} = ${total}.`,
+      roll,
+      modifier,
+      total,
+      dm_approved: true,
+      outcome: 'Recorded by the DM.',
+    });
+
+    if (error) {
+      console.error('Failed to commit player roll:', error);
+      setSaving(false);
+      return;
+    }
+
+    setPlayerRollDraft({ playerName: '', purpose: '', roll: '', modifier: '0' });
+    setPlayerRollModalOpen(false);
+    await loadEvents(sid);
+    setSaving(false);
+  };
+
   const addManualCombatant = async () => {
     const sid = session?.id || activeSessionIdRef.current;
     const name = manualCombatantName.trim();
@@ -1614,6 +1668,7 @@ const denyEvent = async event => {
               )}
               <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
                 <input value={manualLogText} onChange={e => setManualLogText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addManualLogEntry(); } }} placeholder="Add DM note to combat log..." disabled={!session || saving} style={{ flex: 1, background: COLORS.card, border: `1px solid ${COLORS.border}`, color: COLORS.text, borderRadius: 6, padding: '8px 10px', fontFamily: 'Georgia, serif', fontSize: 12, outline: 'none' }} />
+                <button type="button" onClick={() => setPlayerRollModalOpen(true)} disabled={!session || saving} style={{ ...plainButton(), opacity: !session || saving ? 0.45 : 1 }}>Log Roll</button>
                 <button type="button" onClick={addManualLogEntry} disabled={!session || saving || !manualLogText.trim()} style={{ ...goldButton(), opacity: !session || saving || !manualLogText.trim() ? 0.45 : 1 }}>Add</button>
               </div>
             </div>
@@ -1719,6 +1774,71 @@ const denyEvent = async event => {
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
               <button type="button" onClick={() => setActionPromptRow(null)} style={plainButton()}>Cancel</button>
               <button type="button" onClick={confirmCombatantAction} disabled={!actionPromptValue?.trim()} style={goldButton()}>Roll d20</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {playerRollModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200010, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: '#100d0a', border: '1px solid rgba(200,168,74,0.4)', borderRadius: 14, padding: 20, width: 'min(440px, 100%)', boxShadow: '0 24px 80px rgba(0,0,0,0.8)' }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#e8d9a7', letterSpacing: '0.14em', marginBottom: 4 }}>Log Player Roll</div>
+            <div style={{ color: COLORS.dim, fontSize: 11, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 14 }}>
+              Record what you called for and the result the player rolled.
+            </div>
+            <datalist id="hercules-player-roll-options">
+              {playerRollOptions.map(name => <option key={name} value={name} />)}
+            </datalist>
+            <div style={{ display: 'grid', gap: 10, marginBottom: 16 }}>
+              <input
+                type="text"
+                list="hercules-player-roll-options"
+                value={playerRollDraft.playerName}
+                onChange={e => setPlayerRollDraft(prev => ({ ...prev, playerName: e.target.value }))}
+                onKeyDown={e => { if (e.key === 'Escape') setPlayerRollModalOpen(false); }}
+                placeholder="Player or character..."
+                autoFocus
+                style={{ width: '100%', boxSizing: 'border-box', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: '9px 11px', color: COLORS.text, fontFamily: 'Georgia, serif', fontSize: 13, outline: 'none' }}
+              />
+              <input
+                type="text"
+                value={playerRollDraft.purpose}
+                onChange={e => setPlayerRollDraft(prev => ({ ...prev, purpose: e.target.value }))}
+                onKeyDown={e => { if (e.key === 'Escape') setPlayerRollModalOpen(false); }}
+                placeholder="What did you make them roll for?"
+                style={{ width: '100%', boxSizing: 'border-box', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: '9px 11px', color: COLORS.text, fontFamily: 'Georgia, serif', fontSize: 13, outline: 'none' }}
+              />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={playerRollDraft.roll}
+                  onChange={e => setPlayerRollDraft(prev => ({ ...prev, roll: e.target.value }))}
+                  onKeyDown={e => { if (e.key === 'Enter') commitPlayerRoll(); if (e.key === 'Escape') setPlayerRollModalOpen(false); }}
+                  placeholder="d20 roll"
+                  style={{ width: '100%', boxSizing: 'border-box', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: '9px 11px', color: COLORS.text, fontFamily: 'Georgia, serif', fontSize: 13, outline: 'none' }}
+                />
+                <input
+                  type="number"
+                  value={playerRollDraft.modifier}
+                  onChange={e => setPlayerRollDraft(prev => ({ ...prev, modifier: e.target.value }))}
+                  onKeyDown={e => { if (e.key === 'Enter') commitPlayerRoll(); if (e.key === 'Escape') setPlayerRollModalOpen(false); }}
+                  placeholder="modifier"
+                  style={{ width: '100%', boxSizing: 'border-box', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: '9px 11px', color: COLORS.text, fontFamily: 'Georgia, serif', fontSize: 13, outline: 'none' }}
+                />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button type="button" onClick={() => setPlayerRollModalOpen(false)} style={plainButton()}>Cancel</button>
+              <button
+                type="button"
+                onClick={commitPlayerRoll}
+                disabled={saving || !playerRollDraft.playerName.trim() || !playerRollDraft.purpose.trim() || !playerRollDraft.roll}
+                style={{ ...goldButton(), opacity: saving || !playerRollDraft.playerName.trim() || !playerRollDraft.purpose.trim() || !playerRollDraft.roll ? 0.45 : 1 }}
+              >
+                Commit Roll
+              </button>
             </div>
           </div>
         </div>

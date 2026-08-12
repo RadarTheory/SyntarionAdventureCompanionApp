@@ -473,7 +473,8 @@ function DMSigilModal({ onSuccess, onCancel }) {
 // ─── MAIN LANDING COMPONENT ──────────────────────────────────────────────────
 export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onViewChange }) {
   const { isMobile } = useDevice();
-  const [appView, setAppView] = useState(() => localStorage.getItem('syn_view') || 'home');
+  const initialAccountView = user?.user_metadata?.syntarion_view;
+  const [appView, setAppView] = useState(() => initialAccountView || localStorage.getItem('syn_view') || 'home');
   const [savedChars, setSavedChars] = useState([]);
   const campaignChars = savedChars.filter(c => c.status === 'approved' && c.campaign_id);
   const [loading, setLoading] = useState(true);
@@ -485,9 +486,31 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
   const [legalStatus, setLegalStatus] = useState('checking'); // 'checking' | 'needed' | 'accepted'
   const [showTour, setShowTour] = useState(() => !hasSeenTour());
 
+  const syncAccountState = (patch) => {
+    if (!user?.id) return;
+    supabase.auth.updateUser({
+      data: {
+        ...(user.user_metadata || {}),
+        ...patch,
+      },
+    }).catch(err => console.warn('[account-sync] Failed to persist account state:', err?.message || err));
+  };
+
+  const setSynView = (nextView, accountPatch = {}) => {
+    localStorage.setItem('syn_view', nextView);
+    setAppView(nextView);
+    syncAccountState({ syntarion_view: nextView, ...accountPatch });
+  };
+
   useEffect(() => {
     onViewChange?.(appView !== 'home');
   }, [appView, onViewChange]);
+
+  useEffect(() => {
+    if (appView === 'sheet' && !loading && !selectedChar) {
+      setSynView(savedChars.length ? 'character-select' : 'home');
+    }
+  }, [appView, loading, savedChars.length, selectedChar]);
 
   useEffect(() => {
     if (!user?.id) { setLegalStatus('needed'); return; }
@@ -516,14 +539,34 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
         .select('*')
         .eq('user_id', user.id);
       if (error) throw error;
-      if (data) setSavedChars(data
+      if (data) {
+        const mapped = data
         .filter(row => row.status !== 'rejected')
         .map(row => ({
           ...row.data,
           id: row.id,
           status: row.status,
           campaign_id: row.campaign_id,
-        })));
+          user_id: row.user_id,
+        }));
+        setSavedChars(mapped);
+
+        const metadataCharId = user.user_metadata?.syntarion_selected_character_id;
+        const localCharId = (() => {
+          try { return JSON.parse(localStorage.getItem('syn_char') || 'null')?.id; } catch { return null; }
+        })();
+        const selectedId = metadataCharId || localCharId || selectedChar?.id;
+        const validSelected = selectedId ? mapped.find(char => String(char.id) === String(selectedId)) : null;
+
+        if (validSelected) {
+          setSelectedChar(validSelected);
+          localStorage.setItem('syn_char', JSON.stringify(validSelected));
+        } else {
+          setSelectedChar(null);
+          localStorage.removeItem('syn_char');
+          if (appView === 'sheet') setSynView(mapped.length ? 'character-select' : 'home');
+        }
+      }
     } catch (err) {
       console.error('Fetch error:', err.message);
     } finally {
@@ -533,9 +576,9 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
 
   useEffect(() => { fetchCharacters(); }, [user?.id]);
 
-  const goHome = () => { localStorage.setItem('syn_view', 'home'); setAppView('home'); fetchCharacters(); };
-  const handlePlay = () => { localStorage.setItem('syn_view', 'character-select'); setAppView('character-select'); };
-  const handleDMSuccess = (module) => { setDmModule(module || null); setShowDMModal(false); localStorage.setItem('syn_view', 'dm'); setAppView('dm'); playSfxByKey('ui-campaign-dm-view-page-pop'); };
+  const goHome = () => { setSynView('home'); fetchCharacters(); };
+  const handlePlay = () => { setSynView('character-select'); };
+  const handleDMSuccess = (module) => { setDmModule(module || null); setShowDMModal(false); setSynView('dm'); playSfxByKey('ui-campaign-dm-view-page-pop'); };
 
   // ── Legal Gate ─────────────────────────────────────────────────────────────
   if (legalStatus === 'checking') return (
@@ -551,9 +594,9 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
       <CharacterSelect
         darkMode={darkMode}
         savedChars={savedChars}
-        onSelect={(char) => { setSelectedChar(char); localStorage.setItem('syn_view', 'sheet'); localStorage.setItem('syn_char', JSON.stringify(char)); setAppView('sheet'); }}
-        onCreate={() => setAppView('wizard')}
-        onClaim={() => { localStorage.setItem('syn_view', 'roster'); setAppView('roster'); }}
+        onSelect={(char) => { setSelectedChar(char); localStorage.setItem('syn_char', JSON.stringify(char)); setSynView('sheet', { syntarion_selected_character_id: char.id }); }}
+        onCreate={() => setSynView('wizard')}
+        onClaim={() => { setSynView('roster'); }}
         onHome={goHome}
       />
       <ScribeLite />
@@ -587,6 +630,10 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
   );
 
   if (appView === 'dm') return <DMView darkMode={darkMode} onHome={goHome} module={dmModule} user={user} />;
+
+  if (appView === 'sheet' && !selectedChar) {
+    return <div style={{ minHeight: '100vh', background: darkMode ? '#14110c' : '#f0eeeb' }} />;
+  }
 
   if (appView === 'sheet') return (
     <CharacterSheet
@@ -628,7 +675,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
       id: 'campaigns',
       label: 'CAMPAIGNS',
       sub: campaignChars.length > 0 ? 'Enter the age of steam' : 'Browse the world',
-      onClick: () => { localStorage.setItem('syn_view', 'campaigns'); setAppView('campaigns'); playSfxByKey('ui-campaign-dm-view-page-pop'); },
+      onClick: () => { setSynView('campaigns'); playSfxByKey('ui-campaign-dm-view-page-pop'); },
     },
     {
       id: 'howtoplay',
@@ -640,7 +687,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
       id: 'settings',
       label: 'SETTINGS',
       sub: 'Preferences & display',
-      onClick: () => setAppView('settings'),
+      onClick: () => setSynView('settings'),
     },
     {
       id: 'dm',

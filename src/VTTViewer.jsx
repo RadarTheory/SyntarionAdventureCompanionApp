@@ -1,38 +1,89 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import supabase from './lib/supabase';
-import { COLORS } from './constants';
+import { COLORS, ALL_CLASSES } from './constants';
 import { computeCrowdedKeys, tokenLayoutKey } from './lib/tokenLayout';
+import { logSessionEvent } from './lib/sessionEvents';
+import { useActiveGameSession } from './lib/session';
 
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 8;
+const MOVE_INTENTS = ['Move', 'Sneak', 'Scout', 'Approach', 'Retreat', 'Follow', 'Guard', 'Search', 'Interact'];
+
+function moveIntentText(intent) {
+  return intent || 'Move';
+}
+
+function coordText(pos) {
+  return `${Math.round(Number(pos?.x || 0) * 100)},${Math.round(Number(pos?.y || 0) * 100)}`;
+}
 
 const raceIconCache = {};
+const classIconCache = {};
+
+function normalizeIconKey(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z]/g, '');
+}
+
+function tokenClassId(token) {
+  const raw = token?.cid || token?.classId || token?.class_id || token?.className || token?.class || token?.cp;
+  if (!raw) return null;
+  const direct = String(raw);
+  const matched = ALL_CLASSES?.find(cls => String(cls.id) === direct || normalizeIconKey(cls.name) === normalizeIconKey(direct));
+  return matched?.id || normalizeIconKey(direct);
+}
+
+function makeSilhouetteCanvas(img) {
+  const off = document.createElement('canvas');
+  off.width = img.width; off.height = img.height;
+  const octx = off.getContext('2d');
+  octx.drawImage(img, 0, 0);
+  const imgData = octx.getImageData(0, 0, off.width, off.height);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const sourceAlpha = d[i + 3];
+    const luminance = (d[i] + d[i + 1] + d[i + 2]) / 3;
+    d[i] = 255; d[i + 1] = 255; d[i + 2] = 255;
+    d[i + 3] = Math.round(sourceAlpha * ((255 - luminance) / 255));
+  }
+  octx.putImageData(imgData, 0, 0);
+  return off;
+}
+
 function getRaceIcon(race, onReady) {
   if (!race) return null;
-  const key = race.toLowerCase().replace(/[^a-z]/g, '');
+  const key = normalizeIconKey(race);
   if (raceIconCache[key] === undefined) {
     raceIconCache[key] = null;
     const img = new Image();
     img.onload = () => {
-      const off = document.createElement('canvas');
-      off.width = img.width; off.height = img.height;
-      const octx = off.getContext('2d');
-      octx.drawImage(img, 0, 0);
-      const imgData = octx.getImageData(0, 0, off.width, off.height);
-      const d = imgData.data;
-      for (let i = 0; i < d.length; i += 4) {
-        const luminance = (d[i] + d[i + 1] + d[i + 2]) / 3;
-        d[i] = 255; d[i + 1] = 255; d[i + 2] = 255;
-        d[i + 3] = 255 - luminance;
-      }
-      octx.putImageData(imgData, 0, 0);
-      raceIconCache[key] = off;
+      raceIconCache[key] = makeSilhouetteCanvas(img);
       onReady?.();
     };
     img.onerror = () => { raceIconCache[key] = false; };
     img.src = `/RaceIcons/${key}.png`;
   }
   return raceIconCache[key] || null;
+}
+
+function getClassIcon(classId, onReady) {
+  if (!classId) return null;
+  const key = tokenClassId({ cid: classId });
+  if (!key) return null;
+  if (classIconCache[key] === undefined) {
+    classIconCache[key] = null;
+    const img = new Image();
+    img.onload = () => {
+      classIconCache[key] = makeSilhouetteCanvas(img);
+      onReady?.();
+    };
+    img.onerror = () => { classIconCache[key] = false; };
+    img.src = `/ClassIcons/${key}.png`;
+  }
+  return classIconCache[key] || null;
+}
+
+function tokenSymbolIcon(token, onReady) {
+  return getClassIcon(tokenClassId(token), onReady) || (token?.race ? getRaceIcon(token.race, onReady) : null);
 }
 
 const rawIconCache = {};
@@ -64,6 +115,97 @@ function drawImageCover(ctx, img, x, y, w, h, alignY = 0.18) {
     sy = Math.max(0, Math.min(img.height - sh, (img.height - sh) * alignY));
   }
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+function tokenName(token) {
+  return token?.fullName || token?.name || token?.creatureName || token?.character_name || token?.label || 'Token';
+}
+
+function drawBeastGlyph(ctx, token, x, y, size, color = '#fff1c6') {
+  const s = size;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = Math.max(1.2, s * 0.12);
+
+  ctx.beginPath();
+  ctx.moveTo(x - 0.36 * s, y - 0.2 * s);
+  ctx.lineTo(x - 0.1 * s, y - 0.08 * s);
+  ctx.moveTo(x + 0.36 * s, y - 0.2 * s);
+  ctx.lineTo(x + 0.1 * s, y - 0.08 * s);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x - 0.42 * s, y + 0.06 * s);
+  ctx.quadraticCurveTo(x, y + 0.34 * s, x + 0.42 * s, y + 0.06 * s);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x - 0.22 * s, y + 0.11 * s);
+  ctx.lineTo(x - 0.1 * s, y + 0.38 * s);
+  ctx.lineTo(x + 0.02 * s, y + 0.1 * s);
+  ctx.moveTo(x + 0.22 * s, y + 0.11 * s);
+  ctx.lineTo(x + 0.1 * s, y + 0.38 * s);
+  ctx.lineTo(x - 0.02 * s, y + 0.1 * s);
+  ctx.fill();
+  ctx.restore();
+}
+
+const TOKEN_STYLE = {
+  enemyFill: '#9f3f3f',
+  enemyRim: '#4b1918',
+  playerFallback: '#4f86ad',
+  playerRim: '#172536',
+  hover: '#d7b95f',
+  own: '#79d69a',
+  iconLight: 'rgba(255,246,214,0.88)',
+  iconDark: 'rgba(20,11,9,0.72)',
+};
+
+function tokenFill(tok, isEnemyTok) {
+  return isEnemyTok ? TOKEN_STYLE.enemyFill : (tok.color || TOKEN_STYLE.playerFallback);
+}
+
+function tokenRim(tok, isEnemyTok, isOwn = false) {
+  if (isOwn) return '#1e4b35';
+  return isEnemyTok ? TOKEN_STYLE.enemyRim : TOKEN_STYLE.playerRim;
+}
+
+function drawTokenShape(ctx, tok, x, y, r, fill, rim, { hovered = false } = {}) {
+  const isPlayer = tok.type === 'player';
+  const inset = Math.max(2, r * 0.16);
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.6)';
+  ctx.shadowBlur = hovered ? 9 : 5;
+  ctx.shadowOffsetY = hovered ? 3 : 2;
+
+  if (isPlayer) { ctx.beginPath(); ctx.roundRect(x - r, y - r, r * 2, r * 2, 5); }
+  else { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); }
+  ctx.fillStyle = fill;
+  ctx.fill();
+
+  ctx.shadowColor = 'transparent';
+  ctx.lineWidth = hovered ? 2.4 : 1.8;
+  ctx.strokeStyle = rim;
+  ctx.stroke();
+
+  if (isPlayer) { ctx.beginPath(); ctx.roundRect(x - r + inset, y - r + inset, (r - inset) * 2, (r - inset) * 2, 4); }
+  else { ctx.beginPath(); ctx.arc(x, y, r - inset, 0, Math.PI * 2); }
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = hovered ? 'rgba(255,239,166,0.75)' : 'rgba(255,244,214,0.28)';
+  ctx.stroke();
+  ctx.restore();
+}
+
+function clipTokenShape(ctx, tok, x, y, r, inset = 2) {
+  if (tok.type === 'player') {
+    ctx.beginPath(); ctx.roundRect(x - r + inset, y - r + inset, r * 2 - inset * 2, r * 2 - inset * 2, 4);
+  } else {
+    ctx.beginPath(); ctx.arc(x, y, r - inset, 0, Math.PI * 2);
+  }
 }
 
 function getMapRect(canvas, mapImg) {
@@ -175,48 +317,53 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
     const isEnemyTok = tok.type !== 'player';
     const tx = mapRect.x + tok.x * mapRect.w;
     const ty = mapRect.y + tok.y * mapRect.h;
-    const r = isHovered ? 22 : 14;
+    const r = isHovered ? 19 : 13;
     ctx.save();
     ctx.globalAlpha = hasPending ? 0.4 : 1;
 
     // Crowded tokens collapse to a small pin on their exact spot (hover shows the card).
     if (crowdedKeys.has(tokenLayoutKey(tok, tokIndex)) && !isHovered) {
-      ctx.beginPath(); ctx.arc(tx, ty, 6, 0, Math.PI * 2);
-      ctx.fillStyle = isEnemyTok ? '#e05a5a' : (tok.color || '#e85d4a');
-      ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = isOwn ? '#79f5a7' : (isEnemyTok ? '#7a1f1f' : 'rgba(8,6,4,0.85)');
-      ctx.stroke();
+      const pr = 5;
+      drawTokenShape(ctx, tok, tx, ty, pr, tokenFill(tok, isEnemyTok), tokenRim(tok, isEnemyTok, isOwn));
+      const pinIcon = tokenSymbolIcon(tok, onIconReady);
+      if (pinIcon) {
+        ctx.globalAlpha *= 0.78;
+        const iconSize = pr * 1.35;
+        ctx.drawImage(pinIcon, tx - iconSize / 2, ty - iconSize / 2, iconSize, iconSize);
+      } else if (isEnemyTok) {
+        drawBeastGlyph(ctx, tok, tx, ty, pr * 1.1, TOKEN_STYLE.iconDark);
+      }
       ctx.restore();
       return;
     }
 
-    if (tok.type === 'player') { ctx.beginPath(); ctx.roundRect(tx - r, ty - r, r * 2, r * 2, 4); }
-    else { ctx.beginPath(); ctx.arc(tx, ty, r, 0, Math.PI * 2); }
-    ctx.fillStyle = isEnemyTok ? '#e05a5a' : (tok.color || '#e85d4a');
-    ctx.fill();
-    ctx.strokeStyle = isHovered ? '#e8c84a' : (isOwn ? '#79f5a7' : (isEnemyTok ? '#e05a5a' : '#fff'));
-    ctx.lineWidth = isHovered ? 3 : (isOwn ? 2.5 : 2);
-    ctx.stroke();
+    const rim = isHovered ? TOKEN_STYLE.hover : tokenRim(tok, isEnemyTok, isOwn);
+    drawTokenShape(ctx, tok, tx, ty, r, tokenFill(tok, isEnemyTok), rim, { hovered: isHovered });
     ctx.globalAlpha = hasPending ? 0.5 : 1;
     const tokenArt = tok.sprite_url || tok.portrait_url || null;
     const tokenImg = tokenArt ? getRawIcon(tokenArt, onIconReady) : null;
     if (tokenImg) {
       ctx.save();
-      if (tok.type === 'player') { ctx.beginPath(); ctx.roundRect(tx - r + 2, ty - r + 2, r * 2 - 4, r * 2 - 4, 4); }
-      else { ctx.beginPath(); ctx.arc(tx, ty, r - 2, 0, Math.PI * 2); }
+      clipTokenShape(ctx, tok, tx, ty, r, Math.max(2.5, r * 0.2));
       ctx.clip();
-      drawImageCover(ctx, tokenImg, tx - r, ty - r, r * 2, r * 2);
+      ctx.globalAlpha *= 0.86;
+      const imageInset = Math.max(2, r * 0.08);
+      drawImageCover(ctx, tokenImg, tx - r + imageInset, ty - r + imageInset, (r - imageInset) * 2, (r - imageInset) * 2);
       ctx.restore();
     } else {
-      const icon = tok.race ? getRaceIcon(tok.race, onIconReady) : null;
+      const icon = tokenSymbolIcon(tok, onIconReady);
       if (icon) {
-        const iconSize = r * 1.3;
+        ctx.globalAlpha *= 0.82;
+        const iconSize = r * 1.12;
         ctx.drawImage(icon, tx - iconSize / 2, ty - iconSize / 2, iconSize, iconSize);
       } else {
-        ctx.fillStyle = '#fff'; ctx.font = `bold ${isHovered ? 12 : 9}px sans-serif`;
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
+        if (isEnemyTok) {
+          drawBeastGlyph(ctx, tok, tx, ty, r * 0.92, TOKEN_STYLE.iconDark);
+        } else {
+          ctx.fillStyle = TOKEN_STYLE.iconLight; ctx.font = `bold ${isHovered ? 12 : 9}px sans-serif`;
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText((tok.label || '?').slice(0, 3), tx, ty);
+        }
       }
     }
     if (tok.status === 'dead' && tok.type !== 'player') {
@@ -289,6 +436,7 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
 export default function VTTViewer({ campaignId, userChar, castMode = false }) {
   const canvasRef   = useRef(null);
   const mapImgRef   = useRef(null);
+  const castShellRef = useRef(null);
   const panRef      = useRef({ panning: false, lastX: 0, lastY: 0 });
   const pinchRef    = useRef({ active: false, lastDist: 0 });
   const dragRef     = useRef({ dragging: false, token: null, startX: 0, startY: 0, moved: false });
@@ -306,11 +454,15 @@ export default function VTTViewer({ campaignId, userChar, castMode = false }) {
  const [hoveredToken, setHoveredToken]   = useState(null);
   const [iconTick, setIconTick] = useState(0);
   const [portraitFullscreen, setPortraitFullscreen] = useState(null);
+  const [moveIntent, setMoveIntent] = useState('Move');
+  const [moveNote, setMoveNote] = useState('');
+  const [castRotation, setCastRotation] = useState(0);
 
   const transformRef    = useRef(transform);
   const tokensRef       = useRef(tokens);
   const pendingMovesRef = useRef(pendingMoves);
   const vttSessionRef   = useRef(vttSession);
+  const activeGameSessionId = useActiveGameSession(campaignId);
   // Saved zoom/pan applies only on the first load — never on realtime refreshes
   // (commits, moves) — so a pan/zoom set on this window stays put.
   const hasLoadedTransformRef = useRef(false);
@@ -321,6 +473,20 @@ export default function VTTViewer({ campaignId, userChar, castMode = false }) {
   useEffect(() => { vttSessionRef.current = vttSession; }, [vttSession]);
 
   const userCharId = userChar?.id ? String(userChar.id) : null;
+  const normalizedCastRotation = ((castRotation % 360) + 360) % 360;
+  const castTurnedSideways = normalizedCastRotation === 90 || normalizedCastRotation === 270;
+  const castCanvasScale = castTurnedSideways ? 0.66 : 1;
+
+  const handleCastKeyDown = useCallback((e) => {
+    if (!castMode) return;
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.key === 'ArrowLeft') setCastRotation(prev => prev - 90);
+    if (e.key === 'ArrowRight') setCastRotation(prev => prev + 90);
+    if (e.key === 'ArrowUp') setCastRotation(0);
+    if (e.key === 'ArrowDown') setCastRotation(180);
+  }, [castMode]);
 
   useEffect(() => {
     if (!campaignId) return;
@@ -340,12 +506,12 @@ export default function VTTViewer({ campaignId, userChar, castMode = false }) {
     if (!chars) return toks;
     const map = Object.fromEntries(chars.map(c => {
       const data = typeof c.data === 'string' ? JSON.parse(c.data) : c.data || {};
-      return [String(c.id), { sprite_url: data.sprite_url || data.token?.sprite_url || null, portrait_url: data.portrait_url || null }];
+      return [String(c.id), { sprite_url: data.sprite_url || data.token?.sprite_url || null, portrait_url: data.portrait_url || null, race: data.race || null, cid: data.cid || null }];
     }));
     return toks.map(t => {
       if (!t.characterId || !map[String(t.characterId)]) return t;
       const art = map[String(t.characterId)];
-      return { ...t, sprite_url: art.sprite_url || t.sprite_url || null, portrait_url: art.portrait_url || t.portrait_url || null };
+      return { ...t, sprite_url: art.sprite_url || t.sprite_url || null, portrait_url: art.portrait_url || t.portrait_url || null, race: t.race || art.race || null, cid: t.cid || art.cid || null };
     });
   };
 
@@ -453,10 +619,14 @@ useEffect(() => {
 
   const addWaypoint = async (x, y) => {
     if (!userCharId) return;
+    const intent = moveIntentText(moveIntent);
+    const note = moveNote.trim();
     const newMove = {
       id: Math.random().toString(36).slice(2, 9),
       characterId: userCharId,
       characterName: userChar?.name || 'Player',
+      intent,
+      note,
       x, y,
       createdAt: new Date().toISOString(),
     };
@@ -478,13 +648,40 @@ useEffect(() => {
         description: `${userChar?.name || 'Player'} requests move — waypoint ${myMoves.length}.`,
       });
     }
+    const myMoves = next.filter(m => m.characterId === userCharId);
+    await logSessionEvent(campaignId, activeGameSessionId, 'vtt_token_move_requested', {
+      actor_id: userCharId,
+      actor_name: userChar?.name || 'Player',
+      character_id: userCharId,
+      character_name: userChar?.name || 'Player',
+      intent,
+      note: note || null,
+      to: { x, y },
+      waypoint_count: myMoves.length,
+      description: `${userChar?.name || 'Player'} requested to ${intent.toLowerCase()} to waypoint ${myMoves.length} at ${coordText({ x, y })}${note ? `: ${note}` : ''}.`,
+      source: 'vtt',
+    });
     await persistPendingMoves(next);
   };
 
   const removeWaypoint = async (moveId) => {
+    const removed = pendingMovesRef.current.find(m => m.id === moveId);
     const next = pendingMovesRef.current.filter(m => m.id !== moveId);
     setPendingMoves(next);
     pendingMovesRef.current = next;
+    if (removed) {
+      await logSessionEvent(campaignId, activeGameSessionId, 'vtt_token_move_cancelled', {
+        actor_id: userCharId,
+        actor_name: userChar?.name || 'Player',
+        character_id: userCharId,
+        character_name: userChar?.name || 'Player',
+        intent: removed.intent || null,
+        note: removed.note || null,
+        to: { x: removed.x, y: removed.y },
+        description: `${userChar?.name || 'Player'} cancelled a ${moveIntentText(removed.intent).toLowerCase()} waypoint at ${coordText(removed)}${removed.note ? `: ${removed.note}` : ''}.`,
+        source: 'vtt',
+      });
+    }
     await persistPendingMoves(next);
   };
 
@@ -692,7 +889,13 @@ useEffect(() => {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%' }}>
+    <div
+      ref={castShellRef}
+      tabIndex={castMode ? 0 : undefined}
+      onKeyDown={handleCastKeyDown}
+      onMouseDownCapture={() => { if (castMode) castShellRef.current?.focus(); }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%', outline: 'none' }}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" }}>
           Live Map · {Math.round(transform.scale * 100)}% · Scroll/pinch to zoom · Drag to pan
@@ -702,6 +905,26 @@ useEffect(() => {
           {!castMode && <button onClick={() => setFullscreen(true)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 9, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>⛶ Expand</button>}
         </div>
       </div>
+
+      {userCharId && (
+        <div style={{ background: 'rgba(240,238,235,0.035)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: 8, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" }}>Intent</div>
+          <select
+            value={moveIntent}
+            onChange={e => setMoveIntent(e.target.value)}
+            style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '5px 8px', color: COLORS.text, fontFamily: "'Cinzel', serif", fontSize: 9, outline: 'none' }}
+          >
+            {MOVE_INTENTS.map(intent => <option key={intent} value={intent}>{intent}</option>)}
+          </select>
+          <input
+            value={moveNote}
+            onChange={e => setMoveNote(e.target.value)}
+            maxLength={140}
+            placeholder="Optional intent note"
+            style={{ flex: '1 1 180px', minWidth: 0, background: 'rgba(10,8,6,0.75)', border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: '6px 8px', color: COLORS.text, fontFamily: 'Georgia, serif', fontSize: 10, outline: 'none' }}
+          />
+        </div>
+      )}
 
       {myPendingMoves.length > 0 && (
         <div style={{ background: 'rgba(121,245,167,0.07)', border: '1px solid rgba(121,245,167,0.3)', borderRadius: 6, padding: '7px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
@@ -729,13 +952,13 @@ useEffect(() => {
         {!mapLoaded ? (
           <div style={{ padding: '60px 20px', textAlign: 'center', fontFamily: 'Georgia, serif', fontStyle: 'italic', color: COLORS.dim, fontSize: 12 }}>Loading map…</div>
         ) : (
-          <canvas ref={canvasRef} width={900} height={600} style={{ width: '100%', height: 'auto', maxHeight: window.innerWidth <= 640 ? '60vh' : 'none', display: 'block', touchAction: 'none' }}
+          <canvas ref={canvasRef} width={900} height={600} style={{ width: '100%', height: 'auto', maxHeight: window.innerWidth <= 640 ? '60vh' : 'none', display: 'block', touchAction: 'none', transform: castMode ? `rotate(${normalizedCastRotation}deg) scale(${castCanvasScale})` : 'none', transformOrigin: 'center center', transition: castMode ? 'transform 160ms ease' : 'none' }}
             onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
             onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={(e) => handleTouchEnd(e)} />
         )}
       </div>
 
-      {hoveredToken && (
+      {false && hoveredToken && (
         <div style={{ position: 'fixed', left: hoveredToken.clientX, top: hoveredToken.clientY - 160, transform: 'translateX(-50%)', background: 'rgba(8,6,4,0.82)', backdropFilter: 'blur(10px)', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 10, padding: 10, pointerEvents: 'auto', zIndex: 200005, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: 110, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
           {(hoveredToken.sprite_url || hoveredToken.portrait_url) ? (
             <div onClick={() => setPortraitFullscreen(hoveredToken)} style={{ width: 72, height: 96, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(200,168,74,0.4)', flexShrink: 0, cursor: 'pointer' }}>
@@ -772,5 +995,3 @@ useEffect(() => {
     </div>
   );
 }
-
-

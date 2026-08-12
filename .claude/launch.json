@@ -23,6 +23,12 @@
       "name": "f1rstspace-attach",
       "url": "http://localhost:5174",
       "port": 5174
+    },
+    {
+      "name": "sistine-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/Users/Radar Theory/Downloads/sistine-app", "run", "dev"],
+      "port": 3000
     }
   ]
 }
