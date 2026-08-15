@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Crownfall</title>
+  <desc id="desc">Dim etched crown sigil for Crownfall.</desc>
+  <rect width="128" height="128" fill="none"/>
+  <g fill="none" stroke="#8f7f4c" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="64" cy="64" r="49" stroke-width="3" opacity=".62"/>
+    <path d="M31 78h66l-8 22H39l-8-22Z" stroke-width="4" opacity=".72"/>
+    <path d="M37 76 30 42l22 19 12-30 12 30 22-19-7 34" stroke-width="5" opacity=".75"/>
+    <path d="M43 88h42" stroke-width="3" opacity=".48"/>
+    <path d="M64 32v45" stroke-width="2" opacity=".38"/>
+  </g>
+  <g fill="#8f7f4c" opacity=".58">
+    <circle cx="30" cy="42" r="4"/>
+    <circle cx="64" cy="31" r="4"/>
+    <circle cx="98" cy="42" r="4"/>
+  </g>
+</svg>

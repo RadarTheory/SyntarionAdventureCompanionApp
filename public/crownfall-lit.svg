@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Crownfall Lit</title>
+  <desc id="desc">Golden lit crown sigil for Crownfall.</desc>
+  <rect width="128" height="128" fill="none"/>
+  <defs>
+    <radialGradient id="g" cx="50%" cy="50%" r="56%">
+      <stop offset="0%" stop-color="#fff1a8" stop-opacity=".78"/>
+      <stop offset="48%" stop-color="#d7a84e" stop-opacity=".28"/>
+      <stop offset="100%" stop-color="#d7a84e" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="64" cy="64" r="58" fill="url(#g)"/>
+  <g fill="none" stroke="#f2d96f" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="64" cy="64" r="49" stroke-width="3"/>
+    <path d="M31 78h66l-8 22H39l-8-22Z" stroke-width="4.4"/>
+    <path d="M37 76 30 42l22 19 12-30 12 30 22-19-7 34" stroke-width="5.4"/>
+    <path d="M43 88h42" stroke-width="3" opacity=".72"/>
+    <path d="M64 32v45" stroke-width="2" opacity=".48"/>
+  </g>
+  <g fill="#fff0a6">
+    <circle cx="30" cy="42" r="4.2"/>
+    <circle cx="64" cy="31" r="4.2"/>
+    <circle cx="98" cy="42" r="4.2"/>
+  </g>
+</svg>

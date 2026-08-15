@@ -27,6 +27,7 @@ const GAMES = [
     icon: '/elddimgates-logo-lit.png',
     dimIcon: '/elddimgates-logo.png',
     iconScale: 1.28,
+    hidden: true,
   },
   {
     id: 'undercrypts',
@@ -36,6 +37,25 @@ const GAMES = [
     dimIcon: '/undercrypts-logo.svg',
     iconScale: 1.08,
     mobileLocked: true,
+    hidden: true,
+  },
+  {
+    id: 'quyntharas-chorus',
+    name: "Quynthe'ra's Chorus",
+    subtitle: 'A 6-8 Voice song-grid of Elven accord',
+    icon: '/quyntharas-chorus-lit.svg',
+    dimIcon: '/quyntharas-chorus.svg',
+    iconScale: 1.08,
+    hidden: true,
+  },
+  {
+    id: 'crownfall',
+    name: 'Crownfall',
+    subtitle: 'A 6-8 claimant game of favor and accusation',
+    icon: '/crownfall-lit.svg',
+    dimIcon: '/crownfall.svg',
+    iconScale: 1.08,
+    hidden: true,
   },
   {
     id: 'ocp-nodewright',
@@ -44,8 +64,11 @@ const GAMES = [
     icon: '/nodewright-logo-lit.svg',
     dimIcon: '/nodewright-logo.svg',
     iconScale: 1.08,
+    hidden: true,
   },
 ];
+
+const VISIBLE_GAMES = GAMES.filter((game) => !game.hidden);
 
 function BagIcon({ size = 48 }) {
   const [failed, setFailed] = useState(false);
@@ -403,7 +426,7 @@ export default function LotjarrsBag({ onHome, onLaunchGame }) {
           <div style={{ color: 'rgba(232,210,142,0.48)', fontStyle: 'italic', fontSize: 13 }}>No records yet. First victory writes the board.</div>
         )}
         <div style={{ display: 'grid', gap: 6 }}>
-          {(leaderboard.length ? leaderboard.slice(0, 3) : GAMES.slice(0, 3)).map((entry, index) => {
+          {(leaderboard.length ? leaderboard.slice(0, 3) : VISIBLE_GAMES.slice(0, 3)).map((entry, index) => {
             const row = entry.gameId ? entry : { gameId: entry.id, gameName: entry.name, score: 0, plays: 0 };
             return (
               <div key={row.gameId} style={{ display: 'grid', gridTemplateColumns: '24px 1fr auto', gap: 10, alignItems: 'center', color: index === leaderIndex % Math.max(leaderboard.length, 1) ? '#f2d96f' : 'rgba(232,210,142,0.56)', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
@@ -418,7 +441,7 @@ export default function LotjarrsBag({ onHome, onLaunchGame }) {
 
       {/* Game tiles */}
       <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {GAMES.map(game => {
+        {VISIBLE_GAMES.map(game => {
           const locked = !!(game.mobileLocked && isMobile);
           return (
             <GameTile

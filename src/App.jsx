@@ -9,6 +9,8 @@ import Fubin from './Fubin';
 import Elddimgates from './Elddimgates';
 import Undercrypts from './Undercrypts';
 import OcpNodewright from './OcpNodewright';
+import QuyntharasChorus from './QuyntharasChorus';
+import Crownfall from './Crownfall';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -18,7 +20,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem('syn_dark', darkMode ? '1' : '0'); }, [darkMode]);
   const [view, setView] = useState(() => {
    const saved = localStorage.getItem('syntarion_view');
-    return ['driftstone', 'fubin', 'elddimgates', 'undercrypts', 'ocp-nodewright'].includes(saved) ? saved : 'landing';
+    return ['driftstone', 'fubin', 'elddimgates', 'undercrypts', 'ocp-nodewright', 'quyntharas-chorus', 'crownfall'].includes(saved) ? saved : 'landing';
   });
   const [inSession, setInSession] = useState(false);
   const [inCampaign, setInCampaign] = useState(false);
@@ -131,6 +133,8 @@ export default function App() {
   if (view === 'elddimgates') return <Elddimgates onExit={returnToBag} />;
   if (view === 'undercrypts') return <Undercrypts onExit={returnToBag} userId={session.user.id} />;
   if (view === 'ocp-nodewright') return <OcpNodewright onExit={returnToBag} />;
+  if (view === 'quyntharas-chorus') return <QuyntharasChorus onExit={returnToBag} />;
+  if (view === 'crownfall') return <Crownfall onExit={returnToBag} />;
 
   // Main app — pass real session user
   return (

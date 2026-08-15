@@ -5,6 +5,8 @@ export const GAME_LABELS = {
   fubin: 'Fubin',
   elddimgates: 'Elddimgates',
   undercrypts: 'Undercrypts',
+  'quyntharas-chorus': "Quynthe'ra's Chorus",
+  crownfall: 'Crownfall',
   'ocp-nodewright': 'Nodewright',
 };
 

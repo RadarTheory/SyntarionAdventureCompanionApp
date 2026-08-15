@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Quynthe'ra's Chorus</title>
+  <desc id="desc">Dim etched sigil for a seven by seven Elven song-grid game.</desc>
+  <rect width="128" height="128" fill="none"/>
+  <g fill="none" stroke="#8f7f4c" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="64" cy="64" r="48" stroke-width="3" opacity=".62"/>
+    <circle cx="64" cy="64" r="34" stroke-width="1.5" opacity=".5"/>
+    <path d="M64 18v92M18 64h92M32 32l64 64M96 32 32 96" stroke-width="1.4" opacity=".42"/>
+    <path d="M38 72c12-20 40-20 52 0M44 56c10 10 30 10 40 0" stroke-width="4" opacity=".58"/>
+    <path d="M64 31c7 10 7 20 0 30-7-10-7-20 0-30Z" stroke-width="3" opacity=".7"/>
+    <path d="M42 85c15 9 29 9 44 0" stroke-width="3" opacity=".5"/>
+  </g>
+  <g fill="#8f7f4c" opacity=".55">
+    <circle cx="64" cy="18" r="3"/>
+    <circle cx="110" cy="64" r="3"/>
+    <circle cx="64" cy="110" r="3"/>
+    <circle cx="18" cy="64" r="3"/>
+    <circle cx="32" cy="32" r="2.5"/>
+    <circle cx="96" cy="32" r="2.5"/>
+    <circle cx="96" cy="96" r="2.5"/>
+    <circle cx="32" cy="96" r="2.5"/>
+  </g>
+</svg>
