@@ -30,6 +30,8 @@ const TABLE_TABS = Object.keys(TAB_CONFIG);
 // bucket alone, keyed by filename.
 const TABS = [...TABLE_TABS, 'moments'];
 const BUCKET = 'dm_assets';
+// Sentinel for characters with no campaign — object keys can't hold null.
+const NO_CAMPAIGN = '__none__';
 const DM_ROLES = ['admin', 'architect', 'creator'];
 const ROW_LIMIT = 200;
 
@@ -61,6 +63,18 @@ export default function AssetsPanel({ campaignId = null, embedded = false }) {
   // removed behind the row, a bad host. Tracked separately from "no art" because
   // they look identical on screen and only one of them is a problem to fix.
   const [brokenIds, setBrokenIds] = useState(() => new Set());
+  const [campaigns, setCampaigns] = useState([]);
+
+  useEffect(() => {
+    supabase.from('campaigns').select('id, name, subtitle').order('id').then(({ data }) => {
+      if (data) setCampaigns(data);
+    });
+  }, []);
+
+  const campaignLabel = (id) => {
+    const c = campaigns.find(x => String(x.id) === String(id));
+    return c?.subtitle || c?.name || (id ? `Campaign ${id}` : 'Unassigned');
+  };
   const momentInputRef = useRef(null);
   // Every load claims a ticket; only the newest one is allowed to write state,
   // so switching tabs mid-request can't paint the previous tab's assets.
@@ -121,7 +135,7 @@ export default function AssetsPanel({ campaignId = null, embedded = false }) {
 
     if (jsonb) {
       const { data: rows, error: charErr } = await supabase
-        .from('characters').select('id, data, status').not('status', 'eq', 'rejected');
+        .from('characters').select('id, data, status, campaign_id').not('status', 'eq', 'rejected');
       if (stale()) return;
       if (charErr) { setError(`Could not read characters: ${charErr.message}`); setLoading(false); return; }
       const needle = debouncedSearch.trim().toLowerCase();
@@ -132,6 +146,9 @@ export default function AssetsPanel({ campaignId = null, embedded = false }) {
           return {
             id: row.id,
             name: d.name || `${d.fn || ''} ${d.ln || ''}`.trim() || 'Unnamed',
+            // The sheet's own campaign wins over the column, matching how Argus
+            // and the roster resolve it.
+            campaign: d.campaign || row.campaign_id || null,
             // Full portrait first — introducing someone wants the art, not the
             // 512px map token.
             url: d.portrait_url || d.sprite_url || d.token?.sprite_url || null,
@@ -284,6 +301,20 @@ export default function AssetsPanel({ campaignId = null, embedded = false }) {
     }
   };
 
+  // Characters are the one tab where the roster is long enough that a flat A–Z
+  // wall stops being navigable — you look for "who's in this tale", not for a
+  // letter. Everything else stays flat.
+  const showGroups = activeTab === 'characters';
+  const groupedAssets = showGroups
+    ? Object.entries(assets.reduce((acc, a) => {
+        const key = a.campaign == null || a.campaign === '' ? NO_CAMPAIGN : String(a.campaign);
+        (acc[key] = acc[key] || []).push(a);
+        return acc;
+      }, {}))
+      // Unassigned sinks to the bottom; named campaigns sort by their label.
+      .sort(([a], [b]) => (a === NO_CAMPAIGN ? 1 : b === NO_CAMPAIGN ? -1 : campaignLabel(a).localeCompare(campaignLabel(b))))
+    : [['all', assets]];
+
   if (!roleChecked) return null;
   if (!isDM) return null;
 
@@ -349,8 +380,19 @@ export default function AssetsPanel({ campaignId = null, embedded = false }) {
         {loading && <div style={{ fontSize: 11, color: COLORS.dim, fontStyle: 'italic', textAlign: 'center', padding: '20px 0' }}>Reading the archive…</div>}
         {!loading && !assets.length && <div style={{ fontSize: 11, color: COLORS.dim, fontStyle: 'italic', textAlign: 'center', padding: '20px 0' }}>Nothing here yet.</div>}
 
+        {groupedAssets.map(([groupKey, groupAssets]) => (
+        <div key={groupKey} style={{ marginBottom: showGroups ? 16 : 0 }}>
+        {showGroups && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '2px 0 8px' }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#c8a84a', whiteSpace: 'nowrap' }}>
+              {campaignLabel(groupKey === NO_CAMPAIGN ? null : groupKey)}
+            </div>
+            <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>{groupAssets.length}</div>
+            <div style={{ flex: 1, height: 1, background: COLORS.border }} />
+          </div>
+        )}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 10 }}>
-          {assets.map(asset => {
+          {groupAssets.map(asset => {
             const broken = brokenIds.has(asset.id);
             const castable = !!asset.url && !broken;
             const isOnTable = !!asset.url && castNow?.url === asset.url.split('?')[0];
@@ -390,6 +432,8 @@ export default function AssetsPanel({ campaignId = null, embedded = false }) {
             );
           })}
         </div>
+        </div>
+        ))}
       </div>
     </div>
   );
