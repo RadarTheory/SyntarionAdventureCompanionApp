@@ -734,18 +734,79 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
 }
 
 // DM MEMORY PANEL
-function DMMemoryPanel({ characterId, campaignId }) {
+// Lore announcements are stored as one string: an optional reply tag, the
+// [LORE ANNOUNCEMENT] marker, the title, then the prose after a colon. Split it
+// back apart so the title can be set as a heading. Anything that doesn't match
+// (plain notes, hooks, secrets) is returned untouched as body.
+function parseMemoryContent(content) {
+  const raw = content || '';
+  const match = raw.match(/^(\[REPLY TO INTENT [^\]]*\]\s*)?\[LORE ANNOUNCEMENT\]\s*([^:]+):\s*([\s\S]*)$/);
+  if (!match) return { prefix: '', title: null, body: raw };
+  const [, prefix, title, body] = match;
+  // A colon inside the prose rather than after a title would leave a runaway
+  // "title" — treat anything sentence-length as body, not a heading.
+  if (title.trim().length > 90) return { prefix: '', title: null, body: raw };
+  return { prefix: prefix || '', title: title.trim(), body: body.trim() };
+}
+
+// Rebuilds the stored string after an edit. The format is load-bearing: the
+// player-facing lore feed in CampaignView splits on [LORE ANNOUNCEMENT] and the
+// first colon, so an edit that dropped the marker would strand the entry there.
+function composeMemoryContent({ prefix, title, body }) {
+  return title ? `${prefix}[LORE ANNOUNCEMENT] ${title}: ${body}` : body;
+}
+
+// `browseAll` is the standalone Memory tab: every campaign at once, narrowed by a
+// filter. Without it the panel stays scoped to whatever it was handed — a single
+// character in the editor, or one campaign inside its own sub-tab.
+function DMMemoryPanel({ characterId, campaignId, campaigns = [], browseAll = false }) {
   const [memories, setMemories] = useState([]);
   const [newMemory, setNewMemory] = useState('');
   const [category, setCategory] = useState('note');
   const [saving, setSaving] = useState(false);
+  const [filterCampaign, setFilterCampaign] = useState(null); // null = all campaigns
+  const [editingId, setEditingId] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editBody, setEditBody] = useState('');
+  const [editError, setEditError] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
-  useEffect(() => { fetchMemories(); }, [characterId, campaignId]);
+  const beginEdit = (m, parsed) => {
+    setEditingId(m.id);
+    setEditTitle(parsed.title || '');
+    setEditBody(parsed.body);
+    setEditError('');
+  };
+
+  const saveEdit = async (m, parsed) => {
+    const content = composeMemoryContent({
+      prefix: parsed.prefix,
+      // Only entries that already had a title keep one, so the stored shape
+      // never changes kind under an edit.
+      title: parsed.title ? editTitle.trim() : null,
+      body: editBody.trim(),
+    });
+    if (!content.trim() || savingEdit) return;
+    setSavingEdit(true);
+    setEditError('');
+    // Row-count checked: an RLS-filtered update reports success with zero rows.
+    const { data, error } = await supabase.from('dm_memory').update({ content }).eq('id', m.id).select('id');
+    setSavingEdit(false);
+    if (error) { setEditError(`Could not save: ${error.message}`); return; }
+    if (!data?.length) { setEditError('Nothing was written — a database policy blocked this edit.'); return; }
+    setEditingId(null);
+    fetchMemories();
+  };
+
+  // What the list is scoped to, and where a new entry lands.
+  const scopeCampaign = browseAll ? filterCampaign : campaignId;
+
+  useEffect(() => { fetchMemories(); }, [characterId, campaignId, filterCampaign, browseAll]);
 
   const fetchMemories = async () => {
     let q = supabase.from('dm_memory').select('*').order('created_at', { ascending: false });
     if (characterId) q = q.eq('character_id', characterId);
-    else if (campaignId) q = q.eq('campaign_id', campaignId);
+    else if (scopeCampaign) q = q.eq('campaign_id', scopeCampaign);
     const { data } = await q;
     if (data) setMemories(data);
   };
@@ -753,16 +814,40 @@ function DMMemoryPanel({ characterId, campaignId }) {
   const addMemory = async () => {
     if (!newMemory.trim()) return;
     setSaving(true);
-    await supabase.from('dm_memory').insert({ character_id: characterId || null, campaign_id: campaignId || null, category, content: newMemory.trim() });
+    await supabase.from('dm_memory').insert({ character_id: characterId || null, campaign_id: scopeCampaign || null, category, content: newMemory.trim() });
     setNewMemory(''); setSaving(false); fetchMemories();
   };
 
   const deleteMemory = async (id) => { await supabase.from('dm_memory').delete().eq('id', id); fetchMemories(); };
   const cats = ['note', 'secret', 'hook', 'npc', 'lore'];
+  const campaignLabel = (id) => {
+    const c = campaigns.find(x => String(x.id) === String(id));
+    return c?.subtitle || c?.name || `Campaign ${id}`;
+  };
 
   return (
     <div>
       <div style={{ ...label8(), marginBottom: 10 }}>DM Memory</div>
+
+      {browseAll && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.dim, marginBottom: 5 }}>
+            Filter by campaign
+          </div>
+          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+            {[{ id: null, subtitle: 'All campaigns' }, ...campaigns].map(c => {
+              const on = String(c.id) === String(filterCampaign);
+              return (
+                <div key={String(c.id)} onClick={() => setFilterCampaign(c.id)}
+                  style={{ background: on ? 'rgba(200,168,74,0.16)' : 'transparent', border: `1px solid ${on ? 'rgba(200,168,74,0.55)' : COLORS.border}`, borderRadius: 4, padding: '3px 9px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: on ? '#e8c84a' : COLORS.dim, fontFamily: "'Cinzel', serif" }}>
+                  {c.subtitle || c.name || `Campaign ${c.id}`}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* These chips set the category for the entry being added below — they do
           not filter the list, which always shows every category for this
           campaign. Unlabelled, they read as a filter that returned nothing. */}
@@ -773,28 +858,69 @@ function DMMemoryPanel({ characterId, campaignId }) {
         {cats.map(c => <div key={c} onClick={() => setCategory(c)} style={{ background: category === c ? COLORS.deityBg : 'transparent', border: `1px solid ${category === c ? COLORS.deity : COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: category === c ? COLORS.deityText : COLORS.dim, fontFamily: "'Cinzel', serif" }}>{c}</div>)}
       </div>
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-        <input value={newMemory} onChange={e => setNewMemory(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMemory()} placeholder="Add a memory entry..." style={{ flex: 1, background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
+        <input value={newMemory} onChange={e => setNewMemory(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMemory()} placeholder={browseAll ? (scopeCampaign ? `Add to ${campaignLabel(scopeCampaign)}...` : 'Add a world entry (no campaign)...') : 'Add a memory entry...'} style={{ flex: 1, background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
         <button onClick={addMemory} disabled={saving} style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 6, padding: '7px 12px', cursor: 'pointer', fontSize: 10, color: COLORS.deityText, fontFamily: "'Cinzel', serif" }}>+</button>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 160, overflowY: 'auto' }}>
-        {memories.map(m => (
-          <div key={m.id} style={{ background: 'rgba(240,238,235,0.03)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
-                <div style={{ fontSize: 7, color: COLORS.deity, fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase' }}>{m.category}</div>
-                <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: 'Georgia, serif' }}>{new Date(m.created_at).toLocaleDateString()}</div>
-              </div>
-              <div style={{ fontSize: 11, color: COLORS.text, fontFamily: 'Georgia, serif', lineHeight: 1.4 }}>{m.content}</div>
-              {(m.character_id || m.campaign_id) && (
-                <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 4 }}>
-                  {m.campaign_id ? `Campaign ${m.campaign_id}` : 'Character'}
+      {/* No fixed max-height: the tab body already scrolls, and capping this at
+          160px squeezed long lore into a peephole while the page below sat empty. */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {memories.map(m => {
+          const { prefix, title, body } = parseMemoryContent(m.content);
+          return (
+            <div key={m.id} style={{ background: 'rgba(240,238,235,0.03)', border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '12px 14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: title ? 6 : 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                  <span style={{ fontSize: 7, color: COLORS.deity, fontFamily: "'Cinzel', serif", letterSpacing: '0.12em', textTransform: 'uppercase', border: `1px solid ${COLORS.border}`, borderRadius: 3, padding: '2px 6px', flexShrink: 0 }}>{m.category}</span>
+                  {(m.character_id || m.campaign_id) && (
+                    <span style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {m.campaign_id ? campaignLabel(m.campaign_id) : 'Character'}
+                    </span>
+                  )}
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                  <span style={{ fontSize: 8, color: COLORS.dim, fontFamily: 'Georgia, serif' }}>{new Date(m.created_at).toLocaleDateString()}</span>
+                  <button onClick={() => (editingId === m.id ? setEditingId(null) : beginEdit(m, { title, body, prefix }))} title="Edit entry" style={{ background: 'transparent', border: 'none', color: editingId === m.id ? COLORS.deityText : `${COLORS.dim}88`, cursor: 'pointer', fontSize: 12, padding: 0, lineHeight: 1 }}>✎</button>
+                  <button onClick={() => deleteMemory(m.id)} title="Delete entry" style={{ background: 'transparent', border: 'none', color: `${COLORS.dim}88`, cursor: 'pointer', fontSize: 12, padding: 0, lineHeight: 1 }}>✕</button>
+                </div>
+              </div>
+
+              {/* Lore arrives as one string with its title welded on. Split it so the
+                  title can read as a heading instead of running into the prose. */}
+              {editingId === m.id ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {title !== null && (
+                    <input value={editTitle} onChange={e => setEditTitle(e.target.value)} placeholder="Title"
+                      style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', boxSizing: 'border-box' }} />
+                  )}
+                  {/* Grow with the entry — lore runs long, and a 4-row box would
+                      make editing a synopsis miserable. Regex rather than a
+                      string escape so the newline can't be mangled again. */}
+                  <textarea value={editBody} onChange={e => setEditBody(e.target.value)} rows={Math.min(22, Math.max(5, (editBody.match(/\n/g) || []).length + 3))}
+                    style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '9px 11px', color: COLORS.text, fontSize: 12.5, fontFamily: 'Georgia, serif', lineHeight: 1.7, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} />
+                  {editError && <div style={{ fontSize: 10, color: COLORS.warn, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{editError}</div>}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => saveEdit(m, { title, body, prefix })} disabled={savingEdit || !editBody.trim()}
+                      style={{ background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 6, padding: '6px 14px', cursor: savingEdit ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.deityText }}>
+                      {savingEdit ? 'Saving...' : 'Save'}
+                    </button>
+                    <button onClick={() => setEditingId(null)}
+                      style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.dim }}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {title && (
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, color: COLORS.text, letterSpacing: '0.04em', marginBottom: 6, lineHeight: 1.4 }}>{title}</div>
+                  )}
+                  <div style={{ fontSize: 12.5, color: title ? COLORS.muted : COLORS.text, fontFamily: 'Georgia, serif', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{body}</div>
+                </>
               )}
             </div>
-            <button onClick={() => deleteMemory(m.id)} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 12, flexShrink: 0 }}>x</button>
-          </div>
-        ))}
-        {memories.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No memories recorded.</div>}
+          );
+        })}
+        {memories.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{scopeCampaign ? `No memories recorded for ${campaignLabel(scopeCampaign)}.` : 'No memories recorded.'}</div>}
       </div>
     </div>
   );
@@ -1393,7 +1519,7 @@ const renderTab = () => {
                 ))}
               </div>
               {campaignSubTab === 'log' && <SessionLogEditor campaign={camp} />}
-              {campaignSubTab === 'memory' && <DMMemoryPanel campaignId={camp.id} />}
+              {campaignSubTab === 'memory' && <DMMemoryPanel campaignId={camp.id} campaigns={dbCampaigns} />}
               {campaignSubTab === 'map' && <MapManager campaign={camp} />}
               {campaignSubTab === 'music' && <MusicPanel />}
             </div>
@@ -1406,7 +1532,7 @@ const renderTab = () => {
 
     case 'Chronicle': return <ChroniclePanel campaignId={activeCampaignTab} />;
 
-    case 'Memory': return <DMMemoryPanel campaignId={activeCampaignTab} />;
+    case 'Memory': return <DMMemoryPanel campaigns={dbCampaigns} browseAll />;
 
     case 'Catalog': return <ItemCatalog />;
 
