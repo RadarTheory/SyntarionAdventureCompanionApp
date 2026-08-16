@@ -209,12 +209,14 @@ function drawTokenShape(ctx, tok, x, y, r, fill, rim, { hovered = false } = {}) 
   ctx.restore();
 }
 
-function clipTokenShape(ctx, tok, x, y, r, inset = 2) {
-  if (tok.type === 'player') {
-    ctx.beginPath(); ctx.roundRect(x - r + inset, y - r + inset, r * 2 - inset * 2, r * 2 - inset * 2, 4);
-  } else {
-    ctx.beginPath(); ctx.arc(x, y, r - inset, 0, Math.PI * 2);
-  }
+// Tokens carrying art are always circular, whatever their type. The forge press
+// produces a round ringed portrait, so clipping it to the player rounded-square
+// left dead corners and framed a circle inside a square. Faction is carried by
+// the ring colour instead; the rounded square survives only in the no-art
+// fallback below, where shape is the only thing distinguishing a plain token.
+function clipTokenCircle(ctx, x, y, r) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
 }
 
 // The canvas is authored in a fixed 900x600 coordinate space and then stretched
@@ -396,13 +398,13 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
       ctx.shadowColor = 'rgba(0,0,0,0.6)';
       ctx.shadowBlur = isHovered ? 9 : 5;
       ctx.shadowOffsetY = isHovered ? 3 : 2;
-      clipTokenShape(ctx, tok, tx, ty, r, 0);
+      clipTokenCircle(ctx, tx, ty, r);
       ctx.fillStyle = 'rgba(12,9,7,0.92)'; // backing so the shadow has something to cast from
       ctx.fill();
       ctx.restore();
 
       ctx.save();
-      clipTokenShape(ctx, tok, tx, ty, r, 0);
+      clipTokenCircle(ctx, tx, ty, r);
       ctx.clip();
       if (tok.sprite_url && tokenImg.width === FORGE_TOKEN.size) {
         // Forge sprite: crop to the ring, dropping the baked name and shadow band.
@@ -415,7 +417,7 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
       ctx.restore();
 
       ctx.save();
-      clipTokenShape(ctx, tok, tx, ty, r, 0);
+      clipTokenCircle(ctx, tx, ty, r);
       ctx.lineWidth = Math.max(1.5, r * (isHovered ? 0.13 : 0.1));
       ctx.strokeStyle = isOwn ? TOKEN_STYLE.own : (isHovered ? TOKEN_STYLE.hover : tokenFill(tok, isEnemyTok));
       ctx.stroke();
@@ -460,14 +462,17 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
         ctx.save();
         ctx.font = `700 ${fs}px 'Cinzel', Georgia, serif`;
         ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
+        // Hover grows both the token and its label, so a name below it lands on
+        // whatever token sits underneath. Flip above while hovered.
+        ctx.textBaseline = isHovered ? 'bottom' : 'top';
         // Outline instead of a plate: legible over dark stone or bright sand
         // without boxing in the token.
         ctx.lineJoin = 'round';
         ctx.miterLimit = 2;
         ctx.lineWidth = Math.max(1.5, fs * 0.36);
         ctx.strokeStyle = 'rgba(8,6,4,0.9)';
-        const ly = ty + r + Math.max(2, r * 0.18);
+        const nameGap = Math.max(2, r * 0.18);
+        const ly = isHovered ? ty - r - nameGap : ty + r + nameGap;
         ctx.strokeText(label, tx, ly);
         ctx.fillStyle = isOwn ? TOKEN_STYLE.own : (isHovered ? TOKEN_STYLE.hover : '#f2e6c8');
         ctx.fillText(label, tx, ly);
