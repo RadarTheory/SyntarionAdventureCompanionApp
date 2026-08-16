@@ -46,10 +46,13 @@ export default function LoreAnnouncePanel({ campaignId: campaignIdProp, embedded
   const [rollSaving, setRollSaving] = useState(false);
   const [rollSaved, setRollSaved] = useState(false);
   const recognitionRef = useRef(null);
+  // True while the DM wants to keep dictating. Distinguishes a deliberate Stop
+  // from Chrome ending the stream on its own after a pause.
+  const wantListeningRef = useRef(false);
   const finalTranscriptRef = useRef('');
 
   // Stop the mic if the panel unmounts mid-listen.
-  useEffect(() => () => { try { recognitionRef.current?.stop(); } catch { /* already stopped */ } }, []);
+  useEffect(() => () => { wantListeningRef.current = false; try { recognitionRef.current?.stop(); } catch { /* already stopped */ } }, []);
 
   // Send the rough speech transcript to Gemini to clean it into a lore announcement.
   const polishTranscript = async (raw) => {
@@ -127,19 +130,48 @@ CRITICAL OUTPUT RULES:
       setInterim(live);
     };
     rec.onerror = (e) => {
-      setNarratorMsg(e.error === 'not-allowed' ? 'Microphone blocked — allow mic access and try again.' : `Mic error: ${e.error}`);
+      // 'no-speech' and 'aborted' are routine on a long pause — the engine simply
+      // gave up waiting. Neither means the DM is finished, so don't shout about
+      // them and don't stop; onend will restart us.
+      if (e.error === 'no-speech' || e.error === 'aborted') return;
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+        wantListeningRef.current = false; // a real refusal — stop trying
+        setNarratorMsg('Microphone blocked — allow mic access and try again.');
+        return;
+      }
+      setNarratorMsg(`Mic error: ${e.error}`);
     };
     rec.onend = () => {
+      // Chrome ends the stream on its own after a silence gap, even with
+      // continuous = true. Treating that as "finished" cut long dictation off
+      // mid-thought. Only a deliberate Stop ends the session; anything else
+      // resumes and keeps accumulating into the same transcript.
+      if (wantListeningRef.current) {
+        try {
+          rec.start();
+          return;
+        } catch {
+          // Engine wasn't ready to restart immediately — retry on the next tick.
+          setTimeout(() => {
+            if (!wantListeningRef.current) return;
+            try { rec.start(); } catch { wantListeningRef.current = false; setListening(false); recognitionRef.current = null; }
+          }, 250);
+          return;
+        }
+      }
       setListening(false);
       recognitionRef.current = null;
       polishTranscript(finalTranscriptRef.current);
     };
     recognitionRef.current = rec;
+    wantListeningRef.current = true;
     setListening(true);
     try { rec.start(); } catch { /* start after an abrupt stop */ }
   };
 
   const stopNarrator = () => {
+    // Clearing the intent first is what lets onend know this stop was deliberate.
+    wantListeningRef.current = false;
     const rec = recognitionRef.current;
     if (rec) { try { rec.stop(); } catch { setListening(false); } }
     else setListening(false);

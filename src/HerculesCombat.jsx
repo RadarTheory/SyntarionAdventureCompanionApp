@@ -268,6 +268,9 @@ useEffect(() => {
   const [initiative, setInitiative] = useState([]);
   const [creatureSearch, setCreatureSearch] = useState('');
   const [saving, setSaving] = useState(false);
+  // Combat failures used to reach console.error only, so a DM mid-session saw
+  // nothing at all when it refused to start.
+  const [startError, setStartError] = useState('');
   const [rollTokensModal, setRollTokensModal] = useState(null); // null | array of token candidates
   const [actionPromptRow, setActionPromptRow] = useState(null); // null | combatant row awaiting an action
   const [actionPromptValue, setActionPromptValue] = useState('Attack');
@@ -547,9 +550,23 @@ useEffect(() => {
   }, [session?.id, loadEvents, loadInitiative]);
 
   const startCombat = async () => {
-    if (!campaignId) return;
+    if (!campaignId) {
+      setStartError('No campaign selected — pick a campaign before starting combat.');
+      return;
+    }
 
     setSaving(true);
+    setStartError('');
+
+    // Remember what was live before touching anything. This used to end the
+    // running session first and insert second, so a failed insert left the DM
+    // with their encounter marked ended and nothing to replace it — the session
+    // was destroyed by the attempt to start a new one.
+    const { data: previouslyActive } = await supabase
+      .from('hercules_sessions')
+      .select('id')
+      .eq('campaign_id', String(campaignId))
+      .eq('status', 'active');
 
     await supabase
       .from('hercules_sessions')
@@ -569,6 +586,19 @@ useEffect(() => {
       })
       .select()
       .single();
+
+    // Put the old encounter back rather than leaving the table with nothing.
+    if ((error || !data) && previouslyActive?.length) {
+      await supabase
+        .from('hercules_sessions')
+        .update({ status: 'active', ended_at: null })
+        .in('id', previouslyActive.map(s => s.id));
+      setStartError(
+        `Could not start combat: ${error?.message || 'the database returned no session'}. Your previous encounter has been restored.`
+      );
+      setSaving(false);
+      return;
+    }
 
     if (!error && data) {
       setSession(data);
@@ -590,6 +620,7 @@ useEffect(() => {
 
     if (error) {
       console.error('Failed to start Hercules combat:', error);
+      setStartError(`Could not start combat: ${error.message}`);
     }
 
     setSaving(false);
@@ -1490,6 +1521,12 @@ const denyEvent = async event => {
                 </option>
               ))}
             </select>
+
+            {startError && (
+              <div role="alert" style={{ width: '100%', margin: '8px 0', padding: '8px 12px', background: 'rgba(224,90,90,0.10)', border: '1px solid rgba(224,90,90,0.45)', borderRadius: 6, color: '#e08a8a', fontFamily: 'Georgia, serif', fontSize: 12, lineHeight: 1.5 }}>
+                {startError}
+              </div>
+            )}
 
             {!isMobile && !session && (
               <button type="button" onClick={startCombat} disabled={saving || !campaignId} style={goldButton()}>
