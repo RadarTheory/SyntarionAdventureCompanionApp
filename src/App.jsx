@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
+import { consumeExplicitSignOut, isSessionPersistent, markExplicitSignOut } from './lib/authSession';
 import Landing from './Landing';
 import ScribeLite from './ScribeLite';
 import LoadingScreen from './LoadingScreen';
@@ -75,7 +76,11 @@ export default function App() {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true);
-      if (event === 'SIGNED_OUT') {
+      // SIGNED_OUT also fires when a refresh token is rejected — an expired
+      // session, a rotated token, a dropped mobile connection. Only a sign out
+      // the player actually asked for should throw away their character and
+      // view; otherwise a blip cost them their place as well as their session.
+      if (event === 'SIGNED_OUT' && consumeExplicitSignOut()) {
         localStorage.removeItem('syn_char');
         localStorage.setItem('syn_view', 'home');
         localStorage.removeItem('syntarion_view');
@@ -124,7 +129,7 @@ export default function App() {
 
   // Wait for the ban check before rendering anything gameplay-related
   if (!banStatus.checked) return null;
-  if (banStatus.banned) return <BannedScreen onSignOut={() => supabase.auth.signOut()} />;
+  if (banStatus.banned) return <BannedScreen onSignOut={() => { markExplicitSignOut(); supabase.auth.signOut(); }} />;
 
   // Bag / mini-game views (auth still required to reach these)
   if (view === 'bag') return <LotjarrsBag onHome={goLandingHome} onLaunchGame={launchGame} />;
@@ -446,6 +451,15 @@ function LoginScreen() {
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') handleEmailAuth(); }}
         />
+
+        {/* Without durable storage the session dies with the tab, so the player
+            is sent back here on every visit with nothing to explain it. */}
+        {!isSessionPersistent() && (
+          <div style={{ fontSize: 12, color: '#8a6d3b', marginBottom: 10, textAlign: 'center', lineHeight: 1.5, fontStyle: 'italic' }}>
+            This browser is blocking saved logins, so you&apos;ll be asked to sign in again
+            each visit. Turn off Private Browsing, or allow site data for Syntarion, to stay signed in.
+          </div>
+        )}
 
         {error && (
           <div style={{ fontSize: 12, color: '#c0392b', marginBottom: 8, textAlign: 'center' }}>

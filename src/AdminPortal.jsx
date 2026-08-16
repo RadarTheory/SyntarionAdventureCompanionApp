@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import supabase from './lib/supabase';
+import { markExplicitSignOut } from './lib/authSession';
 import CompendiumUpload from './CompendiumUpload';
 import PlayersPanel from './PlayersPanel';
 import HandbookBookmark from './HandbookBookmark';
@@ -266,7 +267,7 @@ export default function AdminPortal() {
           {session && !isAdmin && (
             <div style={{ color: '#ef4444', fontSize: 11, textAlign: 'center' }}>
               This account is not authorized.
-              <button onClick={() => supabase.auth.signOut()} style={{ ...S.btnDanger, display: 'block', margin: '10px auto 0' }}>Sign out</button>
+              <button onClick={() => { markExplicitSignOut(); supabase.auth.signOut(); }} style={{ ...S.btnDanger, display: 'block', margin: '10px auto 0' }}>Sign out</button>
             </div>
           )}
           {!session && (<>
@@ -317,7 +318,7 @@ export default function AdminPortal() {
         onChooseTable={chooseTable}
         customTable={customTable}
         onCustomTable={chooseCustomTable}
-        onSignOut={() => supabase.auth.signOut()}
+        onSignOut={() => { markExplicitSignOut(); supabase.auth.signOut(); }}
       />
 
       <div style={{ flex: 1, padding: 16, minWidth: 0 }}>

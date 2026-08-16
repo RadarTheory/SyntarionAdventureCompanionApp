@@ -338,7 +338,9 @@ export default function CharacterTokenForge({ char, portraitUrl, drafts, setDraf
       setOpen(false);
     } catch (err) {
       console.error('Token upload failed:', err);
-      setError('The token could not be sealed into the archive.');
+      // Show the real reason — a silent generic message hid writes that the
+      // database had refused.
+      setError(err?.message || 'The token could not be sealed into the archive.');
     } finally {
       setSavingId(null);
     }

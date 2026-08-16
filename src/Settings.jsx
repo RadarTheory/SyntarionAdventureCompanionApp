@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import supabase from './lib/supabase';
+import { markExplicitSignOut } from './lib/authSession';
 import { COLORS } from './constants';
 import LegalGate from './LegalGate';
 import { getPWAInstallState, promptPWAInstall, subscribePWAInstall } from './pwaInstall';
@@ -65,6 +66,7 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
   };
 
   const handleSignOut = async () => {
+    markExplicitSignOut();
     await supabase.auth.signOut();
   };
 

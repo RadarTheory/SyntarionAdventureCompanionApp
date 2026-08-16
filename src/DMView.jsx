@@ -359,9 +359,13 @@ function AssignOwnerPanel({ char }) {
 }
 
 // CHARACTER EDITOR
-function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
-  const [data, setData] = useState({ portrait_url: char.portrait_url || char.data?.portrait_url || null, sprite_url: char.sprite_url || char.data?.sprite_url || char.data?.token?.sprite_url || null, ...char });
+function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
+  // `char` is spread first: spreading it last let an undefined char.sprite_url
+  // overwrite the token.sprite_url fallback, so a character whose token was only
+  // recorded under `token` read as having none.
+  const [data, setData] = useState({ ...char, portrait_url: char.portrait_url || char.data?.portrait_url || null, sprite_url: char.sprite_url || char.data?.sprite_url || char.token?.sprite_url || char.data?.token?.sprite_url || null });
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [note, setNote] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -405,8 +409,16 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
 
   const handleSave = async (newStatus) => {
     setSaving(true);
+    setSaveError('');
     const { id, status, campaign_id, user_id, ...blob } = data;
-    await supabase.from('characters').update({ data: { ...blob, portrait_url: data.portrait_url || null, sprite_url: selectedSpriteUrl || data.sprite_url || null, token: { ...(data.token || {}), sprite_url: selectedSpriteUrl || data.sprite_url || null, generation_count: spriteGenerationCount, status: (selectedSpriteUrl || data.sprite_url) ? 'selected' : 'not_selected' } }, status: newStatus || data.status, campaign_id: data.campaign || null }).eq('id', char.id);
+    const { data: updated, error } = await supabase.from('characters').update({ data: { ...blob, portrait_url: data.portrait_url || null, sprite_url: selectedSpriteUrl || data.sprite_url || null, token: { ...(data.token || {}), sprite_url: selectedSpriteUrl || data.sprite_url || null, generation_count: spriteGenerationCount, status: (selectedSpriteUrl || data.sprite_url) ? 'selected' : 'not_selected' } }, status: newStatus || data.status, campaign_id: data.campaign || null }).eq('id', char.id).select('id');
+    // Same guard as assign/unassign above: RLS reports a filtered write as
+    // success with zero rows, which would look like a save that stuck.
+    if (error || !updated?.length) {
+      setSaving(false);
+      setSaveError(error ? `Save failed: ${error.message}` : 'Nothing was written — a database policy blocked this update. Nothing was saved.');
+      return;
+    }
     if (note && (newStatus === 'rejected' || newStatus === 'approved')) {
       await supabase.from('messages').insert({ character_id: char.id, campaign_id: data.campaign, type: 'dm_reply', content: note, sender_name: 'The Architect', is_dm: true });
     }
@@ -532,13 +544,43 @@ function CharacterEditor({ char, onSave, onClose, campaigns = [] }) {
           generationCount={spriteGenerationCount}
           setGenerationCount={setSpriteGenerationCount}
           onSelectedUrl={async (url) => {
-            const nextToken = { ...(data.token || {}), sprite_url: url, generation_count: spriteGenerationCount, status: 'selected' };
+            // Read the row back first. The player's own session writes the whole
+            // `data` blob on its actions, so merging into this editor's copy —
+            // loaded when the sheet opened — would revert whatever they changed
+            // since, and reinstate the token they had picked.
+            const { data: row, error: readErr } = await supabase
+              .from('characters').select('data').eq('id', char.id).maybeSingle();
+            if (readErr) throw new Error(`Could not read the character sheet: ${readErr.message}`);
+            const current = (typeof row?.data === 'string' ? JSON.parse(row.data) : row?.data) || {};
+
+            // The DM's pick overrides whatever the player selected, regardless of
+            // the sheet's current status.
+            const nextToken = {
+              ...(current.token || {}),
+              sprite_url: url,
+              generation_count: spriteGenerationCount,
+              status: 'selected',
+              set_by: 'dm',
+              set_at: new Date().toISOString(),
+            };
+
+            // Ask for the written row back: with RLS on, a blocked update comes
+            // back as success with zero rows (see 20260810_characters_delete_policy.sql),
+            // so an unchecked write reports a save that never happened.
+            const { data: updated, error } = await supabase
+              .from('characters')
+              .update({ data: { ...current, sprite_url: url, token: nextToken } })
+              .eq('id', char.id)
+              .select('id');
+            if (error) throw new Error(`The archive refused the token: ${error.message}`);
+            if (!updated?.length) throw new Error('Nothing was written — a database policy blocked this update. The token was not saved.');
+
             setData(prev => ({ ...prev, sprite_url: url, token: nextToken }));
-            await supabase.from('characters').update({ data: { ...data, sprite_url: url, token: nextToken } }).eq('id', char.id);
             await syncSpriteToVttSessions(url);
-            onSave?.();
+            onRefresh?.(); // refresh the roster without closing the sheet mid-review
           }}
         />
+        {saveError && <div style={{ marginBottom: 12, padding: '8px 10px', background: COLORS.warnBg, border: `1px solid ${COLORS.warn}`, borderRadius: 6, color: COLORS.warn, fontSize: 11, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{saveError}</div>}
         <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
           <button onClick={() => handleSave('approved')} style={{ flex: 1, background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText, fontFamily: "'Cinzel', serif", fontWeight: 700 }}>Approve</button>
           <button onClick={() => handleSave('rejected')} style={{ flex: 1, background: COLORS.warnBg, border: `1px solid ${COLORS.warn}`, borderRadius: 6, padding: '8px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.warn, fontFamily: "'Cinzel', serif", fontWeight: 700 }}>Reject</button>
@@ -1530,7 +1572,7 @@ const renderTab = () => {
           onClose={closeMapcast}
         />
       )}
-      {editingChar && <CharacterEditor char={editingChar} campaigns={dbCampaigns} onSave={() => { setEditingChar(null); fetchCharacters(); }} onClose={() => setEditingChar(null)} />}
+      {editingChar && <CharacterEditor char={editingChar} campaigns={dbCampaigns} onSave={() => { setEditingChar(null); fetchCharacters(); }} onRefresh={fetchCharacters} onClose={() => setEditingChar(null)} />}
       {activeSession && <ChatPanel session={activeSession} onClose={() => setActiveSession(null)} isDM={true} />}
       {showScribePanel && (
         <DraggablePanel {...panelPriority('scribe')} defaultX={108} defaultY={80} onClose={() => setShowScribePanel(false)} title="THE SCRIBE - Architect Access" width={420} accentColor={`${COLORS.deity}55`}>

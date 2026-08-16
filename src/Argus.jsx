@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { playCoinSfx } from './soundLibrary';
@@ -31,6 +31,41 @@ const RARITIES = ['Mundane','Common','Uncommon','Rare','Very Rare','Epic','Legen
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
+}
+
+// Long item descriptions (journals, letters, lore documents) can run thousands of
+// characters. Collapse them to a few lines so a single item can't swallow the panel.
+function ClampedText({ text, lines = 3, openMaxHeight = 200, style }) {
+  const [open, setOpen]           = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (open) return; // only measure while collapsed, so the toggle never disappears
+    const el = ref.current;
+    if (el) setOverflows(el.scrollHeight > el.clientHeight + 2);
+  }, [text, lines, open]);
+
+  if (!text) return null;
+
+  return (
+    <div>
+      <div ref={ref} style={{
+        ...style,
+        ...(open
+          ? { maxHeight: openMaxHeight, overflowY: 'auto' }
+          : { display: '-webkit-box', WebkitLineClamp: lines, WebkitBoxOrient: 'vertical', overflow: 'hidden' }),
+      }}>
+        {text}
+      </div>
+      {overflows && (
+        <button onClick={() => setOpen(o => !o)}
+          style={{ background: 'transparent', border: 'none', padding: '3px 0 0', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.12em', color: COLORS.dim }}>
+          {open ? '▴ Less' : '▾ More'}
+        </button>
+      )}
+    </div>
+  );
 }
 
 // ─── GRANT MODAL (DM only) ────────────────────────────────────────────────────
@@ -192,20 +227,26 @@ function GrantModal({ item, onClose }) {
 function ModalShell({ item, col, onClose, children }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.78)', zIndex: 400000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div style={{ background: '#120e0a', border: `1px solid ${COLORS.border}`, borderRadius: 14, width: '100%', maxWidth: 420, maxHeight: '88vh', overflowY: 'auto', padding: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-          <div style={{ flex: 1, paddingRight: 12 }}>
-            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: COLORS.text, marginBottom: 4 }}>{item.name}</div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <span style={{ fontSize: 8, color: col, fontFamily: "'Cinzel', serif" }}>{item.category}</span>
-              <span style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>{item.type}</span>
+      <div style={{ background: '#120e0a', border: `1px solid ${COLORS.border}`, borderRadius: 14, width: '100%', maxWidth: 420, maxHeight: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Header + description stay pinned so the ✕ and the actions below are always reachable */}
+        <div style={{ padding: '24px 24px 0', flexShrink: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+            <div style={{ flex: 1, paddingRight: 12 }}>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: COLORS.text, marginBottom: 4 }}>{item.name}</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <span style={{ fontSize: 8, color: col, fontFamily: "'Cinzel', serif" }}>{item.category}</span>
+                <span style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>{item.type}</span>
+              </div>
             </div>
+            <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim, flexShrink: 0 }}>✕</button>
           </div>
-          <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
+          <ClampedText text={item.desc} lines={4} openMaxHeight={180}
+            style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', lineHeight: 1.5 }} />
+          <div style={{ height: 1, background: COLORS.border, margin: '16px 0' }} />
         </div>
-        <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16, lineHeight: 1.5 }}>{item.desc}</div>
-        <div style={{ height: 1, background: COLORS.border, marginBottom: 16 }} />
-        {children}
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 24px 24px' }}>
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -413,7 +454,12 @@ function PackRow({ item }) {
           <div style={{ fontSize: 7, color: col, fontFamily: "'Cinzel', serif", flexShrink: 0 }}>{item.category}</div>
           {item.qty > 1 && <div style={{ fontSize: 8, color: '#e8c84a', fontFamily: "'Cinzel', serif", flexShrink: 0 }}>×{item.qty}</div>}
         </div>
-        {item.desc && <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>{item.desc}</div>}
+        {item.desc && (
+          <div style={{ marginTop: 2 }}>
+            <ClampedText text={item.desc} lines={2} openMaxHeight={160}
+              style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }} />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -658,7 +704,12 @@ export function ArgusDMPanel({ onClose, embedded = false }) {
                         ✦ Grant
                       </button>
                     </div>
-                    {item.desc && <div style={{ color: COLORS.muted, fontSize: 10, marginTop: 4, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{item.desc}</div>}
+                    {item.desc && (
+                      <div style={{ marginTop: 4 }}>
+                        <ClampedText text={item.desc} lines={3} openMaxHeight={200}
+                          style={{ color: COLORS.muted, fontSize: 10, fontFamily: 'Georgia, serif', fontStyle: 'italic' }} />
+                      </div>
+                    )}
                   </div>
                 );
               })}
