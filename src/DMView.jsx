@@ -443,7 +443,8 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
       setApReason('');
       onSave?.();
     } catch (e) {
-      setNote(e.message || 'AP award failed.');
+      // Not setNote — that field is the message sent to the player on approve.
+      setSaveError(e.message || 'AP award failed.');
     } finally {
       setGrantingAp(false);
     }
@@ -469,8 +470,12 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
     };
     const { id, status, campaign_id, user_id, ...blob } = nextData;
     setSaving(true);
+    setSaveError('');
     try {
-      const { error } = await supabase.from('characters').update({
+      // Ask for the row back. Without it an RLS-filtered update returns success
+      // with zero rows, local state was updated anyway, and the editor closed —
+      // so the old level reappeared on refresh and it read as "didn't save".
+      const { data: updated, error } = await supabase.from('characters').update({
         ap_total: nextApTotal,
         level: targetLevel,
         at_current: nextAtCurrent,
@@ -478,13 +483,16 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
         atCurrent: nextAtCurrent,
         atTotal: nextAtTotal,
         data: blob,
-      }).eq('id', char.id);
+      }).eq('id', char.id).select('id');
       if (error) throw error;
+      if (!updated?.length) throw new Error('Nothing was written — a database policy blocked this update. The level was not saved.');
       setData(nextData);
       setLevelDraft(String(targetLevel));
-      onSave?.();
+      onRefresh?.(); // refresh the roster but keep the sheet open
     } catch (e) {
-      setNote(e.message || 'Manual level update failed.');
+      // Never setNote here: that is the Note to Player field, so a database
+      // error would sit in it and get mailed to the player on the next approve.
+      setSaveError(e.message || 'Manual level update failed.');
     } finally {
       setSaving(false);
     }
@@ -1054,6 +1062,7 @@ export default function DMView({ user, session, onHome, darkMode = true, module 
   const [showQuestor, setShowQuestor] = useState(false);
   const [showClock, setShowClock] = useState(false);
   const [showLore, setShowLore] = useState(false);
+  const [showAssets, setShowAssets] = useState(false);
   const [headerClock, setHeaderClock] = useState(null);
   const [showSpeak, setShowSpeak] = useState(false);
   const [showProximity, setShowProximity] = useState(false);
@@ -1525,6 +1534,7 @@ const renderTab = () => {
     showBazaar && 'bazaar',
     showQuestor && 'questor',
     showClock && 'clock',
+    showAssets && 'assets',
     showLore && 'lore',
     showSpeak && 'speak',
     showProximity && 'proximity',
@@ -1761,6 +1771,13 @@ const renderTab = () => {
       </div>
     </DraggablePanel>
   )}
+      {showAssets && (
+        <DraggablePanel {...panelPriority('assets')} defaultX={108} defaultY={80} onClose={() => setShowAssets(false)} title="SESSION ASSETS - Cast to the Table" width={420} accentColor="rgba(200,168,74,0.35)">
+          <AssetsPanel campaignId={activeCampaignTab} embedded />
+        </DraggablePanel>
+      )}
+      {/* Astragal stays first: FloatToolbar shows index 0 by default, and the
+          dice are what the DM reaches for most. */}
       <FloatToolbar activeIds={activeToolIds} buttons={[
         {
           id: 'astragal',
@@ -1786,6 +1803,12 @@ const renderTab = () => {
           onClick: () => setShowCastor(o => !o),
           badge: castorBadge,
           children: <img src="/castoricon.png" alt="CASTOR" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />,
+        },
+        {
+          id: 'assets',
+          title: 'SESSION ASSETS - Cast an image to the table',
+          onClick: () => setShowAssets(o => !o),
+          children: <span style={{ fontFamily: "'Cinzel', serif", fontSize: 22, color: '#e8c84a', pointerEvents: 'none', lineHeight: 1 }}>◈</span>,
         },
         {
           id: 'bestiary',

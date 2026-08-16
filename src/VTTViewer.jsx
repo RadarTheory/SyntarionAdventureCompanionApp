@@ -164,6 +164,15 @@ const TOKEN_STYLE = {
   iconDark: 'rgba(20,11,9,0.72)',
 };
 
+// The Scribe's forge composes a 512px token: portrait ring centred at (256,246)
+// with radius 174, a drop-shadow ellipse below it, and the character's name across
+// the bottom. On the map we want the ring alone — the name is drawn on canvas
+// instead, where it stays sharp at any zoom rather than being a 22px baked bitmap.
+// half=195 is the window between the ring's outer edge (192.8 from centre, its
+// thickest Standee variant) and the top of the name band (198 from centre): the
+// full ring survives, no name pixels do.
+const FORGE_TOKEN = { size: 512, cx: 256, cy: 246, half: 195 };
+
 function tokenFill(tok, isEnemyTok) {
   return isEnemyTok ? TOKEN_STYLE.enemyFill : (tok.color || TOKEN_STYLE.playerFallback);
 }
@@ -208,8 +217,34 @@ function clipTokenShape(ctx, tok, x, y, r, inset = 2) {
   }
 }
 
+// The canvas is authored in a fixed 900x600 coordinate space and then stretched
+// by CSS to whatever the window is. On a Mapcast window at ~1900px that was a
+// better-than-2x upscale of every pixel, which is what made tokens and their name
+// labels look soft. Keep the logical space — every draw call below depends on it —
+// and raise only the backing store to real device pixels.
+const LOGICAL_W = 900;
+const LOGICAL_H = 600;
+// 4x logical is already 3600px wide; beyond that the memory cost outruns any
+// visible gain, and some mobile GPUs refuse the allocation outright.
+const MAX_RENDER_SCALE = 4;
+
+function fitCanvasToDisplay(canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const displayed = rect.width || LOGICAL_W;
+  const scale = Math.min(MAX_RENDER_SCALE, Math.max(1, (displayed / LOGICAL_W) * dpr));
+  const w = Math.round(LOGICAL_W * scale);
+  const h = Math.round(LOGICAL_H * scale);
+  // Assigning width/height wipes the context state, so only touch it on a change.
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  return scale;
+}
+
 function getMapRect(canvas, mapImg) {
-  const W = canvas.width, H = canvas.height;
+  const W = LOGICAL_W, H = LOGICAL_H;
   const imgRatio = mapImg.width / mapImg.height;
   const canvasRatio = W / H;
   let drawW, drawH;
@@ -237,12 +272,23 @@ function isTokenFogged(tok, fogZones) {
 function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves, draggingToken, dragPos, userCharId, hoveredTokenId, onIconReady }) {
   if (!canvas || !mapImg) return;
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
+  // renderScale maps the logical 900x600 space onto the real backing store.
+  const renderScale = fitCanvasToDisplay(canvas);
+  const W = LOGICAL_W, H = LOGICAL_H;
   const mapRect = getMapRect(canvas, mapImg);
 
+  ctx.setTransform(renderScale, 0, 0, renderScale, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.clearRect(0, 0, W, H);
   ctx.save();
-  ctx.setTransform(transform.scale, 0, 0, transform.scale, transform.x, transform.y);
+  // Compose the pan/zoom on top of renderScale — a bare setTransform here would
+  // discard it and put us back at 900x600.
+  ctx.setTransform(
+    renderScale * transform.scale, 0,
+    0, renderScale * transform.scale,
+    renderScale * transform.x, renderScale * transform.y,
+  );
   ctx.drawImage(mapImg, mapRect.x, mapRect.y, mapRect.w, mapRect.h);
 
   // Fog
@@ -338,19 +384,44 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
     }
 
     const rim = isHovered ? TOKEN_STYLE.hover : tokenRim(tok, isEnemyTok, isOwn);
-    drawTokenShape(ctx, tok, tx, ty, r, tokenFill(tok, isEnemyTok), rim, { hovered: isHovered });
     ctx.globalAlpha = hasPending ? 0.5 : 1;
     const tokenArt = tok.sprite_url || tok.portrait_url || null;
     const tokenImg = tokenArt ? getRawIcon(tokenArt, onIconReady) : null;
     if (tokenImg) {
+      // Confirmed art already carries its own frame, so the map contributes a
+      // single state ring rather than a filled shape plus two strokes plus an
+      // inset clip. The portrait gets the area that chrome used to occupy, and
+      // the ring still encodes enemy / player / yours / hovered.
       ctx.save();
-      clipTokenShape(ctx, tok, tx, ty, r, Math.max(2.5, r * 0.2));
+      ctx.shadowColor = 'rgba(0,0,0,0.6)';
+      ctx.shadowBlur = isHovered ? 9 : 5;
+      ctx.shadowOffsetY = isHovered ? 3 : 2;
+      clipTokenShape(ctx, tok, tx, ty, r, 0);
+      ctx.fillStyle = 'rgba(12,9,7,0.92)'; // backing so the shadow has something to cast from
+      ctx.fill();
+      ctx.restore();
+
+      ctx.save();
+      clipTokenShape(ctx, tok, tx, ty, r, 0);
       ctx.clip();
-      ctx.globalAlpha *= 0.86;
-      const imageInset = Math.max(2, r * 0.08);
-      drawImageCover(ctx, tokenImg, tx - r + imageInset, ty - r + imageInset, (r - imageInset) * 2, (r - imageInset) * 2);
+      if (tok.sprite_url && tokenImg.width === FORGE_TOKEN.size) {
+        // Forge sprite: crop to the ring, dropping the baked name and shadow band.
+        const { cx, cy, half } = FORGE_TOKEN;
+        ctx.drawImage(tokenImg, cx - half, cy - half, half * 2, half * 2, tx - r, ty - r, r * 2, r * 2);
+      } else {
+        // A raw portrait rather than a forged token — no baked furniture to trim.
+        drawImageCover(ctx, tokenImg, tx - r, ty - r, r * 2, r * 2);
+      }
+      ctx.restore();
+
+      ctx.save();
+      clipTokenShape(ctx, tok, tx, ty, r, 0);
+      ctx.lineWidth = Math.max(1.5, r * (isHovered ? 0.13 : 0.1));
+      ctx.strokeStyle = isOwn ? TOKEN_STYLE.own : (isHovered ? TOKEN_STYLE.hover : tokenFill(tok, isEnemyTok));
+      ctx.stroke();
       ctx.restore();
     } else {
+      drawTokenShape(ctx, tok, tx, ty, r, tokenFill(tok, isEnemyTok), rim, { hovered: isHovered });
       const icon = tokenSymbolIcon(tok, onIconReady);
       if (icon) {
         ctx.globalAlpha *= 0.82;
@@ -376,6 +447,31 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
         ctx.font = `bold ${r}px sans-serif`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText('☠', tx, ty);
+      }
+    }
+
+    // Floating name, drawn on the map rather than baked into the sprite so it
+    // stays sharp at any zoom. Player tokens only — an enemy's real name is the
+    // DM's to reveal, and these labels are visible to the whole table.
+    if (tok.type === 'player') {
+      const label = tokenName(tok);
+      if (label) {
+        const fs = Math.max(5, r * 0.4);
+        ctx.save();
+        ctx.font = `700 ${fs}px 'Cinzel', Georgia, serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        // Outline instead of a plate: legible over dark stone or bright sand
+        // without boxing in the token.
+        ctx.lineJoin = 'round';
+        ctx.miterLimit = 2;
+        ctx.lineWidth = Math.max(1.5, fs * 0.36);
+        ctx.strokeStyle = 'rgba(8,6,4,0.9)';
+        const ly = ty + r + Math.max(2, r * 0.18);
+        ctx.strokeText(label, tx, ly);
+        ctx.fillStyle = isOwn ? TOKEN_STYLE.own : (isHovered ? TOKEN_STYLE.hover : '#f2e6c8');
+        ctx.fillText(label, tx, ly);
+        ctx.restore();
       }
     }
     ctx.restore();
@@ -548,7 +644,7 @@ useEffect(() => {
     e.preventDefault();
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const scaleRatio = canvas.width / rect.width;
+    const scaleRatio = LOGICAL_W / rect.width; // logical space, not the backing store
     const mouseX = (e.clientX - rect.left) * scaleRatio;
     const mouseY = (e.clientY - rect.top) * scaleRatio;
     const delta = e.deltaY < 0 ? 1.1 : 0.9;
@@ -572,7 +668,7 @@ useEffect(() => {
     if (!canvas || !mapImg) return { x: 0.5, y: 0.5 };
     const rect = canvas.getBoundingClientRect();
     const t = transformRef.current;
-    const scaleRatio = canvas.width / rect.width;
+    const scaleRatio = LOGICAL_W / rect.width; // logical space, not the backing store
     const canvasX = ((clientX - rect.left) * scaleRatio - t.x) / t.scale;
     const canvasY = ((clientY - rect.top) * scaleRatio - t.y) / t.scale;
     const mapRect = getMapRect(canvas, mapImg);
@@ -717,7 +813,7 @@ useEffect(() => {
     if (panRef.current.panning) {
       const canvas = canvasRef.current;
       const rect = canvas.getBoundingClientRect();
-      const scaleRatio = canvas.width / rect.width;
+      const scaleRatio = LOGICAL_W / rect.width; // logical space, not the backing store
       const dx = (clientX - panRef.current.lastX) * scaleRatio;
       const dy = (clientY - panRef.current.lastY) * scaleRatio;
       panRef.current.lastX = clientX;
@@ -810,7 +906,7 @@ useEffect(() => {
       pinchRef.current.lastDist = dist;
       const canvas = canvasRef.current;
       const rect = canvas.getBoundingClientRect();
-      const scaleRatio = canvas.width / rect.width;
+      const scaleRatio = LOGICAL_W / rect.width; // logical space, not the backing store
       const midX = ((e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left) * scaleRatio;
       const midY = ((e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top) * scaleRatio;
       setTransform(prev => {
@@ -833,7 +929,7 @@ useEffect(() => {
       const { clientX, clientY } = e.touches[0];
       const canvas = canvasRef.current;
       const rect = canvas.getBoundingClientRect();
-      const scaleRatio = canvas.width / rect.width;
+      const scaleRatio = LOGICAL_W / rect.width; // logical space, not the backing store
       const dx = (clientX - panRef.current.lastX) * scaleRatio;
       const dy = (clientY - panRef.current.lastY) * scaleRatio;
       panRef.current.lastX = clientX;
@@ -955,6 +1051,40 @@ useEffect(() => {
           <canvas ref={canvasRef} width={900} height={600} style={{ width: '100%', height: 'auto', maxHeight: window.innerWidth <= 640 ? '60vh' : 'none', display: 'block', touchAction: 'none', transform: castMode ? `rotate(${normalizedCastRotation}deg) scale(${castCanvasScale})` : 'none', transformOrigin: 'center center', transition: castMode ? 'transform 160ms ease' : 'none' }}
             onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
             onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={(e) => handleTouchEnd(e)} />
+        )}
+
+        {/* Cast overlay — whatever the DM is showing the table. Arrives on the
+            existing vtt_sessions subscription, so it appears here and on the
+            Mapcast window at the same time. pointerEvents stays off so a player
+            can still work the map underneath while something is being shown. */}
+        {vttSession?.cast_overlay?.url && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3% 4%', background: 'radial-gradient(ellipse at center, rgba(6,4,3,0.55) 0%, rgba(6,4,3,0.82) 100%)', pointerEvents: 'none' }}>
+            {/* Definite height on the figure plus minHeight:0 on the image is what
+                lets the image shrink to fit. Without both, a flex item refuses to
+                go below its intrinsic size and a tall asset runs off the bottom.
+                No explicit width/height on the img, so small art is never upscaled. */}
+            <figure style={{ margin: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, width: '100%', height: '100%', minHeight: 0 }}>
+              <img
+                src={vttSession.cast_overlay.url}
+                alt={vttSession.cast_overlay.title || 'Cast asset'}
+                style={{ flex: '0 1 auto', minHeight: 0, maxWidth: '100%', objectFit: 'contain', borderRadius: 8, border: '1px solid rgba(200,168,74,0.45)', boxShadow: '0 24px 80px rgba(0,0,0,0.8)', background: 'rgba(10,8,6,0.35)' }}
+              />
+              {(vttSession.cast_overlay.title || vttSession.cast_overlay.caption) && (
+                <figcaption style={{ textAlign: 'center', maxWidth: '100%', flexShrink: 0 }}>
+                  {vttSession.cast_overlay.title && (
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: castMode ? 20 : 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#e8d9a7' }}>
+                      {vttSession.cast_overlay.title}
+                    </div>
+                  )}
+                  {vttSession.cast_overlay.caption && (
+                    <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: castMode ? 14 : 11, color: 'rgba(232,217,167,0.7)', marginTop: 4 }}>
+                      {vttSession.cast_overlay.caption}
+                    </div>
+                  )}
+                </figcaption>
+              )}
+            </figure>
+          </div>
         )}
       </div>
 

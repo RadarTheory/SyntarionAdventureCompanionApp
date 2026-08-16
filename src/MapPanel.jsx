@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { COLORS } from './constants';
+import { GENERATED_MAPS } from './mapsGenerated';
 
 // ─── LOCATION REGISTRY ────────────────────────────────────────────────────────
-export const LOCATIONS = [
+// Hand-written names and ids. These win over the generated list, so curating an
+// entry here is how a map gets a display name nicer than its filename — but a
+// map no longer has to be listed to show up at all.
+const CURATED_LOCATIONS = [
   { id: 'albion',              name: 'Albion',                            filename: 'Albion.png' },
   { id: 'aridara',             name: 'Aridara',                           filename: 'Aridara.png' },
   { id: 'ashendell',           name: 'Ashendell',                         filename: 'Ashendell.png' },
@@ -45,6 +49,7 @@ export const LOCATIONS = [
   { id: 'murinor',             name: 'Murinor Burrowhold',                filename: 'Murinorburrowhold.png' },
   { id: 'nquythalas',          name: "N'quythalas",                       filename: "N'quythalas.png" },
   { id: 'nquythalas-2',        name: "N'quythalas II",                    filename: "N'quythalas 2.png" },
+  { id: 'nquythalas-depths',   name: "N'quythalas Depths",                filename: "N'quythalasdepths.png" },
   { id: 'ormr',                name: 'Ormr',                              filename: 'Ormr.png' },
   { id: 'quynthera',           name: "Quynthe'ra",                        filename: "quynthe'ra.png" },
   { id: 'rakesh',              name: "Ra'Kesh",                           filename: "Ra'Kesh.png" },
@@ -70,6 +75,17 @@ export const LOCATIONS = [
   { id: 'zephyria-college',    name: 'Zephyria — College Behind the Veil',filename: 'ZephyriaCollegebehindtheveil.png' },
   { id: 'zeppelin',            name: 'Zeppelin',                          filename: 'Zeppelin.png' },
 ];
+
+// Everything in public/Maps, merged with the curated names above. A map dropped
+// into that folder appears here on the next dev reload or build with a name
+// derived from its filename — add it to CURATED_LOCATIONS only when you want a
+// better name than that. Stays a plain synchronous array, so VTTCanvas and the
+// rest can keep importing LOCATIONS directly.
+const curatedFilenames = new Set(CURATED_LOCATIONS.map(l => l.filename));
+export const LOCATIONS = [
+  ...CURATED_LOCATIONS,
+  ...GENERATED_MAPS.filter(m => !curatedFilenames.has(m.filename)),
+].sort((a, b) => a.name.localeCompare(b.name));
 
 // ─── COMPASS LOGO SVG ─────────────────────────────────────────────────────────
 function CompassLogo({ size = 36 }) {

@@ -13,6 +13,9 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
   const [displayName, setDisplayName] = useState(initialDisplayName);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(!!initialDisplayName);
+  const [newPassword, setNewPassword] = useState('');
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordStatus, setPasswordStatus] = useState('');
   const [legalTab, setLegalTab] = useState(null);
   const [installState, setInstallState] = useState(getPWAInstallState);
   const [showAppleInstall, setShowAppleInstall] = useState(false);
@@ -56,6 +59,22 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
     musicEngine.setMuted(!next.musicEnabled);
     sfxEngine.setVolume(next.sfxVolume);
     sfxEngine.setMuted(!next.sfxEnabled);
+  };
+
+  // updateUser attaches the password to the signed-in user. Never signUp here —
+  // that would mint a separate account and strand this one's characters.
+  const handleSetPassword = async () => {
+    if (newPassword.length < 6 || savingPassword) return;
+    setSavingPassword(true);
+    setPasswordStatus('');
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setSavingPassword(false);
+    if (error) {
+      setPasswordStatus(`Could not set it: ${error.message}`);
+      return;
+    }
+    setNewPassword('');
+    setPasswordStatus(`Done. You can now sign in with ${user?.email || 'your email'} and this password.`);
   };
 
   const handleSaveName = async () => {
@@ -535,6 +554,32 @@ export default function Settings({ user, darkMode, setDarkMode, onHome }) {
                     {saved ? '✓ Saved' : saving ? 'Saving...' : 'Save'}
                   </button>
                 </div>
+              </div>
+
+              {/* Adds a password to the account you are already signed into. This
+                  is updateUser, not signUp — same user id, so characters, party
+                  membership and history stay put. Signing up again with the same
+                  address would instead make a second, empty account. */}
+              <div className="settings-control">
+                <label className="settings-field-label">Sign-in password</label>
+                <div className="settings-copy" style={{ marginBottom: 8 }}>
+                  Adds a second way into <strong>this same account</strong> — useful if signing in
+                  with Google keeps dropping you back to the login screen. Your characters stay exactly where they are.
+                </div>
+                <div className="settings-input-row">
+                  <input
+                    className="settings-input"
+                    type="password"
+                    autoComplete="new-password"
+                    value={newPassword}
+                    onChange={e => { setNewPassword(e.target.value); setPasswordStatus(''); }}
+                    placeholder="At least 6 characters"
+                  />
+                  <button type="button" className="settings-button" onClick={handleSetPassword} disabled={savingPassword || newPassword.length < 6}>
+                    {savingPassword ? 'Saving...' : 'Set'}
+                  </button>
+                </div>
+                {passwordStatus && <div className="settings-copy" style={{ marginTop: 8 }}>{passwordStatus}</div>}
               </div>
             </section>
 

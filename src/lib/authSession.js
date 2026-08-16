@@ -102,6 +102,28 @@ export function getPersistenceGrant() {
   return persistenceGrant;
 }
 
+// Everything the login screen needs to explain why a player keeps landing back
+// here. Deliberately booleans and states only — never token values.
+export function collectAuthDiagnostics(storageKey) {
+  const standalone = window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  let sessionSaved = false;
+  let handshakePending = false;
+  try {
+    sessionSaved = !!window.localStorage.getItem(storageKey);
+    // PKCE parks a verifier here between leaving for the provider and coming
+    // back. Present on a fresh load means the return trip never completed.
+    handshakePending = Object.keys(window.localStorage).some(k => k.endsWith('-code-verifier'));
+  } catch { /* storage unreadable — sessionSaved stays false */ }
+
+  return {
+    installedApp: standalone,
+    savedLoginsAllowed: isSessionPersistent(),
+    storageKeptByBrowser: persistenceGrant,
+    sessionFoundAtStart: sessionSaved,
+    handshakePending,
+  };
+}
+
 let explicitSignOut = false;
 
 // Call immediately before supabase.auth.signOut() on any user-initiated sign out.

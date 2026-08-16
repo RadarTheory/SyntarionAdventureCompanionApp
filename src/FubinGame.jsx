@@ -17,21 +17,23 @@ const WIN_AHEAD        = 5;
 const BALL_BASE_R      = 13;
 const BALL_MIN_R       = 3;
 const BALL_SHRINK      = 1.0;
-const BALL_BASE_SPEED  = 420;
-const BALL_MAX_SPEED   = 980;
-const BALL_SERVE_SPEED = BALL_BASE_SPEED * 0.75;
+const BALL_BASE_SPEED  = 620;
+const BALL_MAX_SPEED   = 1200;
+const BALL_SERVE_SPEED = BALL_BASE_SPEED * 0.78;
 const PADDLE_W         = 52;
-const PADDLE_H         = 52;
+const PADDLE_H         = 104;   // 2x taller, still diamond-shaped
 const BORDER           = 36;
-const GOAL_RATIO       = 0.52;
+const GOAL_RATIO       = 0.32;  // smaller goals
 const MAX_WISPS        = 7;
 const WISP_SPAWN_INTERVAL = 3.2;
 const TRAP_TIMEOUT     = 1.0;
+const INITIAL_WISPS    = 3;     // frozen on the board before the first serve
+const PADDLE_MOVE_SPEED = 620;
 
 const DIFFICULTY = {
-  apprentice: { label: 'Apprentice', reactionDelay: 0.22, errorMult: 1.2, speed: 0.55, color: '#60c860', jewel: '#40e840' },
-  adept:      { label: 'Adept',      reactionDelay: 0.13, errorMult: 0.7, speed: 0.72, color: '#4090e0', jewel: '#40b0ff' },
-  archmage:   { label: 'Archmage',   reactionDelay: 0.05, errorMult: 0.2, speed: 0.92, color: '#c040e0', jewel: '#d060ff' },
+  apprentice: { label: 'Apprentice', reactionDelay: 0.22, errorMult: 1.2, speed: 0.72, color: '#60c860', jewel: '#40e840' },
+  adept:      { label: 'Adept',      reactionDelay: 0.13, errorMult: 0.7, speed: 0.88, color: '#4090e0', jewel: '#40b0ff' },
+  archmage:   { label: 'Archmage',   reactionDelay: 0.05, errorMult: 0.2, speed: 1.1,  color: '#c040e0', jewel: '#d060ff' },
 };
 
 // ── Math utils ───────────────────────────────────────────────────────────────
@@ -1600,20 +1602,20 @@ function GameCanvas({ user, mode, difficulty, lobbyState, onWin, onAbandon }) {
 
       // ── Keyboard input (right paddle = human in AI mode) ──────────────
       const keys = keysRef.current;
-      const spd  = 320;
+      const spd  = PADDLE_MOVE_SPEED;
       if (mode === 'ai') {
         if (keys['ArrowUp'])    { pR.vy = -spd; } else
-        if (keys['ArrowDown'])  { pR.vy =  spd; } else { pR.vy *= 0.8; }
+        if (keys['ArrowDown'])  { pR.vy =  spd; } else { pR.vy *= 0.75; }
         if (keys['ArrowLeft'])  { pR.vx = -spd; } else
-        if (keys['ArrowRight']) { pR.vx =  spd; } else { pR.vx *= 0.8; }
+        if (keys['ArrowRight']) { pR.vx =  spd; } else { pR.vx *= 0.75; }
         if (keys['w']) { pL.vy = -spd; } else
-        if (keys['s']) { pL.vy =  spd; } else { pL.vy *= 0.8; }
+        if (keys['s']) { pL.vy =  spd; } else { pL.vy *= 0.75; }
       } else {
         // 2P local key fallback
-        if (keys['ArrowUp'])   pR.vy = -spd; else if (keys['ArrowDown'])  pR.vy =  spd; else pR.vy *= 0.8;
-        if (keys['ArrowLeft']) pR.vx = -spd; else if (keys['ArrowRight']) pR.vx =  spd; else pR.vx *= 0.8;
-        if (keys['w']) pL.vy = -spd; else if (keys['s']) pL.vy =  spd; else pL.vy *= 0.8;
-        if (keys['a']) pL.vx = -spd; else if (keys['d']) pL.vx =  spd; else pL.vx *= 0.8;
+        if (keys['ArrowUp'])   pR.vy = -spd; else if (keys['ArrowDown'])  pR.vy =  spd; else pR.vy *= 0.75;
+        if (keys['ArrowLeft']) pR.vx = -spd; else if (keys['ArrowRight']) pR.vx =  spd; else pR.vx *= 0.75;
+        if (keys['w']) pL.vy = -spd; else if (keys['s']) pL.vy =  spd; else pL.vy *= 0.75;
+        if (keys['a']) pL.vx = -spd; else if (keys['d']) pL.vx =  spd; else pL.vx *= 0.75;
       }
 
       // Move paddles
@@ -1917,6 +1919,20 @@ function GameCanvas({ user, mode, difficulty, lobbyState, onWin, onAbandon }) {
 
     // Start wisp spawner after short delay (will be called once phase transitions out of intro)
     wispTimerRef.current = WISP_SPAWN_INTERVAL;
+
+    // Seed the board with wisps before the first serve. They start frozen —
+    // handleGoal already unfreezes any wisp at full opacity — so the board reads
+    // as inhabited during the intro instead of empty until the spawner catches up.
+    {
+      const seedW = getW(), seedH = getH();
+      const ball = ballRef.current;
+      const pL = paddleLRef.current, pR = paddleRRef.current;
+      wispsRef.current = Array.from({ length: INITIAL_WISPS }, () => {
+        const w = makeWisp(wispIdRef.current++, seedW, seedH, ball?.x ?? seedW / 2, ball?.y ?? seedH / 2, [pL, pR]);
+        w.frozen = true;
+        return w;
+      });
+    }
 
     af = requestAnimationFrame(loop);
 

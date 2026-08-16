@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
-import { consumeExplicitSignOut, isSessionPersistent, markExplicitSignOut } from './lib/authSession';
+import { collectAuthDiagnostics, consumeExplicitSignOut, isSessionPersistent, markExplicitSignOut } from './lib/authSession';
 import Landing from './Landing';
 import ScribeLite from './ScribeLite';
 import LoadingScreen from './LoadingScreen';
@@ -306,6 +306,9 @@ function LoginScreen() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [showDiag, setShowDiag] = useState(false);
+  // Read once, on the render where the player is actually looking at it.
+  const diag = showDiag ? collectAuthDiagnostics(supabase.auth.storageKey) : null;
 
   const handleOAuth = async (provider) => {
     setError('');
@@ -503,6 +506,35 @@ function LoginScreen() {
         <button onClick={() => handleOAuth('facebook')} style={ghostBtnStyle}>
           Sign in with Facebook
         </button>
+
+        {/* Why am I signing in again? — a readout a player can screenshot, so a
+            repeat sign-in becomes diagnosable instead of guesswork. */}
+        <button
+          onClick={() => setShowDiag(v => !v)}
+          style={{ width: '100%', background: 'transparent', border: 'none', padding: '14px 0 4px', cursor: 'pointer', fontFamily: 'Georgia, serif', fontSize: 11, color: 'rgba(26,23,20,0.4)', textDecoration: 'underline' }}
+        >
+          {showDiag ? 'Hide sign-in details' : 'Asked to sign in again?'}
+        </button>
+
+        {diag && (
+          <div style={{ border: '1px solid rgba(26,23,20,0.18)', borderRadius: 6, padding: '10px 12px', fontFamily: 'Georgia, serif', fontSize: 11, color: '#1a1714', lineHeight: 1.7 }}>
+            {[
+              ['Opened as', diag.installedApp ? 'Installed app' : 'Browser tab'],
+              ['Saved logins', diag.savedLoginsAllowed ? 'Allowed' : 'Blocked by this browser'],
+              ['Storage kept', diag.storageKeptByBrowser],
+              ['Login found on open', diag.sessionFoundAtStart ? 'Yes' : 'No'],
+              ['Interrupted sign-in', diag.handshakePending ? 'Yes — a sign-in never finished' : 'No'],
+            ].map(([k, v]) => (
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                <span style={{ color: 'rgba(26,23,20,0.55)' }}>{k}</span>
+                <span style={{ fontWeight: 700, textAlign: 'right' }}>{String(v)}</span>
+              </div>
+            ))}
+            <div style={{ marginTop: 8, fontSize: 10, fontStyle: 'italic', color: 'rgba(26,23,20,0.5)' }}>
+              Screenshot this and send it to your GM.
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

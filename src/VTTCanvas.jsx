@@ -202,6 +202,12 @@ function tokenRim(tok, isEnemyTok, isOwn = false) {
   return isEnemyTok ? TOKEN_STYLE.enemyRim : TOKEN_STYLE.playerRim;
 }
 
+// Mirrors VTTViewer: the Scribe's forge composes a 512px token with the portrait
+// ring centred at (256,246) and the character's name baked across the bottom.
+// half=195 clears the ring's outer edge (192.8) and stops short of the name (198),
+// so the map can draw the name itself and keep it sharp at any zoom.
+const FORGE_TOKEN = { size: 512, cx: 256, cy: 246, half: 195 };
+
 function drawTokenShape(ctx, tok, x, y, r, fill, rim, { hovered = false, dashed = false } = {}) {
   const isPlayer = tok.type === 'player';
   const inset = Math.max(2, r * 0.16);
@@ -398,20 +404,47 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
     }
 
     const rim = isHovered ? TOKEN_STYLE.hover : (fogged ? TOKEN_STYLE.fogged : tokenRim(tok, isEnemyTok));
-    drawTokenShape(ctx, tok, tx, ty, r, tokenFill(tok, isEnemyTok), rim, { hovered: isHovered, dashed: fogged });
 
     // Sprite, icon, or label
     const tokenArt = tok.sprite_url || tok.portrait_url || null;
     const tokenImg = tokenArt ? getRawIcon(tokenArt, onIconReady) : null;
     if (tokenImg) {
+      // Confirmed art already carries its own frame, so the map contributes a
+      // single state ring instead of a filled shape, two strokes and an inset
+      // clip. Mirrors the player view in VTTViewer — keep the two in step.
       ctx.save();
-      clipTokenShape(ctx, tok, tx, ty, r, Math.max(2.5, r * 0.2));
+      ctx.shadowColor = 'rgba(0,0,0,0.6)';
+      ctx.shadowBlur = isHovered ? 9 : 5;
+      ctx.shadowOffsetY = isHovered ? 3 : 2;
+      clipTokenShape(ctx, tok, tx, ty, r, 0);
+      ctx.fillStyle = 'rgba(12,9,7,0.92)'; // backing so the shadow has something to cast from
+      ctx.fill();
+      ctx.restore();
+
+      ctx.save();
+      clipTokenShape(ctx, tok, tx, ty, r, 0);
       ctx.clip();
-      ctx.globalAlpha *= 0.86;
-      const imageInset = Math.max(2, r * 0.08);
-      drawImageCover(ctx, tokenImg, tx - r + imageInset, ty - r + imageInset, (r - imageInset) * 2, (r - imageInset) * 2);
+      if (tok.sprite_url && tokenImg.width === FORGE_TOKEN.size) {
+        // Forge sprite: crop to the ring, dropping the baked name and shadow band.
+        const { cx, cy, half } = FORGE_TOKEN;
+        ctx.drawImage(tokenImg, cx - half, cy - half, half * 2, half * 2, tx - r, ty - r, r * 2, r * 2);
+      } else {
+        drawImageCover(ctx, tokenImg, tx - r, ty - r, r * 2, r * 2);
+      }
+      ctx.restore();
+
+      ctx.save();
+      clipTokenShape(ctx, tok, tx, ty, r, 0);
+      // Fogged tokens keep their dashed outline — that's DM-only state the ring
+      // still has to carry.
+      if (fogged) ctx.setLineDash([3, 2]);
+      ctx.lineWidth = Math.max(1.5, r * (isHovered ? 0.13 : 0.1));
+      ctx.strokeStyle = isHovered ? TOKEN_STYLE.hover : (fogged ? TOKEN_STYLE.fogged : tokenFill(tok, isEnemyTok));
+      ctx.stroke();
+      ctx.setLineDash([]);
       ctx.restore();
     } else {
+      drawTokenShape(ctx, tok, tx, ty, r, tokenFill(tok, isEnemyTok), rim, { hovered: isHovered, dashed: fogged });
       const icon = tokenSymbolIcon(tok, onIconReady);
       if (icon) {
         ctx.globalAlpha *= 0.82;
@@ -442,6 +475,29 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
         ctx.font = `bold ${r}px sans-serif`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText('☠', tx, ty);
+      }
+    }
+
+    // Floating name, drawn on the map rather than baked into the sprite so it
+    // stays sharp at any zoom. Player tokens only, matching the player view —
+    // an enemy's real name stays the DM's to reveal.
+    if (tok.type === 'player') {
+      const label = tokenName(tok);
+      if (label) {
+        const fs = Math.max(5, r * 0.4);
+        ctx.save();
+        ctx.font = `700 ${fs}px 'Cinzel', Georgia, serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.lineJoin = 'round';
+        ctx.miterLimit = 2;
+        ctx.lineWidth = Math.max(1.5, fs * 0.36);
+        ctx.strokeStyle = 'rgba(8,6,4,0.9)';
+        const ly = ty + r + Math.max(2, r * 0.18);
+        ctx.strokeText(label, tx, ly);
+        ctx.fillStyle = isHovered ? TOKEN_STYLE.hover : '#f2e6c8';
+        ctx.fillText(label, tx, ly);
+        ctx.restore();
       }
     }
 
@@ -505,7 +561,19 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   const [showGrid, setShowGrid] = useState(false);
   const [gridSize, setGridSize] = useState(40);
   const [dmFogMode, setDmFogMode] = useState(() => localStorage.getItem('vtt_dm_fog_mode') || 'full');
-  const dmFogOpacity = dmFogMode === 'off' ? 0 : dmFogMode === 'dim' ? 0.5 : 1;
+  // Press-and-hold peek: a momentary look under the fog that never touches
+  // dmFogMode, so releasing always returns to whatever mode was set.
+  const [fogPeek, setFogPeek] = useState(false);
+  const dmFogOpacity = fogPeek ? 0 : (dmFogMode === 'off' ? 0 : dmFogMode === 'dim' ? 0.5 : 1);
+
+  // If the window loses focus mid-hold the pointerup never arrives, which would
+  // strand the DM's fog off without them realising.
+  useEffect(() => {
+    if (!fogPeek) return;
+    const drop = () => setFogPeek(false);
+    window.addEventListener('blur', drop);
+    return () => window.removeEventListener('blur', drop);
+  }, [fogPeek]);
   const cycleFog = () => {
     const order = ['full', 'dim', 'off'];
     const next = order[(order.indexOf(dmFogMode) + 1) % order.length];
@@ -1059,6 +1127,54 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
       </div>
 
       <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: `1px solid ${COLORS.border}`, background: '#0d0b09', flex: 1, minHeight: 0, cursor: tool === 'pan' ? 'grab' : tool === 'fog-reveal' || tool === 'fog-hide' ? 'crosshair' : tool === 'erase-token' ? 'not-allowed' : 'default' }}>
+        {/* Peek-under-fog. Lives in the DOM over the canvas rather than being
+            drawn into it, so it stays pinned to this corner at any zoom or pan —
+            canvas content moves with the transform, this doesn't. */}
+        {mapLoaded && (
+          <button
+            type="button"
+            title="Hold to peek under the fog"
+            aria-label="Hold to peek under the fog"
+            aria-pressed={fogPeek}
+            onPointerDown={e => {
+              e.preventDefault();
+              e.stopPropagation();
+              // Capture so the release still reaches us if the cursor slides off.
+              e.currentTarget.setPointerCapture?.(e.pointerId);
+              setFogPeek(true);
+            }}
+            onPointerUp={() => setFogPeek(false)}
+            onPointerCancel={() => setFogPeek(false)}
+            onLostPointerCapture={() => setFogPeek(false)}
+            onContextMenu={e => e.preventDefault()}
+            style={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              zIndex: 5,
+              width: 34,
+              height: 34,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 6,
+              cursor: 'pointer',
+              touchAction: 'none',
+              background: fogPeek ? 'rgba(200,168,74,0.22)' : 'rgba(13,11,9,0.82)',
+              border: `1px solid ${fogPeek ? 'rgba(200,168,74,0.75)' : COLORS.border}`,
+              color: fogPeek ? '#e8c84a' : COLORS.dim,
+              boxShadow: fogPeek ? '0 0 14px rgba(200,168,74,0.35)' : '0 2px 10px rgba(0,0,0,0.5)',
+              transition: 'background 0.12s, border-color 0.12s, color 0.12s',
+              padding: 0,
+            }}
+          >
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
+              <path d="M1.6 12S5.2 5.2 12 5.2 22.4 12 22.4 12 18.8 18.8 12 18.8 1.6 12 1.6 12Z" />
+              <circle cx="12" cy="12" r="3.1" />
+            </svg>
+          </button>
+        )}
+
         {!mapFilename ? (
           <div style={{ padding: '24px 20px', display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'flex-start' }}>
             {/* Left — search + location list (click previews, does not commit) */}

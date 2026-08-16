@@ -2,6 +2,54 @@
   box-sizing: border-box;
 }
 
+/* ── Scrollbars ───────────────────────────────────────────────────────────────
+   Default OS scrollbars read as a browser window sitting inside the app. These
+   are deliberately mid-tone bronze rather than the usual gold, so the same rule
+   stays legible on the dark app shell (#14110c) and the light Landing/login
+   screen (#dbdcdf) without needing a second theme. The Mapcast popup clones the
+   opener's stylesheets, so it inherits these too. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(155, 130, 80, 0.5) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  /* Transparent border + padding-box clip insets the thumb, so it reads as a
+     slim pill with breathing room rather than filling the gutter edge to edge. */
+  background: rgba(155, 130, 80, 0.42);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(200, 168, 74, 0.75);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgba(200, 168, 74, 0.9);
+  background-clip: padding-box;
+}
+
+/* The little stepper arrows are pure OS chrome — nothing else in the app has them. */
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 html {
   width: 100%;
   min-height: 100%;
