@@ -71,6 +71,8 @@ function ComposeForm({ char, campaignId, npcs, players, onSent, onCancel, isDM }
   const [sending, setSending]             = useState(false);
   const [estimate, setEstimate]           = useState(null);
   const [warned, setWarned]               = useState(false);
+  // DM only: attribute the letter to an NPC. Empty = from The Architect.
+  const [senderName, setSenderName]       = useState('');
 
   useEffect(() => {
     if (recipientName) setEstimate(estimateDelivery(recipientName));
@@ -84,7 +86,7 @@ function ComposeForm({ char, campaignId, npcs, players, onSent, onCancel, isDM }
   await supabase.from('larks').insert({
     campaign_id:    String(campaignId),
     sender_id:      char?.id ? String(char.id) : null,
-    sender_name:    isDM ? 'The Architect' : (char?.name || 'Unknown'),
+    sender_name:    isDM ? (senderName.trim() || 'The Architect') : (char?.name || 'Unknown'),
     recipient_type: recipientType,
     recipient_name: recipientName.trim(),
     recipient_id:   recipientType === 'player' ? recipientId : null, // Set recipient_id for player larks
@@ -128,6 +130,26 @@ function ComposeForm({ char, campaignId, npcs, players, onSent, onCancel, isDM }
 
       {!warned && (
         <>
+          {/* From — DM only. Lets a letter arrive in a player's hands over an
+              NPC's signature rather than The Architect's. */}
+          {isDM && (
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ ...label8(), marginBottom: 5 }}>From</div>
+              <select value={senderName} onChange={e => setSenderName(e.target.value)}
+                style={{ width: '100%', background: COLORS.card, border: `1px solid ${senderName ? 'rgba(200,168,74,0.45)' : COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: senderName ? '#e8c84a' : COLORS.text, fontFamily: 'Georgia, serif', fontSize: 11, outline: 'none', boxSizing: 'border-box' }}>
+                <option value="">The Architect</option>
+                {npcList.map(n => (
+                  <option key={n.id || n.name} value={n.name}>{n.name}</option>
+                ))}
+              </select>
+              {senderName && (
+                <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 5 }}>
+                  Arrives signed “{senderName}” — the recipient sees no sign of the Architect.
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Recipient */}
           <div style={{ marginBottom: 10 }}>
             <div style={{ ...label8(), marginBottom: 5 }}>
@@ -286,21 +308,41 @@ export default function LarkPanel({ char, campaignId, isDM = false, embedded = f
 
   useEffect(() => {
     loadLarks();
-    // Load NPCs from window event system
-    window.dispatchEvent(new CustomEvent('census:request_snapshot'));
-    const h = e => setNpcs(e.detail?.npcs || []);
-    window.addEventListener('census:npc_snapshot', h);
 
-    // Load players
-    supabase.from('characters').select('id, name').eq('campaign_id', String(campaignId)).then(({ data }) => {
-      if (data) setPlayers(data);
+    // NPCs: the census broadcast only answers when that panel is mounted, so the
+    // Lark window opened on its own got an empty list. Read the table directly and
+    // let the broadcast override it when it does arrive.
+    window.dispatchEvent(new CustomEvent('census:request_snapshot'));
+    const h = e => { const list = e.detail?.npcs; if (list?.length) setNpcs(list); };
+    window.addEventListener('census:npc_snapshot', h);
+    supabase.from('npcs').select('id, name').order('name').then(({ data }) => {
+      if (data?.length) setNpcs(prev => (prev.length ? prev : data));
     });
+
+    // Players. Two fixes over the old select('id, name').eq('campaign_id', …):
+    //   - names live in the `data` jsonb; the top-level `name` column exists but
+    //     the app never writes it, so every option came back blank.
+    //   - the campaign filter stringifies a missing campaign to "null", which
+    //     matches no rows at all. The DM writes to anyone, so they skip it.
+    let playerQuery = supabase.from('characters')
+      .select('id, data, status, campaign_id')
+      .not('status', 'eq', 'rejected');
+    if (!isDM && campaignId) playerQuery = playerQuery.eq('campaign_id', String(campaignId));
+    playerQuery
+      .then(({ data }) => {
+        if (!data) return;
+        setPlayers(data.map(row => {
+          let d = {};
+          try { d = typeof row.data === 'string' ? JSON.parse(row.data) : (row.data || {}); } catch { /* unreadable blob */ }
+          return { id: row.id, name: d.name || `${d.fn || ''} ${d.ln || ''}`.trim() || 'Unnamed' };
+        }).sort((a, b) => a.name.localeCompare(b.name)));
+      });
 
     const sub = supabase.channel(`larks-${campaignId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'larks', filter: `campaign_id=eq.${campaignId}` }, loadLarks)
       .subscribe();
     return () => { supabase.removeChannel(sub); window.removeEventListener('census:npc_snapshot', h); };
-  }, [campaignId]);
+  }, [campaignId, isDM]);
 
  const loadLarks = async () => {
   setLoading(true);
