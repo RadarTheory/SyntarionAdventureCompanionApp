@@ -805,6 +805,12 @@ function DMMemoryPanel({ characterId, campaignId, campaigns = [], browseAll = fa
 
   const fetchMemories = async () => {
     let q = supabase.from('dm_memory').select('*').order('created_at', { ascending: false });
+    // Tales write their transcripts here under a synthetic `tales:<module>`
+    // campaign (see CampaignView's taleId). They're machine chatter, not DM
+    // canon, and they buried the real entries. The is-null arm matters: a bare
+    // NOT LIKE evaluates to NULL for rows with no campaign, which would drop
+    // character-scoped and world entries along with them.
+    q = q.or('campaign_id.is.null,campaign_id.not.like.tales:*');
     if (characterId) q = q.eq('character_id', characterId);
     else if (scopeCampaign) q = q.eq('campaign_id', scopeCampaign);
     const { data } = await q;
