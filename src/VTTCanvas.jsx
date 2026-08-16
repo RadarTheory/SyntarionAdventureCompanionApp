@@ -363,7 +363,15 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   // ── 4. Draw tokens ───────────────────────────────────────────────────────
   // Tokens never move; where full portraits would collide we draw compact pins.
   const crowdedKeys = computeCrowdedKeys(tokens, mapRect);
-  tokens.forEach((tok, tokIndex) => {
+  // Hovered token draws last so its enlarged ring and its name land on top of
+  // neighbouring tokens instead of under them. Pairs keep the original index,
+  // which crowdedKeys is keyed on. Array.sort is stable, so everything else
+  // holds its existing order.
+  const drawOrder = tokens.map((tok, i) => [tok, i]);
+  if (hoveredTokenId) {
+    drawOrder.sort((a, b) => (a[0].id === hoveredTokenId ? 1 : 0) - (b[0].id === hoveredTokenId ? 1 : 0));
+  }
+  drawOrder.forEach(([tok, tokIndex]) => {
     const fogged = isTokenFogged(tok, fogZones);
 
     // Players never see fogged tokens
@@ -490,15 +498,12 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
         ctx.save();
         ctx.font = `700 ${fs}px 'Cinzel', Georgia, serif`;
         ctx.textAlign = 'center';
-        // Hover grows both the token and its label, so a name below it lands on
-        // whatever token sits underneath. Flip above while hovered.
-        ctx.textBaseline = isHovered ? 'bottom' : 'top';
+        ctx.textBaseline = 'top';
         ctx.lineJoin = 'round';
         ctx.miterLimit = 2;
         ctx.lineWidth = Math.max(1.5, fs * 0.36);
         ctx.strokeStyle = 'rgba(8,6,4,0.9)';
-        const nameGap = Math.max(2, r * 0.18);
-        const ly = isHovered ? ty - r - nameGap : ty + r + nameGap;
+        const ly = ty + r + Math.max(2, r * 0.18);
         ctx.strokeText(label, tx, ly);
         ctx.fillStyle = isHovered ? TOKEN_STYLE.hover : '#f2e6c8';
         ctx.fillText(label, tx, ly);
