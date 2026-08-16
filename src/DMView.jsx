@@ -763,6 +763,12 @@ function DMMemoryPanel({ characterId, campaignId }) {
   return (
     <div>
       <div style={{ ...label8(), marginBottom: 10 }}>DM Memory</div>
+      {/* These chips set the category for the entry being added below — they do
+          not filter the list, which always shows every category for this
+          campaign. Unlabelled, they read as a filter that returned nothing. */}
+      <div style={{ fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.dim, marginBottom: 5 }}>
+        File next entry as
+      </div>
       <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
         {cats.map(c => <div key={c} onClick={() => setCategory(c)} style={{ background: category === c ? COLORS.deityBg : 'transparent', border: `1px solid ${category === c ? COLORS.deity : COLORS.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: category === c ? COLORS.deityText : COLORS.dim, fontFamily: "'Cinzel', serif" }}>{c}</div>)}
       </div>

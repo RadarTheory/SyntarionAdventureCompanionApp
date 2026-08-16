@@ -13,7 +13,20 @@ function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
 }
 
-export default function LoreAnnouncePanel({ campaignId, embedded }) {
+export default function LoreAnnouncePanel({ campaignId: campaignIdProp, embedded }) {
+  // The prop is the default (active session's campaign, else the DM's open tab).
+  // Picking one here overrides it, so lore can be written between sessions
+  // against a campaign the DM isn't currently looking at.
+  const [campaignOverride, setCampaignOverride] = useState(null);
+  const [campaignChoices, setCampaignChoices] = useState([]);
+  const campaignId = campaignOverride || campaignIdProp;
+
+  useEffect(() => {
+    supabase.from('campaigns').select('id, name, subtitle').order('id').then(({ data }) => {
+      if (data) setCampaignChoices(data);
+    });
+  }, []);
+
   const [text, setText] = useState('');
   const [title, setTitle] = useState('');
   const [characters, setCharacters] = useState([]);
@@ -293,7 +306,7 @@ CRITICAL OUTPUT RULES:
 }, [campaignId]);
 
   const handleAnnounce = async () => {
-    if (!text.trim() || !activeSession) return;
+    if (!text.trim() || !campaignId) return;
     setSending(true);
     setError(null);
 
@@ -312,13 +325,15 @@ CRITICAL OUTPUT RULES:
         content: `${replyTag}[LORE ANNOUNCEMENT] ${entryTitle}: ${text.trim()}`,
       });
 
-      await logSessionEvent(campaignId, activeSession.id, 'lore_announcement', {
-        actor_name: 'The Architect',
-        title: entryTitle,
-        content: text.trim(),
-        character_ids: selected.map(String),
-        source: 'lore_announce',
-      });
+      if (activeSession?.id) {
+        await logSessionEvent(campaignId, activeSession.id, 'lore_announcement', {
+          actor_name: 'The Architect',
+          title: entryTitle,
+          content: text.trim(),
+          character_ids: selected.map(String),
+          source: 'lore_announce',
+        });
+      }
 
       // 2. Push to each selected character's Grimoire
       await Promise.all(selected.map(charId =>
@@ -352,7 +367,7 @@ CRITICAL OUTPUT RULES:
         supabase.from('messages').insert({
           character_id: String(charId),
           campaign_id: String(campaignId),
-          session_id: activeSession.id,
+          session_id: activeSession?.id ?? null,
           type: 'lore_announcement',
           content: text.trim(),
           sender_name: 'The Architect',
@@ -382,26 +397,57 @@ CRITICAL OUTPUT RULES:
   return (
     <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-      {/* Session status */}
+      {/* Session status — informational, not a gate. Lore is campaign canon; only
+          the session timeline entry needs a live session. */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8,
         padding: '8px 12px',
-        background: activeSession ? 'rgba(121,245,167,0.06)' : 'rgba(224,90,90,0.06)',
-        border: `1px solid ${activeSession ? 'rgba(121,245,167,0.25)' : 'rgba(224,90,90,0.25)'}`,
+        background: activeSession ? 'rgba(121,245,167,0.06)' : 'rgba(200,168,74,0.06)',
+        border: `1px solid ${activeSession ? 'rgba(121,245,167,0.25)' : 'rgba(200,168,74,0.25)'}`,
         borderRadius: 8,
       }}>
         <div style={{
-          width: 6, height: 6, borderRadius: '50%',
-          background: activeSession ? '#79f5a7' : '#e05a5a',
+          width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+          background: activeSession ? '#79f5a7' : '#c8a84a',
         }} />
         <div style={{
           fontFamily: "'Cinzel', serif", fontSize: 9,
-          color: activeSession ? '#79f5a7' : '#e05a5a',
-          letterSpacing: '0.12em',
+          color: activeSession ? '#79f5a7' : '#c8a84a',
+          letterSpacing: '0.12em', lineHeight: 1.5,
         }}>
-          {activeSession ? 'Active Session — Ready to Announce' : 'No Active Session — Start a session to announce'}
+          {activeSession
+            ? 'Active Session — Ready to Announce'
+            : 'No Active Session — lore still records to canon, but not to a session timeline'}
         </div>
       </div>
+
+      {/* Campaign selector — which campaign this lore becomes canon for. Bound to
+          the panel rather than inherited silently, so writing between sessions
+          can't quietly land on whatever tab happened to be open. */}
+      {campaignChoices.length > 0 && (
+        <div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: COLORS.muted, marginBottom: 6 }}>
+            Campaign
+          </div>
+          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+            {campaignChoices.map(c => {
+              const active = String(c.id) === String(campaignId);
+              return (
+                <button key={c.id} onClick={() => setCampaignOverride(String(c.id))}
+                  style={{
+                    background: active ? 'rgba(200,168,74,0.16)' : 'transparent',
+                    border: `1px solid ${active ? 'rgba(200,168,74,0.55)' : COLORS.border}`,
+                    borderRadius: 6, padding: '5px 10px', cursor: 'pointer',
+                    fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em',
+                    color: active ? '#e8c84a' : COLORS.dim,
+                  }}>
+                  {c.subtitle || c.name || c.id}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Session roll recorder */}
       <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: 12 }}>
@@ -608,19 +654,19 @@ CRITICAL OUTPUT RULES:
 
       <button
         onClick={handleAnnounce}
-        disabled={!text.trim() || !activeSession || sending || done}
+        disabled={!text.trim() || !campaignId || sending || done}
         style={{
           background: done ? 'rgba(121,245,167,0.12)'
-            : (!text.trim() || !activeSession) ? 'transparent'
+            : (!text.trim() || !campaignId) ? 'transparent'
             : 'rgba(200,168,74,0.16)',
           border: `1px solid ${done ? 'rgba(121,245,167,0.4)'
-            : (!text.trim() || !activeSession) ? COLORS.border
+            : (!text.trim() || !campaignId) ? COLORS.border
             : 'rgba(200,168,74,0.55)'}`,
           borderRadius: 8, padding: '11px',
-          cursor: (!text.trim() || !activeSession || sending) ? 'default' : 'pointer',
+          cursor: (!text.trim() || !campaignId || sending) ? 'default' : 'pointer',
           fontFamily: "'Cinzel', serif", fontSize: 10,
           color: done ? '#79f5a7'
-            : (!text.trim() || !activeSession) ? COLORS.dim
+            : (!text.trim() || !campaignId) ? COLORS.dim
             : '#e8c84a',
           fontWeight: 700, letterSpacing: '0.12em',
           transition: 'all 0.15s',
