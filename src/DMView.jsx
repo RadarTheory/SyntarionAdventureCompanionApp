@@ -1609,11 +1609,6 @@ const renderTab = () => {
       .limit(1)
       .maybeSingle();
 
-    if (sessionError || !hsession?.id) {
-      console.error('No active Hercules session found for DM Astragal roll:', sessionError);
-      return;
-    }
-
     const dice =
       payload?.diceResults ||
       payload?.results ||
@@ -1622,7 +1617,7 @@ const renderTab = () => {
       [];
 
     const diceList = Array.isArray(dice)
-      ? dice.map(d => Number(d?.value - d?.roll - d)).filter(n => !Number.isNaN(n))
+      ? dice.map(d => Number(d?.value ?? d?.roll ?? d)).filter(n => !Number.isNaN(n))
       : [];
 
     const notation =
@@ -1630,27 +1625,43 @@ const renderTab = () => {
       `${payload?.count || diceList.length || 1}d${payload?.sides || payload?.die || 20}`;
 
     const diceTotal =
-      payload?.diceTotal -
+      payload?.diceTotal ??
       diceList.reduce((sum, value) => sum + value, 0);
 
-    const statModifier = Number(payload?.statModifier - payload?.statMod - 0);
-    const flatModifier = Number(payload?.flatModifier - payload?.modifier - 0);
-    const total = Number(payload?.total - payload?.result - diceTotal + statModifier + flatModifier);
+    const statModifier = Number(payload?.statModifier ?? payload?.statMod ?? 0);
+    const flatModifier = Number(payload?.flatModifier ?? payload?.modifier ?? 0);
+    const total = Number(payload?.total ?? payload?.result ?? (diceTotal + statModifier + flatModifier));
 
     const diceText = diceList.length ? diceList.join(', ') : 'unknown';
+
+    const description =
+      `The Architect rolls the bones: ${notation}. ` +
+      `Dice: ${diceText}. ` +
+      `Dice total: ${diceTotal}. ` +
+      `Stat modifier: ${statModifier >= 0 ? '+' : ''}${statModifier}. ` +
+      `Flat modifier: ${flatModifier >= 0 ? '+' : ''}${flatModifier}. ` +
+      `Collected result: ${total}.`;
+
+    // Combat running: the roll belongs to that encounter's log. No combat: it
+    // used to be discarded with only a console line, which is why rolls made
+    // outside an encounter existed nowhere. Keep it against the campaign instead.
+    if (sessionError || !hsession?.id) {
+      if (!currentCampaignId) return;
+      const { error: memErr } = await supabase.from('dm_memory').insert({
+        campaign_id: String(currentCampaignId),
+        category: 'roll',
+        content: description,
+      });
+      if (memErr) console.error('Failed to record DM Astragal roll:', memErr);
+      return;
+    }
 
     const { error } = await supabase.from('hercules_events').insert({
       session_id: hsession.id,
       type: 'dm_roll',
       actor_name: 'The Architect',
       actor_id: null,
-      description:
-        `The Architect rolls the bones: ${notation}. ` +
-        `Dice: ${diceText}. ` +
-        `Dice total: ${diceTotal}. ` +
-        `Stat modifier: ${statModifier >= 0 ? '+' : ''}${statModifier}. ` +
-        `Flat modifier: ${flatModifier >= 0 ? '+' : ''}${flatModifier}. ` +
-        `Collected result: ${total}.`,
+      description,
     });
 
     if (error) {

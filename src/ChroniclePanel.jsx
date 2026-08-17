@@ -196,6 +196,9 @@ export default function ChroniclePanel({ campaignId, userChar }) {
   const [initiative, setInitiative] = useState([]);
   const [newEventIds, setNewEventIds] = useState(new Set());
   const [filter, setFilter] = useState('all'); // 'all' | 'combat' | 'rolls' | 'notes'
+  // Campaign-wide records (rolls and lore outside any combat session), merged
+  // with the encounter log below.
+  const [extraEvents, setExtraEvents] = useState([]);
   const [autoScroll, setAutoScroll] = useState(true);
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
@@ -265,17 +268,26 @@ export default function ChroniclePanel({ campaignId, userChar }) {
     if (data?.id) {
       await loadEvents(data.id);
       await loadInitiative(data.id);
-    } else {
-      // Load most recent ended session for history
-      const { data: recent } = await supabase
-        .from('hercules_sessions')
-        .select('*')
-        .eq('campaign_id', String(campaignId))
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (recent?.id) await loadEvents(recent.id);
+      return;
     }
+
+    // Load most recent ended session for history
+    const { data: recent } = await supabase
+      .from('hercules_sessions')
+      .select('*')
+      .eq('campaign_id', String(campaignId))
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (recent?.id) {
+      await loadEvents(recent.id);
+      return;
+    }
+
+    // A campaign that has never had combat still has a record worth showing —
+    // without this the panel stayed permanently empty for it.
+    setEvents([]);
+    await loadCampaignRecord();
   };
 
   const loadEvents = async (sid) => {
@@ -284,7 +296,51 @@ export default function ChroniclePanel({ campaignId, userChar }) {
       .select('*')
       .eq('session_id', sid)
       .order('created_at', { ascending: true });
-    if (data) setEvents(data);
+    setEvents(data || []);
+    await loadCampaignRecord();
+  };
+
+  // Chronicle used to show one combat session's log and nothing else, so a roll
+  // or a lore beat outside an encounter had nowhere to appear — which is why
+  // rolls seemed to vanish when no combat was running. Fold in the campaign-wide
+  // records too, shaped like hercules_events so the existing filters and
+  // renderer work unchanged.
+  const loadCampaignRecord = async () => {
+    if (!campaignId) { setExtraEvents([]); return; }
+    const [{ data: mem }, { data: sess }] = await Promise.all([
+      supabase.from('dm_memory')
+        .select('id, category, content, created_at')
+        .eq('campaign_id', String(campaignId))
+        .in('category', ['roll', 'lore'])
+        .order('created_at', { ascending: true }),
+      supabase.from('session_events')
+        .select('id, type, payload, created_at')
+        .eq('campaign_id', String(campaignId))
+        .order('created_at', { ascending: true }),
+    ]);
+
+    const fromMemory = (mem || []).map(m => ({
+      id: `mem-${m.id}`,
+      type: m.category === 'roll' ? 'roll' : 'dm_note',
+      actor_name: m.category === 'roll' ? 'Astragal' : 'The Architect',
+      description: m.content,
+      created_at: m.created_at,
+      _source: 'campaign',
+    }));
+
+    const fromSession = (sess || []).map(e => {
+      const p = e.payload || {};
+      return {
+        id: `sev-${e.id}`,
+        type: e.type === 'player_roll' ? 'roll' : e.type === 'lore_announcement' ? 'dm_note' : e.type,
+        actor_name: p.actor_name || p.playerName || 'Session',
+        description: p.description || p.content || p.title || e.type.replace(/_/g, ' '),
+        created_at: e.created_at,
+        _source: 'campaign',
+      };
+    });
+
+    setExtraEvents([...fromMemory, ...fromSession]);
   };
 
   const loadInitiative = async (sid) => {
@@ -296,8 +352,13 @@ export default function ChroniclePanel({ campaignId, userChar }) {
     if (data) setInitiative(data);
   };
 
+  // Merge the encounter log with the campaign record, oldest first.
+  const allEvents = [...events, ...extraEvents]
+    .filter((ev, i, arr) => arr.findIndex(o => String(o.id) === String(ev.id)) === i)
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
   // Filter events
-  const filteredEvents = events.filter(ev => {
+  const filteredEvents = allEvents.filter(ev => {
     const cfg = getEventConfig(ev.type);
     if (!cfg.show) return false;
        if (filter === 'combat') return ['combat_start', 'combat_end', 'initiative', 'action', 'ability', 'enemy_added', 'death', 'turn_advance', 'architect_edict', 'intent'].includes(ev.type);

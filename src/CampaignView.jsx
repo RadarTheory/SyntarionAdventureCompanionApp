@@ -2270,7 +2270,6 @@ useEffect(() => {
 
   const logRoll = async payload => {
     const { data: hsession, error: sessionError } = await supabase.from('hercules_sessions').select('id').eq('campaign_id', String(campaign.id)).eq('status', 'active').order('created_at', { ascending: false }).limit(1).maybeSingle();
-    if (sessionError || !hsession?.id) { console.error('No active Hercules session found for Astragal roll:', sessionError); return; }
     const dice = payload?.diceResults || payload?.results || payload?.rolls || payload?.dice || [];
     const diceList = Array.isArray(dice) ? dice.map(d => Number(d?.value ?? d?.roll ?? d)).filter(n => !Number.isNaN(n)) : [];
     const notation = payload?.notation || `${payload?.count || diceList.length || 1}d${payload?.sides || payload?.die || 20}`;
@@ -2279,7 +2278,23 @@ useEffect(() => {
     const flatModifier = Number(payload?.flatModifier ?? payload?.modifier ?? 0);
     const total = Number(payload?.total ?? payload?.result ?? diceTotal + statModifier + flatModifier);
     const diceText = diceList.length ? diceList.join(', ') : String(total);
-    await supabase.from('hercules_events').insert({ session_id: hsession.id, type: 'roll', actor_name: userChar?.name || 'Player', actor_id: userChar?.id ? String(userChar.id) : null, description: `${userChar?.name || 'Player'} rolled a ${diceText} in Astragal for a TOTAL of ${total}.` });
+    const description = `${userChar?.name || 'Player'} rolled a ${diceText} in Astragal for a TOTAL of ${total}.`;
+
+    // Outside combat this used to console.error and discard the roll, so a roll
+    // made between encounters existed nowhere at all. Record it against the
+    // campaign instead; the Chronicle merges those in.
+    if (sessionError || !hsession?.id) {
+      if (!campaign?.id) return;
+      const { error: memErr } = await supabase.from('dm_memory').insert({
+        campaign_id: String(campaign.id),
+        category: 'roll',
+        content: description,
+      });
+      if (memErr) console.error('Failed to record Astragal roll:', memErr);
+      return;
+    }
+
+    await supabase.from('hercules_events').insert({ session_id: hsession.id, type: 'roll', actor_name: userChar?.name || 'Player', actor_id: userChar?.id ? String(userChar.id) : null, description });
   };
 
   const renderTab = () => {
