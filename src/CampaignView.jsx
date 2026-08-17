@@ -1552,52 +1552,78 @@ function InventoryPanel({ char, onInventoryChange, isDM = false, campaignId }) {
     setDraft(d => ({ ...d, bonuses: { ...d.bonuses, [statKey]: Number(val) } }));
   };
 
-  const renderSlotGroup = (title, slots) => (
-    <div style={{ marginBottom: 18 }}>
-      <div style={{ ...label8(), marginBottom: 8 }}>{title}</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {slots.map(slot => {
-          const item = items[slot];
-          const hasItem = item && item.name;
-          const isAttuned = hasItem && item.attuned;
-          return (
-            <button
-              key={slot}
-             onClick={() => {
-                if (isDM) { openEdit(slot); return; }
-                setPlayerSlot({ slot, item: items[slot] || null });
-              }}
-              style={{ background: hasItem ? (isAttuned ? 'rgba(200,168,74,0.08)' : COLORS.card) : 'transparent', border: `1px solid ${hasItem ? (isAttuned ? 'rgba(200,168,74,0.4)' : COLORS.border) : `${COLORS.border}66`}`, borderRadius: 6, padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', transition: 'all 0.15s' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, color: COLORS.dim, minWidth: 80, letterSpacing: '0.1em' }}>{slot}</div>
-                  {hasItem && (
-                    <>
-                      <div style={{ fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
-                      {isAttuned && <div style={{ fontSize: 7, color: '#e8c84a', fontFamily: "'Cinzel', serif", background: 'rgba(200,168,74,0.12)', border: '1px solid rgba(200,168,74,0.3)', borderRadius: 3, padding: '1px 5px', flexShrink: 0 }}>ATTUNED</div>}
-                    </>
-                  )}
-                  {!hasItem && <div style={{ fontSize: 10, color: `${COLORS.dim}66`, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Empty</div>}
-                </div>
-                {hasItem && item.bonuses && Object.entries(item.bonuses).some(([, v]) => v !== 0) && (
-                  <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-                    {Object.entries(item.bonuses).filter(([, v]) => v !== 0).map(([k, v]) => (
-                      <div key={k} style={{ fontSize: 7, color: v > 0 ? COLORS.magic : '#e05a5a', fontFamily: "'Cinzel', serif", letterSpacing: '0.08em' }}>
-                        {v > 0 ? '+' : ''}{v} {k}
-                      </div>
-                    ))}
+  // Equipped gear gets full cards; empty slots collapse into a single row of
+  // small ghost chips. Previously all 16 slots rendered as identical full-width
+  // rows, so the two or three things you actually carry were buried in a wall of
+  // "Empty" and read no differently from the placeholders.
+  const openSlot = (slot) => {
+    if (isDM) { openEdit(slot); return; }
+    setPlayerSlot({ slot, item: items[slot] || null });
+  };
+
+  const renderSlotGroup = (title, slots) => {
+    const filled = slots.filter(s => items[s]?.name);
+    const empty  = slots.filter(s => !items[s]?.name);
+
+    return (
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <div style={{ ...label8() }}>{title}</div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, color: filled.length ? '#c8a84a' : COLORS.dim }}>
+            {filled.length}/{slots.length}
+          </div>
+          <div style={{ flex: 1, height: 1, background: `${COLORS.border}88` }} />
+        </div>
+
+        {filled.length === 0 && (
+          <div style={{ fontSize: 10, color: `${COLORS.dim}aa`, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 8 }}>
+            Nothing equipped
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {filled.map(slot => {
+            const item = items[slot];
+            const isAttuned = !!item.attuned;
+            const bonuses = Object.entries(item.bonuses || {}).filter(([, v]) => v !== 0);
+            return (
+              <button key={slot} onClick={() => openSlot(slot)}
+                style={{ background: isAttuned ? 'rgba(200,168,74,0.09)' : COLORS.card, border: `1px solid ${isAttuned ? 'rgba(200,168,74,0.45)' : COLORS.border}`, borderLeft: `3px solid ${isAttuned ? 'rgba(200,168,74,0.75)' : 'rgba(240,238,235,0.22)'}`, borderRadius: 7, padding: '9px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, textAlign: 'left', transition: 'all 0.15s' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 7, color: COLORS.dim, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 3 }}>{slot}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <div style={{ fontFamily: 'Georgia, serif', fontSize: 13, color: COLORS.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                    {isAttuned && <div style={{ fontSize: 7, color: '#e8c84a', fontFamily: "'Cinzel', serif", background: 'rgba(200,168,74,0.14)', border: '1px solid rgba(200,168,74,0.35)', borderRadius: 3, padding: '1px 5px', flexShrink: 0, letterSpacing: '0.1em' }}>ATTUNED</div>}
                   </div>
-                )}
-              </div>
-              {isDM && (
-                <div style={{ fontSize: 10, color: COLORS.dim, marginLeft: 8, flexShrink: 0 }}>✎</div>
-              )}
-            </button>
-          );
-        })}
+                  {bonuses.length > 0 && (
+                    <div style={{ display: 'flex', gap: 5, marginTop: 5, flexWrap: 'wrap' }}>
+                      {bonuses.map(([k, v]) => (
+                        <div key={k} style={{ fontSize: 7, color: v > 0 ? COLORS.magic : '#e05a5a', fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', border: `1px solid ${v > 0 ? 'rgba(125,211,252,0.28)' : 'rgba(224,90,90,0.28)'}`, borderRadius: 3, padding: '1px 5px' }}>
+                          {v > 0 ? '+' : ''}{v} {k}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {isDM && <div style={{ fontSize: 10, color: COLORS.dim, flexShrink: 0 }}>✎</div>}
+              </button>
+            );
+          })}
+        </div>
+
+        {empty.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: filled.length ? 8 : 0 }}>
+            {empty.map(slot => (
+              <button key={slot} onClick={() => openSlot(slot)} title={isDM ? `Add to ${slot}` : slot}
+                style={{ background: 'transparent', border: `1px dashed ${COLORS.border}`, borderRadius: 5, padding: '4px 9px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', color: `${COLORS.dim}bb` }}>
+                {slot}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div>
