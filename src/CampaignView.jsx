@@ -15,7 +15,7 @@ import { ScribePlayerPanel } from './ScribePanel';
 import HerculesPlayer from './HerculesPlayer';
 import GrimoirePanel from './GrimoirePanel';
 import LarkPanel from './LarkPanel';
-import WhisperPanel from './WhisperPanel';
+import { DMConsult } from './ScribeConsult';
 import { BazaarPlayerPanel } from './BazaarPanel';
 import { QuestorPlayerPanel } from './QuestorPanel';
 import { WorldMapPanel } from './WorldMapPanel';
@@ -2616,7 +2616,13 @@ useEffect(() => {
 
       {showWhisper && (
         <DraggablePanel {...panelPriority('whisper')} defaultX={108} defaultY={80} onClose={() => setShowWhisper(false)} title="WHISPER · A Private Word" width={380} accentColor="rgba(200,168,74,0.35)">
-          <WhisperPanel char={userChar} campaignId={String(campaign.id)} embedded />
+          {/* The existing player→DM tool, previously only reachable from the
+              character sheet's Consult tab. It threads on session_id
+              `char_<id>`, which is what the DM inbox groups on — a second
+              messaging path would have split one player across two threads. */}
+          <div style={{ padding: 14, overflowY: 'auto', height: '100%' }}>
+            <DMConsult char={userChar} user={authUser} />
+          </div>
         </DraggablePanel>
       )}
 
