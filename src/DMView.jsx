@@ -1229,6 +1229,59 @@ export default function DMView({ user, session, onHome, darkMode = true, module 
   };
   const [showGameLauncher, setShowGameLauncher] = useState(false);
   const [gameLarkToast, setGameLarkToast] = useState(null);
+  // Player-initiated events the DM would otherwise miss. Rulings toast; rolls
+  // only badge the Chronicle tab, because a roll is something you catch up on
+  // and a ruling blocks play.
+  const [notifyMuted, setNotifyMuted] = useState(() => localStorage.getItem('dm_notify_muted') === '1');
+  const [chronicleUnread, setChronicleUnread] = useState(0);
+  const [eventToast, setEventToast] = useState(null);
+  const eventToastTimer = useRef(null);
+  const pendingMoveCountRef = useRef(0);
+
+  // A party rolling initiative fires several events within a second. Collapsing
+  // same-kind bursts into one counted toast keeps that from becoming a stack of
+  // five over the map.
+  const pushEventToast = useCallback((kind, text) => {
+    if (notifyMuted) return;
+    setEventToast(prev => (prev && prev.kind === kind)
+      ? { kind, text, count: prev.count + 1 }
+      : { kind, text, count: 1 });
+    clearTimeout(eventToastTimer.current);
+    eventToastTimer.current = setTimeout(() => setEventToast(null), 6000);
+  }, [notifyMuted]);
+
+  useEffect(() => () => clearTimeout(eventToastTimer.current), []);
+
+  useEffect(() => {
+    const cid = activeCampaignTab;
+    if (!cid) return;
+    const bumpChronicle = () => {
+      setChronicleUnread(n => (activeTab === 'Chronicle' ? 0 : n + 1));
+    };
+    const channel = supabase.channel(`dm-notify-${cid}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'dm_memory', filter: `campaign_id=eq.${cid}` }, ({ new: row }) => {
+        if (row?.category === 'intent') {
+          pushEventToast('intent', (row.content || '').replace(/^\[INTENT\]\s*/, '') || 'An intent was declared');
+        } else if (row?.category === 'roll') {
+          // Skip the Architect's own rolls — you made them.
+          if (!/^The Architect rolls/.test(row.content || '')) bumpChronicle();
+        }
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'hercules_events' }, ({ new: row }) => {
+        if (row?.campaign_id && String(row.campaign_id) !== String(cid)) return;
+        // dm_roll and architect_edict are the DM's own doing.
+        if (['roll', 'initiative'].includes(row?.type)) bumpChronicle();
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'vtt_sessions', filter: `campaign_id=eq.${cid}` }, ({ new: row }) => {
+        const count = (row?.pending_moves || []).length;
+        if (count > pendingMoveCountRef.current) {
+          pushEventToast('move', `${count} move request${count === 1 ? '' : 's'} awaiting your ruling`);
+        }
+        pendingMoveCountRef.current = count;
+      })
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [activeCampaignTab, activeTab, pushEventToast]);
 
   useEffect(() => {
     if (!gameLarkToast) return;
@@ -1710,6 +1763,24 @@ const renderTab = () => {
     <div style={{ minHeight: '100svh', background: COLORS.wizard, display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif', color: COLORS.text, overflowX: 'hidden' }}>
       <HandbookBookmark user={user} darkMode={darkMode} allowEdit trigger="external" openSignal={handbookOpenSignal} />
       <MenuMusicPlayer isMobile={isMobile} restrictToMenu={false} isDM onSoundboardToggle={setSoundboardOpen} campaignId={activeCampaignTab} />
+      {eventToast && (
+        <div role="status" style={{ position: 'fixed', right: isMobile ? 12 : 24, bottom: isMobile ? 96 : 116, zIndex: 320001, width: 'min(340px, calc(100vw - 24px))', background: 'rgba(14,11,8,0.96)', border: '1px solid rgba(200,168,74,0.45)', borderRadius: 10, padding: '12px 14px', boxShadow: '0 18px 50px rgba(0,0,0,0.7)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 5 }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#e8c84a' }}>
+              {eventToast.kind === 'intent' ? 'Intent Declared' : 'Move Requested'}
+              {eventToast.count > 1 && ` ×${eventToast.count}`}
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <button onClick={() => { setNotifyMuted(true); localStorage.setItem('dm_notify_muted', '1'); setEventToast(null); }}
+                title="Mute player notifications"
+                style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', padding: 0 }}>MUTE</button>
+              <button onClick={() => setEventToast(null)} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 11, padding: 0, lineHeight: 1 }}>✕</button>
+            </div>
+          </div>
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: 12, color: COLORS.text, lineHeight: 1.5 }}>{eventToast.text}</div>
+        </div>
+      )}
+
       {gameLarkToast && (
         <div role="status" style={{ position: 'fixed', right: isMobile ? 12 : 24, bottom: isMobile ? 16 : 24, zIndex: 320000, width: 'min(360px, calc(100vw - 24px))', border: '1px solid rgba(232,200,116,0.38)', borderRadius: 12, background: 'linear-gradient(155deg, rgba(28,22,12,0.96), rgba(8,6,4,0.96))', boxShadow: '0 24px 70px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,244,204,0.08)', padding: '14px 16px', color: '#ead9aa' }}>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#e8c84a', marginBottom: 6 }}>GameLark</div>
@@ -1857,14 +1928,23 @@ const renderTab = () => {
       <div style={{ display: 'flex', borderBottom: `1px solid ${COLORS.border}`, overflowX: 'auto', background: COLORS.surface, flexShrink: 0 }}>
         {DM_TABS.map(tab => {
           const isActive = tab === activeTab;
-          const showBadge = tab === 'Inbox' && unreadCount > 0;
+          const showBadge = (tab === 'Inbox' && unreadCount > 0) || (tab === 'Chronicle' && chronicleUnread > 0);
           return (
-            <button key={tab} onClick={() => setActiveTab(tab)} style={{ background: 'transparent', border: 'none', borderBottom: `2px solid ${isActive ? COLORS.text : 'transparent'}`, padding: isMobile ? '10px 12px' : '12px 18px', fontFamily: "'Cinzel', serif", fontSize: isMobile ? 8 : 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: isActive ? COLORS.text : COLORS.dim, fontWeight: isActive ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s ease', position: 'relative' }}>
+            <button key={tab} onClick={() => { setActiveTab(tab); if (tab === 'Chronicle') setChronicleUnread(0); }} style={{ background: 'transparent', border: 'none', borderBottom: `2px solid ${isActive ? COLORS.text : 'transparent'}`, padding: isMobile ? '10px 12px' : '12px 18px', fontFamily: "'Cinzel', serif", fontSize: isMobile ? 8 : 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: isActive ? COLORS.text : COLORS.dim, fontWeight: isActive ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s ease', position: 'relative' }}>
               {tab}
               {showBadge && <span style={{ position: 'absolute', top: 8, right: 6, width: 6, height: 6, borderRadius: '50%', background: COLORS.magic }} />}
             </button>
           );
         })}
+        {/* Muting has to be reversible from somewhere persistent — the toast's own
+            Mute button would otherwise be a one-way door. */}
+        <button
+          onClick={() => { const next = !notifyMuted; setNotifyMuted(next); localStorage.setItem('dm_notify_muted', next ? '1' : '0'); }}
+          title={notifyMuted ? 'Player notifications muted — click to unmute' : 'Mute player notifications'}
+          style={{ marginLeft: 'auto', marginRight: isMobile ? 8 : 16, alignSelf: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: notifyMuted ? COLORS.dim : '#c8a84a', fontSize: 13, lineHeight: 1, padding: '4px 6px' }}
+        >
+          {notifyMuted ? '🔕' : '🔔'}
+        </button>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto' }}>

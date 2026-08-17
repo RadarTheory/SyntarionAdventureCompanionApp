@@ -15,6 +15,7 @@ import { ScribePlayerPanel } from './ScribePanel';
 import HerculesPlayer from './HerculesPlayer';
 import GrimoirePanel from './GrimoirePanel';
 import LarkPanel from './LarkPanel';
+import WhisperPanel from './WhisperPanel';
 import { BazaarPlayerPanel } from './BazaarPanel';
 import { QuestorPlayerPanel } from './QuestorPanel';
 import { WorldMapPanel } from './WorldMapPanel';
@@ -2110,6 +2111,7 @@ function CampaignDashboard({ campaign, userChar, onBack, onAssign, onUpdateChar,
   const [mapZoom, setMapZoom] = useState(1);
   const [showGrimoire, setShowGrimoire] = useState(false);
   const [showLark, setShowLark] = useState(false);
+  const [showWhisper, setShowWhisper] = useState(false);
   const [showBazaar, setShowBazaar] = useState(false);
   const [showQuestor, setShowQuestor] = useState(false);
   const [showGameLauncher, setShowGameLauncher] = useState(false);
@@ -2407,6 +2409,7 @@ useEffect(() => {
     showQuestor && 'questor',
     showGrimoire && 'grimoire',
     showLark && 'lark',
+    showWhisper && 'whisper',
   ].filter(Boolean);
   const [topToolId, setTopToolId] = useState(null);
   const [handbookOpenSignal, setHandbookOpenSignal] = useState(0);
@@ -2570,6 +2573,8 @@ useEffect(() => {
           children: <img src="/Grimoireicon.png" alt="Grimoire" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
         { id: 'lark', title: 'Lark — Send a Letter', onClick: () => setShowLark(o => !o),
           children: <img src="/Larkicon.png" alt="Lark" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
+        { id: 'whisper', title: 'Whisper — Message the Architect directly', onClick: () => setShowWhisper(o => !o),
+          children: <span style={{ fontFamily: "'Cinzel', serif", fontSize: 20, color: '#e8c84a', pointerEvents: 'none', lineHeight: 1 }}>✉</span> },
         { id: 'handbook', title: 'Player Handbook', onClick: () => setHandbookOpenSignal(n => n + 1),
           children: <img src="/player-handbook.png" alt="Handbook" draggable={false} style={{ width: '160%', height: '160%', objectFit: 'contain', pointerEvents: 'none', transform: 'scale(1.06)' }} /> },
       ]} />
@@ -2606,6 +2611,12 @@ useEffect(() => {
       {showLark && (
         <DraggablePanel {...panelPriority('lark')} defaultX={108} defaultY={80} onClose={() => setShowLark(false)} title="LARK · Letters & Correspondence" width={400} accentColor="rgba(200,168,74,0.35)">
           <LarkPanel char={userChar} campaignId={String(campaign.id)} isDM={false} embedded />
+        </DraggablePanel>
+      )}
+
+      {showWhisper && (
+        <DraggablePanel {...panelPriority('whisper')} defaultX={108} defaultY={80} onClose={() => setShowWhisper(false)} title="WHISPER · A Private Word" width={380} accentColor="rgba(200,168,74,0.35)">
+          <WhisperPanel char={userChar} campaignId={String(campaign.id)} embedded />
         </DraggablePanel>
       )}
 
