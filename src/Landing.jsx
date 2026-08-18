@@ -476,7 +476,15 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
   const initialAccountView = user?.user_metadata?.syntarion_view;
   const [appView, setAppView] = useState(() => initialAccountView || localStorage.getItem('syn_view') || 'home');
   const [savedChars, setSavedChars] = useState([]);
-  const campaignChars = savedChars.filter(c => c.status === 'approved' && c.campaign_id);
+  // Gate on being assigned to a campaign, not on status === 'approved'. The DM
+  // roster shows every non-rejected character and groups them by campaign_id, so
+  // a character could sit in a campaign, be visible to the DM, and still be
+  // invisible to its own player if its status was anything other than the exact
+  // string 'approved' — which is what left players with "No character loaded"
+  // and their own token un-greened on the map.
+  // `c.campaign` is where some sheets keep it; requiring the column alone
+  // excluded those characters from every campaign screen.
+  const campaignChars = savedChars.filter(c => c.status !== 'rejected' && (c.campaign_id ?? c.campaign));
   const [loading, setLoading] = useState(true);
   const [showDMModal, setShowDMModal] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);

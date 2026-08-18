@@ -1941,9 +1941,16 @@ const renderTab = () => {
         <button
           onClick={() => { const next = !notifyMuted; setNotifyMuted(next); localStorage.setItem('dm_notify_muted', next ? '1' : '0'); }}
           title={notifyMuted ? 'Player notifications muted — click to unmute' : 'Mute player notifications'}
-          style={{ marginLeft: 'auto', marginRight: isMobile ? 8 : 16, alignSelf: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: notifyMuted ? COLORS.dim : '#c8a84a', fontSize: 13, lineHeight: 1, padding: '4px 6px' }}
+          style={{ marginLeft: 'auto', marginRight: isMobile ? 8 : 16, alignSelf: 'center', display: 'flex', alignItems: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: notifyMuted ? `${COLORS.dim}99` : '#c8a84a', lineHeight: 1, padding: '4px 6px', transition: 'color 0.15s' }}
         >
-          {notifyMuted ? '🔕' : '🔔'}
+          {/* Line-art rather than an emoji: emoji render in the OS font, so they
+              ignore the app's palette and sit wrong against Cinzel. currentColor
+              lets this follow the muted state like every other control. */}
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
+            <path d="M18 8.4a6 6 0 1 0-12 0c0 6.4-2.6 8.2-2.6 8.2h17.2S18 14.8 18 8.4Z" />
+            <path d="M13.7 20.2a2 2 0 0 1-3.4 0" />
+            {notifyMuted && <path d="M3.6 3.6 20.4 20.4" />}
+          </svg>
         </button>
       </div>
 

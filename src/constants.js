@@ -71,8 +71,6 @@ export const RACES = [
   { id:'chronison', name:'Chronison',  sub:'Construct',  tag:'tech', lean:2,  sub2:'Built, not born', variants:[], ns:'chronison', desc:"Built, not born. Sentience arrived uninvited in most cases, and has since made itself at home. Chronison cannot use magic in any form — their constructed nature is fundamentally incompatible with arcane, divine, and spiritual disciplines. The only exception is a weapon or tool infused with a special deposit of Grimrite element, which briefly bridges the gap between material and resonant." },
   { id:'tiol',      name:'Tiol',       sub:'Giant Vàld Dark-Tel\'ari', tag:'magic',lean:-1, sub2:'Tiol', variants:['Tiol'], ns:'tiol', desc:"The Tiols are the procreation of human Vikingrs and the Dark Elves — two races once at war, joined in the wake of the phenomenon, before the establishment of the Silent Charter. The Dark Elves were the first humans exposed to the phenomenon, wielding magic and great power, and were once believed to bring humanity closer to the gods. Every Tiol is born with a unique ability, and every Tiol travels by flight or teleportation. Only two — Sakara and Kay — have ever been able to do both." },
   { id:'folwoade',  name:'Folwoade',   sub:'Pure Magic', tag:'magic',lean:-2, sub2:'Beings of living resonance', variants:[], ns:'folwoade', desc:"The Folwoade are not born in any conventional sense — they coalesce from concentrations of pure magical resonance, taking a form that is part living creature and part sustained spell. Pale, ageless, and faintly luminous, they carry the weight of the Lines in their bones and perceive the world through a register most mortals cannot reach. They cannot use technology — their nature rejects the material logic of machines, mechanisms, and constructed systems entirely. The only exception is an item infused with a special deposit of Grimrite element, which allows brief and uncomfortable interaction with the technical world." },
-  { id:'goblin',    name:'Goblin',     sub:'Goblinoid',  tag:'tech', lean:1,  sub2:'Small · Chronically underestimated', variants:[], ns:'goblin', desc:"Small, sharp-toothed, and chronically underestimated. Goblin clans have outlasted empires they never had the numbers to fight head-on, by refusing to fight anything head-on. What they lack in size they make up in swarming tactics, scavenged gear, and a genius for being somewhere you didn't check." },
-  { id:'qissi',     name:'Qissi',      sub:'Reptilian',  tag:'magic',lean:-1, sub2:'Desert-born · Sun-marked', variants:[], ns:'qissi', desc:"Desert-born and sun-marked, the Qissi read the wastes the way other people read a room. Their scales shift faintly with the day's heat, their eyes are built for glare, and their patience is longer than almost anyone who has tried to outlast them in an argument or a standoff." },
 ];
 
 // ─── RACE VARIANT DESCRIPTIONS ────────────────────────────────────────────────
@@ -679,28 +677,6 @@ export const RACIAL_TRAITS = {
     },
   },
 
-  goblin: {
-    passive: {
-      name: 'Beneath Notice',
-      text: "You are consistently underestimated by anyone who hasn't fought you before. The first hostile action taken against you in a scene, by a creature encountering you for the first time, takes –1. They didn't think they needed to aim carefully.",
-    },
-    active: {
-      name: "Opportunist's Strike",
-      text: "Once per rest, when acting against a target who hasn't noticed you or has already written you off as harmless, you may roll to make it count. On a success, treat this action as if you'd had a full exchange to prepare for it.",
-    },
-  },
-
-  qissi: {
-    passive: {
-      name: 'Heatwise',
-      text: "Extreme heat, sun exposure, and desert conditions never impose a penalty on you. Where others see a hostile environment, you see the version of home you grew up in.",
-    },
-    active: {
-      name: 'Sunworn Reflexes',
-      text: "Once per rest, when acting in harsh heat, glare, or open desert conditions, you may roll to move faster than the moment allows. On a success, act immediately, before anyone else has decided to.",
-    },
-  },
-
 };
 
 
@@ -980,20 +956,6 @@ export const NAMES = {
       f: ['Guardinal','Revenant','Chronoform','Bastion','Errant','Medica','Catalyst','Manifold','Sentinel','Aegis','Vanguard','Paragon','Specter','Cipher','Oracle','Nexus','Axiom','Codex','Warden','Null'],
       s: ['404-L','303-Z','Lambda-76','103-D','Prime-7','Prime-12','Sigma-18','Lambda-88','75-L','Sigma-21','Omega-17','Theta-12','457-A','Nexus-3','Codex-44','Cipher-77','Oracle-21','Axiom-61','Warden-44','Null-00','Glitch-13','Aegis-88','Paragon-16','Specter-29','Bastion-91'],
     },
-  },
-
-  // ── GOBLIN ──
-  goblin: {
-    m: ['Grik','Snab','Korr','Yig','Nix','Bok','Skree','Tannik','Vole','Grubb','Fitch','Wick','Rask','Dov','Chik','Rott','Snik','Plith','Gorn','Tibb'],
-    f: ['Nizzi','Yela','Britta','Onna','Wisk','Karra','Vex','Nettle','Fira','Brix','Pella','Snitch','Yowl','Dott','Kessa','Vrilla','Tikka','Zinn','Molt','Skitter'],
-    s: ['Grimtooth','Rustnail','Cinderjaw','Quickhand','Foulwick','Bristlebone','Grubgnaw','Cutfinger','Blackspark','Cravenmaw','Dredgewick','Sootback','Wickfang','Tinkjaw','Rattlehide','Snarethorn','Hollowtooth','Ashgnaw','Scraphide','Underbite'],
-  },
-
-  // ── QISSI ──
-  qissi: {
-    m: ['Sethrak','Kessu','Vaan','Rezhi','Tulaq','Naseer','Ossik','Zharat','Kavesh','Iddris','Suun','Tazhak','Voren','Amrit','Qesh','Havel','Ossan','Ryzek','Tembre','Kellith'],
-    f: ['Ashira','Vessa','Rihen','Kaisha','Nefret','Suhail','Yashka','Zireh','Amaru','Tessin','Nahiri','Orash','Vellai','Kiren','Sashe','Uveni','Ilyara','Damira','Rasira','Qelen'],
-    s: ['Windrasp','Duneborn','Sandglass','Farwatch','Stillsand','Sunfold','Glasswind','Emberscale','Coldsand','Farstep','Hollowdune','Suncoil','Dryreach','Ashendune','Windcoil','Farscale','Duskglass','Rockshade','Palewind','Glintscale'],
   },
 };
 

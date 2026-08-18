@@ -203,29 +203,62 @@ export function DMConsult({ char, user }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState(null);
   const [thread, setThread] = useState([]);
+  // 'talk' = the back-and-forth, 'notices' = everything the app sent this
+  // character (grants, receipts, approvals) that previously had no reader at all.
+  const [view, setView] = useState('talk');
   const bottomRef = useRef(null);
   const displayName = useDisplayName(char?.name || 'traveler');
 
- const sessionId = `char_${char.id}`;
+ // Null-safe: the campaign toolbar can mount this before a character exists.
+ const sessionId = char?.id ? `char_${char.id}` : null;
 
   useEffect(() => {
-    if (!open || !sessionId) return;
+    if (!open || !char?.id) return;
     fetchThread();
-    const channel = supabase.channel(`player-thread-${sessionId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `session_id=eq.${sessionId}` }, () => fetchThread())
+    // Subscribe on character_id, not session_id. Item grants, lootbox receipts
+    // and approval notes are all written with session_id: null, so a
+    // session-scoped subscription never saw them.
+    const channel = supabase.channel(`player-thread-${char.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `character_id=eq.${char.id}` }, () => fetchThread())
       .subscribe();
     return () => supabase.removeChannel(channel);
-  }, [open, sessionId]);
+  }, [open, char?.id]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [thread]);
 
   const fetchThread = async () => {
-    const { data } = await supabase.from('messages').select('*').eq('session_id', sessionId).neq('type', 'scribe').order('created_at', { ascending: true });
+    if (!char?.id) return;
+    // Everything addressed to this character, however it was sent. The old query
+    // filtered on session_id, which excluded every message the app wrote with a
+    // null session — grants, receipts and approvals reached nobody.
+    const { data } = await supabase.from('messages')
+      .select('*')
+      .eq('character_id', String(char.id))
+      .neq('type', 'scribe')
+      .order('created_at', { ascending: true })
+      .limit(300);
     if (data) setThread(data);
   };
 
+  // Conversation vs. things the app told you. Anything the DM typed by hand is
+  // conversation; the rest is a notice.
+  const TALK_TYPES = new Set(['player_message', 'dm_reply', 'dm_system', 'player_whisper']);
+  const isNotice = (m) => !TALK_TYPES.has(m.type);
+  const talkMessages = thread.filter(m => m.type !== 'dm_system' && !isNotice(m));
+  const noticeMessages = thread.filter(isNotice);
+  const unreadNotices = noticeMessages.filter(m => !m.read).length;
+
+  // `read` exists on the row and nothing on the player side ever set it, so the
+  // count only ever grew. Clear it when the notices are actually looked at.
+  const markNoticesRead = async () => {
+    const unread = noticeMessages.filter(m => !m.read).map(m => m.id);
+    if (!unread.length) return;
+    await supabase.from('messages').update({ read: true }).in('id', unread);
+    setThread(prev => prev.map(m => (unread.includes(m.id) ? { ...m, read: true } : m)));
+  };
+
   const handleSend = async () => {
-    if (!message.trim() || sending) return;
+    if (!message.trim() || sending || !char?.id) return;
     setSending(true);
     setError(null);
 
@@ -266,14 +299,46 @@ export function DMConsult({ char, user }) {
 
       {open && (
         <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderTop: 'none', borderRadius: '0 0 8px 8px', padding: '16px' }}>
-          {/* Thread */}
+          {/* Conversation / Notices */}
+          <div style={{ display: 'flex', gap: 5, marginBottom: 10 }}>
+            {[['talk', 'Conversation', talkMessages.length], ['notices', 'Notices', noticeMessages.length]].map(([val, lbl, count]) => {
+              const on = view === val;
+              return (
+                <button key={val} onClick={() => { setView(val); if (val === 'notices') markNoticesRead(); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: on ? 'rgba(200,168,74,0.14)' : 'transparent', border: `1px solid ${on ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 5, padding: '4px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: on ? '#e8c84a' : COLORS.dim }}>
+                  {lbl}
+                  <span style={{ fontSize: 7, color: COLORS.dim }}>{count}</span>
+                  {val === 'notices' && unreadNotices > 0 && <span style={{ width: 5, height: 5, borderRadius: '50%', background: COLORS.magic }} />}
+                </button>
+              );
+            })}
+          </div>
+
+          {view === 'notices' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12, maxHeight: 280, overflowY: 'auto' }}>
+              {noticeMessages.length === 0 && (
+                <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '12px 0' }}>Nothing has been sent to you yet.</div>
+              )}
+              {noticeMessages.slice().reverse().map(msg => (
+                <div key={msg.id} style={{ background: 'rgba(240,238,235,0.035)', border: `1px solid ${msg.read ? COLORS.border : 'rgba(200,168,74,0.4)'}`, borderRadius: 7, padding: '9px 12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 4 }}>
+                    <span style={{ fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.12em', textTransform: 'uppercase', color: msg.read ? COLORS.dim : '#e8c84a' }}>
+                      {msg.lore_title || (msg.type || 'notice').replace(/_/g, ' ')}
+                    </span>
+                    <span style={{ fontSize: 7, color: COLORS.dim, fontFamily: 'Georgia, serif', flexShrink: 0 }}>{new Date(msg.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <div style={{ fontSize: 11.5, color: COLORS.text, fontFamily: 'Georgia, serif', lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{msg.content}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12, maxHeight: 280, overflowY: 'auto' }}>
-            {thread.length === 0 && (
+            {talkMessages.length === 0 && (
               <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '12px 0' }}>No messages yet. The Architect awaits your word.</div>
             )}
-            {thread.filter(m => m.type !== 'dm_system').map(msg => {
+            {talkMessages.map(msg => {
               const isMe = !msg.is_dm;
-              const name = msg.is_dm ? 'The Architect' : (displayName || char.name || 'You');
+              const name = msg.is_dm ? 'The Architect' : (displayName || char?.name || 'You');
               return (
                 <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
                   <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', marginBottom: 3 }}>{name}</div>
@@ -284,6 +349,7 @@ export function DMConsult({ char, user }) {
             })}
             <div ref={bottomRef} />
           </div>
+          )}
 
           {/* Input */}
           <textarea value={message} onChange={e => setMessage(e.target.value)} placeholder="Write your message to the DM…" rows={3} style={{ width: '100%', background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '10px 12px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', lineHeight: 1.6, outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
