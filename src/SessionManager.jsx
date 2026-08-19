@@ -365,6 +365,8 @@ function PlayModal({ onClose, onSessionStarted, existingSession }) {
   const [selectedCampaign, setSelectedCampaign] = useState(existingSession?.campaign_id || null);
   const [session, setSession] = useState(existingSession || null);
   const [checkins, setCheckins] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastSync, setLastSync] = useState(null);
   const [starting, setStarting] = useState(false);
   const [dbCampaigns, setDbCampaigns] = useState([]);
   const [mode, setMode] = useState('now');
@@ -378,17 +380,40 @@ function PlayModal({ onClose, onSessionStarted, existingSession }) {
 
   const fetchCheckins = useCallback(async () => {
     if (!session) return;
-    const { data } = await supabase.from('session_checkins').select('*').eq('session_id', session.id);
-    if (data) setCheckins(data);
+    const { data, error } = await supabase.from('session_checkins').select('*').eq('session_id', session.id);
+    // On error keep whatever we already have rather than blanking a populated lobby.
+    if (error) return;
+    const rows = Array.from(new Map((data || []).map(r => [r.user_id ?? r.id, r])).values())
+      .sort((a, b) => String(a.character_name || '').localeCompare(String(b.character_name || '')));
+    setCheckins(rows);
+    setLastSync(Date.now());
   }, [session]);
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchCheckins();
+    setRefreshing(false);
+  }, [fetchCheckins]);
+
+  // Realtime is the fast path, but it silently dies if the table is missing from
+  // the publication or the socket drops. Poll + refetch on focus so the lobby
+  // always catches up on its own, and give the DM a manual refresh besides.
   useEffect(() => {
     if (!session) return undefined;
     queueMicrotask(() => { void fetchCheckins(); });
     const channel = supabase.channel(`lobby-${session.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'session_checkins' }, () => fetchCheckins())
       .subscribe();
-    return () => supabase.removeChannel(channel);
+    const poll = setInterval(() => { void fetchCheckins(); }, 5000);
+    const onWake = () => { if (!document.hidden) void fetchCheckins(); };
+    window.addEventListener('focus', onWake);
+    document.addEventListener('visibilitychange', onWake);
+    return () => {
+      clearInterval(poll);
+      window.removeEventListener('focus', onWake);
+      document.removeEventListener('visibilitychange', onWake);
+      supabase.removeChannel(channel);
+    };
   }, [fetchCheckins, session]);
 
   const createSession = async (status) => {
@@ -527,6 +552,20 @@ function PlayModal({ onClose, onSessionStarted, existingSession }) {
               </div>
             )}
             <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '12px 14px', marginBottom: 20, minHeight: 80 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}>
+                <span style={label8()}>Checked In - {checkins.length}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {lastSync && <span style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>{new Date(lastSync).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>}
+                  <button
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    title="Refresh check-ins"
+                    style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '4px 10px', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: "'Cinzel', serif", color: refreshing ? COLORS.dim : COLORS.muted, cursor: refreshing ? 'default' : 'pointer' }}
+                  >
+                    {refreshing ? 'Syncing' : 'Refresh'}
+                  </button>
+                </div>
+              </div>
               {checkins.length === 0 ? <div style={{ fontSize: 11, color: COLORS.dim }}>No players checked in yet.</div> : checkins.map(c => <div key={c.id} style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.text, padding: '4px 0' }}>{c.character_name}</div>)}
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
@@ -576,7 +615,10 @@ export default function SessionManager({ onTimerLabel }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, () => checkForSession())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'session_checkins' }, () => activeSession?.id && fetchCheckins(activeSession.id))
       .subscribe();
-    return () => supabase.removeChannel(channel);
+    // Same safety net as the lobby modal: keep the header pill count honest even
+    // if the realtime socket never delivers.
+    const poll = setInterval(() => { if (activeSession?.id) void fetchCheckins(activeSession.id); }, 10000);
+    return () => { clearInterval(poll); supabase.removeChannel(channel); };
   }, [activeSession?.id, checkForSession, fetchCheckins]);
 
   const handleSessionStarted = (session, initialCheckins) => {
