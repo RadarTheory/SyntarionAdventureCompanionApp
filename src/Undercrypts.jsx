@@ -32,6 +32,7 @@ const RACE_ATTACKS = {
   fynlor: { name: 'Lowline Skirmish', style: 'dash', reach: 82, arc: 1.05, damage: 7, wind: 145, color: '#f0dc8d', speed: 1.12, note: 'Fast attack and quick feet.' },
   trink: { name: 'Springknife Feint', style: 'needle', reach: 110, arc: 0.48, damage: 9, wind: 170, color: '#7fb7dc', note: 'Precise mechanical jab.' },
   pamorph: { name: 'Bloodline Maul', style: 'claw', reach: 78, arc: 1.35, damage: 9, wind: 185, color: '#e2b569', note: 'Bloodline modifies the bite of it.' },
+  maugar: { name: 'Broadbough Sweep', style: 'sweep', reach: 104, arc: 1.75, damage: 10, wind: 250, color: '#9dbf8a', armor: 1, note: 'Wide reach and a patient guard.' },
   fae: { name: 'Glimmerlash', style: 'sweep', reach: 90, arc: 1.65, damage: 8, wind: 170, color: '#b08fe0', speed: 1.06, note: 'Light resonant sweep.' },
   djinn: { name: 'Wish-Edge Riposte', style: 'hook', reach: 92, arc: 1.3, damage: 10, wind: 190, color: '#79cfd2', note: 'Curved strike, good on angles.' },
   helianth: { name: 'Infernal Guard', style: 'hammer', reach: 76, arc: 1.15, damage: 10, wind: 230, color: '#d86e58', armor: 1, note: 'Defensive hot cut.' },

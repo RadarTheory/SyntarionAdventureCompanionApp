@@ -398,6 +398,50 @@ const RACE_ABILITIES = {
     },
   ],
 
+
+  // ── MAUGAR (Firbolg) ───────────────────────────────────────────────────────
+  maugar: [
+    {
+      id: 'thornwarden', name: 'Thornwarden', axis: 'magic', boon: '+1 Will per use',
+      tiers: [
+        'For 1 hour, add +1 WILL. Claim a stretch of wild ground — treeline, ford, ridge, hollow, game trail, or camp perimeter — as ground you will not give up. Applies to holding position, refusing to be driven off, standing between a threat and those behind you, or enduring exposure.',
+        "Warden's Root — Add +2 to one roll involving holding a line, resisting being moved or driven back, standing watch, enduring weather, or refusing to break under pressure.",
+        'Ground Named — Once during your next encounter or scene, when a creature tries to cross the ground you claimed, you may force it to commit: go through you, go around at a cost, or stop where it stands.',
+        'Thornhold — Until the end of your next encounter, allies who stay within reach of your claimed ground gain +1 to one roll to hold position, withdraw in order, or recover their footing.',
+        "[HIDDEN LVL 5+] Maugar Bulwark — Once during a battle, siege, evacuation, hunt, or collapse, add +2 to one group roll involving holding a position, covering a withdrawal, shielding the wounded, or denying a crossing until the scene resolves.",
+      ],
+    },
+    {
+      id: 'guestright', name: 'Guestright', axis: 'magic', boon: '+1 Spirit per use',
+      tiers: [
+        'For 1 hour, add +1 SPIRIT. Offer guest-right in the old Maugar form — food, fire, water, shelter, or safe passage — to a stranger, traveller, rival, or enemy under truce. Applies to parley, de-escalation, earning trust, reading intent, or being believed.',
+        'Salt and Fire — Add +2 to one roll involving negotiating a truce, calming a hostile party, being trusted by strangers, or persuading someone to lower a weapon.',
+        'Bond Spoken — Once during your next encounter or scene, name the terms of guest-right aloud. A creature that accepts them and then breaks them is marked to you; you may add +2 to one later roll to track, confront, or predict it.',
+        'Hearth Held — Until the end of your next encounter, those who accepted your guest-right will not be the first to raise a hand against you or yours, unless compelled or already committed to violence.',
+        "[HIDDEN LVL 5+] Unbroken Welcome — Once during a summit, standoff, trial, siege, or hostile negotiation, extend guest-right to an entire party. While it holds, one ally may add +2 to a roll involving keeping the peace, buying time, or leaving without bloodshed.",
+      ],
+    },
+    {
+      id: 'braid_reckoning', name: 'Braid Reckoning', axis: 'tech', boon: '+1 Mind per use',
+      tiers: [
+        'For 1 hour, add +1 MIND. Work a record into braid, bead, knot, cord, or bone — a debt, a lineage, a route, a feud, a season of weather, a count of the dead. Applies to recalling detail exactly, tracking obligations, or proving what was agreed.',
+        'Knot Count — Add +2 to one roll involving recalling names, dates, debts, terms, lineages, or the order in which events happened.',
+        'Bead Ledger — Prepare a durable braid-ledger for one territory, clan, contract, caravan, or campaign. It can be read by anyone taught the Maugar reckoning and cannot be altered without the change showing.',
+        'Bonework Record — Complete a full reckoning of one people, place, or long dispute. Until the end of the next journey or negotiation, allies consulting it hold a clear picture of who owes what to whom.',
+        "[HIDDEN LVL 5+] Maugar Long Braid — Create a masterwork lineage-braid spanning generations. Once during an inheritance claim, treaty, trial, feud, or contested history, add +2 to one group roll involving proving a claim, exposing a lie, or settling who has the right of it.",
+      ],
+    },
+    {
+      id: 'wildfare', name: 'Wildfare', axis: 'tech', boon: '+1 Body per use',
+      tiers: [
+        'For 1 hour, add +1 BODY. Read a stretch of country for what it will give — water, forage, game, fuel, shelter, safe crossing, or a place to lie up. Applies to foraging, provisioning, making camp, or keeping a group moving through wild ground.',
+        'Country Read — Add +2 to one roll involving finding water, forage, game, fuel, or shelter, or judging whether ground is safe to cross, camp on, or cross with a load.',
+        'Cacheline — Prepare a line of caches, snares, and marked shelters along a route. A small group travelling it can resupply, lie up, or fall back without carrying the weight.',
+        'Longfare Camp — Establish a camp that holds through weather, cold, or pursuit. Until the end of the next journey, allies using it recover more fully and are harder to find.',
+        "[HIDDEN LVL 5+] Wildhearth Provision — Once during a long march, exile, siege, winter, or flight through hostile country, add +2 to one group roll involving keeping the party fed, warm, hidden, or moving when it should not have been possible.",
+      ],
+    },
+  ],
   // ── DJINN (Genie) ──────────────────────────────────────────────────────────
   djinn: [
     {

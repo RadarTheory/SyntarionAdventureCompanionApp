@@ -149,7 +149,7 @@ HUMANOID:
 - Tel'ari (Elves): Wood/High, Drow/Dark, Nereid, Day, Night, Aejairi, Ýnd'ari, Eladrin
 - Terraxians (Half-Giant) | Trink (Gnome) | Fynlor (Halfling): Lightfoot, Stout
 - Othrod (Orc): Kul'Kal Rakhar, Grothmogg, Telrok, Jotunnar, Por'rakhar
-- Grún (Ogre) | Helianth (Tiefling of Stygia) | Nazari
+- Grún (Ogre) | Helianth (Tiefling of Stygia) | Nazari | Maugar (Firbolg)
 
 PA'MORPH (Major — anthropomorphic animal races):
 - Aaravok (Eagle) | Kra'ark (Crow) | Cath'Vari (Feline) | Kara'Zelith (Feline, Elseworld)

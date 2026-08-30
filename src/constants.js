@@ -62,6 +62,7 @@ export const RACES = [
   { id:'fynlor',    name:'Fynlor',     sub:'Halfling',   tag:'any',  lean:0,  sub2:'Lightfoot · Stout', variants:['Lightfoot','Stout'], ns:'fynlor', desc:"Small, quick, and socially gifted in ways that larger folk consistently underestimate. The Fynlor have a talent for arriving at the right moment and leaving before the wrong one." },
   { id:'trink',     name:'Trink',      sub:'Gnome',      tag:'tech', lean:2,  sub2:'Small · Arcane logic', variants:[], ns:'trink', desc:"Curious to a fault and mechanically gifted. The Trink built half the systems that run Ashendell's lower districts and have filed patents on the other half." },
   { id:'pamorph',   name:"Pa'morph",   sub:'Beast-folk', tag:'any',  lean:0,  sub2:'Choose bloodline below', variants:[], isPamorph:true, ns:'pamorph', desc:"Shape-touched and bloodline-defined, the Pa'morph exist across every corner of Soteria. Their culture varies as widely as their forms — from pack-law territories to city guilds to wilderness enclaves that appear on no official map." },
+  { id:'maugar',    name:'Maugar',     sub:'Firbolg',    tag:'any',  lean:-1, sub2:'Large · Wilderness-attuned', variants:[], ns:'maugar', desc:"Tall, broad, and built for country that does not forgive mistakes. The Maugar carry their history in braid and bead and bone — long drooping ears, features that never quite settled on human, and a warrior tradition older than every border currently drawn across it. They are unfailingly courteous to strangers, which outsiders consistently mistake for softness." },
   { id:'fae',       name:'Fae',        sub:"Faerie",     tag:'magic',lean:-2, sub2:'Arcani potential · Soul-sight', variants:[], ns:'fae', desc:"Fae exist at the intersection of the material and the resonant. They perceive things that others cannot and are occasionally perceived by things that others cannot see." },
   { id:'djinn',     name:'Djinn',      sub:'Genie',      tag:'magic',lean:-1, sub2:'Efreet · Marid · Djinni · Dao', variants:['Efreet — Wish','Marid — Hex','Djinni — Heal','Dao — Luck'], ns:'djinn', desc:"Born of supernatural convergence, the Djinn carry their heritage in their blood, but their whim remains unpredictable.." },
   { id:'helianth',  name:'Helianth',   sub:'Tiefling',   tag:'magic',lean:-1, sub2:'Infernal ancestry', variants:[], ns:'helianth', desc:"Infernal blood runs cool in the Helianth — not hot. They are not defined by their ancestry unless they choose to be, and most of them are tired of being defined by it." },
@@ -666,6 +667,17 @@ export const RACIAL_TRAITS = {
     },
   },
 
+  maugar: {
+    passive: {
+      name: 'Wildhold',
+      text: "Difficult natural terrain, weather, and forage conditions do not impose automatic penalties on you. You also count as one size larger for lifting, carrying, grappling, and bracing against force. The wild raised you. It does not get to charge you for the privilege.",
+    },
+    active: {
+      name: 'Wildstep',
+      text: "Once per rest, you may roll to move unseen through natural surroundings — treeline, scrub, rock, snow, or smoke. On a success, you cannot be tracked or targeted for one exchange, and your next action taken from concealment reduces its difficulty by one step. Something that large should not be able to do that. It remains a common complaint.",
+    },
+  },
+
   tiol: {
     passive: {
       name: 'Charterborn Gift',
@@ -938,6 +950,13 @@ export const NAMES = {
       f: ['Neema','Abena','Malaika','Lykia','Selene','Alleria','Kurama'],
       s: ['Mbaku','Umbacca','Krowe','Proudmoore','Aleval','Ardentbrin','Deecye'],
     },
+  },
+
+  // ── MAUGAR — wilderness clans, beast-featured lineage ──
+  maugar: {
+    m: ['Brughan','Cailm','Dorrach','Eamhar','Fenwold','Grumhal','Hessgar','Ionvar','Keldrogh','Maccun','Nualgar','Ossiban','Ruadhan','Torvach','Ulmar'],
+    f: ['Aoinwen','Brenna','Caolith','Deirvagh','Eithne','Faolagh','Grellis','Hulda','Immrigh','Kaernna','Mabrigh','Nessavane','Ronnagh','Sorcha','Vaenna'],
+    s: ['Beastmourn','Braidbone','Deepfen','Elkspar','Fernhollow','Greatfell','Hollowhorn','Longear','Mosswake','Stonebraid','Thornwade','Wildhearth'],
   },
 
   // ── TIOL — Giant Nordic Dark-Tel'ari lineage ──
