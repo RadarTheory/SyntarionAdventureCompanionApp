@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import supabase from './lib/supabase';
 import medallion from './assets/medallion.png';
 import { useDevice } from './useDevice';
-import { COLORS, CAMPAIGNS, ALL_STATS, ALL_CLASSES, ACTIONS, getRaceDisplay } from './constants';
+import { COLORS, CAMPAIGNS, ALL_STATS, ALL_CLASSES, ACTIONS, getRaceDisplay, EQUIP_SLOT_GROUPS } from './constants';
 import { LOCATIONS } from './MapPanel';
 import VTTViewer from './VTTViewer';
 import Astragal from './Astragal';
@@ -81,15 +81,9 @@ const SLOT_CATEGORIES = {
   Artifact: ['Magic Items','Artifacts','Spellcasting Items','Accessories','Collectables'],
 };
 
-const SLOT_GROUPS = {
-  'Main Hand':   ['blade','ranged','staff'],
-  'Off-Hand':    ['offhand','blade','sidearm'],
-  'Side-Weapon': ['sidearm','blade'],
-  'Heavy':       ['heavy','ranged'],
-  Head: ['head'], Torso: ['torso','cloak'], Waist: ['waist'],
-  Hands: ['hands'], Greaves: ['boots'], Boots: ['boots'],
-  'Ring I': ['ring'], 'Ring II': ['ring'], Neck: ['neck'], Charm: ['charm'],
-};
+// Single source of truth lives in constants.js so Argus, the catalog and the
+// sheet cannot drift apart on what fits where.
+const SLOT_GROUPS = EQUIP_SLOT_GROUPS;
 function itemFitsSlot(slot, item) {
   if (!SLOT_GROUPS[slot]) return (SLOT_CATEGORIES[slot] || []).includes(item?.category);
   if (item?.equip_slot) return SLOT_GROUPS[slot].includes(item.equip_slot);

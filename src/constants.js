@@ -976,6 +976,13 @@ export const NAMES = {
       s: ['404-L','303-Z','Lambda-76','103-D','Prime-7','Prime-12','Sigma-18','Lambda-88','75-L','Sigma-21','Omega-17','Theta-12','457-A','Nexus-3','Codex-44','Cipher-77','Oracle-21','Axiom-61','Warden-44','Null-00','Glitch-13','Aegis-88','Paragon-16','Specter-29','Bastion-91'],
     },
   },
+
+  // ── FOLWOADE — coalesced from resonance, not born; "surnames" name the Line ──
+  folwoade: {
+    m: ['Aelune','Caelivar','Diomere','Eshavel','Ilvaren','Lumethar','Mirovel','Nyssarel','Oriveth','Phaeleth','Quorivel','Sevaryn','Thalivore','Umbriel','Yshavel'],
+    f: ['Aluneth','Cirelle','Elyvane','Ffionwe','Ilythra','Lireth','Myssaela','Neriquel','Ondrivel','Peraleth','Sylvaeth','Thessaly','Vaelune','Ysolde','Zephyrel'],
+    s: ['Brightwake','Chordfall','Dawnhum','Emberline','Glasslight','Hollowchime','Linewake','Lumenveil','Nullchord','Stillharmonic','Thrumhollow','Veilcurrent'],
+  },
 };
 
 
@@ -2353,6 +2360,83 @@ export const ACTIONS = {
 export const APPAREL_SLOTS   = ['Head','Torso','Waist','Hands','Greaves','Boots'];
 export const WEAPON_SLOTS    = ['Main Hand','Off-Hand','Side Weapon','Heavy'];
 export const ACCESSORY_SLOTS = ['Ring I','Ring II','Neck','Charm','Relic','Artifact'];
+
+// Canonical values stored in items.equip_slot. The *_SLOTS arrays above are the
+// display names of a character's slots; these are the machine keys an item
+// carries. EQUIP_SLOT_GROUPS maps a character slot -> the item keys it accepts.
+export const EQUIP_SLOT_OPTIONS = [
+  { value: 'head',    label: 'Head',              group: 'Apparel'     },
+  { value: 'torso',   label: 'Torso',             group: 'Apparel'     },
+  { value: 'cloak',   label: 'Cloak / Back',      group: 'Apparel'     },
+  { value: 'waist',   label: 'Waist',             group: 'Apparel'     },
+  { value: 'hands',   label: 'Hands',             group: 'Apparel'     },
+  { value: 'greaves', label: 'Greaves (legs)',    group: 'Apparel'     },
+  { value: 'boots',   label: 'Boots (feet)',      group: 'Apparel'     },
+  { value: 'blade',   label: 'Blade',             group: 'Weapons'     },
+  { value: 'ranged',  label: 'Ranged',            group: 'Weapons'     },
+  { value: 'staff',   label: 'Staff',             group: 'Weapons'     },
+  { value: 'sidearm', label: 'Sidearm',           group: 'Weapons'     },
+  { value: 'offhand', label: 'Off-Hand / Shield', group: 'Weapons'     },
+  { value: 'heavy',   label: 'Heavy',             group: 'Weapons'     },
+  { value: 'ring',    label: 'Ring',              group: 'Accessories' },
+  { value: 'neck',    label: 'Neck',              group: 'Accessories' },
+  { value: 'charm',   label: 'Charm',             group: 'Accessories' },
+];
+
+export const EQUIP_SLOT_GROUPS = {
+  'Main Hand':   ['blade','ranged','staff'],
+  'Off-Hand':    ['offhand','blade','sidearm'],
+  'Side Weapon': ['sidearm','blade'],
+  'Side-Weapon': ['sidearm','blade'],  // hyphenated spelling used by Argus/CampaignView
+  'Heavy':       ['heavy','ranged'],
+  Head:    ['head'],
+  Torso:   ['torso','cloak'],
+  Waist:   ['waist'],
+  Hands:   ['hands'],
+  Greaves: ['greaves'],
+  Boots:   ['boots'],
+  'Ring I': ['ring'], 'Ring II': ['ring'], Neck: ['neck'], Charm: ['charm'],
+};
+
+// Which slot groups a category may reasonably occupy. Unlisted categories offer
+// every slot rather than none - the DM decides, the form only sorts the list.
+const CATEGORY_SLOT_GROUPS = {
+  Armor:                ['Apparel'],
+  Weapons:              ['Weapons'],
+  Accessories:          ['Accessories'],
+  'Magic Items':        ['Apparel','Weapons','Accessories'],
+  Artifacts:            ['Apparel','Weapons','Accessories'],
+  'Spellcasting Items': ['Weapons','Accessories'],
+  Collectables:         ['Accessories'],
+};
+
+export function slotOptionsForCategory(category) {
+  const groups = CATEGORY_SLOT_GROUPS[category];
+  if (!groups) return EQUIP_SLOT_OPTIONS;
+  return EQUIP_SLOT_OPTIONS.filter(o => groups.includes(o.group));
+}
+
+// ─── CONDITIONS ───────────────────────────────────────────────────────────────
+// Named states a DM can hang on a character or NPC (Stunned, Paralyzed, ...).
+// Shared so the DM character editor and the NPC census cannot drift apart.
+// NOTE: distinct from the per-stat numeric "condition modifier" that
+// CharacterSheet reads off char.conditions[statKey].
+export const CONDITIONS = ['Alive','Dead','Dying','Unconscious','Asleep','Awake','Injured','Wounded','Bleeding','Poisoned','Diseased','Cursed','Blessed','Charmed','Frightened','Confused','Stunned','Paralyzed','Restrained','Grappled','Prone','Hidden','Invisible','Disguised','Blinded','Deafened','Muted','Exhausted','Hungry','Thirsty','Drunk','Drugged','Possessed','Haunted','Enraged','Calm','Hostile','Friendly','Neutral','Suspicious','Afraid','Loyal','Betrayed','Wanted','Imprisoned','Captured','Missing','Traveling','Guarding','Working','Resting','Fleeing','Hiding','Following','Tracking','Hunted','Protected','Marked','Banished','Exiled','Transformed','Polymorphed','Magically Bound','Oathbound','Debt-Bound','Faction-Aligned','Faction-Enemy','Undercover','Unknown'];
+export const CONDITION_COLORS = {Dead:'#e05a5a',Dying:'#e06060',Unconscious:'#c06060',Injured:'#e08a5a',Wounded:'#e07a5a',Bleeding:'#e05a5a',Poisoned:'#80c060',Diseased:'#a0b040',Exhausted:'#b09060',Hungry:'#c09050',Thirsty:'#c09050',Paralyzed:'#9080c0',Stunned:'#9080c0',Prone:'#808090',Restrained:'#9070a0',Grappled:'#9070a0',Cursed:'#c060c0',Blessed:'#e8c040',Charmed:'#e080c0',Possessed:'#a040e0',Haunted:'#8050c0',Transformed:'#60a0e0',Polymorphed:'#60a0e0','Magically Bound':'#a060e0',Oathbound:'#c0a040','Debt-Bound':'#c08040',Invisible:'#80b0c0',Blinded:'#808090',Deafened:'#808090',Muted:'#808090',Frightened:'#e08060',Confused:'#c0a060',Enraged:'#e04040',Calm:'#60c090',Drunk:'#e0c060',Drugged:'#a0c060',Hostile:'#e05050',Friendly:'#60e090',Neutral:'#909090',Suspicious:'#c0a040',Afraid:'#e09060',Loyal:'#60b0e0',Betrayed:'#e06060',Wanted:'#e08040',Imprisoned:'#c06060',Captured:'#c06060',Missing:'#e0b040',Traveling:'#60c0e0',Guarding:'#6090d0',Working:'#b0a060',Resting:'#70b090',Fleeing:'#e09050',Hiding:'#909070',Following:'#60b0c0',Tracking:'#70a060',Hunted:'#e06050',Protected:'#60d080',Marked:'#e0a040',Banished:'#a06080',Exiled:'#a06080','Faction-Aligned':'#60a0e0','Faction-Enemy':'#e06060',Undercover:'#a0b060',Alive:'#60e060',Awake:'#90d0a0',Disguised:'#b0a070',Hidden:'#909070',Unknown:'#808090'};
+export const condColor = c => CONDITION_COLORS[c] || '#909090';
+
+// Of the full CONDITIONS list, only these read as something hovering over a
+// miniature. The rest is roster and social tracking - Wanted, Undercover,
+// Faction-Aligned, Traveling - which belongs in list views, not on a token.
+export const COMBAT_CONDITIONS = ['Unconscious','Paralyzed','Stunned','Restrained','Grappled','Prone','Blinded','Deafened','Frightened','Charmed','Poisoned','Bleeding','Cursed','Blessed','Enraged','Exhausted','Invisible','Hidden'];
+
+// Filters a character's conditions down to the drawable ones, in a fixed
+// order so pips keep their positions instead of reshuffling between frames
+// as the DM adds and removes states mid-combat.
+export function combatConditions(list) {
+  if (!Array.isArray(list) || !list.length) return [];
+  return COMBAT_CONDITIONS.filter(c => list.includes(c));
+}
 
 // ─── UTILITY ──────────────────────────────────────────────────────────────────
 export const pick = arr => arr[Math.floor(Math.random() * arr.length)];

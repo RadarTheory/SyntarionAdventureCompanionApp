@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import supabase from './lib/supabase';
-import { COLORS, ALL_CLASSES } from './constants';
+import { COLORS, ALL_CLASSES, combatConditions, condColor } from './constants';
 import { computeCrowdedKeys, tokenLayoutKey } from './lib/tokenLayout';
 import { logSessionEvent } from './lib/sessionEvents';
 import { useActiveGameSession } from './lib/session';
@@ -182,6 +182,53 @@ function tokenRim(tok, isEnemyTok, isOwn = false) {
   return isEnemyTok ? TOKEN_STYLE.enemyRim : TOKEN_STYLE.playerRim;
 }
 
+// Condition pips: a row of colored dots above the token. Words do not fit here
+// - the name label below already runs at r*0.4 and bottoms out at 5px - so the
+// colour carries the state at a glance and hovering spells it out. Icons can
+// slot in later the same way the death overlay prefers /death.png over a glyph.
+function drawConditionPips(ctx, conds, tx, ty, r, hovered) {
+  if (!conds.length) return;
+  const shown = conds.slice(0, 4);
+  const extra = conds.length - shown.length;
+  const pr = Math.max(1.6, r * 0.13);
+  const gap = pr * 2.6;
+  const slots = shown.length + (extra > 0 ? 1 : 0);
+  const startX = tx - ((slots - 1) * gap) / 2;
+  const py = ty - r - pr - Math.max(2, r * 0.12);
+  ctx.save();
+  shown.forEach((cond, i) => {
+    ctx.beginPath();
+    ctx.arc(startX + i * gap, py, pr, 0, Math.PI * 2);
+    ctx.fillStyle = condColor(cond);
+    ctx.fill();
+    ctx.lineWidth = Math.max(0.8, pr * 0.35);
+    ctx.strokeStyle = 'rgba(8,6,4,0.85)';
+    ctx.stroke();
+  });
+  if (extra > 0) {
+    ctx.fillStyle = 'rgba(242,230,200,0.9)';
+    ctx.font = `700 ${Math.max(5, pr * 1.7)}px 'Cinzel', Georgia, serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(`+${extra}`, startX + shown.length * gap, py);
+  }
+  // Hovering is the only place the words appear on the map, stacked upward so
+  // they clear the pips and never collide with the name under the token.
+  if (hovered) {
+    const fs = Math.max(6, r * 0.34);
+    ctx.font = `700 ${fs}px 'Cinzel', Georgia, serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+    ctx.lineWidth = Math.max(1.5, fs * 0.36);
+    conds.forEach((cond, i) => {
+      const wy = py - pr - 2 - (conds.length - 1 - i) * (fs * 1.15);
+      ctx.strokeStyle = 'rgba(8,6,4,0.9)';
+      ctx.strokeText(cond, tx, wy);
+      ctx.fillStyle = condColor(cond);
+      ctx.fillText(cond, tx, wy);
+    });
+  }
+  ctx.restore();
+}
 function drawTokenShape(ctx, tok, x, y, r, fill, rim, { hovered = false } = {}) {
   const isPlayer = tok.type === 'player';
   const inset = Math.max(2, r * 0.16);
@@ -460,6 +507,8 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
       }
     }
 
+    // Pips sit above the token; the name label below is untouched.
+    drawConditionPips(ctx, combatConditions(tok.conditions), tx, ty, r, isHovered);
     // Floating name, drawn on the map rather than baked into the sprite so it
     // stays sharp at any zoom. Player tokens only — an enemy's real name is the
     // DM's to reveal, and these labels are visible to the whole table.
@@ -601,6 +650,10 @@ export default function VTTViewer({ campaignId, userChar, castMode = false }) {
     const sub = supabase
       .channel(`vtt-viewer-${campaignId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'vtt_sessions', filter: `campaign_id=eq.${campaignId}` }, () => loadSession())
+      // Conditions live on the character row, not the session, so a DM toggling
+      // one mid-combat would otherwise not reach the board until something else
+      // touched the session. Re-hydrate on character writes too.
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'characters' }, () => loadSession())
       .subscribe();
     return () => supabase.removeChannel(sub);
   }, [campaignId]);
@@ -612,12 +665,12 @@ export default function VTTViewer({ campaignId, userChar, castMode = false }) {
     if (!chars) return toks;
     const map = Object.fromEntries(chars.map(c => {
       const data = typeof c.data === 'string' ? JSON.parse(c.data) : c.data || {};
-      return [String(c.id), { sprite_url: data.sprite_url || data.token?.sprite_url || null, portrait_url: data.portrait_url || null, race: data.race || null, cid: data.cid || null }];
+      return [String(c.id), { sprite_url: data.sprite_url || data.token?.sprite_url || null, portrait_url: data.portrait_url || null, race: data.race || null, cid: data.cid || null, conditions: Array.isArray(data.conditions) ? data.conditions : [] }];
     }));
     return toks.map(t => {
       if (!t.characterId || !map[String(t.characterId)]) return t;
       const art = map[String(t.characterId)];
-      return { ...t, sprite_url: art.sprite_url || t.sprite_url || null, portrait_url: art.portrait_url || t.portrait_url || null, race: t.race || art.race || null, cid: t.cid || art.cid || null };
+      return { ...t, sprite_url: art.sprite_url || t.sprite_url || null, portrait_url: art.portrait_url || t.portrait_url || null, race: t.race || art.race || null, cid: t.cid || art.cid || null, conditions: art.conditions };
     });
   };
 

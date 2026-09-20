@@ -4,7 +4,7 @@ import { getLevelProgress } from './leveling';
 import {
   COLORS, ALL_STATS, ALL_CLASSES, RACES, ACTIONS,
   APPAREL_SLOTS, WEAPON_SLOTS, ACCESSORY_SLOTS,
-  getRaceDisplay,
+  getRaceDisplay, condColor,
 } from './constants';
 import { ScribeConsult, DMConsult } from './ScribeConsult';
 import supabase from './lib/supabase';
@@ -66,7 +66,11 @@ function StatDisplay({ statDef, char }) {
   const { key, label, equiv, axis } = statDef;
   const base       = char.stats?.[key]       || 8;
   const item       = char.itemBonuses?.[key]  || 0;
-  const condition  = char.conditions?.[key]   || 0;
+  // `conditions` is overloaded: the DM tools write an array of named states
+  // (Stunned, Prone...), while this layer wants a per-stat modifier map. Only
+  // treat it as a map when it actually is one.
+  const condMap    = Array.isArray(char.conditions) ? null : char.conditions;
+  const condition  = condMap?.[key]           || 0;
   const occurrence = char.occurrences?.[key]  || 0;
   const total      = base + item + condition + occurrence;
   const col        = axisColor(axis);
@@ -134,6 +138,9 @@ function ActionRow({ action, bonus }) {
 
 // ═════════════════════════════════════════════════════════════════════════════
 export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
+  // Named states the DM has hung on this character. Read-only here - players
+  // see what they are under, they do not clear it themselves.
+  const charConditions = Array.isArray(char.conditions) ? char.conditions : [];
   const { isMobile } = useDevice();
   const [activeTab, setActiveTab] = useState('identity');
   const isDM = user?.id === import.meta.env.VITE_DM_USER_ID;
@@ -165,7 +172,20 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
               <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 22 : 28, fontWeight: 700, color: COLORS.text, letterSpacing: '0.04em', lineHeight: 1.1 }}>{char.name || 'Unnamed'}</div>
               <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 4 }}>{raceDisplay}{cls ? ` · ${cls.name}` : ''}</div>
             </div>
-            <StatusBadge status={char.status || 'draft'} />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMobile ? 'flex-start' : 'flex-end', gap: 6 }}>
+              <StatusBadge status={char.status || 'draft'} />
+              {charConditions.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
+                  {charConditions.map(c => (
+                    <span key={c} title={c}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: `${condColor(c)}18`, border: `1px solid ${condColor(c)}55`, borderRadius: 20, padding: '3px 9px', fontFamily: "'Cinzel', serif", fontSize: 9, color: condColor(c) }}>
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: condColor(c) }} />
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))', gap: 8, marginBottom: 24 }}>
@@ -256,7 +276,7 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
             <SectionHead>Base Stats</SectionHead>
             <div style={{ fontSize: 10, color: COLORS.muted, fontFamily: 'Georgia, serif' }}>
               Total: <span style={{ color: COLORS.text, fontWeight: 700, fontFamily: "'Cinzel', serif" }}>
-                {ALL_STATS.reduce((sum, s) => sum + (char.stats?.[s.key] || 8) + (char.itemBonuses?.[s.key] || 0) + (char.conditions?.[s.key] || 0) + (char.occurrences?.[s.key] || 0), 0)}
+                {ALL_STATS.reduce((sum, s) => sum + (char.stats?.[s.key] || 8) + (char.itemBonuses?.[s.key] || 0) + (Array.isArray(char.conditions) ? 0 : char.conditions?.[s.key] || 0) + (char.occurrences?.[s.key] || 0), 0)}
               </span>
             </div>
           </div>

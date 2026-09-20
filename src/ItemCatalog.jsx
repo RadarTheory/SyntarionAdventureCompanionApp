@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { COLORS } from './constants';
+import { COLORS, slotOptionsForCategory } from './constants';
 import supabase from './lib/supabase';
 
 const CAT_COLOR = {
@@ -308,7 +308,7 @@ const ALL_EIGHT_KEYS = ['spirit','soul','body','essence','will','whim','mind','d
 
 // ─── NEW ITEM MODAL ───────────────────────────────────────────────────────────
 function NewItemModal({ onClose, onCreated }) {
-  const EMPTY = { name: '', category: 'Weapons', type: '', description: '', rarity: 'Common', value: '', tags: '', bonuses: {}, apBonus: '' };
+  const EMPTY = { name: '', category: 'Weapons', type: '', description: '', rarity: 'Common', value: '', tags: '', bonuses: {}, apBonus: '' , equip_slot: '' };
   const [draft, setDraft] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
@@ -322,6 +322,7 @@ function NewItemModal({ onClose, onCreated }) {
     const { data, error } = await supabase.from('items').insert({
       name: draft.name.trim(),
       category: draft.category,
+      equip_slot: draft.equip_slot || null,
       type: draft.type.trim() || draft.category,
       description: draft.description.trim(),
       rarity: draft.rarity,
@@ -379,7 +380,7 @@ function NewItemModal({ onClose, onCreated }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <div>
               <div style={{ ...label8(), marginBottom: 6 }}>Category</div>
-              <select value={draft.category} onChange={e => set('category', e.target.value)}
+              <select value={draft.category} onChange={e => setDraft(d => ({ ...d, category: e.target.value, equip_slot: slotOptionsForCategory(e.target.value).some(o => o.value === d.equip_slot) ? d.equip_slot : '' }))}
                 style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 8px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none' }}>
                 {ITEM_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -389,6 +390,20 @@ function NewItemModal({ onClose, onCreated }) {
               <input value={draft.type} onChange={e => set('type', e.target.value)}
                 placeholder="e.g. Longsword"
                 style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 8px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+          </div>
+
+          <div>
+            <div style={{ ...label8(), marginBottom: 6 }}>Equip Slot</div>
+            <select value={draft.equip_slot} onChange={e => set('equip_slot', e.target.value)}
+              style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 8px', fontFamily: 'Georgia, serif', fontSize: 11, color: COLORS.text, outline: 'none' }}>
+              <option value="">- None (not equippable) -</option>
+              {slotOptionsForCategory(draft.category).map(o => (
+                <option key={o.value} value={o.value}>{o.group} · {o.label}</option>
+              ))}
+            </select>
+            <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 4 }}>
+              Decides which slot on the character sheet this item can be equipped to.
             </div>
           </div>
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
-import { COLORS, CAMPAIGNS, ALL_CLASSES, ALL_STATS, getRaceDisplay } from './constants';
+import { COLORS, CAMPAIGNS, ALL_CLASSES, ALL_STATS, getRaceDisplay, CONDITIONS, condColor } from './constants';
 import { DraggablePanel } from './DraggablePanel';
 import { MusicPanel } from './MusicPanel';
 import ItemCatalog from './ItemCatalog';
@@ -377,6 +377,8 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
   const [apReason, setApReason] = useState('');
   const [levelDraft, setLevelDraft] = useState(String(data.charLevel || data.level || 1));
   const [grantingAp, setGrantingAp] = useState(false);
+  const [condPicker, setCondPicker] = useState(false);
+  const [condSearch, setCondSearch] = useState('');
   const apTotal = data.apTotal ?? data.ap_total ?? 0;
   const atCurrent = data.atCurrent ?? data.at_current ?? data.apCurrent ?? 0;
   const atTotal = data.atTotal ?? data.at_total ?? data.apTotal ?? 0;
@@ -426,6 +428,20 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
   };
 
   const set = (key, val) => setData(prev => ({ ...prev, [key]: val }));
+
+  // Named states the DM hangs on a character. Stored as an array of strings on
+  // data.conditions - the same field and shape the NPC census writes.
+  const conditions = Array.isArray(data.conditions) ? data.conditions : [];
+  const toggleCondition = async (cond) => {
+    const next = conditions.includes(cond) ? conditions.filter(c => c !== cond) : [...conditions, cond];
+    set('conditions', next);
+    // These land mid-play, so they write straight away instead of waiting for
+    // Save. Read the row back first: the player's own session rewrites the whole
+    // `data` blob, so merging into this editor's copy would revert their changes.
+    const { data: row } = await supabase.from('characters').select('data').eq('id', char.id).maybeSingle();
+    const existing = typeof row?.data === 'string' ? JSON.parse(row.data || '{}') : (row?.data || {});
+    await supabase.from('characters').update({ data: { ...existing, conditions: next } }).eq('id', char.id);
+  };
   const setStat = (key, val) => setData(prev => ({ ...prev, stats: { ...prev.stats, [key]: parseInt(val) || 8 } }));
 
   const awardAp = async () => {
@@ -646,6 +662,41 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
             <input type="number" value={Number(data.morality) || 0} onChange={e => set('morality', parseInt(e.target.value) || 0)}
               style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }} />
           </div>
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ ...label8(), marginBottom: 6 }}>Conditions</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+            {conditions.map(c => (
+              <button key={c} onClick={() => toggleCondition(c)} title={`Remove ${c}`}
+                style={{ ...{ display: 'inline-flex', alignItems: 'center', gap: 4, borderRadius: 20, padding: '3px 9px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9 }, background: `${condColor(c)}18`, border: `1px solid ${condColor(c)}55`, color: condColor(c) }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: condColor(c) }} />
+                {c}<span style={{ opacity: 0.55, marginLeft: 2 }}>✕</span>
+              </button>
+            ))}
+            {!conditions.length && <span style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>None</span>}
+            <button onClick={() => { setCondPicker(v => !v); setCondSearch(''); }}
+              style={{ ...{ display: 'inline-flex', alignItems: 'center', gap: 4, borderRadius: 20, padding: '3px 9px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9 }, background: 'rgba(200,168,74,0.08)', border: '1px solid rgba(200,168,74,0.28)', color: '#e8c040' }}>
+              {condPicker ? '− Close' : '+ Add'}
+            </button>
+          </div>
+          {condPicker && (
+            <div style={{ marginTop: 8, border: `1px solid ${COLORS.border}`, borderRadius: 8, background: 'rgba(10,8,5,0.55)', overflow: 'hidden' }}>
+              <input autoFocus value={condSearch} onChange={e => setCondSearch(e.target.value)} placeholder="Search conditions…"
+                style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(240,238,235,0.04)', border: 'none', borderBottom: `1px solid ${COLORS.border}`, color: COLORS.text, padding: '7px 10px', fontFamily: 'Georgia, serif', fontSize: 11, outline: 'none' }} />
+              <div style={{ maxHeight: 180, overflowY: 'auto', padding: '4px 0' }}>
+                {CONDITIONS.filter(c => !condSearch || c.toLowerCase().includes(condSearch.toLowerCase())).map(c => {
+                  const active = conditions.includes(c);
+                  return (
+                    <button key={c} onClick={() => toggleCondition(c)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 7, width: '100%', textAlign: 'left', border: 'none', background: active ? 'rgba(200,168,74,0.1)' : 'transparent', padding: '5px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, color: active ? '#e8c040' : COLORS.dim }}>
+                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: active ? condColor(c) : 'rgba(200,168,74,0.2)', border: `1px solid ${condColor(c)}55`, flexShrink: 0 }} />
+                      {c}{active && <span style={{ marginLeft: 'auto', opacity: 0.7 }}>✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
         {[['Name', 'name'], ['Backstory', 'backstory'], ['Notes', 'notes']].map(([lbl, key]) => (
           <div key={key} style={{ marginBottom: 14 }}>
