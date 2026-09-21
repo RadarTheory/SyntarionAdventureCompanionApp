@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import supabase from './lib/supabase';
+import { resolveEquipSlots } from './lib/equipSlot';
 import medallion from './assets/medallion.png';
 import { useDevice } from './useDevice';
 import { COLORS, CAMPAIGNS, ALL_STATS, ALL_CLASSES, ACTIONS, getRaceDisplay, EQUIP_SLOT_GROUPS } from './constants';
@@ -1376,6 +1377,18 @@ function InventoryPanel({ char, onInventoryChange, isDM = false, campaignId }) {
               equipped[row.slot] = { name: row.name, description: row.description || '', attuned: !!row.attuned, bonuses: row.bonuses || {}, equip_slot: row.equip_slot || null };
             }
           });
+          // Older rows were granted before every path wrote equip_slot, and a
+          // pack item with no slot and a 'Misc' category matches nothing in
+          // SLOT_CATEGORIES — it cannot be equipped to any slot at all. Look the
+          // missing ones up by name so the pack works without a migration.
+          const unslotted = pack.filter(p => !p.equip_slot).map(p => p.name);
+          if (unslotted.length) {
+            try {
+              const found = await resolveEquipSlots(unslotted);
+              pack.forEach(p => { if (!p.equip_slot && found[p.name]) p.equip_slot = found[p.name]; });
+              Object.values(equipped).forEach(e => { if (!e.equip_slot && found[e.name]) e.equip_slot = found[e.name]; });
+            } catch (_) { }
+          }
           setItems(equipped);
           setPackItems(pack);
           setLoadedFromDB(true);

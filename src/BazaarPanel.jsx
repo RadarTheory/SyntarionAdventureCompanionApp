@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import supabase from './lib/supabase';
+import { resolveEquipSlot } from './lib/equipSlot';
 import { COLORS } from './constants';
 import { playSfxByKey, playCoinSfx } from './soundLibrary';
 
@@ -119,12 +120,15 @@ export function BazaarPlayerPanel({ char, campaignId, embedded = false }) {
 
   const claimApprovedItem = async (box, item) => {
     const description = `${item.item_category || 'Misc'}|${item.item_desc || ''}${item.note ? ' — ' + item.note : ''}`;
+    // Without a slot the item lands in the pack as unequippable Misc, so fall
+    // back to the catalog when the lootbox row does not carry one.
+    const equip_slot = await resolveEquipSlot(item.item_name, item.item_equip_slot || null);
     await supabase.from('character_items').insert({
       character_id: String(char.id),
       slot: `pack__${Date.now()}`,
       name: item.item_name,
       description,
-      attuned: false, bonuses: {}, weight: item.qty || 1,
+      attuned: false, bonuses: {}, weight: item.qty || 1, equip_slot,
     });
     await supabase.from('lootbox_items').update({ claim_status: 'claimed' }).eq('id', item.id);
     await supabase.from('grimoire_entries').insert({
@@ -532,12 +536,14 @@ export function BazaarDMPanel({ campaignId, onClose }) {
       }
       for (const item of theirItems) {
         const description = `${item.item_category || 'Misc'}|${item.item_desc || ''}`;
+        // trade_items carries no slot, so a traded item would arrive unequippable.
+        const equip_slot = await resolveEquipSlot(item.item_name, item.item_equip_slot || null);
         await supabase.from('character_items').insert({
           character_id: trade.initiator_character_id,
           slot: `pack__${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
           name: item.item_name,
           description,
-          attuned: false, bonuses: {}, weight: item.qty || 1,
+          attuned: false, bonuses: {}, weight: item.qty || 1, equip_slot,
         });
         playCoinSfx({ name: item.item_name, description, weight: item.qty || 1 });
       }
