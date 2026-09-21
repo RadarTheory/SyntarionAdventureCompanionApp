@@ -707,7 +707,138 @@ const RACE_ABILITIES = {
   ],
 
   // ── FAE ────────────────────────────────────────────────────────────────────
-  fae: [],
+  fae: [
+    {
+      id: 'seamsight', name: 'Seamsight', axis: 'magic', boon: '+1 Mind per use',
+      tiers: [
+        'For 1 hour, add +1 MIND. Look for the seam — the edge where something constructed meets something real. Applies to spotting illusions, forgeries, disguises, false walls, staged scenes, rehearsed stories, or anything built to be mistaken for what it is not.',
+        'Edge Found — Add +2 to one roll involving detecting a lie, an illusion, a forgery, a disguise, a concealed door, or a scene arranged for your benefit.',
+        'Seam Named — Once during your next encounter or scene, point to one thing you have marked as constructed and name it aloud. The DM confirms whether it is illusion, fabrication, disguise, or genuine.',
+        'Unglamoured Sight — Until the end of your next encounter, you perceive the constructed layer of your surroundings clearly. Allies you warn gain +1 to one roll involving resisting or seeing through the same deception.',
+        "[HIDDEN LVL 5+] Fae Seamwalk — Once during an infiltration, audience, trial, ambush, or elaborate deception, add +2 to one group roll involving exposing a fabricated place, person, document, or account for what it truly is.",
+      ],
+    },
+    {
+      id: 'soul_glance', name: 'Soul Glance', axis: 'magic', boon: '+1 Soul per use',
+      tiers: [
+        "For 1 hour, add +1 SOUL. Meet a creature's eyes and read the register beneath the face — grief, intent, obligation, hunger, fear, or the shape of what it wants. Applies to reading intent, judging sincerity, sensing bonds, or knowing what someone is protecting.",
+        'Register Read — Add +2 to one roll involving judging sincerity, sensing a hidden motive, reading grief or fear, or identifying what a creature is unwilling to lose.',
+        'Bond Seen — Once during your next encounter or scene, perceive the strongest bond a creature carries — to a person, a place, an oath, or a debt. The DM names it in general terms.',
+        'Open Register — Until the end of your next encounter, creatures find it unusually hard to conceal intent from you. You gain advantage on rolls to tell whether someone means what they are saying.',
+        "[HIDDEN LVL 5+] Fae Soul-Sight — Once during a negotiation, trial, betrayal, reunion, or confrontation, add +2 to one group roll involving determining loyalty, exposing a traitor, identifying a replaced or possessed creature, or knowing who in the room can be trusted.",
+      ],
+    },
+    {
+      id: 'glamourglass', name: 'Glamourglass', axis: 'tech', boon: '+1 Whim per use',
+      tiers: [
+        'For 1 hour, add +1 WHIM. Work a small lens, mirror, pane, lacquered shard, or polished charm that briefly holds a glamour you have already seen. Applies to showing others what you perceived, preserving evidence of an illusion, or replaying a seeming.',
+        'Held Seeming — Add +2 to one roll involving proving what you saw, convincing a sceptic, presenting evidence of a deception, or demonstrating a glamour to someone who cannot perceive it.',
+        'Mirrorcase — Prepare a cased lens that stores one captured glamour or illusion. It may be shown to others once, and does not fade in the retelling.',
+        'Glamour Archive — Complete a small set of glass plates recording several seemings. Until the end of the next investigation or audience, allies presenting them argue from evidence rather than claim.',
+        "[HIDDEN LVL 5+] Fae Truthglass — Create a masterwork glamour-lens. Once during a trial, court, inquiry, or confrontation, add +2 to one group roll involving proving a deception, discrediting a false account, or forcing a concealed thing to be seen by everyone present.",
+      ],
+    },
+    {
+      id: 'wardleaf_kit', name: 'Wardleaf Kit', axis: 'tech', boon: '+1 Spirit per use',
+      tiers: [
+        'For 1 hour, add +1 SPIRIT. Assemble small pressed-leaf charms, thread-bound sprigs, and paper wards that steady the mind against enchantment. Applies to resisting compulsion, staying clear-headed, guarding sleep, or protecting someone else from influence.',
+        'Pressed Ward — Add +2 to one roll involving resisting a compulsion, shaking off a charm, staying awake, guarding a rest, or keeping your own intentions your own.',
+        'Wardleaf Bundle — Prepare a bundle of charms for a small group. Each may be spent once to gain +1 against a single attempt at enchantment, compulsion, or intrusion on the mind.',
+        'Warded Camp — Set a perimeter of leaf-wards around a rest, room, or camp. Until the end of the next rest, those inside are harder to influence, scry, or disturb through enchantment.',
+        "[HIDDEN LVL 5+] Fae Heartward — Create a masterwork ward-charm. Once during a haunting, possession, domination, or sustained magical assault, add +2 to one group roll involving resisting, breaking, or shielding a companion from an effect that seizes the mind.",
+      ],
+    },
+  ],
+
+  // ── TIOL (Giant Vàld Dark-Tel'ari) ─────────────────────────────────────────
+  tiol: [
+    {
+      id: 'waymark_step', name: 'Waymark Step', axis: 'magic', boon: '+1 Whim per use',
+      tiers: [
+        'For 1 hour, add +1 WHIM. Fix a waymark on a place you can see or have stood — a stone, a gate, a rooftop, a treeline, a doorway — and hold it as an anchor for your innate travel. Applies to arriving, withdrawing, repositioning, or returning to ground you have already claimed.',
+        'Anchor Held — Add +2 to one roll involving reaching your waymark, escaping toward it, arriving unseen from it, or repositioning by flight or teleportation.',
+        'Second Waymark — Once during your next encounter or scene, hold a second anchor alongside the first and move between the two without retracing the ground between them.',
+        'Carried Passage — Until the end of your next encounter, you may bring one willing ally with you when you use your innate travel, though the effort costs you your next action.',
+        "[HIDDEN LVL 5+] Tiol Waychain — Once during an escape, rescue, siege, infiltration, or evacuation, chain your waymarks into a route. Add +2 to one group roll involving moving the party out of a closing position, crossing ground that cannot be walked, or reaching somewhere the enemy believed sealed.",
+      ],
+    },
+    {
+      id: 'charter_witness', name: 'Charter Witness', axis: 'magic', boon: '+1 Soul per use',
+      tiers: [
+        'For 1 hour, add +1 SOUL. Stand as witness to an agreement in the old form of the Silent Charter — a truce, a debt, a passage, a promise of safe conduct. Applies to binding terms, being believed as a neutral party, or sensing bad faith.',
+        'Witnessed Terms — Add +2 to one roll involving securing a truce, being accepted as an impartial witness, holding parties to stated terms, or detecting an intent to break them.',
+        'Charter Marked — Once during your next encounter or scene, mark an agreement as witnessed. You know, without checking, the moment any party to it breaks the terms.',
+        'Standing Witness — Until the end of your next encounter, those who agreed under your witness are reluctant to move first against one another, and you may add +2 to one roll involving holding the arrangement together.',
+        "[HIDDEN LVL 5+] Tiol Silent Charter — Once during a treaty, hostage exchange, surrender, alliance, or standoff, witness terms between hostile parties. While the terms hold, one ally may add +2 to a roll involving keeping the peace, invoking the agreement, or naming a breach before the room.",
+      ],
+    },
+    {
+      id: 'skyline_survey', name: 'Skyline Survey', axis: 'tech', boon: '+1 Mind per use',
+      tiers: [
+        'For 1 hour, add +1 MIND. Take height by flight or arrive by step, and record what the ground shows from above — roads, pickets, rooflines, water, cover, the shape of a force and where it is thin. Applies to reconnaissance, judging numbers, planning approaches, or reading a battlefield.',
+        'Overwatch Read — Add +2 to one roll involving scouting from height, counting a force, spotting an ambush, judging an approach, or finding the weak point in a perimeter.',
+        'Approach Sketch — Prepare a marked approach for one building, camp, ruin, or position, showing entries, blind spots, watch rotations, and the line least likely to be seen.',
+        'Overwatch Chart — Complete a survey of one contested area. Until the end of the next engagement or infiltration, allies working from it move with better information about cover, sightlines, and enemy placement.',
+        "[HIDDEN LVL 5+] Charterborn Skysurvey — Create a masterwork aerial survey of a city, siege line, wilderness, or hostile territory. Once during the operation, add +2 to one group roll involving approach, ambush, withdrawal, pursuit, or arriving where no one was watching for you.",
+      ],
+    },
+    {
+      id: 'tallreach_rig', name: 'Tallreach Rig', axis: 'tech', boon: '+1 Body per use',
+      tiers: [
+        'For 1 hour, add +1 BODY. Fit a harness built for Tiol proportions — long-limbed leverage, high anchor points, load straps rated for a body that arrives from above. Applies to climbing, hauling, carrying another person, bracing at height, or landing under weight.',
+        'Longline Purchase — Add +2 to one roll involving climbing, hauling a load, carrying a companion, arresting a fall, or bracing at an exposed height.',
+        'Carry Rig — Upgrade the harness to bear a second body safely. Until the end of your next encounter or scene, you may move one unconscious, wounded, or unwilling creature without being slowed by the burden.',
+        'Highanchor Set — Establish anchored lines across a vertical space — a shaft, cliff, tower, rooftop run, or collapsed structure. Allies may cross it without individual climbing rolls.',
+        "[HIDDEN LVL 5+] Vàld Highharness — Create a masterwork Tiol harness rated for descent, ascent, and carried weight. Once during a rescue, collapse, siege, storm, or vertical assault, add +2 to one group roll involving moving people up, down, or across ground that offers no footing.",
+      ],
+    },
+  ],
+
+  // ── FOLWOADE (Pure Magic) ──────────────────────────────────────────────────
+  // Folwoade cannot use technology, so all four abilities sit on the magic axis.
+  // The tech section renders empty for them by design (see AxisSection).
+  folwoade: [
+    {
+      id: 'line_reading', name: 'Line Reading', axis: 'magic', boon: '+1 Mind per use',
+      tiers: [
+        'For 1 hour, add +1 MIND. Read the Lines running through a place — their depth, direction, age, and where they have been cut, bound, drained, or fed. Applies to understanding a site of magic, tracing a working to its source, or knowing what a place has been used for.',
+        'Depth Read — Add +2 to one roll involving identifying a magical working, tracing resonance to its source, judging the age or strength of an enchantment, or recognising what kind of power shaped a place.',
+        'Line Traced — Once during your next encounter or scene, follow one active working back toward its origin. The DM names the direction, the rough distance, and whether the source is a creature, an object, or a place.',
+        'Resonant Survey — Until the end of your next encounter, you perceive the flow of magic around you in detail. Allies you guide gain +1 to one roll involving avoiding, disrupting, or exploiting a magical feature of the area.',
+        "[HIDDEN LVL 5+] Folwoade Deep Line — Once during a ritual, ward-breaking, containment, haunting, or arcane disaster, add +2 to one group roll involving understanding what a working does, finding where it is anchored, or determining what will happen if it is broken.",
+      ],
+    },
+    {
+      id: 'chordbind', name: 'Chordbind', axis: 'magic', boon: '+1 Spirit per use',
+      tiers: [
+        'For 1 hour, add +1 SPIRIT. Lend your own resonance to a working already running — a ward, a spell, a binding, a spirit-bond — holding it steady where it would otherwise fail. Applies to sustaining, reinforcing, or stabilising active magic.',
+        'Steady Chord — Add +2 to one roll involving maintaining a spell, holding a ward, stabilising a failing binding, or keeping a magical effect from collapsing.',
+        "Lent Resonance — Once during your next encounter or scene, sustain an ally's active working past the point at which it would have ended, for one further exchange.",
+        'Held Harmonic — Until the end of your next encounter, one ward, binding, or ongoing effect you have bound yourself to does not lapse while you remain conscious and within range of it.',
+        "[HIDDEN LVL 5+] Folwoade Sustaining Chord — Once during a ritual, siege, containment, or collapse, hold a critical working intact. One ally may add +2 to a roll that depends on that ward, binding, seal, or spell still standing.",
+      ],
+    },
+    {
+      id: 'nullchord', name: 'Nullchord', axis: 'magic', boon: '+1 Will per use',
+      tiers: [
+        'For 1 hour, add +1 WILL. Flatten the resonance around you into silence, dulling magic in your immediate area rather than breaking it. Applies to suppressing, muffling, or quieting active magical effects, including your own.',
+        'Dulled Air — Add +2 to one roll involving resisting a spell, suppressing a magical effect, hiding a working from detection, or moving through a warded space without setting it singing.',
+        'Silence Held — Once during your next encounter or scene, hold one area quiet. Magical detection, scrying, and ward-triggers within it are unreliable for as long as you concentrate.',
+        'Null Field — Until the end of your next encounter, hostile magic worked in your immediate area is weakened, and allies gain +1 to one roll involving resisting a spell cast close to you.',
+        "[HIDDEN LVL 5+] Folwoade Deep Null — Once during a ritual, ambush, escape, or arcane confrontation, drop a region into resonant silence. Add +2 to one group roll involving passing unseen through wards, denying an enemy their casting, or preventing a working from completing.",
+      ],
+    },
+    {
+      id: 'grimrite_contact', name: 'Grimrite Contact', axis: 'magic', boon: '+1 Soul per use',
+      tiers: [
+        'For 1 hour, add +1 SOUL. Take up an item carrying a Grimrite deposit — the one substance that lets a Folwoade touch the constructed world — and endure the contact. Applies to operating, examining, or interfering with a mechanism, device, lock, or machine you could otherwise never handle.',
+        'Grimrite Grip — Add +2 to one roll involving working a mechanism, opening a device, disabling a machine, or handling constructed equipment through a Grimrite-infused item.',
+        'Endured Contact — Once during your next encounter or scene, hold the contact longer than is bearable and complete one mechanical task that would normally require sustained handling. You take –1 to your next roll.',
+        'Grimrite Conduit — Until the end of your next encounter, you may handle constructed objects through your Grimrite item without further penalty, though the discomfort is visible to anyone watching.',
+        "[HIDDEN LVL 5+] Folwoade Grimrite Rite — Once during an infiltration, escape, sabotage, or salvage, work directly against a machine, vault, engine, or construct that no Folwoade should be able to touch. Add +2 to one group roll, and take –1 on your next roll from the cost of it.",
+      ],
+    },
+  ],
 };
 
 // ─── RACE → ABILITY KEY MAPPING ───────────────────────────────────────────────

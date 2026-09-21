@@ -34,7 +34,7 @@ Syntarion is a live companion app for tabletop sessions — part virtual tableto
 
 ## Tech Stack
 
-- **Frontend:** React 19 + Vite
+- **Frontend:** React 18 + Vite
 - **Backend:** Supabase (Postgres, Auth, Realtime, Edge Functions)
 - **AI:** Google Gemini (Scribe lore engine), Groq Whisper (voice transcription) — both server-side via Edge Functions
 - **Hosting:** Vercel
