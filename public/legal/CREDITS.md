@@ -9,11 +9,11 @@ A production of **Theonhex Media & Publishing**
 The world of Soteria, its cosmology, histories, races, classes, factions, bestiary, and systems are original creative works, developed across years of writing and tabletop play, and connected to the novels *The Lockcaste* and *Veinrunner*.
 
 **Driftstone** — original in-world board game designed by Adrian Gilmore
-**Fubin** — original in-world 2D platrformer game designed by Jake Homer
+**Fubin** — original in-world 2D platformer game
 
 ## Development & Design
 
-**Application design and development** — Adrian Gilmore, Jake Homer
+**Application design and development** — Adrian Gilmore
 
 ## Original Music
 
@@ -47,7 +47,6 @@ To the players and DMs whose tables will help shape these tools — and whose ch
 
 Playtesters:
 
-- Jake "JayDoze" Homer
 - Chris Clark
 - Drew Emmick
 - Helen Gilmore

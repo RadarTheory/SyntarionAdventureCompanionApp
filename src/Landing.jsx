@@ -989,7 +989,7 @@ export default function Landing({ user, darkMode, setDarkMode, onOpenBag, onView
         animation: 'fadeUp 1.2s cubic-bezier(0.16,1,0.3,1) both',
         animationDelay: '0.9s',
       }}>
-        Developed by Adrian 'Radar Theory' Gilmore and Jacob 'Jake' Homer. &copy; 2026 TheonhexMedia &amp; Publishing. All rights reserved.
+        Developed by Adrian 'Radar Theory' Gilmore. &copy; 2026 TheonhexMedia &amp; Publishing. All rights reserved.
       </div>
 
       <MenuMusicPlayer isMobile={isMobile} />
