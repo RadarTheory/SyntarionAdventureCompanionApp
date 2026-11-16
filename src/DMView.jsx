@@ -1648,7 +1648,7 @@ const renderTab = () => {
 
     case 'Scribe': return <ScribeDMPanel embedded activeCampaignId={activeCampaignTab} />;
 
-    case 'Chronicle': return <ChroniclePanel campaignId={activeCampaignTab} />;
+    case 'Chronicle': return <ChroniclePanel key={activeCampaignTab} campaignId={activeCampaignTab} />;
 
     case 'Memory': return <DMMemoryPanel campaigns={dbCampaigns} browseAll />;
 

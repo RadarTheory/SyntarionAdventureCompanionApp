@@ -203,6 +203,7 @@ export default function ChroniclePanel({ campaignId, userChar }) {
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
   const prevEventCount = useRef(0);
+  const eventSessionId = useRef(null);
 
   useEffect(() => {
     if (!campaignId) return;
@@ -216,7 +217,12 @@ export default function ChroniclePanel({ campaignId, userChar }) {
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'hercules_events',
       }, (payload) => {
-        if (payload.new) {
+        const row = payload.new;
+        if (!row) return;
+        const matchesCampaign = row.campaign_id != null
+          ? String(row.campaign_id) === String(campaignId)
+          : eventSessionId.current != null && String(row.session_id) === String(eventSessionId.current);
+        if (matchesCampaign) {
           setEvents(prev => {
             const updated = [...prev, payload.new];
             setNewEventIds(ids => new Set([...ids, payload.new.id]));
@@ -286,17 +292,23 @@ export default function ChroniclePanel({ campaignId, userChar }) {
 
     // A campaign that has never had combat still has a record worth showing —
     // without this the panel stayed permanently empty for it.
-    setEvents([]);
+    setEvents(previous => previous.filter(row => String(row.campaign_id) === String(campaignId)));
     await loadCampaignRecord();
   };
 
   const loadEvents = async (sid) => {
+    eventSessionId.current = sid;
     const { data } = await supabase
       .from('hercules_events')
       .select('*')
       .eq('session_id', sid)
       .order('created_at', { ascending: true });
-    setEvents(data || []);
+    if (eventSessionId.current !== sid) return;
+    setEvents(previous => {
+      const fetched = data || [];
+      const fetchedIds = new Set(fetched.map(row => row.id));
+      return [...fetched, ...previous.filter(row => row.session_id === sid && !fetchedIds.has(row.id))];
+    });
     await loadCampaignRecord();
   };
 
