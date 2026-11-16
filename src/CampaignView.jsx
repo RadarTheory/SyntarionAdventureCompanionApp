@@ -7,7 +7,7 @@ import { COLORS, CAMPAIGNS, ALL_STATS, ALL_CLASSES, ACTIONS, getRaceDisplay, EQU
 import { LOCATIONS } from './MapPanel';
 import VTTViewer from './VTTViewer';
 import Astragal from './Astragal';
-import AbilitiesPanel from './AbilitiesPanel';
+import CampaignAbilities from './CampaignAbilities';
 import CastorPanel from './CastorPanel';
 import FloatToolbar from './FloatToolbar';
 import ArgusPlayerPanel from './Argus';
@@ -2251,7 +2251,7 @@ useEffect(() => {
 
       case 'Abilities':
         return userChar
-          ? <AbilitiesPanel char={userChar} campaignId={String(campaign.id)} onRoll={rollAbility} />
+          ? <CampaignAbilities char={userChar} campaignId={String(campaign.id)} onRoll={rollAbility} onUpdateChar={onUpdateChar} />
           : <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12 }}>No character loaded.</div>;
 
       case 'Inventory':

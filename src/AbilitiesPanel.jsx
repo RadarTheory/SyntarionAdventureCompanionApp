@@ -393,7 +393,7 @@ export default function AbilitiesPanel({ char, campaignId, onRoll }) {
           </div>
         </div>
       )}
-      {entries && !entries.length && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>{stars.length ? "Your star is open, but no abilities are awakened yet. Spend AP on them in the Constellation, on your sheet's Abilities tab." : "No abilities learned yet. Awaken them in the Constellation, on your sheet's Abilities tab."}</div>}
+      {entries && !entries.length && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>{stars.length ? "Your star is open, but no abilities are awakened yet. Spend AP on them in the Constellation view above." : "No abilities learned yet. Awaken them in the Constellation view above."}</div>}
 
       {/* ── SPELLS ── */}
       <AbilitySection
