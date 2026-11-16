@@ -2653,8 +2653,8 @@ useEffect(() => {
         
       </div>
 
-      <div style={{ flex: 1, overflowY: activeTab === 'Map' ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column', WebkitOverflowScrolling: 'touch' }}>
-        <div style={{ padding: activeTab === 'Map' ? 0 : (isMobile ? '20px 16px calc(24px + env(safe-area-inset-bottom, 0px))' : '28px 32px'), maxWidth: activeTab === 'Map' ? '100%' : activeTab === 'Tales' ? 920 : 680, width: '100%', margin: '0 auto', height: activeTab === 'Map' || activeTab === 'Tales' ? '100%' : 'auto', flex: activeTab === 'Map' || activeTab === 'Tales' ? 1 : 'none', display: activeTab === 'Map' || activeTab === 'Tales' ? 'flex' : 'block', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflowY: activeTab === 'Map' || activeTab === 'Abilities' ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ padding: activeTab === 'Map' || activeTab === 'Abilities' ? 0 : (isMobile ? '20px 16px calc(24px + env(safe-area-inset-bottom, 0px))' : '28px 32px'), maxWidth: activeTab === 'Map' || activeTab === 'Abilities' ? '100%' : activeTab === 'Tales' ? 920 : 680, width: '100%', margin: '0 auto', height: activeTab === 'Map' || activeTab === 'Tales' || activeTab === 'Abilities' ? '100%' : 'auto', flex: activeTab === 'Map' || activeTab === 'Tales' || activeTab === 'Abilities' ? 1 : 'none', display: activeTab === 'Map' || activeTab === 'Tales' || activeTab === 'Abilities' ? 'flex' : 'block', flexDirection: 'column' }}>
           {false && !isAssigned && userChar && (
             <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '16px 20px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Assign your character to this campaign</div>
