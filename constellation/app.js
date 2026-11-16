@@ -4,7 +4,7 @@ import {classPortrait,hydrateClassIcons} from './class-icons.js';
 import {practiceSymbol} from './practice-icons.js';
 import {disciplines,classes,roots,attributes,abilityEntries,classLevelNodes,buyVerb,visibleClasses,restoreSelection,setupForClass,praethacyEligibility,nullRevealed,canLearn,classById,classKnown,isMastered,isComplete,reachableNodes,awakenedCount,masteredClasses,unlockRequirement,repairLearned,spentPoints,nodeCost,blockReason,nextParent,magicTechAxis,AXIS_LIMIT,MASTERY,STARTING_POINTS,CALLING_LORE,traitFor} from './data.js';
 import {DEV_MODE,setStartingPoints} from './config.js';
-import {HOSTED,hostInit,hostSave} from './host.js';
+import {HOSTED,PICKING,hostInit,hostSave,hostPick} from './host.js';
 import {aspectForClass,doctrineGroups,hopeAspect} from './doctrine.js';
 import {snapshot,play,tickPoints,masteryTitle,holdToConfirm,dive,chargeThread,unveil} from './ceremony.js';
 const $=s=>document.querySelector(s);
@@ -15,11 +15,11 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 let declared=null;const declare=id=>{declared=roots.find(r=>r.id===id&&!r.secret&&!r.hidden)?.id||null;let style=document.getElementById('declared-style');if(!style){style=document.createElement('style');style.id='declared-style';document.head.append(style);}
 style.textContent=declared?`[data-star-class="${declared}"] .node-corona{visibility:visible!important;opacity:.34;animation:psynth-breathe 5.5s ease-in-out infinite}[data-motion="off"] [data-star-class="${declared}"] .node-corona{animation:none}`:'';};
 const hosted=await hostInit(update=>{declare(update.startingCalling);setStartingPoints(update.available+spentPoints(learned));render();});
-if(HOSTED)document.documentElement.classList.add('hosted');
+if(HOSTED)document.documentElement.classList.add('hosted');if(PICKING)document.documentElement.classList.add('picking');
 const storageKey=hosted?`syntarion-atlas-host-${hosted.characterId??'character'}`:'syntarion-atlas-v1';
-let saved={};try{saved=JSON.parse(localStorage.getItem(storageKey)||'{}')||{};}catch{}
+let saved={};try{if(!PICKING)saved=JSON.parse(localStorage.getItem(storageKey)||'{}')||{};}catch{}
 if(hosted){declare(hosted.startingCalling);const held=repairLearned(hosted.learned,Infinity);saved.learned=held;setStartingPoints(hosted.available+spentPoints(held));
-if(declared&&!saved.classId){saved.classId=declared;saved.calling=declared;}}
+if(declared&&!saved.classId){saved.classId=declared;if(!PICKING)saved.calling=declared;}}
 let learned=repairLearned(saved.learned);
 let reported={spent:spentPoints(learned),axis:magicTechAxis(learned).value,key:JSON.stringify(learned)};
 let {revealed,selectedClass,disciplineId}=restoreSelection(saved,learned);
@@ -31,7 +31,7 @@ if(!classKnown(selectedClass,learned))selectedClass=classById(selectedClass.root
 let category='levels',selectedAbility=null,scale=1,pan={...homePan},drag=null,moved=false;
 const d=()=>disciplines.find(x=>x.id===disciplineId);
 const revealedDescription='Beyond what is known, explore what may yet be.';
-function save(){if(hosted){const key=JSON.stringify(learned);if(key!==reported.key){const spent=spentPoints(learned),axis=magicTechAxis(learned).value;hostSave({learned,spentDelta:spent-reported.spent,magicTechDelta:axis-reported.axis});reported={spent,axis,key};}}
+function save(){if(PICKING)return;if(hosted){const key=JSON.stringify(learned);if(key!==reported.key){const spent=spentPoints(learned),axis=magicTechAxis(learned).value;hostSave({learned,spentDelta:spent-reported.spent,magicTechDelta:axis-reported.axis});reported={spent,axis,key};}}
 try{localStorage.setItem(storageKey,JSON.stringify({...(hosted?{}:{learned}),revealed,nullOpen,classId:selectedClass.id,disciplineId,calling}));}catch{if(!hosted)notify('Device storage is unavailable. This build will last for this session.');}}
 // A toast can carry one action (Undo); it then stays a little longer.
 let toastTimer;function notify(message,action){const t=$('#toast');t.textContent=message;if(action){const b=document.createElement('button');b.type='button';b.className='toast-action';b.textContent=action.label;b.onclick=()=>{t.classList.remove('show');action.run();};t.append(b);}t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),action?6000:3000);}
@@ -41,12 +41,14 @@ const nextPaths=cls=>classes.filter(c=>c.parentIds?.includes(cls.id));
 // The drawer opens only for a class the player has awakened; until then the sky's corner offers its first purchase.
 const awakened=cls=>learned.some(id=>id.startsWith(`${cls.id}:`));
 function undo(){if(!lastBuy||!learned.includes(lastBuy.id))return;const {id,name,cost}=lastBuy,ap=apLeft();lastBuy=null;learned=repairLearned(learned.filter(x=>x!==id));save();render();tickPoints($('#points'),ap,apLeft());notify(`${name} returned · ${cost} AP refunded`);}
-function setClass(cls){if(!cls||!visibleClasses(revealed,false,learned,nullOpen).includes(cls)||!classKnown(cls,learned))return;selectedClass=cls;drawerOpen=awakened(cls);if(!drawerOpen)category='levels';disciplineId=cls.discipline;selectedAbility=null;if(cls.rootId||calling)openCalling(cls.rootId||cls.id);save();render();}
+// In pick mode, choosing any class on a line picks that line's calling; it then glows as the declared one.
+function pick(cls){if(!PICKING||!cls)return;const root=cls.rootId?classById(cls.rootId):cls;if(!root||root.secret||root.hidden)return;declare(root.id);hostPick(root.id);}
+function setClass(cls){if(!cls||!visibleClasses(revealed,false,learned,nullOpen).includes(cls)||!classKnown(cls,learned))return;selectedClass=cls;pick(cls);drawerOpen=awakened(cls);if(!drawerOpen)category='levels';disciplineId=cls.discipline;selectedAbility=null;if(cls.rootId||calling)openCalling(cls.rootId||cls.id);save();render();}
 // Opening or leaving a calling recentres the camera; selecting within a sky never moves it.
 function openCalling(id){if(calling!==id){calling=id;scale=1;pan={...homePan};}}
 // Entering a calling dives the camera into its star; leaving pulls back out to the atlas. `then` runs once the new sky has settled.
 let diving=false;
-function enterCalling(id,then){if(diving)return;const go=()=>{const root=classById(id);openCalling(id);if((selectedClass.rootId||selectedClass.id)!==id){selectedClass=root;disciplineId=root.discipline;selectedAbility=null;}drawerOpen=awakened(selectedClass);if(!drawerOpen)category='levels';save();render();};if(calling===id){go();return then?.();}diving=true;dive($('#stars'),$(`#stars [data-star-class="${id}"]`),go).finally(()=>{diving=false;then?.();});}
+function enterCalling(id,then){if(diving)return;if(PICKING){pick(classById(id));return then?.();}const go=()=>{const root=classById(id);openCalling(id);pick(root);if((selectedClass.rootId||selectedClass.id)!==id){selectedClass=root;disciplineId=root.discipline;selectedAbility=null;}drawerOpen=awakened(selectedClass);if(!drawerOpen)category='levels';save();render();};if(calling===id){go();return then?.();}diving=true;dive($('#stars'),$(`#stars [data-star-class="${id}"]`),go).finally(()=>{diving=false;then?.();});}
 function leaveCalling(){if(diving)return;diving=true;dive($('#stars'),null,()=>{calling=null;scale=1;pan={...homePan};save();render();},{out:true}).finally(()=>diving=false);}
 // Praethacy's reveal lives on the sky: the sealed veil star reveals it once the gate is met; afterwards the map toolbar offers Close the veil.
 function openSeal(id){if(id==='veil')return revealPraethacy();if(!nullRevealed(learned)){const n=masteredClasses(learned).filter(c=>c.discipline==='nihimence'&&!c.parentIds&&!c.secret).length;return notify(`The void holds · ${Math.min(n,2)}/2 Nihimence classes have opened their paths`);}nullOpen=true;revealCeremony('null','void','✦ The void opens ✦','The hidden Nihimence class reveals itself');}

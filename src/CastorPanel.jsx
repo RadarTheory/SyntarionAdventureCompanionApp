@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { logHerculesEvent } from './lib/herculesLog';
-import { DISCIPLINE_META, poolOf, loadConstellation, learnedEntries } from './constellationAbilities';
+import { DISCIPLINE_META, poolOf, spendTrait, loadConstellation, learnedEntries } from './constellationAbilities';
 
 // ─── TIER LABELS ──────────────────────────────────────────────────────────────
 const MAGIC_TIERS = ['Mote', 'Charm', 'Spell', 'Weave', 'Weave (Hidden)'];
@@ -970,7 +970,7 @@ function ConstellationCard({ entry, char, requests, onSubmit }) {
   const axisColor  = entry.axis === 'magic' ? COLORS.magic : COLORS.tech;
   const color      = meta.color || axisColor;
   const axisLabel  = entry.axis === 'magic' ? 'Cast' : 'Deploy';
-  const pool       = poolOf(char, entry.currencyKey);
+  const pool       = poolOf(char, entry.currencyKey, entry.poolMax);
   const canAfford  = pool >= entry.cost;
   const hasPending = requests.some(r => r.ability_id === `constellation:${entry.id}` && r.status === 'pending');
 
@@ -1005,7 +1005,7 @@ function ConstellationCard({ entry, char, requests, onSubmit }) {
         <div style={{ padding: '10px 12px', borderTop: `1px solid ${COLORS.border}`, background: COLORS.surface, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ fontSize: 10, color: COLORS.text, fontFamily: 'Georgia, serif', lineHeight: 1.5 }}>{entry.effect}</div>
           <div style={{ fontSize: 8, color: canAfford ? color : '#e05a5a', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
-            {entry.cost} {entry.currencyLabel} per use (provisional) · Pool: {pool}
+            {entry.cost} {entry.currencyLabel} per use (provisional) · Pool: {pool} / {entry.poolMax} · refills on a long rest
           </div>
           <textarea value={note} onChange={e => setNote(e.target.value)}
             placeholder="Optional note to the Architect…" rows={2}
@@ -1070,6 +1070,9 @@ function CastorInner({ char, campaignId, onClose, onBadgeChange }) {
 
   // What the character has learned in the Constellation (null while its data loads).
   const [learned, setLearned] = useState(null);
+  // Pool spending made here, shown until the character reloads with it.
+  const [traitSpent, setTraitSpent] = useState(null);
+  const poolChar = traitSpent ? { ...char, traitSpent } : char;
   const learnedKey = JSON.stringify(char?.abilities || []);
   useEffect(() => {
     let live = true;
@@ -1139,6 +1142,15 @@ function CastorInner({ char, campaignId, onClose, onBadgeChange }) {
     const statVal   = entry.statKey ? (char?.stats?.[entry.statKey] || 8) : 8;
     const label     = `${entry.className} · ${entry.type}`;
 
+    // The use is paid from the trait's pool when it is sent; a denial gives it back (CastorDMPanel).
+    try {
+      const next = await spendTrait(char.id, entry.currencyKey, entry.cost);
+      setTraitSpent(next.traitSpent);
+    } catch (e) {
+      console.error('Could not spend from the trait pool:', e);
+      return;
+    }
+
     const { data: req, error } = await supabase.from('cast_requests').insert({
       campaign_id:      String(campaignId),
       character_id:     String(char.id),
@@ -1156,6 +1168,10 @@ function CastorInner({ char, campaignId, onClose, onBadgeChange }) {
       resolved_at:      null,
     }).select().single();
 
+    if (error || !req) {
+      const back = await spendTrait(char.id, entry.currencyKey, -entry.cost).catch(() => null);
+      if (back) setTraitSpent(back.traitSpent);
+    }
     if (!error && req) {
       await logHerculesEvent(campaignId, {
         type: 'cast_request',
@@ -1208,11 +1224,11 @@ function CastorInner({ char, campaignId, onClose, onBadgeChange }) {
               {hasMagic && (
                 <AxisSection title="Magicka — Racial Magic" axis="magic" abilities={abilities} charLevel={charLevel} char={char} campaignId={campaignId} requests={requests} onSubmit={handleSubmit} />
               )}
-              <ConstellationSection title="Magicka — Constellation Spells" axis="magic" entries={learnedList} char={char} requests={requests} onSubmit={handleConstellationSubmit} />
+              <ConstellationSection title="Magicka — Constellation Spells" axis="magic" entries={learnedList} char={poolChar} requests={requests} onSubmit={handleConstellationSubmit} />
               {hasTech && (
                 <AxisSection title="Ingenium — Racial Tech" axis="tech" abilities={abilities} charLevel={charLevel} char={char} campaignId={campaignId} requests={requests} onSubmit={handleSubmit} />
               )}
-              <ConstellationSection title="Ingenium — Constellation Schematics" axis="tech" entries={learnedList} char={char} requests={requests} onSubmit={handleConstellationSubmit} />
+              <ConstellationSection title="Ingenium — Constellation Schematics" axis="tech" entries={learnedList} char={poolChar} requests={requests} onSubmit={handleConstellationSubmit} />
             </div>
           )
         )}

@@ -479,3 +479,5 @@ html{scrollbar-color:color-mix(in srgb,var(--accent,#c4b389) 40%,#2a332c) #080f0
 
 /* Host mode (inside Syntarion): the host page supplies the header and owns saving, so the explorer's own chrome is hidden. */
 .hosted .topbar,.hosted .page-footer{display:none}
+/* Pick mode (character wizard): the sky is for choosing a calling, so nothing that buys or counts AP is shown. */
+.picking .map-toolbar .segmented,.picking .map-hud .points,.picking #reset,.picking #hud-awaken,.picking #awaken,.picking .dock-awaken,.picking #axis-meter,.picking #learned-count,.picking .map-legend{display:none!important}

@@ -10,6 +10,7 @@
     "check:races": "node scripts/check-race-registries.mjs",
     "preview": "vite preview",
     "sync:constellation": "node scripts/sync-constellation.mjs",
+    "scribe:classes": "node scripts/scribe-class-reference.mjs",
     "check:constellation": "npm --prefix constellation run check",
     "constellation": "node constellation/server.mjs"
   },

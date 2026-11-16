@@ -11,7 +11,7 @@ Syntarion is a live companion app for tabletop sessions — part virtual tableto
 ## Features
 
 **For Players**
-- **Character Wizard** — guided character creation across race, class, stats, belief, and backstory, built on Soteria's 16-class ability tree (Magicka / Ingenium disciplines) and 8-stat system
+- **Character Wizard** — guided character creation across race, class, stats, belief, and backstory, built on Soteria's Constellation (16 callings across Magicka, Ingenium and Nihimence) and 8-stat system
 - **Character Sheet & Ability Trees** — live character management with class progression
 - **Grimoire** — a per-character journal that automatically records NPCs, beasts, and lore your character encounters
 - **Lark** — an in-world letter system for player-to-player and player-to-NPC correspondence
@@ -72,7 +72,10 @@ The character sheet's Abilities tab is the Syntarion Constellation. Its source l
 - **AP** is spent on abilities. It is stored in `at_current` / `at_total` and granted as the character levels. **XP** is experience: it is stored in `ap_total` and sets the level. Only the labels say AP and XP; the columns keep their names.
 - Purchases are instant. The build is stored as constellation unlock ids in the character's `data.abilities`, on that character's `characters` row, so it belongs to whoever owns the character and is read and written under the same access rules as the rest of the sheet.
 - A character still holding abilities from the earlier tree has them cleared once, with their AP refunded, the first time the tab opens.
-- The casting panel (`src/AbilitiesPanel.jsx`) lists the abilities a character has learned. Each draws on its line's trait pool in `char.disciplines`. A use costs 1 from that pool for now, until amounts are decided.
+- The casting panel (`src/AbilitiesPanel.jsx`) and Castor list the abilities a character has learned. Each draws on its line's trait (one of the sheet's 16 Magic | Tech rows). A trait's pool holds one point per star (class level) awakened in classes drawing on it; only what is spent is stored, in `data.traitSpent`. A use costs 1 for now (`USE_COST`), until amounts are decided. Castor pays when the cast is sent and gives it back if the Architect denies it. The DM's Long Rest on the Soteria Clock refills every pool in the campaign.
+- Rolls use the class's aspect stat: Soul, Spirit, Mind, Body, Will, Whim and Dream roll that stat, Affect rolls Essence, and Hope (Warden's and Null's lines) rolls Dream.
+- The character wizard's class step (`src/StepClass.jsx`) shows the constellation in pick mode: the player chooses a calling on the sky, and it opens as their first star when the Abilities tab first loads.
+- The Scribe's class reference, `src/soteria-classes.js`, is generated from the constellation by `scripts/scribe-class-reference.mjs` (run by the Vite config with the sync, or `npm run scribe:classes`); don't edit it by hand.
 
 ## Project Status
 

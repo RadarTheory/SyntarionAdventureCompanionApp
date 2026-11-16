@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { logHerculesEvent } from './lib/herculesLog';
-import { DISCIPLINE_META, poolOf, loadConstellation, learnedEntries, awakenedStars } from './constellationAbilities';
+import { DISCIPLINE_META, poolOf, spendTrait, loadConstellation, learnedEntries, awakenedStars } from './constellationAbilities';
 
 // ─── LEARNED ABILITIES ────────────────────────────────────────────────────────
 // The panel lists the abilities the character has bought in the Constellation (the Abilities tab), read from
@@ -36,14 +36,15 @@ function label8() {
 }
 
 // ─── ABILITY CARD ─────────────────────────────────────────────────────────────
-function AbilityCard({ entry, char, campaignId, onRoll, disabled, onRequestUse }) {
+function AbilityCard({ entry, char, campaignId, onRoll, onUpdateChar, disabled }) {
   const [expanded, setExpanded] = useState(false);
   const [rolling, setRolling]   = useState(false);
   const [requesting, setRequesting] = useState(false);
   const [requested, setRequested]   = useState(false);
 
   const meta    = DISCIPLINE_META[entry.discipline] || {};
-  const pool    = poolOf(char, entry.currencyKey);
+  const pool    = poolOf(char, entry.currencyKey, entry.poolMax);
+  const [spendError, setSpendError] = useState(null);
   const canAfford = pool >= entry.cost;
   const typeColor = TYPE_COLORS[entry.type] || COLORS.dim;
   const statVal = entry.statKey ? (char?.stats?.[entry.statKey] || 8) : 8;
@@ -52,7 +53,15 @@ function AbilityCard({ entry, char, campaignId, onRoll, disabled, onRequestUse }
   const handleRoll = async () => {
     if (rolling || disabled || !canAfford) return;
     setRolling(true);
-    await onRoll(entry, modifier);
+    setSpendError(null);
+    try {
+      // The use is paid from the trait's pool first; a long rest refills it.
+      const next = await spendTrait(char.id, entry.currencyKey, entry.cost);
+      onUpdateChar?.({ ...char, traitSpent: next.traitSpent });
+      await onRoll(entry, modifier);
+    } catch (e) {
+      setSpendError(e.message || 'Could not spend from the pool.');
+    }
     setRolling(false);
   };
 
@@ -198,6 +207,7 @@ function AbilityCard({ entry, char, campaignId, onRoll, disabled, onRequestUse }
               </button>
             </div>
           )}
+          {spendError && <div style={{ fontSize: 9, color: '#e05a5a', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{spendError}</div>}
         </div>
       )}
     </div>
@@ -205,7 +215,7 @@ function AbilityCard({ entry, char, campaignId, onRoll, disabled, onRequestUse }
 }
 
 // ─── SECTION BLOCK ────────────────────────────────────────────────────────────
-function AbilitySection({ title, axis, entries, char, campaignId, onRoll, disabled, alignVal }) {
+function AbilitySection({ title, axis, entries, char, campaignId, onRoll, onUpdateChar, disabled, alignVal }) {
   const [collapsed, setCollapsed] = useState(false);
   const axisColor = axis === 'magic' ? COLORS.magic : COLORS.tech;
 
@@ -270,8 +280,8 @@ function AbilitySection({ title, axis, entries, char, campaignId, onRoll, disabl
         <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           {disciplines.map(disc => {
             const meta    = DISCIPLINE_META[disc] || {};
-            const pool    = poolOf(char, disc);
             const entries = byDiscipline[disc];
+            const pool    = poolOf(char, disc, entries[0]?.poolMax);
             return (
               <div key={disc}>
                 {/* Discipline sub-header */}
@@ -286,7 +296,7 @@ function AbilitySection({ title, axis, entries, char, campaignId, onRoll, disabl
                     border: `1px solid ${pool > 0 && !disabled ? meta.color + '44' : COLORS.border}`,
                     borderRadius: 4, padding: '1px 7px',
                   }}>
-                    {pool} {entries[0]?.currencyLabel}
+                    {pool} / {entries[0]?.poolMax || 0} {entries[0]?.currencyLabel}
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -297,8 +307,8 @@ function AbilitySection({ title, axis, entries, char, campaignId, onRoll, disabl
                       char={char}
                       campaignId={campaignId}
                       onRoll={onRoll}
+                      onUpdateChar={onUpdateChar}
                       disabled={disabled}
-                      onRequestUse={() => {}}
                     />
                   ))}
                 </div>
@@ -312,7 +322,7 @@ function AbilitySection({ title, axis, entries, char, campaignId, onRoll, disabl
 }
 
 // ─── ABILITIES PANEL (exported) ───────────────────────────────────────────────
-export default function AbilitiesPanel({ char, campaignId, onRoll }) {
+export default function AbilitiesPanel({ char, campaignId, onRoll, onUpdateChar }) {
   // null while the constellation's data loads; then one entry per learned ability.
   const [entries, setEntries] = useState(null);
   const [stars, setStars] = useState([]);
@@ -403,6 +413,7 @@ export default function AbilitiesPanel({ char, campaignId, onRoll }) {
         char={char}
         campaignId={campaignId}
         onRoll={onRoll}
+        onUpdateChar={onUpdateChar}
         disabled={spellsDisabled}
         alignVal={alignVal}
       />
@@ -415,6 +426,7 @@ export default function AbilitiesPanel({ char, campaignId, onRoll }) {
         char={char}
         campaignId={campaignId}
         onRoll={onRoll}
+        onUpdateChar={onUpdateChar}
         disabled={schematicsDisabled}
         alignVal={alignVal}
       />

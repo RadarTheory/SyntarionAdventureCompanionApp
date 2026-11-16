@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
 import { COLORS, CAMPAIGNS } from './constants';
 import { logHerculesEvent } from './lib/herculesLog';
+import { spendTrait } from './constellationAbilities';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -200,6 +201,10 @@ export default function CastorDMPanel({ onPendingChange, onClose }) {
     setResolving(req.id);
     const note = dmNotes[req.id]?.trim() || null;
     await supabase.from('cast_requests').update({ status, dm_note: note, resolved_at: new Date().toISOString() }).eq('id', req.id);
+    // A Constellation use was paid from its trait pool when sent; a denied one gets it back.
+    if (status !== 'approved' && String(req.ability_id || '').startsWith('constellation:') && req.character_id && req.currency_key) {
+      await spendTrait(req.character_id, String(req.currency_key).toLowerCase(), -(Number(req.cost) || 0)).catch(e => console.error('Trait refund failed:', e));
+    }
     await logHerculesEvent(req.campaign_id, {
       type: 'cast_resolved',
       actor_name: 'The Architect',

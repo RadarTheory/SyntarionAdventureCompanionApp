@@ -1,6 +1,7 @@
 // Shared by the Abilities panel and Castor: reads what a character has learned in the Constellation (data.abilities)
 // through the constellation's own data module, and maps each ability to its sheet trait pool.
 import { COLORS } from './constants';
+import supabase from './lib/supabase';
 
 // Sheet rows: trait key → discipline label, trait label and colour. Rows that existed before keep their colour.
 export const DISCIPLINE_META = {
@@ -22,12 +23,56 @@ export const DISCIPLINE_META = {
   ion:     { label: 'Gain',        trait: 'Ion',     color: COLORS.tech,  axis: 'tech'  },
 };
 
-// Pools saved under the panel's earlier keys are still read, so nothing a character held is lost.
-const LEGACY_POOL = { chi: 'essence', ion: 'gain', steam: 'grit', zinc: 'focus', volt: 'matter', cell: 'reason', lithium: 'fortitude', null: 'ingenuity' };
-export const poolOf = (char, key) => Number(char?.disciplines?.[key] ?? char?.disciplines?.[LEGACY_POOL[key]] ?? 0) || 0;
+// Trait pools (user, 2026-11-16). A trait's pool holds one point for every star (class level) the character has awakened in
+// classes that draw on that trait, so it grows as they buy. Uses spend from it, and a long rest refills every pool.
+// Only what has been spent is stored, in data.traitSpent ({ trait key: points spent }); the pool is its size minus that.
+export function poolMaxes(d, learned) {
+  const held = new Set((Array.isArray(learned) ? learned : []).filter(id => typeof id === 'string' && !id.includes('|')));
+  const maxes = {};
+  if (!held.size) return maxes;
+  for (const cls of d.classes) {
+    const t = d.traitFor(cls);
+    if (!t) continue;
+    const stars = d.classLevelNodes(cls).filter(n => held.has(n.id)).length;
+    if (stars) { const key = t.trait.toLowerCase(); maxes[key] = (maxes[key] || 0) + stars; }
+  }
+  return maxes;
+}
+export const spentOf = (char, key) => Math.max(0, Number(char?.traitSpent?.[key]) || 0);
+export const poolOf = (char, key, max) => Math.max(0, (Number(max) || 0) - spentOf(char, key));
 
-// The class's aspect sets the roll stat. Affect rolls Essence (the sheet's earlier rule); Hope has no stat yet.
-const ASPECT_STAT = { Soul: 'soul', Spirit: 'spirit', Mind: 'mind', Body: 'body', Will: 'will', Whim: 'whim', Dream: 'dream', Affect: 'essence' };
+const blobOf = data => (typeof data === 'string' ? JSON.parse(data || '{}') : (data || {}));
+
+// Spends `amount` from a trait pool (a negative amount gives it back). Reads the row fresh so other edits are kept.
+// Returns the character's new data blob.
+export async function spendTrait(charId, key, amount) {
+  const { data: row, error } = await supabase.from('characters').select('data').eq('id', charId).maybeSingle();
+  if (error) throw error;
+  if (!row) throw new Error('Character not found.');
+  const data = blobOf(row.data);
+  const spent = Math.max(0, (Number(data.traitSpent?.[key]) || 0) + amount);
+  const next = { ...data, traitSpent: { ...(data.traitSpent || {}), [key]: spent } };
+  const { error: saveError } = await supabase.from('characters').update({ data: next }).eq('id', charId);
+  if (saveError) throw saveError;
+  return next;
+}
+
+// A long rest refills every trait pool of every character in the campaign. Returns how many characters were refilled.
+export async function refillTraitPools(campaignId) {
+  const { data: rows, error } = await supabase.from('characters').select('id, data').eq('campaign_id', String(campaignId));
+  if (error) throw error;
+  let refilled = 0;
+  for (const row of rows || []) {
+    const data = blobOf(row.data);
+    if (!Object.values(data.traitSpent || {}).some(v => Number(v) > 0)) continue;
+    const { error: saveError } = await supabase.from('characters').update({ data: { ...data, traitSpent: {} } }).eq('id', row.id);
+    if (!saveError) refilled++;
+  }
+  return refilled;
+}
+
+// The class's aspect sets the roll stat. Affect rolls Essence (the sheet's earlier rule); Hope rolls Dream (user, 2026-11-16).
+const ASPECT_STAT = { Soul: 'soul', Spirit: 'spirit', Mind: 'mind', Body: 'body', Will: 'will', Whim: 'whim', Dream: 'dream', Affect: 'essence', Hope: 'dream' };
 
 // Placeholder: what one use costs from the trait's pool is not decided yet, so every use costs 1.
 export const USE_COST = 1;
@@ -40,6 +85,7 @@ export function loadConstellation() {
 
 // One entry per learned ability, at the highest level the character holds.
 export function learnedEntries(d, learned) {
+  const maxes = poolMaxes(d, learned);
   const held = new Set((Array.isArray(learned) ? learned : []).filter(id => typeof id === 'string' && !id.includes('|')));
   const out = [];
   for (const cls of d.classes) {
@@ -55,7 +101,7 @@ export function learnedEntries(d, learned) {
         id: e.key, name: e.name, className: cls.name,
         type: top.levelName, level: owned.length, levels: e.nodes.length,
         discipline: key, disciplineLabel: meta?.label || t.discipline,
-        cost: USE_COST, currencyKey: key, currencyLabel: t.trait,
+        cost: USE_COST, currencyKey: key, currencyLabel: t.trait, poolMax: maxes[key] || 0,
         statKey: ASPECT_STAT[cls.attribute] || null,
         effect: top.description || e.description || '',
         axis: t.column === 'Magic' ? 'magic' : 'tech',

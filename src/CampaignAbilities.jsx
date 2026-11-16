@@ -31,7 +31,7 @@ export default function CampaignAbilities({ char, campaignId, onRoll, onUpdateCh
         : (
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
             <div style={{ maxWidth: 680, margin: '0 auto', padding: '20px 24px 40px' }}>
-              <AbilitiesPanel char={char} campaignId={campaignId} onRoll={onRoll} />
+              <AbilitiesPanel char={char} campaignId={campaignId} onRoll={onRoll} onUpdateChar={onUpdateChar} />
             </div>
           </div>
         )}

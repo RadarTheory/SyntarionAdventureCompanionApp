@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
+import { refillTraitPools } from './constellationAbilities';
 import {
   PASSES, getCycleName, getPassInfo, advanceFragments, getLiveClock, getClockTime,
   TRAVEL_METHODS, FRAGMENTS_PER_TURN, GREATER_CYCLES_EU, GREATER_CYCLES_ED,
@@ -326,6 +327,8 @@ export default function SoteriaClockPanel({ campaignId }) {
     const base = getLiveClock(clock);
     save({ ...advanceFragments(base, FRAGMENTS_PER_TURN), session_anchor_at: clock.session_anchor_at ? new Date().toISOString() : null });
     logClockEvent('The party takes a long rest. One full Soterian day passes.');
+    // A long rest refills every character's trait pools (user, 2026-11-16).
+    refillTraitPools(campaignId).catch(e => console.error('Trait pools could not be refilled:', e));
   };
 
   const shortRest = () => {

@@ -6,6 +6,9 @@
 // or the lean the character already had from creation.
 // Messages are only exchanged with the same origin.
 export const HOSTED=typeof location!=='undefined'&&new URLSearchParams(location.search).get('host')==='syntarion';
+// Pick mode (&pick=1): the character wizard shows the sky to choose a calling. Nothing is bought; choosing a calling
+// (selecting its star or any class on its line) posts {type:'pick', classId} with the calling's id.
+export const PICKING=HOSTED&&new URLSearchParams(location.search).get('pick')==='1';
 
 const send=message=>{try{window.parent.postMessage(message,location.origin);}catch{}};
 
@@ -22,5 +25,7 @@ export function hostInit(onUpdate){
     send({type:'ready'});
   });
 }
+
+export function hostPick(classId){send({type:'pick',classId});}
 
 export function hostSave({learned,spentDelta,magicTechDelta}){send({type:'save',learned:[...learned],spentDelta,magicTechDelta});}
