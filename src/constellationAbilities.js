@@ -74,8 +74,8 @@ export async function refillTraitPools(campaignId) {
 // The class's aspect sets the roll stat. Affect rolls Essence (the sheet's earlier rule); Hope rolls Dream (user, 2026-11-16).
 const ASPECT_STAT = { Soul: 'soul', Spirit: 'spirit', Mind: 'mind', Body: 'body', Will: 'will', Whim: 'whim', Dream: 'dream', Affect: 'essence', Hope: 'dream' };
 
-// Placeholder: what one use costs from the trait's pool is not decided yet, so every use costs 1.
-export const USE_COST = 1;
+// One use costs half the ability's level held, rounded up (user, 2026-11-16): 1 at the first two steps, 2 at the next two, 3 at the top.
+export const costOfUse = level => Math.max(1, Math.ceil((Number(level) || 1) / 2));
 
 let constellationData = null;
 export function loadConstellation() {
@@ -101,7 +101,7 @@ export function learnedEntries(d, learned) {
         id: e.key, name: e.name, className: cls.name,
         type: top.levelName, level: owned.length, levels: e.nodes.length,
         discipline: key, disciplineLabel: meta?.label || t.discipline,
-        cost: USE_COST, currencyKey: key, currencyLabel: t.trait, poolMax: maxes[key] || 0,
+        cost: costOfUse(owned.length), currencyKey: key, currencyLabel: t.trait, poolMax: maxes[key] || 0,
         statKey: ASPECT_STAT[cls.attribute] || null,
         effect: top.description || e.description || '',
         axis: t.column === 'Magic' ? 'magic' : 'tech',
@@ -123,7 +123,9 @@ export async function learnedAbilitiesText(char) {
   }
 }
 
-// The class chosen at creation (char.cid) is the build's first star. Creation ids that differ from their calling's id:
+// The class chosen at creation (char.cid) is the build's first star. Creation ids now match the calling ids; 'magister'
+// was Oneir's old id (renamed 2026-11-16, rows moved by supabase/migrations/20261116_magister_to_oneir.sql) and is kept
+// here only for a row the migration has not reached.
 const CALLING_OF_CLASS = { magister: 'oneir' };
 export const startingCallingOf = char => (char?.cid ? (CALLING_OF_CLASS[char.cid] || char.cid) : null);
 
@@ -131,6 +133,31 @@ export const startingCallingOf = char => (char?.cid ? (CALLING_OF_CLASS[char.cid
 export function startingNodeId(d, char) {
   const cls = d.classById(startingCallingOf(char));
   return cls && !cls.rootId && !cls.secret && !cls.hidden ? d.levelId(cls.id, 0) : null;
+}
+
+// A character's class as the rest of the app shows it, from their constellation build: the highest-tier class they have
+// awakened on their starting line (so a subclass or master class replaces the calling's name), plus any other
+// callings they have opened. Falls back to the starting calling's name before anything is bought. Returns
+// { name, title, iconId, others }: title is e.g. "Oneir line · also Fighter"; iconId is the root calling's id (its class icon).
+export function classLabelOf(d, char) {
+  const held = new Set((Array.isArray(char?.abilities) ? char.abilities : []).filter(id => typeof id === 'string' && !id.includes('|')));
+  const startId = startingCallingOf(char);
+  const owns = cls => [...held].some(id => id.startsWith(`${cls.id}:`));
+  const rootOf = cls => cls.rootId || cls.id;
+  const lines = new Map(); // root id → furthest class owned on that line
+  for (const cls of d.classes) {
+    if (!owns(cls)) continue;
+    const root = rootOf(cls), best = lines.get(root);
+    if (!best || (cls.tier || 1) > (best.tier || 1)) lines.set(root, cls);
+  }
+  const startRoot = startId && d.classById(startId) ? rootOf(d.classById(startId)) : [...lines.keys()][0];
+  const main = lines.get(startRoot) || (startRoot && d.classById(startRoot)) || null;
+  if (!main) return null;
+  const others = [...lines.keys()].filter(r => r !== startRoot).map(r => d.classById(r)?.name).filter(Boolean);
+  const root = d.classById(rootOf(main));
+  const title = [main.id !== root?.id ? `${root?.name} line` : null, others.length ? `also ${others.join(', ')}` : null].filter(Boolean).join(' · ');
+  const t = d.traitFor(main);
+  return { name: main.name, title, iconId: root?.id || main.id, others, trait: t ? `${t.discipline} / ${t.trait}` : null };
 }
 
 // What opening that star costs on a fresh build: its first level plus the first-purchase point.

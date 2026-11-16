@@ -50,8 +50,8 @@ export async function buildScribeClasses(constellationDir = join(root, 'constell
     'Will, Whim and Dream roll that stat; Affect rolls Essence; Hope rolls Dream.',
     '',
     'TRAIT POOLS: each class draws on one of the sheet\'s 16 traits (its row of the Magic | Tech table). A trait\'s pool holds',
-    'one point per star (class level) awakened in classes drawing on it. Each use spends from the pool (1 for now); a denied',
-    'cast gives it back, and a long rest refills every pool.',
+    'one point per star (class level) awakened in classes drawing on it. A use spends half the ability\'s level held, rounded',
+    'up: 1 at the first two steps, 2 at the next two, 3 at the top. A denied cast gives it back, and a long rest refills every pool.',
     '',
     'THE 16 TRAITS (discipline → trait):',
   );

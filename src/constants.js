@@ -412,20 +412,6 @@ export const RACIAL_TRAITS = {
   addamar: {
     passive: {
       name: 'Unbound Adaptation',
-      text: '...',
-    },
-    active: {
-      Veridoran: {
-        name: 'Court Conditioning',
-        text: '...',
-      },
-    },
-  
-  }, 
-
-  addamar: {
-    passive: {
-      name: 'Unbound Adaptation',
       text: "Humans do not specialize. They survive by refusing to be one thing. When you use a stat in a way it was not designed for, you do not take the standard penalty for crossing disciplines. You were always going to find another way.",
     },
     variants: {
@@ -1093,7 +1079,7 @@ export const CLASSES = {
     { id:'sage',       name:'Sage',       path:'Arcane',    disc:'Gnosis',    t2:'Codexer / Scribe',       t3:'Glyphsage / Runesiph',    stats:'Int',     magicTechNudge:-1 },
     { id:'mystic',     name:'Mystic',     path:'Mythic',    disc:'Shaeid',    t2:'Guardian',               t3:'Arcani / Maleficar',      stats:'Wis/Cha', magicTechNudge:-2 },
     { id:'bard',       name:'Bard',       path:'Melodic',   disc:'Resonance', t2:'Minstrel',               t3:'Rhapsodist',              stats:'Cha/Wis', magicTechNudge:-1 },
-    { id:'magister',   name:'Magister',   path:'Shadow',    disc:'Wraill',    t2:'Hemoclast / Harrow',     t3:'Necromancer / Darkweaver',stats:'Int/Cha', magicTechNudge:-2 },
+    { id:'oneir',      name:'Oneir',      path:'Shadow',    disc:'Wraill',    t2:'Hemoclast / Harrow',     t3:'Necromancer / Mystagogue',stats:'Int/Cha', magicTechNudge:-2 },
   ],
   tech: [
     { id:'merchant',  name:'Merchant',  path:'Business',    disc:'Gain',      t2:'Emissary / Diplomat',    t3:'Tycoon / Negotiator',     stats:'Cha/Int', magicTechNudge:1  },
@@ -1852,10 +1838,10 @@ export const ABILITY_TREE = {
   },
 
   // ─── DREAM ROW ──────────────────────────────────────────────────────────────
-  // Starter: Magister | Magic Elite: Eldritch | Tech Elite: Materion
+  // Starter: Oneir | Magic Elite: Eldritch | Tech Elite: Materion
   dream: {
     id: 'dream', label: 'Dream', sublabel: 'Umbral',
-    starter: 'Magister',
+    starter: 'Oneir',
     starterAbilities: [
       { n: 'Echo Harvest',  d: 'Draws residual essence from the recently fallen, storing it for later use.' },
       { n: 'Grave Speech',  d: 'Communicates with lingering remnants to extract fragments of memory or intent.' },
@@ -2497,7 +2483,7 @@ export const PROGRESSION = {
   Sage:       { row: 'Will',   branches: [['Scribe','Runesiph'], ['Codexer','Glyphsage']],                        capstone: 'Makemark', relic: 'Sigilawl' },
   Mystic:     { row: 'Whim',   branches: [['Guardian','Dryad'], ['Fatebinder','Wishwright']],                     capstone: 'Arcani', relic: 'Shaeidblade' },
   Bard:       { row: 'Affect', branches: [['Minstrel','Rhapsodist']],                                             capstone: 'Cantor', relic: 'Elderlute' },
-  Magister:   { row: 'Dream',  branches: [['Haruspex','Maleficar'], ['Harrow','Hemoclast'], ['Necromancer','Darkweaver']], capstone: 'Eldritch', relic: 'Felrod' },
+  Oneir:      { row: 'Dream',  branches: [['Haruspex','Maleficar'], ['Harrow','Hemoclast'], ['Necromancer','Mystagogue']], capstone: 'Eldritch', relic: 'Felrod' },
 
   // ── Tech path ──
   Rogue:      { row: 'Soul',   branches: [['Inspector','Detective'], ['Strider','Ranger']],                       capstone: 'Sleuth', relic: 'Sleeve Stiletto' },

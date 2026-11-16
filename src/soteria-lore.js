@@ -182,7 +182,7 @@ MAGIC TRACK:
 - Nature: Druid → Ovate/Wildheart → Dryad/Primalist
 - Arcane: Sage → Codexer/Scribe → Glyphsage/Runesiph
 - Mythic: Mystic → Guardian → Arcani
-- Harrow: Magister → Hemoclast/Harrow → Necromancer/Darkweaver
+- Harrow: Oneir → Hemoclast/Harrow → Necromancer/Mystagogue
 
 TECH TRACK:
 - Business: Merchant → Emissary/Diplomat → Tycoon/Negotiator

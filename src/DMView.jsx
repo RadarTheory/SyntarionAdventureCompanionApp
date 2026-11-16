@@ -42,6 +42,8 @@ import { playSfxByKey } from './soundLibrary';
 import { LEVEL_CAP, AP_PER_LEVEL, apForLevel, getLevelProgress, grantAp } from './leveling';
 import { logAstragalRoll } from './lib/herculesLog';
 import LearnedAbilitiesList from './LearnedAbilitiesList';
+import ConstellationTab from './ConstellationTab';
+import { useConstellation, classLabel } from './useConstellation';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe - an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -381,6 +383,8 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
   const [grantingAp, setGrantingAp] = useState(false);
   const [condPicker, setCondPicker] = useState(false);
   const [condSearch, setCondSearch] = useState('');
+  const [showConstellation, setShowConstellation] = useState(false);
+  const classInfo = classLabel(useConstellation(), data);
   const apTotal = data.apTotal ?? data.ap_total ?? 0;
   const atCurrent = data.atCurrent ?? data.at_current ?? data.apCurrent ?? 0;
   const atTotal = data.atTotal ?? data.at_total ?? data.apTotal ?? 0;
@@ -544,6 +548,18 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,8,6,0.8)', backdropFilter: 'blur(6px)', zIndex: 150, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={onClose}>
+      {showConstellation && (
+        <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', inset: 0, zIndex: 2, background: '#0c100f', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderBottom: `1px solid ${COLORS.border}`, background: '#13100d' }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: COLORS.text }}>{char.name}'s Constellation</div>
+            <div style={{ flex: 1, fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Changes spend this character's AP and save immediately. Award XP in the editor to give them more.</div>
+            <button onClick={() => setShowConstellation(false)} style={{ background: 'transparent', border: `1px solid ${COLORS.borderMid}`, borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.text, fontFamily: "'Cinzel', serif" }}>Close</button>
+          </div>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <ConstellationTab char={data} onUpdateChar={next => { setData(prev => ({ ...prev, ...next })); onRefresh?.(); }} />
+          </div>
+        </div>
+      )}
       <div onClick={e => e.stopPropagation()} style={{ background: '#13100d', border: `1px solid rgba(240,238,235,0.12)`, borderRadius: 14, padding: '28px 32px', maxWidth: 560, width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 16, fontWeight: 700, color: COLORS.text }}>{char.name}</div>
@@ -736,6 +752,17 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
               </div>
             ))}
           </div>
+        </div>
+        {/* The character's constellation, the same one the player sees. Purchases spend the character's AP and save at once. */}
+        <div style={{ marginBottom: 16, padding: '10px 12px', background: 'rgba(240,238,235,0.03)', border: `1px solid ${COLORS.border}`, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ ...label8(), marginBottom: 4 }}>Constellation</div>
+            <div style={{ fontSize: 11, color: COLORS.textSub, fontFamily: 'Georgia, serif' }}>
+              {classInfo ? [classInfo.name, classInfo.title].filter(Boolean).join(' · ') : 'No calling yet'}
+              <span style={{ color: COLORS.dim }}> · {(Array.isArray(data.abilities) ? data.abilities.filter(k => typeof k === 'string' && !k.includes('|')).length : 0)} stars and abilities · {atCurrent} AP left</span>
+            </div>
+          </div>
+          <button onClick={() => setShowConstellation(true)} style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '7px 12px', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText, fontFamily: "'Cinzel', serif", fontWeight: 700, whiteSpace: 'nowrap' }}>Open</button>
         </div>
         <div style={{ ...label8(), marginBottom: 10 }}>Stats</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>

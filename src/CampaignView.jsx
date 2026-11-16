@@ -3,7 +3,7 @@ import supabase from './lib/supabase';
 import { resolveEquipSlot, resolveEquipSlots } from './lib/equipSlot';
 import medallion from './assets/medallion.png';
 import { useDevice } from './useDevice';
-import { COLORS, CAMPAIGNS, ALL_STATS, ALL_CLASSES, ACTIONS, getRaceDisplay, EQUIP_SLOT_GROUPS } from './constants';
+import { COLORS, CAMPAIGNS, ALL_STATS, ACTIONS, getRaceDisplay, EQUIP_SLOT_GROUPS } from './constants';
 import { LOCATIONS } from './MapPanel';
 import VTTViewer from './VTTViewer';
 import Astragal from './Astragal';
@@ -26,6 +26,8 @@ import IntentDeclare from "./IntentDeclare";
 import PartyProximityPanel from './PartyProximityPanel';
 import PortraitUpload from "./PortraitUpload";
 import HandbookBookmark from './HandbookBookmark';
+import { useConstellation, classLabel } from './useConstellation';
+import { DISCIPLINE_META, poolMaxes, poolOf } from './constellationAbilities';
 import MenuMusicPlayer from './MenuMusicPlayer';
 import GameSessionOverlay from './GameSessionOverlay';
 import { logAstragalRoll, logHerculesEvent } from './lib/herculesLog';
@@ -794,6 +796,12 @@ function ScalesPanel({ char, effectiveStats }) {
   const atCurrent = char?.atCurrent ?? char?.at_current ?? char?.apCurrent ?? 0;
   const atTotal = char?.atTotal ?? char?.at_total ?? char?.apTotal ?? 0;
   const morality = char?.morality ?? 0;
+  const constellation = useConstellation();
+  const maxes = constellation ? poolMaxes(constellation, char?.abilities) : {};
+  const pools = Object.entries(maxes).map(([key, max]) => {
+    const meta = DISCIPLINE_META[key] || {};
+    return { key, max, pool: poolOf(char, key, max), label: meta.label || key, trait: meta.trait || key, color: meta.color || COLORS.deity };
+  });
 
   const scaleRow = (label, val, maxVal, leftLabel, rightLabel, color) => {
     const pct = Math.max(0, Math.min(100, ((val - 0) / maxVal) * 100));
@@ -904,19 +912,22 @@ function ScalesPanel({ char, effectiveStats }) {
         </div>
       </div>
 
-      {/* Discipline pools if char has them */}
-      {char?.disciplines && Object.keys(char.disciplines).length > 0 && (
+      {/* Trait pools: one point per star awakened on that trait, minus what has been spent since the last long rest */}
+      {pools.length > 0 && (
         <>
           <div style={{ height: 1, background: COLORS.border, margin: '16px 0' }} />
-          <div style={{ ...label8(), marginBottom: 12 }}>Discipline Pools</div>
+          <div style={{ ...label8(), marginBottom: 12 }}>Trait Pools</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {Object.entries(char.disciplines).map(([key, val]) => val > 0 ? (
-              <div key={key} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px' }}>
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, color: COLORS.muted, letterSpacing: '0.12em', textTransform: 'uppercase' }}>{key}</div>
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 16, fontWeight: 700, color: COLORS.deity }}>{val}</div>
+            {pools.map(p => (
+              <div key={p.key} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px' }}>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, color: COLORS.muted, letterSpacing: '0.12em', textTransform: 'uppercase' }}>{p.label} · {p.trait}</div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 16, fontWeight: 700, color: p.color }}>
+                  {p.pool}<span style={{ fontSize: 10, color: COLORS.dim, fontWeight: 400 }}> / {p.max}</span>
+                </div>
               </div>
-            ) : null)}
+            ))}
           </div>
+          <div style={{ fontSize: 8, color: COLORS.dim, marginTop: 6 }}>Refills on a long rest.</div>
         </>
       )}
     </div>
@@ -960,9 +971,9 @@ function useSilhouette(url) {
 
 // ─── FULL CHARACTER SHEET (inline, dark) ──────────────────────────────────────
 function CharacterSheetInline({ char, effectiveStats, onUpdateChar }) {
-  const cls = ALL_CLASSES?.find(c => c.id === char.cid);
+  const cls = classLabel(useConstellation(), char);
   const raceIconSrc = char.race ? `/RaceIcons/${char.race.toLowerCase().replace(/[^a-z]/g, '')}.png` : null;
-  const classIconSrc = cls ? `/ClassIcons/${cls.id}.png` : null;
+  const classIconSrc = cls ? `/ClassIcons/${cls.iconId}.png` : null;
   const raceIconUrl = useSilhouette(raceIconSrc);
   const classIconUrl = useSilhouette(classIconSrc);
 
@@ -998,7 +1009,7 @@ function CharacterSheetInline({ char, effectiveStats, onUpdateChar }) {
             </div>
           )}
           {classIconUrl && (
-            <div title={cls.name} style={{ width: 48, height: 48, borderRadius: 8, border: '1px solid #c8a84a', background: 'rgba(200,168,74,0.35)', padding: 8, boxSizing: 'border-box', cursor: 'help' }}>
+            <div title={[cls.name, cls.title].filter(Boolean).join(' · ')} style={{ width: 48, height: 48, borderRadius: 8, border: '1px solid #c8a84a', background: 'rgba(200,168,74,0.35)', padding: 8, boxSizing: 'border-box', cursor: 'help' }}>
               <img src={classIconUrl} alt={cls.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             </div>
           )}

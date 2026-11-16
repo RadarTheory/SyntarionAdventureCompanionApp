@@ -9,6 +9,7 @@ import {
 import { ScribeConsult, DMConsult } from './ScribeConsult';
 import supabase from './lib/supabase';
 import ConstellationTab from './ConstellationTab';
+import { useConstellation, classLabel } from './useConstellation';
 import AstragalButton from './AstragalButton';
 import SessionCheckin from './SessionCheckin';
 
@@ -138,6 +139,7 @@ function ActionRow({ action, bonus }) {
 
 // ═════════════════════════════════════════════════════════════════════════════
 export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
+  const constellation = useConstellation();
   // Named states the DM has hung on this character. Read-only here - players
   // see what they are under, they do not clear it themselves.
   const charConditions = Array.isArray(char.conditions) ? char.conditions : [];
@@ -156,6 +158,7 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
 
   const raceDisplay = getRaceDisplay(char.race, char.rv, char.pmV);
   const cls         = ALL_CLASSES.find(c => c.id === char.cid);
+  const label       = classLabel(constellation, char);
   const sliders     = char.sliders || { morality: 0, magicTech: 0, willWhim: 0 };
   const apTotal     = char.apTotal ?? char.ap_total ?? 0;
   const atCurrent   = char.atCurrent ?? char.at_current ?? char.apCurrent ?? 0;
@@ -170,7 +173,7 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 10 : 0, justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'flex-start', marginBottom: 24 }}>
             <div>
               <div style={{ fontFamily: "'Cinzel', serif", fontSize: isMobile ? 22 : 28, fontWeight: 700, color: COLORS.text, letterSpacing: '0.04em', lineHeight: 1.1 }}>{char.name || 'Unnamed'}</div>
-              <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 4 }}>{raceDisplay}{cls ? ` · ${cls.name}` : ''}</div>
+              <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 4 }}>{raceDisplay}{label ? ` · ${label.name}` : ''}</div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMobile ? 'flex-start' : 'flex-end', gap: 6 }}>
               <StatusBadge status={char.status || 'draft'} />
@@ -228,8 +231,8 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
           <SectionHead>Class</SectionHead>
           <div style={{ display: 'grid', gridTemplateColumns: detailGridCols, gap: '0 24px' }}>
             <Field label="Path" value={char.cp ? char.cp.charAt(0).toUpperCase() + char.cp.slice(1) : null} />
-            <Field label="Class" value={cls?.name} />
-            <Field label="Discipline" value={cls?.disc} />
+            <Field label="Class" value={label ? [label.name, label.title].filter(Boolean).join(' · ') : null} />
+            <Field label="Trait" value={label?.trait || cls?.disc} />
             <Field label="Primary Stats" value={cls?.stats} />
           </div>
 

@@ -5,7 +5,8 @@ import * as XLSX from 'xlsx';
 import remarkGfm from 'remark-gfm';
 import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
-import { COLORS, RACES, CLASSES, GODS, SPIRITS, UNAFFILIATED, PROGRESSION } from './constants';
+import { COLORS, RACES, GODS, SPIRITS, UNAFFILIATED } from './constants';
+import { useConstellation } from './useConstellation';
 
 
 
@@ -662,19 +663,29 @@ function RaceReference({ isMobile, theme, compact = false }) {
   );
 }
 
+// Live from the constellation (public/constellation/data.js): each calling with its practice, aspect, trait and line.
+// Callings on a hidden line (Praethacy, Null) are left out, as they are in the constellation until revealed.
 function ClassReference({ isMobile, theme, compact = false }) {
-  const classes = [...CLASSES.magic.map(c => ({ ...c, track: 'Magic' })), ...CLASSES.tech.map(c => ({ ...c, track: 'Tech' }))];
+  const d = useConstellation();
+  if (!d) return <LiveBlockHeader title="Classes" subtitle="Loading the constellation..." theme={theme} />;
+  const practice = Object.fromEntries(d.disciplines.map(p => [p.id, p]));
+  const lines = d.roots.filter(r => !r.hidden && !r.secret);
   return (
     <section style={{ display: 'grid', gap: 10 }}>
-      <LiveBlockHeader title="Classes" subtitle="Live from the character class constants, including current progressions where present." theme={theme} />
+      <LiveBlockHeader title="Classes" subtitle="Live from the Constellation. Every character starts at The Self and awakens callings with AP; buying is instant, and mastering a class opens the next classes on its line." theme={theme} />
       <ReferenceGrid isMobile={isMobile}>
-        {classes.map(cls => {
-          const prog = PROGRESSION[cls.name];
+        {lines.map(root => {
+          const family = d.classes.filter(c => c.rootId === root.id);
+          const t = d.traitFor(root);
+          const byTier = [2, 3, 4].map(tier => [tier, family.filter(c => (c.tier || 1) === tier)]).filter(([, list]) => list.length);
+          const master = family.find(c => c.tier === 4);
           return (
-            <ReferenceCard key={cls.id} title={cls.name} meta={[cls.track, cls.path, cls.disc, cls.stats].filter(Boolean).join(' | ')} theme={theme}>
+            <ReferenceCard key={root.id} title={root.name} meta={[practice[root.discipline]?.name, root.attribute, t && `${t.discipline} / ${t.trait}`].filter(Boolean).join(' | ')} theme={theme}>
               <div style={{ marginTop: 8, fontSize: 12, color: theme.muted, lineHeight: 1.55 }}>
-                Tier 2: {cls.t2 || 'Unlisted'}<br />Tier 3: {cls.t3 || 'Unlisted'}
-                {!compact && prog && <><br />Capstone: {prog.capstone}</>}
+                {byTier.map(([tier, list], i) => (
+                  <span key={tier}>{i > 0 && <br />}{tier === 4 ? 'Master class' : `Tier ${tier}`}: {list.map(c => c.name).join(', ')}</span>
+                ))}
+                {!compact && master?.item && <><br />Holds: {master.item}</>}
               </div>
             </ReferenceCard>
           );

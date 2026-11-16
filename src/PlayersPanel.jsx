@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import supabase from './lib/supabase';
-import { COLORS, CAMPAIGNS, ALL_CLASSES, getRaceDisplay } from './constants';
+import { COLORS, CAMPAIGNS, getRaceDisplay } from './constants';
+import { useConstellation, classLabel } from './useConstellation';
 
 function formatLastSeen(ts) {
   if (!ts) return 'Never';
@@ -18,6 +19,7 @@ const statusLabel = (s) => ({ approved: 'Approved', awaiting_adventure: 'Pending
 const campaignLabel = (campaign, fallback) => campaign?.subtitle || campaign?.name || fallback || 'Untitled Campaign';
 
 export default function PlayersPanel({ onOpenCharacter, onMessage, showVTT, onPlaceOnVTT, embedded = false, variant = 'admin', campaigns = [] }) {
+  const constellation = useConstellation();
   const [collapsed, setCollapsed] = useState(false);
   const [users, setUsers] = useState([]);
   const [characters, setCharacters] = useState([]);
@@ -151,7 +153,7 @@ export default function PlayersPanel({ onOpenCharacter, onMessage, showVTT, onPl
 
   const renderDmCharacter = (char) => {
     const owner = char.user_id ? userById.get(String(char.user_id)) : null;
-    const cls = ALL_CLASSES?.find(c => c.id === char.cid);
+    const cls = classLabel(constellation, char);
     const campaign = char.campaign_id != null ? campaignById.get(String(char.campaign_id)) : null;
     const portrait = char.sprite_url || char.token?.sprite_url || char.portrait_url || null;
     const isExpanded = expanded === char.id;
@@ -289,7 +291,7 @@ export default function PlayersPanel({ onOpenCharacter, onMessage, showVTT, onPl
                         {user.chars.length === 0 ? (
                           <div style={{ fontSize: 10, color: COLORS.dim, fontStyle: 'italic' }}>No characters yet.</div>
                         ) : user.chars.map(char => {
-                          const cls = ALL_CLASSES?.find(c => c.id === char.cid);
+                          const cls = classLabel(constellation, char);
                           const campaign = campaignById.get(String(char.campaign_id));
                           return (
                             <div key={char.id} style={{ background: 'rgba(240,238,235,0.03)', border: '1px solid rgba(240,238,235,0.07)', borderRadius: 6, padding: '7px 8px' }}>

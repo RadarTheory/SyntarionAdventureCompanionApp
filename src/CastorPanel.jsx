@@ -1005,7 +1005,7 @@ function ConstellationCard({ entry, char, requests, onSubmit }) {
         <div style={{ padding: '10px 12px', borderTop: `1px solid ${COLORS.border}`, background: COLORS.surface, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ fontSize: 10, color: COLORS.text, fontFamily: 'Georgia, serif', lineHeight: 1.5 }}>{entry.effect}</div>
           <div style={{ fontSize: 8, color: canAfford ? color : '#e05a5a', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
-            {entry.cost} {entry.currencyLabel} per use (provisional) · Pool: {pool} / {entry.poolMax} · refills on a long rest
+            {entry.cost} {entry.currencyLabel} per use · Pool: {pool} / {entry.poolMax} · refills on a long rest
           </div>
           <textarea value={note} onChange={e => setNote(e.target.value)}
             placeholder="Optional note to the Architect…" rows={2}

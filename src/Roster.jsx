@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
 import { useDevice } from './useDevice';
-import { COLORS, CAMPAIGNS, ALL_CLASSES, getRaceDisplay } from './constants';
+import { COLORS, CAMPAIGNS, getRaceDisplay } from './constants';
+import { useConstellation, classLabel } from './useConstellation';
 
 const FULL_TITLES = {
   'I':   'The Investigation of the Corren Mountain Mines',
@@ -47,7 +48,7 @@ function ClaimModal({ char, userId, onClaim, onCancel }) {
     onClaim(char.id, selectedCampaign);
   };
 
-  const cls = ALL_CLASSES.find(c => c.id === char.data?.cid);
+  const cls = classLabel(useConstellation(), char.data);
 
   return (
     <div style={{
@@ -128,7 +129,7 @@ function ClaimModal({ char, userId, onClaim, onCancel }) {
 
 // ─── CHARACTER CARD ───────────────────────────────────────────────────────────
 function CharCard({ char, isMobile, isOwned, isClaimed, onClaim }) {
-  const cls = ALL_CLASSES.find(c => c.id === char.data?.cid);
+  const cls = classLabel(useConstellation(), char.data);
   const campaignLabel = char.campaign_id ? `${CAMPAIGNS.find(c => c.id === char.campaign_id)?.subtitle || char.campaign_id}` : null;
 
   return (

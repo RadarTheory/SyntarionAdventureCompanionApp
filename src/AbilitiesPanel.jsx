@@ -139,7 +139,7 @@ function AbilityCard({ entry, char, campaignId, onRoll, onUpdateChar, disabled }
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
             <div style={{ fontSize: 8, color: canAfford && !disabled ? meta.color : '#e05a5a', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
-              {entry.cost} {entry.currencyLabel} per use (provisional) · Pool: {pool}
+              {entry.cost} {entry.currencyLabel} per use · Pool: {pool}
             </div>
             <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>
               {entry.className} · level {entry.level} of {entry.levels}

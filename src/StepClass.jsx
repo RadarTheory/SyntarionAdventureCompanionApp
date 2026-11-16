@@ -11,7 +11,6 @@ import { loadConstellation, startingCallingOf } from './constellationAbilities';
 // (ConstellationTab.jsx). cid stays one of the wizard's CLASSES ids, so boons, stats and the Magic | Tech lean are unchanged.
 // ═════════════════════════════════════════════════════════════════════════════
 const SRC = '/constellation/index.html?host=syntarion&pick=1';
-const CLASS_OF_CALLING = { oneir: 'magister' };
 
 export default function StepClass({
   cp, setCp, cid, setCid,
@@ -44,7 +43,7 @@ export default function StepClass({
       const msg = e.data || {};
       if (msg.type === 'ready') { sendInit(); return; }
       if (msg.type !== 'pick' || typeof msg.classId !== 'string') return;
-      const id = CLASS_OF_CALLING[msg.classId] || msg.classId;
+      const id = msg.classId;
       const path = CLASSES.magic.some(c => c.id === id) ? 'magic' : CLASSES.tech.some(c => c.id === id) ? 'tech' : null;
       if (!path) return;
       setCid(id);
