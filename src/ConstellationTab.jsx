@@ -11,7 +11,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
-import { loadConstellation, startingCallingOf, startingNodeId, startingCost } from './constellationAbilities';
+import { loadConstellation, startingCallingOf, startingNodeId, startingCost, poolMaxes, poolOf, learnedEntries, costOfUse, spendTrait } from './constellationAbilities';
 // The old tree's costs and Magic | Tech nudges (AbilityTree.jsx), needed only to refund an old build.
 const OLD_MAGIC_PATHS = new Set(['divine', 'spiritual', 'arcane', 'wild', 'runic', 'mythic', 'shadow']);
 const tierCost = tier => (tier === 'base' ? 0 : tier === 't2' ? 2 : 3);
@@ -59,11 +59,14 @@ function oldBuildRefund(row, data) {
 // constellation is shown FREE_AP to spend, and purchases and refunds leave the character's AP untouched.
 const FREE_AP = 999;
 
-export default function ConstellationTab({ char, onUpdateChar, dm = false, spendAp = true }) {
+// onUse(entry, modifier): with it, the constellation's drawer opens on the character's abilities and each can be used there
+// (user, 2026-11-16). A use names the level; it costs costOfUse(level) from the ability's trait pool, paid here before the roll.
+export default function ConstellationTab({ char, onUpdateChar, dm = false, spendAp = true, onUse }) {
   const frame = useRef(null);
   const charRef = useRef(char);
   const spendRef = useRef(spendAp);
   const updateRef = useRef(onUpdateChar);
+  const onUseRef = useRef(onUse);
   const queue = useRef(Promise.resolve());
   const [notice, setNotice] = useState(null);
   const [ready, setReady] = useState(false);
@@ -72,18 +75,53 @@ export default function ConstellationTab({ char, onUpdateChar, dm = false, spend
   useEffect(() => { charRef.current = char; }, [char]);
   useEffect(() => { spendRef.current = spendAp; }, [spendAp]);
   useEffect(() => { updateRef.current = onUpdateChar; }, [onUpdateChar]);
+  useEffect(() => { onUseRef.current = onUse; }, [onUse]);
 
   const learnedOf = c => (Array.isArray(c.abilities) ? c.abilities : []).filter(key => !isOldKey(key));
-  const sendInit = useCallback(() => {
+  const sendInit = useCallback(async () => {
     const c = charRef.current;
+    const usable = !!onUseRef.current;
+    let pools = {};
+    if (usable) {
+      try {
+        const d = await loadConstellation();
+        pools = Object.fromEntries(Object.entries(poolMaxes(d, learnedOf(c))).map(([key, max]) => [key, { pool: poolOf(c, key, max), max }]));
+      } catch { /* the drawer then shows no pool counts */ }
+    }
     frame.current?.contentWindow?.postMessage({
       type: 'init',
       learned: learnedOf(c),
       available: spendRef.current ? Math.max(0, Number(c.atCurrent ?? c.at_current ?? 0) || 0) : FREE_AP,
       characterId: c.id,
       startingCalling: startingCallingOf(c),
+      usable,
+      pools,
     }, window.location.origin);
   }, []);
+
+  // A use from the drawer: check the level is held and the pool can pay, spend, roll, then tell the constellation.
+  const handleUse = useCallback(async msg => {
+    const reply = (ok, message) => frame.current?.contentWindow?.postMessage({ type: 'used', ok, message }, window.location.origin);
+    try {
+      const c = charRef.current;
+      const d = await loadConstellation();
+      const entry = learnedEntries(d, learnedOf(c)).find(e => e.id === msg.abilityKey);
+      const level = Math.floor(Number(msg.level) || 0);
+      if (!entry || level < 1 || level > entry.level || !onUseRef.current) return reply(false, 'That ability is not held at that level.');
+      const cost = costOfUse(level);
+      if (poolOf(c, entry.currencyKey, entry.poolMax) < cost) return reply(false, `Not enough ${entry.currencyLabel} · ${cost} needed`);
+      const next = await spendTrait(c.id, entry.currencyKey, cost);
+      charRef.current = { ...c, traitSpent: next.traitSpent };
+      updateRef.current?.(charRef.current);
+      const levelName = typeof msg.levelName === 'string' && msg.levelName ? msg.levelName : entry.type;
+      const modifier = (Number(c.stats?.[entry.statKey]) || 8) - 8;
+      await onUseRef.current({ ...entry, name: `${entry.name} (${levelName})`, level, type: levelName, cost }, modifier);
+      reply(true, `${entry.name} · ${levelName} used · ${cost} ${entry.currencyLabel} spent`);
+      sendInit();
+    } catch (e) {
+      reply(false, e.message || 'Could not use that ability.');
+    }
+  }, [sendInit]);
 
   // One-time reset and refund of an old-tree build, before the constellation opens.
   useEffect(() => {
@@ -140,6 +178,7 @@ export default function ConstellationTab({ char, onUpdateChar, dm = false, spend
       if (e.origin !== window.location.origin || e.source !== frame.current?.contentWindow) return;
       const msg = e.data || {};
       if (msg.type === 'ready') { setReady(true); sendInit(); return; }
+      if (msg.type === 'use') { handleUse(msg); return; }
       if (msg.type !== 'save' || !Array.isArray(msg.learned)) return;
       const spentDelta = Number(msg.spentDelta) || 0, axisDelta = Number(msg.magicTechDelta) || 0;
       // Saves run one after another so quick purchases never race each other.
@@ -162,11 +201,13 @@ export default function ConstellationTab({ char, onUpdateChar, dm = false, spend
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [migrated, sendInit]);
+  }, [migrated, sendInit, handleUse]);
 
   // A grant from elsewhere (the DM levelling the character) reaches the open constellation.
   const available = char.atCurrent ?? char.at_current ?? 0;
-  useEffect(() => { if (ready) sendInit(); }, [available, spendAp, ready, sendInit]);
+  // Pools spent elsewhere (the Use list, Castor, a long rest) reach the drawer too.
+  const spentKey = JSON.stringify(char.traitSpent || {});
+  useEffect(() => { if (ready) sendInit(); }, [available, spendAp, spentKey, ready, sendInit]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>

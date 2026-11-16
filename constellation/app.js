@@ -4,7 +4,8 @@ import {classPortrait,hydrateClassIcons} from './class-icons.js';
 import {practiceSymbol} from './practice-icons.js';
 import {disciplines,classes,roots,attributes,abilityEntries,classLevelNodes,buyVerb,visibleClasses,restoreSelection,setupForClass,praethacyEligibility,nullRevealed,canLearn,classById,classKnown,isMastered,isComplete,reachableNodes,awakenedCount,masteredClasses,unlockRequirement,repairLearned,spentPoints,nodeCost,blockReason,nextParent,magicTechAxis,AXIS_LIMIT,MASTERY,STARTING_POINTS,CALLING_LORE,traitFor} from './data.js';
 import {DEV_MODE,setStartingPoints} from './config.js';
-import {HOSTED,PICKING,hostInit,hostSave,hostPick} from './host.js';
+import {HOSTED,PICKING,hostInit,hostSave,hostPick,hostUse,onHostReply} from './host.js';
+import {renderHeld} from './held-abilities.js';
 import {aspectForClass,doctrineGroups,hopeAspect} from './doctrine.js';
 import {snapshot,play,tickPoints,masteryTitle,holdToConfirm,dive,chargeThread,unveil} from './ceremony.js';
 const $=s=>document.querySelector(s);
@@ -14,7 +15,7 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 // The class declared at character creation: highlighted on the sky, and where a fresh build opens. Opening it is the player's purchase like any other.
 let declared=null;const declare=id=>{declared=roots.find(r=>r.id===id&&!r.secret&&!r.hidden)?.id||null;let style=document.getElementById('declared-style');if(!style){style=document.createElement('style');style.id='declared-style';document.head.append(style);}
 style.textContent=declared?`[data-star-class="${declared}"] .node-corona{visibility:visible!important;opacity:.34;animation:psynth-breathe 5.5s ease-in-out infinite}[data-motion="off"] [data-star-class="${declared}"] .node-corona{animation:none}`:'';};
-const hosted=await hostInit(update=>{declare(update.startingCalling);setStartingPoints(update.available+spentPoints(learned));render();});
+const hosted=await hostInit(update=>{hostState.usable=update.usable;hostState.pools=update.pools;declare(update.startingCalling);setStartingPoints(update.available+spentPoints(learned));render();});
 if(HOSTED)document.documentElement.classList.add('hosted');if(PICKING)document.documentElement.classList.add('picking');
 const storageKey=hosted?`syntarion-atlas-host-${hosted.characterId??'character'}`:'syntarion-atlas-v1';
 let saved={};try{if(!PICKING)saved=JSON.parse(localStorage.getItem(storageKey)||'{}')||{};}catch{}
@@ -28,6 +29,9 @@ let nullOpen=saved.nullOpen===true&&nullRevealed(learned);
 // The open calling's own constellation, or null for the atlas of every calling.
 let calling=visibleClasses(revealed,true,learned,nullOpen).find(r=>r.id===saved.calling)?.id||null;
 if(!classKnown(selectedClass,learned))selectedClass=classById(selectedClass.rootId);
+// The drawer's view: 'held' (the character's abilities, ready to use; the default when the host can use them) or 'class' (the selected star, for buying).
+const hostState={usable:!!hosted?.usable&&!PICKING,pools:hosted?.pools||{}};const heldOn=()=>!!hosted&&!PICKING&&hostState.usable;
+let drawerView=heldOn()?'held':'class',heldOpen=null,heldBusy=null;
 let category='levels',selectedAbility=null,scale=1,pan={...homePan},drag=null,moved=false;
 const d=()=>disciplines.find(x=>x.id===disciplineId);
 const revealedDescription='Beyond what is known, explore what may yet be.';
@@ -43,7 +47,7 @@ const awakened=cls=>learned.some(id=>id.startsWith(`${cls.id}:`));
 function undo(){if(!lastBuy||!learned.includes(lastBuy.id))return;const {id,name,cost}=lastBuy,ap=apLeft();lastBuy=null;learned=repairLearned(learned.filter(x=>x!==id));save();render();tickPoints($('#points'),ap,apLeft());notify(`${name} returned · ${cost} AP refunded`);}
 // In pick mode, choosing any class on a line picks that line's calling; it then glows as the declared one.
 function pick(cls){if(!PICKING||!cls)return;const root=cls.rootId?classById(cls.rootId):cls;if(!root||root.secret||root.hidden)return;declare(root.id);hostPick(root.id);}
-function setClass(cls){if(!cls||!visibleClasses(revealed,false,learned,nullOpen).includes(cls)||!classKnown(cls,learned))return;selectedClass=cls;pick(cls);drawerOpen=awakened(cls);if(!drawerOpen)category='levels';disciplineId=cls.discipline;selectedAbility=null;if(cls.rootId||calling)openCalling(cls.rootId||cls.id);save();render();}
+function setClass(cls){if(!cls||!visibleClasses(revealed,false,learned,nullOpen).includes(cls)||!classKnown(cls,learned))return;selectedClass=cls;drawerView='class';pick(cls);drawerOpen=awakened(cls);if(!drawerOpen)category='levels';disciplineId=cls.discipline;selectedAbility=null;if(cls.rootId||calling)openCalling(cls.rootId||cls.id);save();render();}
 // Opening or leaving a calling recentres the camera; selecting within a sky never moves it.
 function openCalling(id){if(calling!==id){calling=id;scale=1;pan={...homePan};}}
 // Entering a calling dives the camera into its star; leaving pulls back out to the atlas. `then` runs once the new sky has settled.
@@ -63,7 +67,7 @@ if(star&&motion()){star.style.opacity='0';setTimeout(()=>{star.style.opacity='';
 masteryTitle($('#map'),{eyebrow,name:cls.name,color,sub,icon:classPortrait(cls,color,practiceSymbol(setupForClass(cls))),hydrate:hydrateClassIcons});}
 function renderVeil(){const close=$('#veil-toggle');close.hidden=!revealed;close.onclick=()=>{revealed=false;if(calling==='warden')calling=null;setClass(selectedClass.hidden?classById('weaver'):selectedClass);};}
 // The selected constellation is a drawer: it slides in from the right when a star is chosen and recedes when closed.
-let drawerOpen=false;function setDrawer(open){drawerOpen=open;$('.workspace').classList.toggle('drawer-open',open);$('#drawer-tab').setAttribute('aria-expanded',String(open));$('#drawer-tab').textContent=`‹ ${selectedClass.name}`;if(open)$('#details').scrollTop=0;}
+let drawerOpen=false;function setDrawer(open){drawerOpen=open;$('.workspace').classList.toggle('drawer-open',open);$('#drawer-tab').setAttribute('aria-expanded',String(open));$('#drawer-tab').textContent=`‹ ${drawerView==='held'&&heldOn()?'Your abilities':selectedClass.name}`;if(open)$('#details').scrollTop=0;}
 const line=(a,b,color,bright=false)=>`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${color}" style="color:${color}" class="thread ${bright?'bright':''}"/>`;
 function star(x,y,r,color){return `<circle cx="${x}" cy="${y}" r="${r}" fill="${color}"/>`;}
 function glyph(x,y,color,size=14){return `<path d="M ${x} ${y-size} L ${x+size*.38} ${y-size*.38} L ${x+size} ${y} L ${x+size*.38} ${y+size*.38} L ${x} ${y+size} L ${x-size*.38} ${y+size*.38} L ${x-size} ${y} L ${x-size*.38} ${y-size*.38} Z" fill="${color}"/>`;}
@@ -84,7 +88,9 @@ function inspectAbilities(){enterCalling(selectedClass.rootId||selectedClass.id,
 // The class's own discipline levels come first; each ability is one row that is bought again at every level the class holds (Mote Vehem, then Charm Vehem…).
 function panelRows(cls,disc){if(category==='levels')return classLevelNodes(cls).map(n=>({key:n.id,name:n.name,nodes:[n],next:learned.includes(n.id)?null:n,owned:learned.includes(n.id)?[n]:[],level:true}));
 return abilityEntries(cls,category).map(e=>{const owned=e.nodes.filter(n=>learned.includes(n.id));return {key:e.key,name:e.name,nodes:e.nodes,next:e.nodes.find(n=>!learned.includes(n.id))||null,owned};});}
-function renderDetails(){const disc=setupForClass(selectedClass),rows=panelRows(selectedClass,disc);// What can be bought right now is highlighted, and unless the player picked a row, the first of those is selected.
+function renderHeldDrawer(){renderHeld($('#details'),{learned,pools:hostState.pools,open:heldOpen,busy:heldBusy,onOpen:key=>{heldOpen=key;renderDetails();},onUse:use=>{if(heldBusy)return;heldBusy=use.abilityKey;hostUse(use);renderDetails();},onClose:()=>setDrawer(false)});
+$('#hud-awaken').hidden=true;$('#drawer-tab').hidden=false;$('#dock').innerHTML=`<button type="button" class="dock-info" id="dock-info"><small>READY TO USE</small><b>YOUR ABILITIES</b></button>`;$('#dock-info').onclick=()=>setDrawer(true);setDrawer(drawerOpen);}
+function renderDetails(){if(drawerView==='held'&&heldOn())return renderHeldDrawer();const disc=setupForClass(selectedClass),rows=panelRows(selectedClass,disc);// What can be bought right now is highlighted, and unless the player picked a row, the first of those is selected.
 const buyable=r=>!!r.next&&canLearn(r.next,learned);const row=rows.find(r=>r.key===selectedAbility)||rows.find(buyable)||rows[0]||null;selectedAbility=row?.key||null;const node=row?(row.next||row.nodes.at(-1)):null;
 const complete=!!row&&!row.next,available=!!node&&canLearn(node,learned),blocked=node&&!complete?blockReason(node,learned):null,sealed=unlockRequirement(selectedClass,learned),count=awakenedCount(selectedClass,learned);
 const parent=nextParent(selectedClass,learned),reachNodes=reachableNodes(selectedClass),reach=reachNodes.length,reachHeld=reachNodes.filter(n=>learned.includes(n.id)).length,done=isComplete(selectedClass,learned),paths=nextPaths(selectedClass).length>0;
@@ -128,7 +134,8 @@ if(!hud.hidden){const cost=nodeCost(node,learned);hud.innerHTML=`<button type="b
 hud.insertAdjacentHTML('afterbegin',`<div class="hud-symbol" aria-hidden="true">${classPortrait(selectedClass,disc.color,practiceSymbol(disc))}</div>`);hydrateClassIcons(hud);
 // The calling's description drifts in beside the button a beat later.
 const lore=CALLING_LORE[selectedClass.id];if(lore){hud.insertAdjacentHTML('beforeend',`<aside class="hud-lore"><span>${esc(disc.name.toUpperCase())} · ${esc(selectedClass.attribute.toUpperCase())}</span><p>${esc(lore)}</p></aside>`);fitLore(hud.querySelector('.hud-lore'));}}$('#dock-info').onclick=()=>setDrawer(true);
-$('#details .panel-title').insertAdjacentHTML('beforeend','<button type="button" class="drawer-close" id="drawer-close" aria-label="Close the panel">×</button>');$('#drawer-close').onclick=()=>setDrawer(false);setDrawer(drawerOpen);}
+$('#details .panel-title').insertAdjacentHTML('beforeend',`${heldOn()?'<button type="button" class="held-back" id="held-back">✦ Your abilities</button>':''}<button type="button" class="drawer-close" id="drawer-close" aria-label="Close the panel">×</button>`);$('#drawer-close').onclick=()=>setDrawer(false);
+if($('#held-back'))$('#held-back').onclick=()=>{drawerView='held';heldOpen=null;drawerOpen=true;renderDetails();};setDrawer(drawerOpen);}
 // Syntarion's Magic | Tech slider: the needle sits at the axis value, the fill runs from neutral to it, and the color carries the mix.
 function renderAxis(){const a=magicTechAxis(learned),pct=v=>(v+AXIS_LIMIT)/(2*AXIS_LIMIT)*100,at=pct(a.value),from=Math.min(at,50),width=Math.abs(at-50);
 $('#axis-meter').style.setProperty('--axis',a.color);$('#axis-meter').dataset.mode=a.mode;$('#axis-meter').toggleAttribute('data-centered',a.value===0);const counts=['magicka','ingenium','praethacy','nihimence'].filter(k=>a[k]).map(k=>`${disciplines.find(d=>d.id===k).name} ${a[k]}`).join(' · ')||'No purchases yet';
@@ -159,6 +166,9 @@ $('#stars').addEventListener('pointerdown',e=>{if(e.button!==0)return;drag={x:e.
 window.addEventListener('pointermove',e=>{if(!drag)return;const rect=$('#stars').getBoundingClientRect();const units=Math.max(1100/rect.width,1000/rect.height);const dx=(e.clientX-drag.x)*units,dy=(e.clientY-drag.y)*units;if(Math.abs(dx)+Math.abs(dy)>5){moved=true;pan={x:Math.max(-650,Math.min(650,drag.pan.x+dx)),y:Math.max(-450,Math.min(450,drag.pan.y+dy))};$('#universe')?.setAttribute('transform',`translate(${pan.x} ${pan.y}) translate(550 500) scale(${scale}) translate(-550 -500)`);}});
 window.addEventListener('pointerup',()=>{drag=null;setTimeout(()=>moved=false,0);});window.addEventListener('pointercancel',()=>{drag=null;});
 $('#map').onkeydown=e=>{if(e.target!==$('#map'))return;if(e.key==='+'||e.key==='=')zoom(.1);if(e.key==='-')zoom(-.1);const delta={ArrowLeft:[35,0],ArrowRight:[-35,0],ArrowUp:[0,35],ArrowDown:[0,-35]}[e.key];if(delta){e.preventDefault();pan.x+=delta[0];pan.y+=delta[1];renderMap();}};
+// With abilities to use, the drawer opens on them; the host's answer to a use is shown as a toast.
+if(heldOn()&&learned.length)drawerOpen=true;
+onHostReply(({ok,message})=>{heldBusy=null;if(ok)heldOpen=null;if(message)notify(message);renderDetails();});
 save();render();
 
 

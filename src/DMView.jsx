@@ -385,6 +385,10 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
   const [condSearch, setCondSearch] = useState('');
   const [showConstellation, setShowConstellation] = useState(false);
   const [spendAp, setSpendAp] = useState(true);
+  const [titleDraft, setTitleDraft] = useState('');
+  const renownTitles = (Array.isArray(data.renownTitles) ? data.renownTitles : []).map(t => (typeof t === 'string' ? t : t?.name)).filter(Boolean);
+  const addTitle = () => { const t = titleDraft.trim(); if (!t || renownTitles.includes(t)) return; set('renownTitles', [...renownTitles, t]); setTitleDraft(''); };
+  const removeTitle = t => set('renownTitles', renownTitles.filter(x => x !== t));
   const classInfo = classLabel(useConstellation(), data);
   const apTotal = data.apTotal ?? data.ap_total ?? 0;
   const atCurrent = data.atCurrent ?? data.at_current ?? data.apCurrent ?? 0;
@@ -684,7 +688,7 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
             </select>
           </div>
           <div style={{ width: 120 }}>
-            <div style={{ ...label8(), marginBottom: 6 }}>Morality</div>
+            <div title="Added to the Good | Evil reading set at creation (sheet compass, -4 to +4)" style={{ ...label8(), marginBottom: 6 }}>Morality shift</div>
             <input type="number" value={Number(data.morality) || 0} onChange={e => set('morality', parseInt(e.target.value) || 0)}
               style={{ width: '100%', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }} />
           </div>
@@ -771,6 +775,27 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
             </div>
           </div>
           <button onClick={() => setShowConstellation(true)} style={{ background: COLORS.magicBg, border: `1px solid ${COLORS.magic}`, borderRadius: 6, padding: '7px 12px', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.magicText, fontFamily: "'Cinzel', serif", fontWeight: 700, whiteSpace: 'nowrap' }}>Open</button>
+        </div>
+        {/* Renown: the DM's score and the titles the character has earned. Saved with Save. */}
+        <div style={{ marginBottom: 16, padding: '10px 12px', background: 'rgba(200,168,74,0.05)', border: '1px solid rgba(200,168,74,0.22)', borderRadius: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <div style={{ ...label8(), flex: 1 }}>Renown</div>
+            <input type="number" value={Number(data.renown) || 0} onChange={e => set('renown', parseInt(e.target.value, 10) || 0)} aria-label="Renown score"
+              style={{ width: 70, background: 'rgba(240,238,235,0.04)', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 4, padding: '4px 6px', color: '#e3cf8f', fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }} />
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+            {renownTitles.length ? renownTitles.map(t => (
+              <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: '1px solid rgba(200,168,74,0.4)', borderRadius: 999, padding: '3px 6px 3px 10px', fontSize: 10, color: '#ecd99a', fontFamily: "'Cinzel', serif" }}>
+                ✦ {t}<button onClick={() => removeTitle(t)} aria-label={`Remove title ${t}`} style={{ background: 'transparent', border: 'none', color: COLORS.dim, cursor: 'pointer', fontSize: 11, padding: 0 }}>×</button>
+              </span>
+            )) : <span style={{ fontSize: 10, color: COLORS.dim, fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>No titles earned yet.</span>}
+          </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <input value={titleDraft} onChange={e => setTitleDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addTitle(); }} placeholder="Grant a title…"
+              style={{ flex: 1, background: 'rgba(240,238,235,0.04)', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 5, padding: '6px 8px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
+            <button onClick={addTitle} disabled={!titleDraft.trim()} style={{ background: 'rgba(200,168,74,0.12)', border: '1px solid rgba(200,168,74,0.45)', borderRadius: 5, padding: '6px 12px', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#e3cf8f', fontFamily: "'Cinzel', serif" }}>Add</button>
+          </div>
+          <div style={{ marginTop: 6, fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Press Save to keep renown changes.</div>
         </div>
         <div style={{ ...label8(), marginBottom: 10 }}>Stats</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>

@@ -24,7 +24,7 @@ export default function CampaignAbilities({ char, campaignId, onRoll, onUpdateCh
           // filling an absolutely positioned box does not depend on them.
           <div style={{ position: 'relative', flex: '1 1 0', minHeight: 360 }}>
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' }}>
-              <ConstellationTab char={char} onUpdateChar={onUpdateChar} />
+              <ConstellationTab char={char} onUpdateChar={onUpdateChar} onUse={onRoll} />
             </div>
           </div>
         )

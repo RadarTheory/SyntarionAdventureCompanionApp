@@ -24,10 +24,8 @@ import { SoteriaClockDisplay } from './SoteriaClockPanel';
 import SessionCheckin from './SessionCheckin';
 import IntentDeclare from "./IntentDeclare";
 import PartyProximityPanel from './PartyProximityPanel';
-import PortraitUpload from "./PortraitUpload";
+import CharacterSheetPage from './CharacterSheetPage';
 import HandbookBookmark from './HandbookBookmark';
-import { useConstellation, classLabel } from './useConstellation';
-import { DISCIPLINE_META, poolMaxes, poolOf } from './constellationAbilities';
 import MenuMusicPlayer from './MenuMusicPlayer';
 import GameSessionOverlay from './GameSessionOverlay';
 import { logAstragalRoll, logHerculesEvent } from './lib/herculesLog';
@@ -751,325 +749,6 @@ function CampaignList({ onSelect, userChar, onHome, darkMode = false, user = nul
           );
         })}
       </div>
-    </div>
-  );
-}
-
-// ─── STAT BAR ─────────────────────────────────────────────────────────────────
-function StatBar({ stat, baseVal, itemBonus, conditionBonus }) {
-  const total = baseVal + itemBonus + conditionBonus;
-  const pct = Math.round(((total - 8) / 8) * 100);
-  const color = axisColor(stat.axis);
-  const textCol = axisText(stat.axis);
-  return (
-    <div style={{ background: COLORS.card, border: `1px solid ${color}22`, borderRadius: 8, padding: '10px 12px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-        <div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, fontWeight: 700, color: textCol }}>{stat.label}</div>
-          <div style={{ fontSize: 8, color: COLORS.dim }}>{stat.equiv}</div>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 20, fontWeight: 800, color: textCol }}>{total}</div>
-          {(itemBonus !== 0 || conditionBonus !== 0) && (
-            <div style={{ fontSize: 8, color: COLORS.dim }}>
-              {baseVal}{itemBonus !== 0 ? ` +${itemBonus}` : ''}{conditionBonus !== 0 ? ` +${conditionBonus}` : ''}
-            </div>
-          )}
-        </div>
-      </div>
-      <div style={{ height: 3, background: `${color}33`, borderRadius: 2, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, pct))}%`, background: color, borderRadius: 2, transition: 'width 0.3s ease' }} />
-      </div>
-    </div>
-  );
-}
-
-// ─── SCALES PANEL ─────────────────────────────────────────────────────────────
-function ScalesPanel({ char, effectiveStats }) {
-  const vitals = (effectiveStats.body || 8) + (effectiveStats.will || 8);
-  const stamina = (effectiveStats.body || 8) + (effectiveStats.whim || 8);
-  const resolve = (effectiveStats.soul || 8) + (effectiveStats.dream || 8);
-
-  // alignment raw value stored as number -4 to +4; default 0
-  const alignVal = Number(char?.alignment ?? 0);
-  const apTotal = char?.apTotal ?? char?.ap_total ?? 0;
-  const atCurrent = char?.atCurrent ?? char?.at_current ?? char?.apCurrent ?? 0;
-  const atTotal = char?.atTotal ?? char?.at_total ?? char?.apTotal ?? 0;
-  const morality = char?.morality ?? 0;
-  const constellation = useConstellation();
-  const maxes = constellation ? poolMaxes(constellation, char?.abilities) : {};
-  const pools = Object.entries(maxes).map(([key, max]) => {
-    const meta = DISCIPLINE_META[key] || {};
-    return { key, max, pool: poolOf(char, key, max), label: meta.label || key, trait: meta.trait || key, color: meta.color || COLORS.deity };
-  });
-
-  const scaleRow = (label, val, maxVal, leftLabel, rightLabel, color) => {
-    const pct = Math.max(0, Math.min(100, ((val - 0) / maxVal) * 100));
-    return (
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, fontWeight: 700, color: COLORS.text }}>{label}</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 14, fontWeight: 800, color }}>{val}</div>
-        </div>
-        <div style={{ height: 6, background: `${color}22`, borderRadius: 3, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 3, transition: 'width 0.3s ease' }} />
-        </div>
-        {(leftLabel || rightLabel) && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
-            <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>{leftLabel}</div>
-            <div style={{ fontSize: 7, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>{rightLabel}</div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Alignment axis slider — -4 (Magic) to +4 (Tech)
-  const alignPct = ((alignVal + 4) / 8) * 100;
-  const alignColor = alignVal < 0 ? COLORS.magic : alignVal > 0 ? COLORS.tech : COLORS.muted;
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-      <div style={{ ...label8(), marginBottom: 14 }}>Derived Scales</div>
-
-      {scaleRow('Vitals', vitals, 32, 'Body + Will', '', '#e05a5a')}
-      {scaleRow('Stamina', stamina, 32, 'Body + Whim', '', '#e08a5a')}
-      {scaleRow('Resolve', resolve, 32, 'Soul + Dream', '', COLORS.magic)}
-
-      <div style={{ height: 1, background: COLORS.border, margin: '8px 0 16px' }} />
-      <div style={{ ...label8(), marginBottom: 14 }}>Alignment Axis</div>
-
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.magicText }}>Magic</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: alignColor, fontWeight: 700 }}>
-            {alignVal === 0 ? 'Neutral' : alignVal < 0 ? `Magic ${alignVal}` : `Tech +${alignVal}`}
-          </div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.techText }}>Tech</div>
-        </div>
-        <div style={{ position: 'relative', height: 8, background: `linear-gradient(to right, ${COLORS.magic}44, ${COLORS.border}, ${COLORS.tech}44)`, borderRadius: 4 }}>
-          <div style={{ position: 'absolute', left: `${alignPct}%`, top: '50%', transform: 'translate(-50%, -50%)', width: 14, height: 14, borderRadius: '50%', background: alignColor, border: `2px solid ${COLORS.surface}`, boxShadow: `0 0 8px ${alignColor}88` }} />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
-          {[-4, -3, -2, -1, 0, 1, 2, 3, 4].map(v => (
-            <div key={v} style={{ fontSize: 7, color: v === alignVal ? alignColor : COLORS.dim, fontFamily: 'monospace', fontWeight: v === alignVal ? 700 : 400 }}>{v}</div>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ height: 1, background: COLORS.border, margin: '8px 0 16px' }} />
-      <div style={{ ...label8(), marginBottom: 14 }}>Adventurer Gauge</div>
-
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.techText }}>Will</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.techText }}>Whim</div>
-        </div>
-        <div style={{ position: 'relative', height: 5, background: COLORS.border, borderRadius: 3 }}>
-          {(() => {
-            const w = effectiveStats.will || 8, wh = effectiveStats.whim || 8, total = w + wh;
-            const pct = total > 0 ? (w / total) * 100 : 50;
-            return <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${pct}%`, background: COLORS.tech, borderRadius: 3 }} />;
-          })()}
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
-          <div style={{ fontSize: 8, color: COLORS.techText }}>{effectiveStats.will || 8}</div>
-          <div style={{ fontSize: 8, color: COLORS.techText }}>{effectiveStats.whim || 8}</div>
-        </div>
-      </div>
-
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.magicText }}>Soul</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color: COLORS.magicText }}>Spirit</div>
-        </div>
-        <div style={{ position: 'relative', height: 5, background: COLORS.border, borderRadius: 3 }}>
-          {(() => {
-            const s = effectiveStats.soul || 8, sp = effectiveStats.spirit || 8, total = s + sp;
-            const pct = total > 0 ? (s / total) * 100 : 50;
-            return <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${pct}%`, background: COLORS.magic, borderRadius: 3 }} />;
-          })()}
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
-          <div style={{ fontSize: 8, color: COLORS.magicText }}>{effectiveStats.soul || 8}</div>
-          <div style={{ fontSize: 8, color: COLORS.magicText }}>{effectiveStats.spirit || 8}</div>
-        </div>
-      </div>
-
-      <div style={{ height: 1, background: COLORS.border, margin: '8px 0 16px' }} />
-
-      {/* AP & Morality */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-        <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px' }}>
-          <div style={{ ...label8(), marginBottom: 6 }}>Ability Points</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, fontWeight: 800, color: COLORS.magic }}>{atCurrent}</div>
-          <div style={{ fontSize: 8, color: COLORS.dim }}>of {atTotal} AP total - {apTotal} XP</div>
-        </div>
-        <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px' }}>
-          <div style={{ ...label8(), marginBottom: 6 }}>Morality</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, fontWeight: 800, color: morality >= 0 ? COLORS.magic : '#e05a5a' }}>{morality >= 0 ? `+${morality}` : morality}</div>
-          <div style={{ fontSize: 8, color: COLORS.dim }}>alignment rep</div>
-        </div>
-      </div>
-
-      {/* Trait pools: one point per star awakened on that trait, minus what has been spent since the last long rest */}
-      {pools.length > 0 && (
-        <>
-          <div style={{ height: 1, background: COLORS.border, margin: '16px 0' }} />
-          <div style={{ ...label8(), marginBottom: 12 }}>Trait Pools</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {pools.map(p => (
-              <div key={p.key} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px' }}>
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, color: COLORS.muted, letterSpacing: '0.12em', textTransform: 'uppercase' }}>{p.label} · {p.trait}</div>
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 16, fontWeight: 700, color: p.color }}>
-                  {p.pool}<span style={{ fontSize: 10, color: COLORS.dim, fontWeight: 400 }}> / {p.max}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div style={{ fontSize: 8, color: COLORS.dim, marginTop: 6 }}>Refills on a long rest.</div>
-        </>
-      )}
-    </div>
-  );
-}
-
-// Converts a black-on-white icon PNG into a white silhouette with real transparency
-// (luminance -> alpha), returned as a data URL usable directly in <img src>.
-const silhouetteCache = {};
-function useSilhouette(url) {
-  const [dataUrl, setDataUrl] = useState(silhouetteCache[url] || null);
-  useEffect(() => {
-    if (!url) return;
-    if (silhouetteCache[url]) { setDataUrl(silhouetteCache[url]); return; }
-    let cancelled = false;
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width; canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const d = imgData.data;
-      for (let i = 0; i < d.length; i += 4) {
-        const luminance = (d[i] + d[i + 1] + d[i + 2]) / 3;
-        d[i] = 255; d[i + 1] = 255; d[i + 2] = 255;
-        d[i + 3] = 255 - luminance;
-      }
-      ctx.putImageData(imgData, 0, 0);
-      const out = canvas.toDataURL('image/png');
-      silhouetteCache[url] = out;
-      if (!cancelled) setDataUrl(out);
-    };
-    img.onerror = () => { if (!cancelled) setDataUrl(null); };
-    img.src = url;
-    return () => { cancelled = true; };
-  }, [url]);
-  return dataUrl;
-}
-
-// ─── FULL CHARACTER SHEET (inline, dark) ──────────────────────────────────────
-function CharacterSheetInline({ char, effectiveStats, onUpdateChar }) {
-  const cls = classLabel(useConstellation(), char);
-  const raceIconSrc = char.race ? `/RaceIcons/${char.race.toLowerCase().replace(/[^a-z]/g, '')}.png` : null;
-  const classIconSrc = cls ? `/ClassIcons/${cls.iconId}.png` : null;
-  const raceIconUrl = useSilhouette(raceIconSrc);
-  const classIconUrl = useSilhouette(classIconSrc);
-
-  const PACK_META_KEY = `syntarion_pack_meta_${char?.id}`;
-  const [coin, setCoin] = useState('');
-  useEffect(() => {
-    try {
-      const m = JSON.parse(localStorage.getItem(PACK_META_KEY) || '{}');
-      if (m.coin !== undefined) setCoin(m.coin);
-    } catch (_) { }
-  }, [char?.id]);
-
-  const [playerNotes, setPlayerNotes] = useState(char.playerNotes || '');
-  const notesTimer = useRef(null);
-  const handleNotesChange = (val) => {
-    setPlayerNotes(val);
-    clearTimeout(notesTimer.current);
-    notesTimer.current = setTimeout(async () => {
-      const { id, status, campaign_id, user_id, ...blob } = char || {};
-      await supabase.from('characters').update({ data: { ...blob, playerNotes: val } }).eq('id', char.id);
-      onUpdateChar?.({ ...char, playerNotes: val });
-    }, 600);
-  };
-
-  return (
-    <div>
-      {/* Identity header */}
-      <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-          {raceIconUrl && (
-            <div title={getRaceDisplay(char.race, char.rv, char.pmV)} style={{ width: 48, height: 48, borderRadius: 8, border: '1px solid #c8a84a', background: 'rgba(200,168,74,0.35)', padding: 8, boxSizing: 'border-box', cursor: 'help' }}>
-              <img src={raceIconUrl} alt={char.race} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-            </div>
-          )}
-          {classIconUrl && (
-            <div title={[cls.name, cls.title].filter(Boolean).join(' · ')} style={{ width: 48, height: 48, borderRadius: 8, border: '1px solid #c8a84a', background: 'rgba(200,168,74,0.35)', padding: 8, boxSizing: 'border-box', cursor: 'help' }}>
-              <img src={classIconUrl} alt={cls.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-            </div>
-          )}
-        </div>
-        <div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 20, fontWeight: 700, color: COLORS.text, marginBottom: 4 }}>
-            {char.name || 'Unnamed'}
-          </div>
-          <div style={{ fontSize: 12, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 8 }}>
-            {getRaceDisplay(char.race, char.rv, char.pmV)}{cls ? ` · ${cls.name}` : ''}
-            {char.belief ? ` · ${char.belief}` : ''}
-          </div>
-        </div>
-      </div>
-
-      {/* Magic axis stats */}
-      <div style={{ ...label8(), marginBottom: 10, color: COLORS.magicText }}>Magic Axis</div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
-        {MAGIC_STATS.map(s => {
-          const base = char.stats?.[s.key] || 8;
-          const item = effectiveStats._itemBonuses?.[s.key] || 0;
-          const cond = effectiveStats._conditionBonuses?.[s.key] || 0;
-          return <StatBar key={s.key} stat={s} baseVal={base} itemBonus={item} conditionBonus={cond} />;
-        })}
-      </div>
-
-      {/* Tech axis stats */}
-      <div style={{ ...label8(), marginBottom: 10, color: COLORS.techText }}>Tech Axis</div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20 }}>
-        {TECH_STATS.map(s => {
-          const base = char.stats?.[s.key] || 8;
-          const item = effectiveStats._itemBonuses?.[s.key] || 0;
-          const cond = effectiveStats._conditionBonuses?.[s.key] || 0;
-          return <StatBar key={s.key} stat={s} baseVal={base} itemBonus={item} conditionBonus={cond} />;
-        })}
-      </div>
-
-      {/* AP & Money */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
-        <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px' }}>
-          <div style={{ ...label8(), marginBottom: 6 }}>Ability Points</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, fontWeight: 800, color: COLORS.magic }}>{char.atCurrent ?? char.at_current ?? char.apCurrent ?? 0}</div>
-          <div style={{ fontSize: 8, color: COLORS.dim }}>of {char.atTotal ?? char.at_total ?? char.apTotal ?? 0} AP total - {char.apTotal ?? char.ap_total ?? 0} XP</div>
-        </div>
-        <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px' }}>
-          <div style={{ ...label8(), marginBottom: 6 }}>Coin</div>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, fontWeight: 800, color: '#6f5512' }}>{coin || '—'}</div>
-          <div style={{ fontSize: 8, color: COLORS.dim }}>edit in Inventory · Pack</div>
-        </div>
-      </div>
-
-      {/* Player Notes */}
-      <div style={{ ...label8(), marginBottom: 8 }}>Notes</div>
-      <textarea
-        value={playerNotes}
-        onChange={e => handleNotesChange(e.target.value)}
-        placeholder="Personal notes, reminders, goals…"
-        rows={4}
-        style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
-      />
     </div>
   );
 }
@@ -1939,7 +1618,52 @@ function LootboxPanel({ campaignId, userChar, onClaimed }) {
 }
 
 // ─── CAMPAIGN DASHBOARD ───────────────────────────────────────────────────────
-const TABS = ['Map', 'Sheet', 'Scales', 'Actions', 'Abilities', 'Inventory', 'Loot', 'Log'];
+// The Actions tab's action list (user, 2026-11-16: consolidated so it is quick to navigate): category pills and a search
+// over one grid of tiles. A tile rolls the action; its bonus shows in the corner.
+function ActionsGrid({ char, onRoll, rolling }) {
+  const [category, setCategory] = useState('all');
+  const [query, setQuery] = useState('');
+  const groups = Object.entries(ACTIONS).filter(([cat]) => !(cat === 'magic' && char.cp !== 'magic') && !(cat === 'tech' && char.cp !== 'tech'));
+  const q = query.trim().toLowerCase();
+  const shown = groups
+    .filter(([cat]) => category === 'all' || cat === category)
+    .map(([cat, actions]) => [cat, actions.filter(a => !q || a.toLowerCase().includes(q))])
+    .filter(([, actions]) => actions.length);
+  const pill = active => ({ background: active ? 'rgba(200,168,74,0.16)' : 'transparent', border: `1px solid ${active ? 'rgba(200,168,74,0.55)' : COLORS.border}`, color: active ? '#ecd99a' : COLORS.muted, borderRadius: 999, padding: '5px 11px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase' });
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+        <div style={{ ...label8(), flex: 1 }}>Your Actions</div>
+        <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Find an action…" aria-label="Find an action"
+          style={{ width: 170, maxWidth: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+        <button type="button" style={pill(category === 'all')} onClick={() => setCategory('all')}>All</button>
+        {groups.map(([cat]) => <button key={cat} type="button" style={pill(category === cat)} onClick={() => setCategory(cat)}>{cat}</button>)}
+      </div>
+      {shown.length === 0 && <div style={{ fontSize: 11, color: COLORS.dim, fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>No action matches.</div>}
+      {shown.map(([cat, actions]) => (
+        <div key={cat} style={{ marginBottom: 14 }}>
+          {category === 'all' && <div style={{ ...label8(), marginBottom: 6, color: COLORS.dim }}>{cat}</div>}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(118px, 1fr))', gap: 6 }}>
+            {actions.map(action => {
+              const bonus = Number(char.actionBonuses?.[action]) || 0, busy = rolling === action;
+              return (
+                <button key={`${cat}-${action}`} type="button" onClick={() => onRoll(action)} disabled={busy} title={`Roll ${action}`}
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, padding: '9px 10px', background: busy ? 'rgba(200,168,74,0.14)' : COLORS.card, border: `1px solid ${busy ? 'rgba(200,168,74,0.5)' : COLORS.border}`, borderRadius: 6, cursor: busy ? 'default' : 'pointer', textAlign: 'left' }}>
+                  <span style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.text, letterSpacing: '0.04em' }}>{busy ? 'Rolling…' : action}</span>
+                  <span style={{ fontSize: 9, color: bonus ? COLORS.magicText : COLORS.dim, fontFamily: "'Cinzel', serif" }}>{bonus > 0 ? `+${bonus}` : bonus || '+0'}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const TABS = ['Map', 'Sheet', 'Actions', 'Abilities', 'Inventory', 'Loot', 'Log'];
 function SessionLogTab({ campaignId }) {
   const [entries, setEntries] = useState(null);
 
@@ -2203,25 +1927,11 @@ useEffect(() => {
         return <VTTViewer campaignId={String(campaign.id)} userChar={userChar} />;
 
       case 'Sheet':
-  return userChar
-    ? <>
-        <SessionCheckin char={userChar} user={authUser} campaignId={String(campaign.id)} />
-        <div style={{ marginBottom: 16 }}>
-          <PortraitUpload
-            currentUrl={userChar.portrait_url}
-            onUploaded={async (url) => {
-              const { id, status, campaign_id, user_id, ...blob } = userChar || {};
-              await supabase.from('characters').update({ data: { ...blob, portrait_url: url } }).eq('id', userChar.id);
-              onUpdateChar?.({ ...userChar, portrait_url: url });
-            }}
-          />
-        </div>
-        <CharacterSheetInline char={userChar} effectiveStats={effectiveStats} onUpdateChar={onUpdateChar} />
-      </>
-    : <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12 }}>No character loaded.</div>;
-      case 'Scales':
         return userChar
-          ? <ScalesPanel char={userChar} effectiveStats={effectiveStats} />
+          ? <>
+              <SessionCheckin char={userChar} user={authUser} campaignId={String(campaign.id)} />
+              <CharacterSheetPage char={userChar} effectiveStats={effectiveStats} onUpdateChar={onUpdateChar} onOpenAbilities={() => setActiveTab('Abilities')} />
+            </>
           : <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12 }}>No character loaded.</div>;
 
       case 'Actions':
@@ -2231,32 +1941,7 @@ useEffect(() => {
             <div style={{ marginBottom: 16 }}>
               <IntentDeclare campaignId={String(campaign.id)} char={userChar} embedded />
             </div>
-            <div style={{ ...label8(), marginBottom: 12 }}>Your Actions</div>
-            {Object.entries(ACTIONS).map(([category, actions]) => {
-              if (category === 'magic' && userChar.cp !== 'magic') return null;
-              if (category === 'tech' && userChar.cp !== 'tech') return null;
-              return (
-                <div key={category} style={{ marginBottom: 16 }}>
-                  <div style={{ ...label8(), marginBottom: 8, color: COLORS.dim }}>{category}</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                    {actions.map(action => (
-                      <div key={action} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '7px 10px', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6 }}>
-                        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.text }}>{action}</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ fontSize: 10, color: userChar.actionBonuses?.[action] ? COLORS.magicText : COLORS.dim, minWidth: 24, textAlign: 'right' }}>
-                            {userChar.actionBonuses?.[action] ? `+${userChar.actionBonuses[action]}` : '+0'}
-                          </div>
-                          <button type="button" onClick={() => rollAction(action)} disabled={rollingAction === action}
-                            style={{ background: 'rgba(200,168,74,0.14)', border: '1px solid rgba(200,168,74,0.45)', color: '#e8c84a', borderRadius: 5, padding: '4px 8px', cursor: rollingAction === action ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.08em' }}>
-                            {rollingAction === action ? 'Rolling…' : 'Roll'}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+            <ActionsGrid char={userChar} onRoll={rollAction} rolling={rollingAction} />
           </div>
         ) : <div style={{ color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12 }}>No character loaded.</div>;
 
@@ -2665,7 +2350,7 @@ useEffect(() => {
       </div>
 
       <div style={{ flex: 1, overflowY: activeTab === 'Map' || activeTab === 'Abilities' ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column', WebkitOverflowScrolling: 'touch' }}>
-        <div style={{ padding: activeTab === 'Map' || activeTab === 'Abilities' ? 0 : (isMobile ? '20px 16px calc(24px + env(safe-area-inset-bottom, 0px))' : '28px 32px'), maxWidth: activeTab === 'Map' || activeTab === 'Abilities' ? '100%' : activeTab === 'Tales' ? 920 : 680, width: '100%', margin: '0 auto', height: activeTab === 'Map' || activeTab === 'Tales' || activeTab === 'Abilities' ? '100%' : 'auto', flex: activeTab === 'Map' || activeTab === 'Tales' || activeTab === 'Abilities' ? 1 : 'none', display: activeTab === 'Map' || activeTab === 'Tales' || activeTab === 'Abilities' ? 'flex' : 'block', flexDirection: 'column' }}>
+        <div style={{ padding: activeTab === 'Map' || activeTab === 'Abilities' ? 0 : (isMobile ? '20px 16px calc(24px + env(safe-area-inset-bottom, 0px))' : '28px 32px'), maxWidth: activeTab === 'Map' || activeTab === 'Abilities' ? '100%' : activeTab === 'Tales' ? 920 : activeTab === 'Sheet' ? 1120 : 680, width: '100%', margin: '0 auto', height: activeTab === 'Map' || activeTab === 'Tales' || activeTab === 'Abilities' ? '100%' : 'auto', flex: activeTab === 'Map' || activeTab === 'Tales' || activeTab === 'Abilities' ? 1 : 'none', display: activeTab === 'Map' || activeTab === 'Tales' || activeTab === 'Abilities' ? 'flex' : 'block', flexDirection: 'column' }}>
           {false && !isAssigned && userChar && (
             <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '16px 20px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: 11, color: COLORS.muted, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Assign your character to this campaign</div>
