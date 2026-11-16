@@ -20,8 +20,12 @@ export default function CampaignAbilities({ char, campaignId, onRoll, onUpdateCh
       </div>
       {view === 'constellation'
         ? (
-          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-            <ConstellationTab char={char} onUpdateChar={onUpdateChar} />
+          // The page's root only has a min-height, so percentage heights below it collapse the iframe to its 150px default;
+          // filling an absolutely positioned box does not depend on them.
+          <div style={{ position: 'relative', flex: '1 1 0', minHeight: 360 }}>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' }}>
+              <ConstellationTab char={char} onUpdateChar={onUpdateChar} />
+            </div>
           </div>
         )
         : (
