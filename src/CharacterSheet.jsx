@@ -8,7 +8,7 @@ import {
 } from './constants';
 import { ScribeConsult, DMConsult } from './ScribeConsult';
 import supabase from './lib/supabase';
-import AbilityTree from './AbilityTree';
+import ConstellationTab from './ConstellationTab';
 import AstragalButton from './AstragalButton';
 import SessionCheckin from './SessionCheckin';
 
@@ -191,9 +191,9 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))', gap: 8, marginBottom: 24 }}>
             {[
               { label: 'Level', value: char.charLevel || progress.level },
-              { label: 'AP Total', value: apTotal },
-              { label: 'AP Next', value: progress.level >= 50 ? 'Cap' : progress.neededForNext },
-              { label: 'AT', value: String(atCurrent) + '/' + String(atTotal) },
+              { label: 'XP Total', value: apTotal },
+              { label: 'XP Next', value: progress.level >= 50 ? 'Cap' : progress.neededForNext },
+              { label: 'AP', value: String(atCurrent) + '/' + String(atTotal) },
             ].map(({ label, value }) => (
               <div key={label} style={{ flex: 1, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px', textAlign: 'center' }}>
                 <div style={{ ...label8(), marginBottom: 4 }}>{label}</div>
@@ -342,7 +342,8 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
         </div>
       );
 
-      case 'abilities': return <AbilityTree char={char} onUpdateChar={onUpdateChar} user={user} isDM={false} />;
+      // The constellation fills the whole tab area, so it is rendered outside the narrow column below.
+      case 'abilities': return null;
 
       case 'consult': return (
         <div>
@@ -376,11 +377,17 @@ export default function CharacterSheet({ char, onUpdateChar, user, onHome }) {
         })}
       </div>
 
+      {activeTab === 'abilities' ? (
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', height: isMobile ? 'calc(100dvh - 120px)' : 'calc(100vh - 110px)' }}>
+          <ConstellationTab char={char} onUpdateChar={onUpdateChar} />
+        </div>
+      ) : (
       <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ padding: isMobile ? '18px 14px calc(72px + env(safe-area-inset-bottom))' : '28px 32px', maxWidth: 680, width: '100%', margin: '0 auto' }}>
           {renderTab()}
         </div>
       </div>
+      )}
 
       <AstragalButton character={char} />
     </div>

@@ -35,7 +35,7 @@ export function getLevelProgress(ap) {
 export async function grantAp(supabase, { targetType, targetId, amount, reason, sourceType = 'dm', sourceId = null }) {
   const grantAmount = Math.max(0, Math.floor(Number(amount) || 0));
   if (!targetType || !targetId || grantAmount <= 0) {
-    throw new Error('Choose a target and enter a positive AP amount.');
+    throw new Error('Choose a target and enter a positive XP amount.');
   }
 
   const { data, error } = await supabase.rpc('grant_ap', {

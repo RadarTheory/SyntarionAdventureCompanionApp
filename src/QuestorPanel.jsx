@@ -173,7 +173,7 @@ export function QuestorPlayerPanel({ char, campaignId, embedded = false }) {
                       {/* Rewards */}
                       <div style={{ background: 'rgba(200,168,74,0.05)', border: '1px solid rgba(200,168,74,0.2)', borderRadius: 6, padding: '8px 10px', marginBottom: 12 }}>
                         <div style={{ ...label8(), marginBottom: 6, color: '#e8c84a' }}>Rewards</div>
-                        {quest.reward_ap > 0 && <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 3 }}>✦ {quest.reward_ap} AP</div>}
+                        {quest.reward_ap > 0 && <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 3 }}>✦ {quest.reward_ap} XP</div>}
                         {quest.reward_item_name && <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 3 }}>⬡ {quest.reward_item_name}</div>}
                         {quest.reward_stat_bonuses && Object.entries(quest.reward_stat_bonuses).some(([,v]) => v > 0) && (
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
@@ -359,7 +359,7 @@ export function QuestorDMPanel({ campaignId, onClose }) {
     for (const qc of chars) {
       if (qc.status === 'completed') continue;
 
-      // AP reward
+      // XP reward (stored as reward_ap)
       if (quest.reward_ap > 0) {
         await grantAp(supabase, {
           targetType: 'character',
@@ -393,7 +393,7 @@ export function QuestorDMPanel({ campaignId, onClose }) {
         campaign_id: campaignId,
         type: 'event',
         title: `Quest Completed — ${quest.title}`,
-        content: `${qc.character_name} completed the quest: ${quest.title}.${quest.reward_ap > 0 ? ` Awarded ${quest.reward_ap} AP.` : ''}${quest.reward_item_name ? ` Received: ${quest.reward_item_name}.` : ''}${quest.reward_notes ? ` ${quest.reward_notes}` : ''}`,
+        content: `${qc.character_name} completed the quest: ${quest.title}.${quest.reward_ap > 0 ? ` Awarded ${quest.reward_ap} XP.` : ''}${quest.reward_item_name ? ` Received: ${quest.reward_item_name}.` : ''}${quest.reward_notes ? ` ${quest.reward_notes}` : ''}`,
         is_dm: false,
         architect_note: `Quest completed by The Architect. Rewards disbursed.`,
       });
@@ -403,7 +403,7 @@ export function QuestorDMPanel({ campaignId, onClose }) {
         type: 'dm', is_dm: true, sender_name: 'The Architect',
         character_id: qc.character_id,
         campaign_id: campaignId,
-        content: `**Quest Complete: ${quest.title}**\n\nRewards:\n${quest.reward_ap > 0 ? `• ${quest.reward_ap} AP added\n` : ''}${quest.reward_item_name ? `• ${quest.reward_item_name} added to pack\n` : ''}${quest.reward_notes || ''}`,
+        content: `**Quest Complete: ${quest.title}**\n\nRewards:\n${quest.reward_ap > 0 ? `• ${quest.reward_ap} XP added\n` : ''}${quest.reward_item_name ? `• ${quest.reward_item_name} added to pack\n` : ''}${quest.reward_notes || ''}`,
         session_id: null,
       });
     }
@@ -513,7 +513,7 @@ export function QuestorDMPanel({ campaignId, onClose }) {
                       {/* Rewards summary */}
                       <div style={{ background: 'rgba(200,168,74,0.05)', border: '1px solid rgba(200,168,74,0.2)', borderRadius: 6, padding: '8px 10px', marginBottom: 12 }}>
                         <div style={{ ...label8(), marginBottom: 4, color: '#e8c84a' }}>Rewards</div>
-                        {quest.reward_ap > 0 && <div style={{ fontSize: 9, color: COLORS.text }}>✦ {quest.reward_ap} AP</div>}
+                        {quest.reward_ap > 0 && <div style={{ fontSize: 9, color: COLORS.text }}>✦ {quest.reward_ap} XP</div>}
                         {quest.reward_item_name && <div style={{ fontSize: 9, color: COLORS.text }}>⬡ {quest.reward_item_name}</div>}
                         {quest.reward_stat_bonuses && Object.entries(quest.reward_stat_bonuses).some(([,v]) => v > 0) && (
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 3 }}>
@@ -627,7 +627,7 @@ export function QuestorDMPanel({ campaignId, onClose }) {
               <div style={{ ...label8(), marginBottom: 12, color: '#e8c84a' }}>Rewards on Completion</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
                 <div>
-                  <div style={{ ...label8(), marginBottom: 5 }}>AP</div>
+                  <div style={{ ...label8(), marginBottom: 5 }}>XP</div>
                   <input type="number" min={0} value={draft.reward_ap} onChange={e => set('reward_ap', e.target.value)}
                     style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 8px', fontFamily: 'monospace', fontSize: 12, color: COLORS.text, outline: 'none', textAlign: 'center', boxSizing: 'border-box' }} />
                 </div>

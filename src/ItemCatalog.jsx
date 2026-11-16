@@ -440,7 +440,7 @@ function NewItemModal({ onClose, onCreated }) {
           </div>
 
           <div>
-            <div style={{ ...label8(), marginBottom: 6 }}>Held AP Bonus</div>
+            <div style={{ ...label8(), marginBottom: 6 }}>Held XP Bonus</div>
             <input type='number' min='0' value={draft.apBonus} onChange={e => set('apBonus', e.target.value)} placeholder='0' style={{ width: '100%', background: COLORS.card, border: '1px solid rgba(240,238,235,0.12)', borderRadius: 6, padding: '7px 8px', fontFamily: 'monospace', fontSize: 11, color: COLORS.text, outline: 'none', boxSizing: 'border-box' }} />
             <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 4 }}>Awarded once when a character receives or holds this item.</div>
           </div>
@@ -657,7 +657,7 @@ export default function ItemCatalog() {
                 );
               })()}
               <div style={{ color: COLORS.deity || '#C4A35A', fontSize: 9 }}>{item.meta}</div>
-              {item.apBonus > 0 && <div style={{ color: COLORS.magic || '#7B68D8', fontSize: 9, marginTop: 4 }}>+{item.apBonus} AP once when held</div>}
+              {item.apBonus > 0 && <div style={{ color: COLORS.magic || '#7B68D8', fontSize: 9, marginTop: 4 }}>+{item.apBonus} XP once when held</div>}
             </div>
           );
         })}

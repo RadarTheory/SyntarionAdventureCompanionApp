@@ -32,7 +32,7 @@ Campaign: ${campaign ? `${campaign.subtitle}` : 'Unassigned'}
 Belief: ${char?.beliefType || 'None'}${char?.deity ? ` — ${char.deity}` : ''}
 Backstory: ${char?.backstory || 'None recorded'}
 Stats: Will ${char?.stats?.will||8} · Whim ${char?.stats?.whim||8} · Body ${char?.stats?.body||8} · Mind ${char?.stats?.mind||8} · Essence ${char?.stats?.essence||8} · Soul ${char?.stats?.soul||8} · Spirit ${char?.stats?.spirit||8} · Dream ${char?.stats?.dream||8}
-AP: ${char?.apCurrent||0}/${char?.apTotal||0}
+XP: ${char?.apTotal||0} · AP: ${char?.atCurrent ?? char?.at_current ?? 0}/${char?.atTotal ?? char?.at_total ?? 0}
 Scribe Tokens: ${char?.scribeTokens||0}
 
 ${combatLog ? `CURRENT COMBAT LOG:\n${combatLog}\n` : ''}

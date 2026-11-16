@@ -54,22 +54,18 @@ Tier 3 abilities push the Magic/Tech meter. Heavy investment in one macro-path a
 levels 10-20 may trigger a DM-initiated buyback on opposing apex abilities.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ABILITY POINTS (AP)
+EXPERIENCE (XP) AND ABILITY POINTS (AP)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-AP is the primary advancement currency of Soteria.
+XP is experience. It sets a character's level and comes from the DM (the Architect), quests and certain items.
+AP is the currency spent on abilities. A character gains AP as its level rises.
 
-- AP is granted exclusively by the DM (the Architect).
-- Players spend AP on class abilities and heritage abilities.
-- Tier 1 base class abilities are free.
-- Tier 2 abilities cost 2 AP each.
-- Tier 3 abilities cost 3 AP each.
-- AP has a current (unspent) and total (lifetime) value tracked on the sheet.
-- Players request abilities; DM approves or denies.
-- DM can also grant abilities directly (DM Override) without AP cost.
-- DM can initiate buyback, refunding AP and reversing the ability.
+- Abilities are bought with AP in the Constellation, the character's ability tree, and are learned at once.
+- Each class's first purchase costs one extra AP; later purchases cost 1 to 5 AP by depth.
+- AP has a current (unspent) and total value tracked on the sheet. The last purchase can be undone for a refund.
+- A consult with the Scribe costs 1 AP.
 
-The Scribe defers all AP award decisions to the Architect.
+The Scribe defers all XP award decisions to the Architect.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DISCIPLINE SOURCES
@@ -135,7 +131,7 @@ BACKGROUND & BELIEF
 FULL CLASS TREE — MAGIC TRACK
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-AP COST: Tier 1 free | Tier 2 = 2pt per ability | Tier 3 = 3pt per ability
+(Earlier tree, kept for reference; abilities are now bought in the Constellation.)
 PROGRESSION: Base Class (Lvl 1-5) -> Tier 2 specialization (Lvl 5-10) -> Tier 3 apex (Lvl 10-20)
 
 ━━━ PATH: DIVINE (Sanctus / Spirit) ━━━

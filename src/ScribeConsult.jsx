@@ -48,8 +48,9 @@ Soul: ${char?.stats?.soul || 8}
 Spirit: ${char?.stats?.spirit || 8}
 Dream: ${char?.stats?.dream || 8}
 
-AP Current: ${char?.apCurrent || 0}
-AP Total: ${char?.apTotal || 0}
+XP: ${char?.apTotal || 0}
+AP Current: ${char?.atCurrent ?? char?.at_current ?? 0}
+AP Total: ${char?.atTotal ?? char?.at_total ?? 0}
 `.trim();
 }
 
@@ -74,7 +75,8 @@ export function ScribeConsult({ char, onUpdateChar }) {
   const lockRef = useRef(false);
   const displayName = useDisplayName(char?.name || 'traveler');
 
-  const apCurrent = char?.apCurrent || 0;
+  // A consult costs 1 AP, the same AP abilities are bought with (at_current; data.apCurrent was a stale copy of XP).
+  const apCurrent = Math.max(0, Number(char?.atCurrent ?? char?.at_current ?? 0) || 0);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
 
@@ -95,9 +97,9 @@ export function ScribeConsult({ char, onUpdateChar }) {
 
   const deductAP = async () => {
     const newAp = Math.max(0, apCurrent - 1);
-    const { error } = await supabase.from('characters').update({ data: { ...char, apCurrent: newAp } }).eq('id', char.id);
+    const { error } = await supabase.from('characters').update({ data: { ...char, atCurrent: newAp, at_current: newAp }, at_current: newAp, atCurrent: newAp }).eq('id', char.id);
     if (error) { console.error('AP deduction failed:', error); throw new Error('Could not deduct AP.'); }
-    onUpdateChar?.({ ...char, apCurrent: newAp });
+    onUpdateChar?.({ ...char, atCurrent: newAp, at_current: newAp });
     return newAp;
   };
 

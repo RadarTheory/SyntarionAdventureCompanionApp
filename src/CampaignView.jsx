@@ -893,9 +893,9 @@ function ScalesPanel({ char, effectiveStats }) {
       {/* AP & Morality */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px' }}>
-          <div style={{ ...label8(), marginBottom: 6 }}>Ability Tokens</div>
+          <div style={{ ...label8(), marginBottom: 6 }}>Ability Points</div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, fontWeight: 800, color: COLORS.magic }}>{atCurrent}</div>
-          <div style={{ fontSize: 8, color: COLORS.dim }}>of {atTotal} total - {apTotal} AP</div>
+          <div style={{ fontSize: 8, color: COLORS.dim }}>of {atTotal} AP total - {apTotal} XP</div>
         </div>
         <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px' }}>
           <div style={{ ...label8(), marginBottom: 6 }}>Morality</div>
@@ -1039,9 +1039,9 @@ function CharacterSheetInline({ char, effectiveStats, onUpdateChar }) {
       {/* AP & Money */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
         <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px' }}>
-          <div style={{ ...label8(), marginBottom: 6 }}>Ability Tokens</div>
+          <div style={{ ...label8(), marginBottom: 6 }}>Ability Points</div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 18, fontWeight: 800, color: COLORS.magic }}>{char.atCurrent ?? char.at_current ?? char.apCurrent ?? 0}</div>
-          <div style={{ fontSize: 8, color: COLORS.dim }}>of {char.atTotal ?? char.at_total ?? char.apTotal ?? 0} total - {char.apTotal ?? char.ap_total ?? 0} AP</div>
+          <div style={{ fontSize: 8, color: COLORS.dim }}>of {char.atTotal ?? char.at_total ?? char.apTotal ?? 0} AP total - {char.apTotal ?? char.ap_total ?? 0} XP</div>
         </div>
         <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: '10px 12px' }}>
           <div style={{ ...label8(), marginBottom: 6 }}>Coin</div>

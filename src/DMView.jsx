@@ -461,7 +461,7 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
       onSave?.();
     } catch (e) {
       // Not setNote — that field is the message sent to the player on approve.
-      setSaveError(e.message || 'AP award failed.');
+      setSaveError(e.message || 'XP award failed.');
     } finally {
       setGrantingAp(false);
     }
@@ -710,7 +710,7 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
         <div style={{ marginBottom: 16 }}>
           <div style={{ ...label8(), marginBottom: 10 }}>Progression</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8, marginBottom: 10 }}>
-            {[[ 'Level', data.charLevel || progress.level ], [ 'AP Total', apTotal ], [ 'AP Next', progress.level >= 50 ? 'Cap' : progress.neededForNext ], [ 'AT', String(atCurrent) + '/' + String(atTotal) ]].map(([lbl, val]) => (
+            {[[ 'Level', data.charLevel || progress.level ], [ 'XP Total', apTotal ], [ 'XP Next', progress.level >= 50 ? 'Cap' : progress.neededForNext ], [ 'AP', String(atCurrent) + '/' + String(atTotal) ]].map(([lbl, val]) => (
               <div key={lbl} style={{ background: COLORS.card, border: '1px solid rgba(240,238,235,0.12)', borderRadius: 6, padding: '8px 10px', textAlign: 'center' }}>
                 <div style={{ ...label8(), marginBottom: 4 }}>{lbl}</div>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: 15, color: COLORS.text, fontWeight: 800 }}>{val}</div>
@@ -718,17 +718,17 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
             ))}
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
-            <input type='number' min='1' value={apGrant} onChange={e => setApGrant(e.target.value)} placeholder='AP' style={{ width: 74, background: 'rgba(240,238,235,0.04)', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 5, padding: '6px 8px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }} />
+            <input type='number' min='1' value={apGrant} onChange={e => setApGrant(e.target.value)} placeholder='XP' style={{ width: 74, background: 'rgba(240,238,235,0.04)', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 5, padding: '6px 8px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }} />
             <input value={apReason} onChange={e => setApReason(e.target.value)} placeholder='Reason' style={{ flex: 1, background: 'rgba(240,238,235,0.04)', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 5, padding: '6px 8px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
-            <button onClick={awardAp} disabled={grantingAp || !apGrant} style={{ background: COLORS.magicBg, border: '1px solid rgba(159,136,255,0.55)', borderRadius: 5, padding: '7px 12px', cursor: grantingAp || !apGrant ? 'default' : 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.magicText, fontFamily: "'Cinzel', serif", opacity: grantingAp || !apGrant ? 0.6 : 1 }}>{grantingAp ? 'Awarding...' : 'Award AP'}</button>
+            <button onClick={awardAp} disabled={grantingAp || !apGrant} style={{ background: COLORS.magicBg, border: '1px solid rgba(159,136,255,0.55)', borderRadius: 5, padding: '7px 12px', cursor: grantingAp || !apGrant ? 'default' : 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.magicText, fontFamily: "'Cinzel', serif", opacity: grantingAp || !apGrant ? 0.6 : 1 }}>{grantingAp ? 'Awarding...' : 'Award XP'}</button>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
             <input type='number' min='1' max={LEVEL_CAP} value={levelDraft} onChange={e => setLevelDraft(e.target.value)} placeholder='Level' style={{ width: 74, background: 'rgba(240,238,235,0.04)', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 5, padding: '6px 8px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }} />
-            <div style={{ flex: 1, fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Sets AP to that level threshold and adjusts AT by the level difference.</div>
+            <div style={{ flex: 1, fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Sets XP to that level threshold and adjusts AP by the level difference.</div>
             <button onClick={setManualLevel} disabled={saving} style={{ background: 'rgba(240,238,235,0.06)', border: '1px solid rgba(240,238,235,0.18)', borderRadius: 5, padding: '7px 12px', cursor: saving ? 'default' : 'pointer', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text, fontFamily: "'Cinzel', serif", opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving...' : 'Set Level'}</button>
           </div>
           <div style={{ display: 'flex', gap: 16 }}>
-            {[['atCurrent', 'AT Current'], ['atTotal', 'AT Total']].map(([key, lbl]) => (
+            {[['atCurrent', 'AP Current'], ['atTotal', 'AP Total']].map(([key, lbl]) => (
               <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ fontSize: 9, color: COLORS.muted, fontFamily: "'Cinzel', serif", width: 70 }}>{lbl}</div>
                 <input type='number' min='0' value={data[key] ?? 0} onChange={e => { const val = parseInt(e.target.value) || 0; set(key, val); set(key === 'atCurrent' ? 'at_current' : 'at_total', val); }} style={{ width: 50, background: 'rgba(240,238,235,0.04)', border: '1px solid rgba(240,238,235,0.12)', borderRadius: 4, padding: '4px 6px', color: COLORS.text, fontSize: 12, fontFamily: "'Cinzel', serif", outline: 'none', textAlign: 'center' }} />

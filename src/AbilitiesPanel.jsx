@@ -11,392 +11,79 @@
 // Also add rollAbility helper in CampaignDashboard (see bottom of this file).
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { logHerculesEvent } from './lib/herculesLog';
 
-// ─── SEED DATA ────────────────────────────────────────────────────────────────
-// Structured to be DB-replaceable. Each entry maps to one of the 7 magic or
-// tech disciplines. `currencyKey` matches char.disciplines[key].
-// `statKey` is the primary stat used for the roll modifier.
+// ─── LEARNED ABILITIES ────────────────────────────────────────────────────────
+// The panel lists the abilities the character has bought in the Constellation (the Abilities tab), read from
+// data.abilities, using the constellation's own data module (public/constellation/data.js, synced from the
+// constellation project). Each ability draws on its line's row of the character sheet's Magic | Tech table
+// (traitFor), so the pools are the sheet's 16 traits, keyed by trait name in char.disciplines.
 
-const SPELL_CATALOG = [
-  // ── DIVINE / SANCTUS ──
-  {
-    id: 'sp_sanctus_1', discipline: 'sanctus', disciplineLabel: 'Divine',
-    name: 'Sanctified Strike', type: 'Combat',
-    cost: 1, currencyKey: 'sanctus', currencyLabel: 'Sanctus Orb',
-    statKey: 'soul',
-    effect: 'Imbue a weapon strike with divine force. On hit, target is pushed back one position.',
-    range: 'Melee', duration: 'Instant',
-  },
-  {
-    id: 'sp_sanctus_2', discipline: 'sanctus', disciplineLabel: 'Divine',
-    name: 'Ward of Faith', type: 'Defense',
-    cost: 2, currencyKey: 'sanctus', currencyLabel: 'Sanctus Orb',
-    statKey: 'soul',
-    effect: 'Manifest a divine barrier. Reduces next incoming damage by your Soul value.',
-    range: 'Self', duration: '1 round',
-  },
-  {
-    id: 'sp_sanctus_3', discipline: 'sanctus', disciplineLabel: 'Divine',
-    name: 'Consecrate Ground', type: 'Utility',
-    cost: 3, currencyKey: 'sanctus', currencyLabel: 'Sanctus Orb',
-    statKey: 'soul',
-    effect: 'Sanctify a 10ft area. Allies within restore 2 Vitals per turn. Hostile undead cannot enter.',
-    range: '30ft', duration: '3 rounds',
-  },
-  // ── SPIRIT / SACRAL ──
-  {
-    id: 'sp_sacral_1', discipline: 'sacral', disciplineLabel: 'Spirit',
-    name: 'Sacral Whisper', type: 'Utility',
-    cost: 1, currencyKey: 'sacral', currencyLabel: 'Sacral Will',
-    statKey: 'spirit',
-    effect: 'Commune briefly with a nearby spirit or ancestor. Ask one yes/no question.',
-    range: 'Self', duration: 'Instant',
-  },
-  {
-    id: 'sp_sacral_2', discipline: 'sacral', disciplineLabel: 'Spirit',
-    name: 'Spirit Surge', type: 'Combat',
-    cost: 2, currencyKey: 'sacral', currencyLabel: 'Sacral Will',
-    statKey: 'spirit',
-    effect: 'Channel spirit energy through your body. Next action roll gains +Spirit modifier.',
-    range: 'Self', duration: 'Instant',
-  },
-  {
-    id: 'sp_sacral_3', discipline: 'sacral', disciplineLabel: 'Spirit',
-    name: 'Bind Remnant', type: 'Control',
-    cost: 3, currencyKey: 'sacral', currencyLabel: 'Sacral Will',
-    statKey: 'spirit',
-    effect: 'Tether a spirit or ghost in place. It cannot move or act for 2 rounds.',
-    range: '20ft', duration: '2 rounds',
-  },
-  // ── MAGIC / MANA ──
-  {
-    id: 'sp_mana_1', discipline: 'mana', disciplineLabel: 'Magic',
-    name: 'Mana Wisp', type: 'Utility',
-    cost: 1, currencyKey: 'mana', currencyLabel: 'Mana Wisp',
-    statKey: 'essence',
-    effect: 'Conjure a floating light source that follows you. Reveals hidden glyphs.',
-    range: 'Self', duration: '10 min',
-  },
-  {
-    id: 'sp_mana_2', discipline: 'mana', disciplineLabel: 'Magic',
-    name: 'Force Bolt', type: 'Combat',
-    cost: 1, currencyKey: 'mana', currencyLabel: 'Mana Wisp',
-    statKey: 'essence',
-    effect: 'Fire a raw bolt of magical energy. Deals damage equal to your Essence modifier × 2.',
-    range: '40ft', duration: 'Instant',
-  },
-  {
-    id: 'sp_mana_3', discipline: 'mana', disciplineLabel: 'Magic',
-    name: 'Arcane Unravel', type: 'Utility',
-    cost: 2, currencyKey: 'mana', currencyLabel: 'Mana Wisp',
-    statKey: 'essence',
-    effect: 'Dispel one active magical effect on a target or object.',
-    range: '30ft', duration: 'Instant',
-  },
-  // ── NATURE / ESSENCE ──
-  {
-    id: 'sp_essence_1', discipline: 'essence', disciplineLabel: 'Nature',
-    name: 'Rootbind', type: 'Control',
-    cost: 1, currencyKey: 'essence', currencyLabel: 'Essence Seed',
-    statKey: 'body',
-    effect: 'Sprout roots from the ground to restrain a target. Movement reduced to 0 for 1 round.',
-    range: '25ft', duration: '1 round',
-  },
-  {
-    id: 'sp_essence_2', discipline: 'essence', disciplineLabel: 'Nature',
-    name: 'Living Mend', type: 'Healing',
-    cost: 2, currencyKey: 'essence', currencyLabel: 'Essence Seed',
-    statKey: 'body',
-    effect: 'Accelerate natural healing. Target restores Vitals equal to your Body modifier.',
-    range: 'Touch', duration: 'Instant',
-  },
-  {
-    id: 'sp_essence_3', discipline: 'essence', disciplineLabel: 'Nature',
-    name: 'Overgrowth', type: 'Utility',
-    cost: 3, currencyKey: 'essence', currencyLabel: 'Essence Seed',
-    statKey: 'body',
-    effect: 'Rapidly grow dense vegetation in a 15ft area. Difficult terrain, partial concealment.',
-    range: '40ft', duration: '5 rounds',
-  },
-  // ── GLYPH / GNOSIS ──
-  {
-    id: 'sp_gnosis_1', discipline: 'gnosis', disciplineLabel: 'Glyph',
-    name: 'Glyphread', type: 'Utility',
-    cost: 1, currencyKey: 'gnosis', currencyLabel: 'Glyphstone',
-    statKey: 'essence',
-    effect: 'Decipher any magical inscription or rune, even in unknown languages.',
-    range: 'Touch', duration: 'Instant',
-  },
-  {
-    id: 'sp_gnosis_2', discipline: 'gnosis', disciplineLabel: 'Glyph',
-    name: 'Sigil Trap', type: 'Combat',
-    cost: 2, currencyKey: 'gnosis', currencyLabel: 'Glyphstone',
-    statKey: 'essence',
-    effect: 'Inscribe a hidden glyph on a surface. Triggers on contact, dealing Essence modifier damage.',
-    range: 'Touch', duration: 'Until triggered or 1 hour',
-  },
-  {
-    id: 'sp_gnosis_3', discipline: 'gnosis', disciplineLabel: 'Glyph',
-    name: 'Memory Seal', type: 'Utility',
-    cost: 3, currencyKey: 'gnosis', currencyLabel: 'Glyphstone',
-    statKey: 'essence',
-    effect: 'Lock a memory, piece of knowledge, or message into a glyph. Another caster can unlock it.',
-    range: 'Self', duration: 'Permanent until unsealed',
-  },
-  // ── LIGHT / SHAEID ──
-  {
-    id: 'sp_shaeid_1', discipline: 'shaeid', disciplineLabel: 'Light',
-    name: 'Shaeid Flare', type: 'Combat',
-    cost: 1, currencyKey: 'shaeid', currencyLabel: 'Shaeid Shard',
-    statKey: 'spirit',
-    effect: 'Blind a target with concentrated light for 1 round. Disadvantage on next roll.',
-    range: '20ft', duration: '1 round',
-  },
-  {
-    id: 'sp_shaeid_2', discipline: 'shaeid', disciplineLabel: 'Light',
-    name: 'Illuminate Truth', type: 'Utility',
-    cost: 2, currencyKey: 'shaeid', currencyLabel: 'Shaeid Shard',
-    statKey: 'spirit',
-    effect: 'Reveal hidden objects, invisible entities, and illusions in a 20ft radius for 2 rounds.',
-    range: 'Self (20ft radius)', duration: '2 rounds',
-  },
-  {
-    id: 'sp_shaeid_3', discipline: 'shaeid', disciplineLabel: 'Light',
-    name: 'Lunar Bridge', type: 'Utility',
-    cost: 3, currencyKey: 'shaeid', currencyLabel: 'Shaeid Shard',
-    statKey: 'spirit',
-    effect: 'Project a bridge of solidified light across a gap up to 30ft wide. Lasts 3 rounds.',
-    range: '30ft', duration: '3 rounds',
-  },
-  // ── SHADOW / WRAILL ──
-  {
-    id: 'sp_wraill_1', discipline: 'wraill', disciplineLabel: 'Shadow',
-    name: 'Felldrop', type: 'Combat',
-    cost: 1, currencyKey: 'wraill', currencyLabel: 'Felldrop',
-    statKey: 'soul',
-    effect: 'Drip shadow-essence onto a target. They take damage over 2 rounds equal to your Soul modifier.',
-    range: '30ft', duration: '2 rounds',
-  },
-  {
-    id: 'sp_wraill_2', discipline: 'wraill', disciplineLabel: 'Shadow',
-    name: 'Umbral Step', type: 'Utility',
-    cost: 2, currencyKey: 'wraill', currencyLabel: 'Felldrop',
-    statKey: 'soul',
-    effect: 'Merge with your shadow briefly, teleporting up to 20ft to any darkened space.',
-    range: '20ft', duration: 'Instant',
-  },
-  {
-    id: 'sp_wraill_3', discipline: 'wraill', disciplineLabel: 'Shadow',
-    name: 'Veil of Dread', type: 'Control',
-    cost: 3, currencyKey: 'wraill', currencyLabel: 'Felldrop',
-    statKey: 'soul',
-    effect: 'Emanate an aura of shadow-terror. Enemies within 15ft must roll Will or be Shaken (−2 all rolls) for 2 rounds.',
-    range: 'Self (15ft aura)', duration: '2 rounds',
-  },
-];
-
-const SCHEMATIC_CATALOG = [
-  // ── GAIN / ION ──
-  {
-    id: 'sc_ion_1', discipline: 'gain', disciplineLabel: 'Ion',
-    name: 'Ion Pulse', type: 'Combat',
-    cost: 1, currencyKey: 'gain', currencyLabel: 'Ion Cap',
-    statKey: 'will',
-    effect: 'Release a burst of ion energy. Disrupts one electrical or mechanical system within range.',
-    range: '20ft', duration: 'Instant',
-  },
-  {
-    id: 'sc_ion_2', discipline: 'gain', disciplineLabel: 'Ion',
-    name: 'Static Field', type: 'Control',
-    cost: 2, currencyKey: 'gain', currencyLabel: 'Ion Cap',
-    statKey: 'will',
-    effect: 'Generate a field of static discharge in a 10ft area. Targets moving through take Will modifier damage.',
-    range: '30ft', duration: '3 rounds',
-  },
-  {
-    id: 'sc_ion_3', discipline: 'gain', disciplineLabel: 'Ion',
-    name: 'Charge Capacitor', type: 'Utility',
-    cost: 3, currencyKey: 'gain', currencyLabel: 'Ion Cap',
-    statKey: 'will',
-    effect: 'Overcharge a device or weapon. Its next use deals double output or effect.',
-    range: 'Touch', duration: 'Instant',
-  },
-  // ── GRIT / STEAM ──
-  {
-    id: 'sc_steam_1', discipline: 'grit', disciplineLabel: 'Steam',
-    name: 'Pressurize', type: 'Combat',
-    cost: 1, currencyKey: 'grit', currencyLabel: 'Steam Core',
-    statKey: 'will',
-    effect: 'Vent high-pressure steam in a 10ft cone. Targets must roll Body or be Pushed and Disoriented.',
-    range: '10ft cone', duration: 'Instant',
-  },
-  {
-    id: 'sc_steam_2', discipline: 'grit', disciplineLabel: 'Steam',
-    name: 'Core Burn', type: 'Combat',
-    cost: 2, currencyKey: 'grit', currencyLabel: 'Steam Core',
-    statKey: 'will',
-    effect: 'Overheat a steam core, creating an explosive burst. Deals damage equal to Grit pool × 2 in 15ft.',
-    range: '15ft burst', duration: 'Instant',
-  },
-  {
-    id: 'sc_steam_3', discipline: 'grit', disciplineLabel: 'Steam',
-    name: 'Ironclad Shell', type: 'Defense',
-    cost: 3, currencyKey: 'grit', currencyLabel: 'Steam Core',
-    statKey: 'body',
-    effect: 'Encase yourself in a pressurized steam shell. Reduce incoming damage by 4 for 2 rounds.',
-    range: 'Self', duration: '2 rounds',
-  },
-  // ── FOCUS / ELEMENT ──
-  {
-    id: 'sc_element_1', discipline: 'focus', disciplineLabel: 'Element',
-    name: 'Element Charm', type: 'Utility',
-    cost: 1, currencyKey: 'focus', currencyLabel: 'Element Charm',
-    statKey: 'mind',
-    effect: 'Attune briefly to one element (fire, water, stone, wind). Gain resistance to that element for 2 rounds.',
-    range: 'Self', duration: '2 rounds',
-  },
-  {
-    id: 'sc_element_2', discipline: 'focus', disciplineLabel: 'Element',
-    name: 'Elemental Strike', type: 'Combat',
-    cost: 2, currencyKey: 'focus', currencyLabel: 'Element Charm',
-    statKey: 'mind',
-    effect: 'Channel a chosen element through a weapon or ranged attack. Deals Mind modifier as bonus elemental damage.',
-    range: 'Weapon range', duration: 'Instant',
-  },
-  {
-    id: 'sc_element_3', discipline: 'focus', disciplineLabel: 'Element',
-    name: 'Convergence', type: 'Control',
-    cost: 3, currencyKey: 'focus', currencyLabel: 'Element Charm',
-    statKey: 'mind',
-    effect: 'Draw opposing elements together, creating a destabilizing explosion in a 20ft area.',
-    range: '40ft', duration: 'Instant',
-  },
-  // ── MATTER / ARC ──
-  {
-    id: 'sc_arc_1', discipline: 'matter', disciplineLabel: 'Arc',
-    name: 'Arc Spore', type: 'Utility',
-    cost: 1, currencyKey: 'matter', currencyLabel: 'Arc Spore',
-    statKey: 'mind',
-    effect: 'Release a spore that conducts arc energy. Tags a surface or target; next electrical discharge chains to it.',
-    range: '20ft', duration: '5 rounds',
-  },
-  {
-    id: 'sc_arc_2', discipline: 'matter', disciplineLabel: 'Arc',
-    name: 'Matter Shift', type: 'Utility',
-    cost: 2, currencyKey: 'matter', currencyLabel: 'Arc Spore',
-    statKey: 'mind',
-    effect: 'Alter the molecular density of a small object (≤ 5lbs). Make it temporarily weightless or rigid.',
-    range: 'Touch', duration: '3 rounds',
-  },
-  {
-    id: 'sc_arc_3', discipline: 'matter', disciplineLabel: 'Arc',
-    name: 'Deconstruct', type: 'Combat',
-    cost: 3, currencyKey: 'matter', currencyLabel: 'Arc Spore',
-    statKey: 'mind',
-    effect: 'Disassemble an unattended mechanical object or a section of barrier. Deals Mind × 3 to constructs.',
-    range: '10ft', duration: 'Instant',
-  },
-  // ── REASON / CELL ──
-  {
-    id: 'sc_cell_1', discipline: 'reason', disciplineLabel: 'Cell',
-    name: 'Rad Cell', type: 'Utility',
-    cost: 1, currencyKey: 'reason', currencyLabel: 'Rad Cell',
-    statKey: 'dream',
-    effect: 'Activate a cell unit to power a device, lock, or engine for 10 minutes.',
-    range: 'Touch', duration: '10 min',
-  },
-  {
-    id: 'sc_cell_2', discipline: 'reason', disciplineLabel: 'Cell',
-    name: 'Calculated Strike', type: 'Combat',
-    cost: 2, currencyKey: 'reason', currencyLabel: 'Rad Cell',
-    statKey: 'dream',
-    effect: 'Analyze target weak points. Next attack automatically hits and uses Dream modifier as bonus damage.',
-    range: 'Self', duration: 'Next action',
-  },
-  {
-    id: 'sc_cell_3', discipline: 'reason', disciplineLabel: 'Cell',
-    name: 'Cascade Protocol', type: 'Control',
-    cost: 3, currencyKey: 'reason', currencyLabel: 'Rad Cell',
-    statKey: 'dream',
-    effect: 'Execute a chain of technical maneuvers. Take 2 additional actions this turn, each at −2.',
-    range: 'Self', duration: 'This turn',
-  },
-  // ── FORTITUDE / LITHIUM ──
-  {
-    id: 'sc_lithium_1', discipline: 'fortitude', disciplineLabel: 'Lithium',
-    name: 'Lithium Lens', type: 'Utility',
-    cost: 1, currencyKey: 'fortitude', currencyLabel: 'Lithium Lens',
-    statKey: 'body',
-    effect: 'Focus lithium energy through a lens to cut through metal, stone, or dense material.',
-    range: 'Touch', duration: 'Instant',
-  },
-  {
-    id: 'sc_lithium_2', discipline: 'fortitude', disciplineLabel: 'Lithium',
-    name: 'Stabilize', type: 'Defense',
-    cost: 2, currencyKey: 'fortitude', currencyLabel: 'Lithium Lens',
-    statKey: 'body',
-    effect: 'Inject stabilizing compounds. Remove one debuff and regain Body modifier in Vitals.',
-    range: 'Touch', duration: 'Instant',
-  },
-  {
-    id: 'sc_lithium_3', discipline: 'fortitude', disciplineLabel: 'Lithium',
-    name: 'Endurance Surge', type: 'Combat',
-    cost: 3, currencyKey: 'fortitude', currencyLabel: 'Lithium Lens',
-    statKey: 'body',
-    effect: 'Push past physical limits. Ignore all wound penalties for 3 rounds.',
-    range: 'Self', duration: '3 rounds',
-  },
-  // ── INGENUITY / NULL ──
-  {
-    id: 'sc_null_1', discipline: 'ingenuity', disciplineLabel: 'Null',
-    name: 'Nullid', type: 'Utility',
-    cost: 1, currencyKey: 'ingenuity', currencyLabel: 'Nullid',
-    statKey: 'whim',
-    effect: 'Deploy a null-field patch. Suppresses one active magical or tech effect in a 5ft area for 1 round.',
-    range: '15ft', duration: '1 round',
-  },
-  {
-    id: 'sc_null_2', discipline: 'ingenuity', disciplineLabel: 'Null',
-    name: 'Adaptive Bypass', type: 'Utility',
-    cost: 2, currencyKey: 'ingenuity', currencyLabel: 'Nullid',
-    statKey: 'whim',
-    effect: 'Rapidly reverse-engineer and bypass any security system, lock, or encrypted seal.',
-    range: 'Touch', duration: 'Instant',
-  },
-  {
-    id: 'sc_null_3', discipline: 'ingenuity', disciplineLabel: 'Null',
-    name: 'Null Cascade', type: 'Combat',
-    cost: 3, currencyKey: 'ingenuity', currencyLabel: 'Nullid',
-    statKey: 'whim',
-    effect: 'Detonate a null-field in a 20ft burst. Disables all active magical and tech effects in range for 2 rounds.',
-    range: '20ft burst', duration: '2 rounds',
-  },
-];
-
-// ─── DISCIPLINE GROUPING ───────────────────────────────────────────────────────
-const MAGIC_DISCIPLINES = ['sanctus', 'sacral', 'mana', 'essence', 'gnosis', 'shaeid', 'wraill'];
-const TECH_DISCIPLINES  = ['gain', 'grit', 'focus', 'matter', 'reason', 'fortitude', 'ingenuity'];
-
+// Sheet rows: trait key → discipline label, trait label and colour. Rows that existed before keep their colour.
 const DISCIPLINE_META = {
-  sanctus:   { label: 'Divine',     color: '#e8d9a7', axis: 'magic' },
-  sacral:    { label: 'Spirit',     color: COLORS.magic,  axis: 'magic' },
-  mana:      { label: 'Magic',      color: '#a78bfa', axis: 'magic' },
-  essence:   { label: 'Nature',     color: '#86efac', axis: 'magic' },
-  gnosis:    { label: 'Glyph',      color: '#fbbf24', axis: 'magic' },
-  shaeid:    { label: 'Light',      color: '#fef9c3', axis: 'magic' },
-  wraill:    { label: 'Shadow',     color: '#a8a29e', axis: 'magic' },
-  gain:      { label: 'Ion',        color: COLORS.tech,   axis: 'tech'  },
-  grit:      { label: 'Steam',      color: '#fb923c', axis: 'tech'  },
-  focus:     { label: 'Element',    color: '#38bdf8', axis: 'tech'  },
-  matter:    { label: 'Arc',        color: '#4ade80', axis: 'tech'  },
-  reason:    { label: 'Cell',       color: '#c084fc', axis: 'tech'  },
-  fortitude: { label: 'Lithium',    color: '#94a3b8', axis: 'tech'  },
-  ingenuity: { label: 'Null',       color: '#e2e8f0', axis: 'tech'  },
+  sanctus: { label: 'Divine',      trait: 'Sanctus', color: '#e8d9a7',    axis: 'magic' },
+  sacral:  { label: 'Spirit',      trait: 'Sacral',  color: COLORS.magic, axis: 'magic' },
+  mana:    { label: 'Magic',       trait: 'Mana',    color: '#a78bfa',    axis: 'magic' },
+  chi:     { label: 'Nature',      trait: 'Chi',     color: '#86efac',    axis: 'magic' },
+  gnosis:  { label: 'Glyph',       trait: 'Gnosis',  color: '#fbbf24',    axis: 'magic' },
+  shaeid:  { label: 'Light',       trait: 'Shaeid',  color: '#fef9c3',    axis: 'magic' },
+  wraill:  { label: 'Shadow',      trait: 'Wraill',  color: '#a8a29e',    axis: 'magic' },
+  phorym:  { label: 'Imagination', trait: 'Phorym',  color: '#f0abfc',    axis: 'magic' },
+  lithium: { label: 'Fortitude',   trait: 'Lithium', color: '#94a3b8',    axis: 'tech'  },
+  steam:   { label: 'Grit',        trait: 'Steam',   color: '#fb923c',    axis: 'tech'  },
+  crhon:   { label: 'Volition',    trait: 'Crhon',   color: '#fda4af',    axis: 'tech'  },
+  cell:    { label: 'Reason',      trait: 'Cell',    color: '#c084fc',    axis: 'tech'  },
+  zinc:    { label: 'Focus',       trait: 'Zinc',    color: '#38bdf8',    axis: 'tech'  },
+  null:    { label: 'Ingenuity',   trait: 'Null',    color: '#e2e8f0',    axis: 'tech'  },
+  volt:    { label: 'Matter',      trait: 'Volt',    color: '#4ade80',    axis: 'tech'  },
+  ion:     { label: 'Gain',        trait: 'Ion',     color: COLORS.tech,  axis: 'tech'  },
 };
+
+// Pools saved under the panel's earlier keys are still read, so nothing a character held is lost.
+const LEGACY_POOL = { chi: 'essence', ion: 'gain', steam: 'grit', zinc: 'focus', volt: 'matter', cell: 'reason', lithium: 'fortitude', null: 'ingenuity' };
+const poolOf = (char, key) => Number(char?.disciplines?.[key] ?? char?.disciplines?.[LEGACY_POOL[key]] ?? 0) || 0;
+
+// The class's aspect sets the roll stat. Affect rolls Essence (the sheet's earlier rule); Hope has no stat yet.
+const ASPECT_STAT = { Soul: 'soul', Spirit: 'spirit', Mind: 'mind', Body: 'body', Will: 'will', Whim: 'whim', Dream: 'dream', Affect: 'essence' };
+
+// Placeholder: what one use costs from the trait's pool is not decided yet, so every use costs 1.
+const USE_COST = 1;
+
+let constellationData = null;
+function loadConstellation() {
+  constellationData ??= import(/* @vite-ignore */ new URL('/constellation/data.js', window.location.origin).href);
+  return constellationData;
+}
+
+// One entry per learned ability, at the highest level the character holds.
+function learnedEntries(d, learned) {
+  const held = new Set((Array.isArray(learned) ? learned : []).filter(id => typeof id === 'string' && !id.includes('|')));
+  const out = [];
+  for (const cls of d.classes) {
+    if (![...held].some(id => id.startsWith(`${cls.id}:`))) continue;
+    const t = d.traitFor(cls);
+    if (!t) continue;
+    const key = t.trait.toLowerCase(), meta = DISCIPLINE_META[key];
+    for (const e of d.abilityEntries(cls, 'abilities')) {
+      const owned = e.nodes.filter(n => held.has(n.id));
+      if (!owned.length) continue;
+      const top = owned.at(-1);
+      out.push({
+        id: e.key, name: e.name, className: cls.name,
+        type: top.levelName, level: owned.length, levels: e.nodes.length,
+        discipline: key, disciplineLabel: meta?.label || t.discipline,
+        cost: USE_COST, currencyKey: key, currencyLabel: t.trait,
+        statKey: ASPECT_STAT[cls.attribute] || null,
+        effect: top.description || e.description || '',
+        axis: t.column === 'Magic' ? 'magic' : 'tech',
+      });
+    }
+  }
+  return out;
+}
 
 const TYPE_COLORS = {
   Combat:  '#e05a5a',
@@ -418,10 +105,10 @@ function AbilityCard({ entry, char, campaignId, onRoll, disabled, onRequestUse }
   const [requested, setRequested]   = useState(false);
 
   const meta    = DISCIPLINE_META[entry.discipline] || {};
-  const pool    = char?.disciplines?.[entry.currencyKey] ?? 0;
+  const pool    = poolOf(char, entry.currencyKey);
   const canAfford = pool >= entry.cost;
   const typeColor = TYPE_COLORS[entry.type] || COLORS.dim;
-  const statVal = char?.stats?.[entry.statKey] || 8;
+  const statVal = entry.statKey ? (char?.stats?.[entry.statKey] || 8) : 8;
   const modifier = statVal - 8; // modifier relative to baseline 8
 
   const handleRoll = async () => {
@@ -505,10 +192,10 @@ function AbilityCard({ entry, char, campaignId, onRoll, disabled, onRequestUse }
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
             <div style={{ fontSize: 8, color: canAfford && !disabled ? meta.color : '#e05a5a', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
-              {entry.cost} {entry.currencyLabel} · Pool: {pool}
+              {entry.cost} {entry.currencyLabel} per use (provisional) · Pool: {pool}
             </div>
             <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>
-              {entry.range}
+              {entry.className} · level {entry.level} of {entry.levels}
             </div>
           </div>
         </div>
@@ -523,10 +210,7 @@ function AbilityCard({ entry, char, campaignId, onRoll, disabled, onRequestUse }
           </div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>
-              DURATION <span style={{ color: COLORS.muted, marginLeft: 4 }}>{entry.duration}</span>
-            </div>
-            <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>
-              KEY STAT <span style={{ color: COLORS.muted, marginLeft: 4 }}>{entry.statKey.toUpperCase()} {statVal} ({modifier >= 0 ? '+' : ''}{modifier})</span>
+              KEY STAT <span style={{ color: COLORS.muted, marginLeft: 4 }}>{entry.statKey ? entry.statKey.toUpperCase() : 'NONE YET'} {statVal} ({modifier >= 0 ? '+' : ''}{modifier})</span>
             </div>
           </div>
 
@@ -648,7 +332,7 @@ function AbilitySection({ title, axis, entries, char, campaignId, onRoll, disabl
         <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           {disciplines.map(disc => {
             const meta    = DISCIPLINE_META[disc] || {};
-            const pool    = char?.disciplines?.[disc] ?? 0;
+            const pool    = poolOf(char, disc);
             const entries = byDiscipline[disc];
             return (
               <div key={disc}>
@@ -691,17 +375,25 @@ function AbilitySection({ title, axis, entries, char, campaignId, onRoll, disabl
 
 // ─── ABILITIES PANEL (exported) ───────────────────────────────────────────────
 export default function AbilitiesPanel({ char, campaignId, onRoll }) {
-  const [filter, setFilter] = useState('All'); // 'All' | 'Combat' | 'Defense' | 'Utility' | 'Control' | 'Healing'
+  // null while the constellation's data loads; then one entry per learned ability.
+  const [entries, setEntries] = useState(null);
+  const [loadError, setLoadError] = useState(null);
+  const learnedKey = JSON.stringify(char?.abilities || []);
+  useEffect(() => {
+    let live = true;
+    loadConstellation()
+      .then(d => { if (live) setEntries(learnedEntries(d, JSON.parse(learnedKey))); })
+      .catch(() => { if (live) setLoadError('The constellation could not be loaded.'); });
+    return () => { live = false; };
+  }, [learnedKey]);
+  const spells = (entries || []).filter(e => e.axis === 'magic');
+  const schematics = (entries || []).filter(e => e.axis === 'tech');
 
   // Alignment gating — uses char.alignment (-10 to +10)
   const alignVal = Number(char?.alignment ?? 0);
   const spellsDisabled     = alignVal >= 3;   // too far tech-side
   const schematicsDisabled = alignVal <= -3;  // too far magic-side
 
-  const filterTypes = ['All', 'Combat', 'Defense', 'Utility', 'Control', 'Healing'];
-
-  const applyFilter = entries =>
-    filter === 'All' ? entries : entries.filter(e => e.type === filter);
 
   return (
     <div>
@@ -745,28 +437,15 @@ export default function AbilitiesPanel({ char, campaignId, onRoll }) {
       </div>
       <div style={{ height: 18 }} />
 
-      {/* Type filter pills */}
-      <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 20 }}>
-        {filterTypes.map(t => (
-          <button key={t} onClick={() => setFilter(t)}
-            style={{
-              background: filter === t ? 'rgba(200,168,74,0.14)' : 'transparent',
-              border: `1px solid ${filter === t ? 'rgba(200,168,74,0.5)' : COLORS.border}`,
-              borderRadius: 4, padding: '3px 9px', cursor: 'pointer',
-              fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: '0.1em',
-              color: filter === t ? '#e8c84a' : COLORS.dim,
-            }}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
+      {loadError && <div style={{ fontSize: 11, color: '#e05a5a', fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>{loadError}</div>}
+      {!loadError && entries === null && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>Reading your constellation…</div>}
+      {entries && !entries.length && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>No abilities learned yet. Awaken them in the Constellation, on your sheet's Abilities tab.</div>}
 
       {/* ── SPELLS ── */}
       <AbilitySection
         title="Spells"
         axis="magic"
-        entries={applyFilter(SPELL_CATALOG)}
+        entries={spells}
         char={char}
         campaignId={campaignId}
         onRoll={onRoll}
@@ -778,7 +457,7 @@ export default function AbilitiesPanel({ char, campaignId, onRoll }) {
       <AbilitySection
         title="Schematics"
         axis="tech"
-        entries={applyFilter(SCHEMATIC_CATALOG)}
+        entries={schematics}
         char={char}
         campaignId={campaignId}
         onRoll={onRoll}
@@ -788,7 +467,7 @@ export default function AbilitiesPanel({ char, campaignId, onRoll }) {
 
       {/* Footer note */}
       <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', marginTop: 8 }}>
-        Alignment threshold ±3 · Use Request sends a message to the Architect
+        Alignment threshold ±3 · Use Request sends a message to the Architect · Pools are your sheet's traits
       </div>
     </div>
   );
