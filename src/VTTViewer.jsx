@@ -186,7 +186,7 @@ function tokenRim(tok, isEnemyTok, isOwn = false) {
 // Condition pips: a row of colored dots above the token. Words do not fit here
 // - the name label below already runs at r*0.4 and bottoms out at 5px - so the
 // colour carries the state at a glance and hovering spells it out. Icons can
-// slot in later the same way the death overlay prefers /death.png over a glyph.
+// slot in later the same way the death overlay prefers /death-skull.png over a glyph.
 function drawConditionPips(ctx, conds, tx, ty, r, hovered) {
   if (!conds.length) return;
   const shown = conds.slice(0, 4);
@@ -496,7 +496,7 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
       }
     }
     if (tok.status === 'dead' && tok.type !== 'player') {
-      const deathIcon = getRawIcon('/death.png', onIconReady);
+      const deathIcon = getRawIcon('/death-skull.png', onIconReady);
       if (deathIcon) {
         ctx.globalAlpha = 0.85;
         ctx.drawImage(deathIcon, tx - r, ty - r, r * 2, r * 2);
