@@ -39,7 +39,7 @@ import HandbookBookmark from './HandbookBookmark';
 import MenuMusicPlayer from './MenuMusicPlayer';
 import GameSessionOverlay from './GameSessionOverlay';
 import { playSfxByKey } from './soundLibrary';
-import { LEVEL_CAP, apForLevel, getLevelProgress, grantAp } from './leveling';
+import { LEVEL_CAP, AP_PER_LEVEL, apForLevel, getLevelProgress, grantAp } from './leveling';
 import { logAstragalRoll } from './lib/herculesLog';
 import LearnedAbilitiesList from './LearnedAbilitiesList';
 
@@ -473,8 +473,8 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
     const currentLevel = data.charLevel || data.level || progress.level;
     const levelDelta = targetLevel - currentLevel;
     const nextApTotal = apForLevel(targetLevel);
-    const nextAtCurrent = Math.max(0, atCurrent + levelDelta);
-    const nextAtTotal = Math.max(0, atTotal + levelDelta);
+    const nextAtCurrent = Math.max(0, atCurrent + levelDelta * AP_PER_LEVEL);
+    const nextAtTotal = Math.max(0, atTotal + levelDelta * AP_PER_LEVEL);
     const nextData = {
       ...data,
       apTotal: nextApTotal,

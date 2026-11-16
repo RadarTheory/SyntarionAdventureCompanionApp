@@ -1,5 +1,9 @@
 export const LEVEL_CAP = 50;
 
+// The AP economy (decided 2026-11-16). AP_PER_LEVEL mirrors grant_ap in supabase/migrations/20261116_ap_economy.sql.
+export const STARTING_AP = 5;
+export const AP_PER_LEVEL = 2;
+
 export function apForLevel(level) {
   const safeLevel = Math.max(1, Math.min(LEVEL_CAP, Number(level) || 1));
   return 100 * Math.pow(safeLevel - 1, 2);

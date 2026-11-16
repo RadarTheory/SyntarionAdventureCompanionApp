@@ -95,8 +95,9 @@ export default function ConstellationTab({ char, onUpdateChar }) {
         });
         if (cancelled) return;
         let current = nextData ? { ...charRef.current, ...nextData } : charRef.current;
-        // The class declared at creation is opened once, as the character's first purchase at its normal price, on a fresh
-        // build with the AP for it. The flag keeps a later reset or refund from buying it again: after this, every choice is the player's.
+        // The class declared at creation is opened as the character's first purchase, at its normal price, on a fresh build.
+        // With too little AP it waits for the first points to arrive. Once opened, or once the player buys anything else, the flag
+        // keeps a later reset or refund from buying it again: after that, every choice is the player's.
         try {
           const d = await loadConstellation();
           const start = startingNodeId(d, current);
@@ -105,7 +106,8 @@ export default function ConstellationTab({ char, onUpdateChar }) {
             const withStart = await updateCharacter(char.id, ({ data, ap }) => {
               if (data.constellationStart) return null;
               const held = (Array.isArray(data.abilities) ? data.abilities : []).filter(k => !isOldKey(k));
-              const open = held.length === 0 && ap >= cost;
+              if (held.length === 0 && ap < cost) return null;
+              const open = held.length === 0;
               return { ap: open ? ap - cost : ap, fields: { constellationStart: true, ...(open ? { abilities: [start] } : {}) } };
             });
             if (withStart) current = { ...current, ...withStart };

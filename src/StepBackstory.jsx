@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
 import CharacterTokenForge from './CharacterTokenForge';
 import { useDevice } from './useDevice';
+import { STARTING_AP } from './leveling';
 import {
   COLORS, BS_COMPLICATIONS, pick,
   getRaceDisplay,
@@ -85,6 +86,10 @@ const handleSubmit = async (type) => {
     owner_name:  finalChar.fn,
     status,
     data:        finalChar,
+    at_current:  finalChar.atCurrent ?? STARTING_AP,
+    at_total:    finalChar.atTotal ?? STARTING_AP,
+    atCurrent:   finalChar.atCurrent ?? STARTING_AP,
+    atTotal:     finalChar.atTotal ?? STARTING_AP,
     user_id:     user?.id || null,
     player_email: user?.email || null,
     submitted_at: new Date().toISOString(),

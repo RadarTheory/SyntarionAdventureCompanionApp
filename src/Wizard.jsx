@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useDevice } from './useDevice';
+import { STARTING_AP } from './leveling';
 import StepRace from './StepRace';
 import {
   COLORS, RACES, ALL_CLASSES, DEFAULT_STATS,
@@ -307,8 +308,8 @@ export default function Wizard({ onComplete, onHome }) {
   const [charLevel, setCharLevel] = useState(1);
   const [apCurrent, setApCurrent] = useState(0);
   const [apTotal, setApTotal]     = useState(0);
-  const [atCurrent, setAtCurrent] = useState(0);
-  const [atTotal, setAtTotal]     = useState(0);
+  const [atCurrent, setAtCurrent] = useState(STARTING_AP);
+  const [atTotal, setAtTotal]     = useState(STARTING_AP);
   const [classAbilities, setClassAbilities]     = useState([]);
   const [heritageAbilities, setHeritageAbilities] = useState([]);
   const [disciplinePoints, setDisciplinePoints] = useState({});
