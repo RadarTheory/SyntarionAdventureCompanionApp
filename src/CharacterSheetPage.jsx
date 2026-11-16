@@ -1,9 +1,10 @@
 // The campaign Sheet tab (user, 2026-11-16): one page for the character, styled after the Constellation.
-// - Hero: portrait, name, lineage, renown titles, and the race and class symbols drawn the way the constellation draws them
+// - Hero: portrait, name, lineage, reputations, and the race and class symbols drawn the way the constellation draws them
 //   (luminance-to-alpha silhouettes tinted to the practice colour, on a glowing star).
 // - The character's own sky: every calling at its atlas position, the ones they have awakened lit with their symbol and threaded to The Self.
 //   Orbiting stars are plain stars, one per level or ability bought (no ability art).
-// - Moral compass: Good ↔ Evil against Magic ↔ Tech. Renown: the DM's score and the titles the character has earned.
+// - Moral compass: Good ↔ Evil against Magic ↔ Tech. Renown (from their standings), their reputations, and how the NPCs they
+//   have met regard them (tier words only; src/reactions.js).
 // - The old Scales tab lives here too: attributes, vitals / stamina / resolve, the Will | Whim and Soul | Spirit gauges, trait pools.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import supabase from './lib/supabase';
@@ -11,6 +12,7 @@ import { COLORS, getRaceDisplay } from './constants';
 import PortraitUpload from './PortraitUpload';
 import { useConstellation, classLabel } from './useConstellation';
 import { DISCIPLINE_META, poolMaxes, poolOf } from './constellationAbilities';
+import { standingsOf, renownOf, reactionOf, loadReputations, STARTER_REPUTATIONS } from './reactions';
 
 const SKY = '#0b0f0e';
 const GOLD = '#c8a84a';
@@ -270,20 +272,74 @@ function MoralCompass({ moral, magicTech }) {
   );
 }
 
-function Renown({ char }) {
-  const score = Number(char?.renown) || 0;
-  const titles = (Array.isArray(char?.renownTitles) ? char.renownTitles : []).map(t => (typeof t === 'string' ? { name: t } : t)).filter(t => t?.name);
+// What the character is known for: renown (from their standings), the reputations they hold and their standings.
+function useReputations() {
+  const [reps, setReps] = useState(STARTER_REPUTATIONS);
+  useEffect(() => { let live = true; loadReputations().then(r => { if (live) setReps(r); }); return () => { live = false; }; }, []);
+  return reps;
+}
+
+function Standing({ char, reputations }) {
+  const standings = standingsOf(char);
+  const held = new Set(Array.isArray(char?.reputations) ? char.reputations : []);
+  const reps = reputations.filter(r => held.has(r.id));
   return (
     <div className="cs-panel">
       <SectionTitle>Renown</SectionTitle>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-        <div className="cs-big" style={{ color: GOLD }}>{score}</div>
-        <div className="cs-sub">awarded by the Architect</div>
+        <div className="cs-big" style={{ color: GOLD }}>{renownOf(standings)}</div>
+        <div className="cs-sub">how widely they are known</div>
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-        {titles.length ? titles.map((t, i) => (
-          <span key={`${t.name}-${i}`} className="cs-chip cs-title" title={t.note || t.name}>✦ {t.name}</span>
-        )) : <span className="cs-empty">No titles earned yet.</span>}
+        {reps.length ? reps.map(r => <span key={r.id} className="cs-chip cs-title" title={r.description}>✦ {r.name}</span>)
+          : <span className="cs-empty">Known for nothing yet.</span>}
+      </div>
+      {standings.length > 0 && (
+        <div className="cs-standings">
+          {standings.slice(0, 6).map(s => (
+            <div key={s.id}>
+              <span>{s.source.name}</span>
+              <div className="cs-attr-bar"><span style={{ width: `${Math.abs(s.score)}%`, background: s.score < 0 ? COLORS.warn : GOLD }} /></div>
+              <b style={{ color: s.score < 0 ? COLORS.warn : '#e3cf8f' }}>{s.score > 0 ? '+' : ''}{s.score}</b>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// How the NPCs this character has met regard them: the tier word only (the DM sees the number and reasons in the census).
+// "Met" is the character's Grimoire NPC entries.
+function Regard({ char, reputations }) {
+  const [rows, setRows] = useState(null);
+  useEffect(() => {
+    if (!char?.id) return undefined;
+    let live = true;
+    (async () => {
+      try {
+        const { data: met } = await supabase.from('grimoire_entries').select('title').eq('character_id', String(char.id)).eq('type', 'npc');
+        const names = [...new Set((met || []).map(m => m.title).filter(Boolean))];
+        if (!names.length) { if (live) setRows([]); return; }
+        const [{ data: npcs }, { data: cities }] = await Promise.all([
+          supabase.from('npcs').select('*').in('name', names),
+          supabase.from('npc_cities').select('id,name'),
+        ]);
+        if (live) setRows((npcs || []).map(npc => ({ npc, cityName: (cities || []).find(c => c.id === npc.city_id)?.name || null })));
+      } catch { if (live) setRows([]); }
+    })();
+    return () => { live = false; };
+  }, [char?.id]);
+  if (!rows?.length) return null;
+  const list = rows.map(({ npc, cityName }) => ({ npc, tier: reactionOf(char, npc, { cityName, reputations }).tier }))
+    .sort((a, b) => b.tier.min - a.tier.min || String(a.npc.name).localeCompare(String(b.npc.name)));
+  return (
+    <div className="cs-panel">
+      <SectionTitle right={<span className="cs-sub">those you have met</span>}>Regard</SectionTitle>
+      <div className="cs-regard">
+        {list.map(({ npc, tier }) => (
+          <div key={npc.id}><span>{npc.name}</span><b style={{ color: tier.color }}>{tier.word}</b></div>
+        ))}
       </div>
     </div>
   );
@@ -349,7 +405,10 @@ export default function CharacterSheetPage({ char, effectiveStats, onUpdateChar,
   const apLeft = char.atCurrent ?? char.at_current ?? char.apCurrent ?? 0;
   const apTotal = char.atTotal ?? char.at_total ?? char.apTotal ?? 0;
   const level = char.charLevel ?? char.level ?? 1;
-  const titles = (Array.isArray(char.renownTitles) ? char.renownTitles : []).map(t => (typeof t === 'string' ? t : t?.name)).filter(Boolean);
+  const reputations = useReputations();
+  const heldReps = new Set(Array.isArray(char.reputations) ? char.reputations : []);
+  const titles = reputations.filter(r => heldReps.has(r.id)).map(r => r.name);
+  const renown = renownOf(standingsOf(char));
 
   const stat = k => effectiveStats[k] || 8;
   const maxes = d ? poolMaxes(d, char.abilities) : {};
@@ -398,7 +457,7 @@ export default function CharacterSheetPage({ char, effectiveStats, onUpdateChar,
           <div className="cs-hero-stats">
             <div><b>{apLeft}</b><small>AP of {apTotal}</small></div>
             <div><b>{xp}</b><small>XP</small></div>
-            <div><b style={{ color: GOLD }}>{Number(char.renown) || 0}</b><small>Renown</small></div>
+            <div><b style={{ color: GOLD }}>{renown}</b><small>Renown</small></div>
             <div><b style={{ color: '#d6b85a' }}>{coin || '—'}</b><small>Coin</small></div>
           </div>
         </div>
@@ -412,7 +471,8 @@ export default function CharacterSheetPage({ char, effectiveStats, onUpdateChar,
         <CharacterSky char={char} onOpen={onOpenAbilities} />
         <div className="cs-stack">
           <MoralCompass moral={moral} magicTech={magicTech} />
-          <Renown char={char} />
+          <Standing char={char} reputations={reputations} />
+          <Regard char={char} reputations={reputations} />
         </div>
       </div>
 
@@ -531,6 +591,8 @@ const CSS = `
 .cs-pool-val small{font-size:11px;color:${COLORS.dim};font-weight:400}
 .cs-pool-pips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
 .cs-pool-pips i{width:7px;height:7px;border:1px solid;transform:rotate(45deg);border-radius:1px}
+.cs-standings{display:grid;gap:7px;margin-top:12px}.cs-standings>div{display:grid;grid-template-columns:minmax(0,1fr) 70px 34px;gap:8px;align-items:center;font-size:11px;color:#cfc6b6}.cs-standings>div>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cs-standings b{font-family:'Cinzel',serif;font-size:11px;text-align:right}.cs-standings .cs-attr-bar{grid-column:auto}
+.cs-regard{display:grid;gap:6px}.cs-regard>div{display:flex;justify-content:space-between;gap:10px;padding-bottom:6px;border-bottom:1px solid rgba(240,238,235,.06);font-size:12px}.cs-regard b{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.08em}
 .cs-notes{width:100%;box-sizing:border-box;background:rgba(0,0,0,.25);border:1px solid rgba(240,238,235,.08);border-radius:8px;padding:10px 12px;color:${COLORS.text};font-size:12px;font-family:Georgia,serif;outline:none;resize:vertical}
 .cs-notes:focus{border-color:rgba(200,168,74,.4)}
 @media (max-width:860px){.cs-grid-sky,.cs-grid-attrs{grid-template-columns:1fr}}

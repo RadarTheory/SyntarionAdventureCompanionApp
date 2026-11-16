@@ -3,6 +3,8 @@ import supabase from './lib/supabase';
 import { logSessionEvent, getCheckedInCharacterIds } from './lib/sessionEvents';
 import { ALL_CLASSES, PM_MAJ, PM_MIN, PM_AEON, PM_ASTRAL, CONDITIONS, CONDITION_COLORS, condColor } from './constants';
 import PortraitUpload from './PortraitUpload';
+import { FACTIONS } from './reactions';
+import NpcReactions from './NpcReactions';
 
 const RACE_OPTIONS = {
   Addamar: ['Veridoran', 'Brunar', 'Matekwan'],
@@ -219,7 +221,7 @@ function getNodeAffinities(role, alignment) {
   }).filter(Boolean);
 }
 
-const FACTIONS = ['The Gryndal','The Synod','The Kira Deu','The Yarositan Empire','Cult of Thorns','The Ebonshroud Hand','The Conclave of Mages','The Circle of Eight','The Orphaned','Banat Al-Layl','The Luminary','The Thieves Underground','Managerie Council','Brunar Separatists','Legion of Elddim','Sovereign Kingdom Directorate','The Orinscess Triage','Mörkhofn','La Marée d\'Or','Caelyn - Wardens of the Caelvern','Draeth - Harbingers of the Caelvern','Iridesce - Starstriders','Whyth - Bearers of the Whythryn Cogmail','Arcani - FaeKnights','Aerephet - Wraithborne Incubi','The Wayward','House Sillmeer','Council of Asherah','Ba_elnariani','Nyumbani','Hadarai','Iloists - Heartkeepers','The Devoted - Way of Devotion','Ylandari','Cult of Dra_agora','Dunerryian','Firretharh','Brogoshk','Sýrethens','The Gilded Syndicate','The Zor_gol','Khoneul Shadow Paragon','Xaloran Creed','Kildrak - Way of the Stone','Claven of Hreidmar','Fortune\'s Children','The Wheel of Mýr','The Auric Order','Týrethanists','Rifters - Worshippers of the Maelstrom','The Malochean','The Haruspex','The Yal Arcana','The Acends','Wardens','Desolaran','Nameahn Pluralists','Unmarked'];
+// The faction list is shared with reactions (src/reactions.js), so an NPC's faction matches a character's standing.
 const S = {
   root:{display:'flex',flexDirection:'column',height:'100%',background:'#0e0c09',color:'#c8b890',fontFamily:"'Crimson Pro','Georgia',serif",fontSize:13,overflow:'hidden',position:'relative'},
   toolbar:{display:'flex',alignItems:'center',gap:6,padding:'8px 10px',borderBottom:'1px solid rgba(184,137,42,0.2)',flexShrink:0},
@@ -843,6 +845,12 @@ export default function NPCPanel({ campaignId, sessionId }) {
             <div style={{...S.field,flex:1}}><label style={S.label}>Group</label><input style={S.fieldInput} value={selectedNpc.group_name||''} onChange={e=>updateNpcField(selectedNpc.id,'group_name',e.target.value)} placeholder="Group name…"/></div>
           </div>
           <div style={S.field}><label style={S.label}>Faction</label><select style={S.fieldSelect} value={selectedNpc.faction||''} onChange={e=>updateNpcField(selectedNpc.id,'faction',e.target.value)}><option value="" style={{background:'#0e0c09'}}>— Select faction —</option>{FACTIONS.map(f=><option key={f} value={f} style={{background:'#0e0c09'}}>{f}</option>)}</select></div>
+          {/* Reactions (src/reactions.js): lean is npcs.alignment, morality is npcs.morality. */}
+          <div style={{display:'flex',gap:8}}>
+            <div style={{...S.field,flex:1}}><label style={S.label}>Lean</label><select style={S.fieldSelect} value={selectedNpc.alignment||'neutral'} onChange={e=>updateNpcField(selectedNpc.id,'alignment',e.target.value)}>{['magic','neutral','tech'].map(v=><option key={v} value={v} style={{background:'#0e0c09'}}>{v[0].toUpperCase()+v.slice(1)}</option>)}</select></div>
+            <div style={{...S.field,flex:1}}><label style={S.label}>Morality</label><select style={S.fieldSelect} value={selectedNpc.morality||'neutral'} onChange={e=>updateNpcField(selectedNpc.id,'morality',e.target.value)}>{['good','neutral','evil'].map(v=><option key={v} value={v} style={{background:'#0e0c09'}}>{v[0].toUpperCase()+v.slice(1)}</option>)}</select></div>
+          </div>
+          <div style={S.field}><NpcReactions npc={selectedNpc} cityName={selectedCity?.name} campaignId={campaignId} /></div>
           <div style={S.field}><label style={S.label}>Notes</label><textarea style={S.fieldTextarea} value={selectedNpc.notes||''} onChange={e=>updateNpcField(selectedNpc.id,'notes',e.target.value)} placeholder="DM notes, relationships, plot hooks…"/></div>
           {selectedNpc.abilities?.length>0&&(<div style={S.field}><label style={S.label}>Abilities</label><div style={{display:'flex',flexWrap:'wrap',gap:4}}>{selectedNpc.abilities.map((ab,i)=><div key={i} style={{background:'rgba(184,137,42,0.1)',border:'1px solid rgba(184,137,42,0.3)',borderRadius:4,padding:'2px 8px',fontFamily:'Georgia,serif',fontSize:10,color:'#c8b890'}}>{ab.ability}</div>)}</div></div>)}
           <div style={S.field}><label style={S.label}>Conditions</label><div style={{display:'flex',flexWrap:'wrap',gap:3}}>{(selectedNpc.conditions||[]).map(c=>(<div key={c} onClick={()=>toggleNpcCondition(selectedNpc.id,c)} style={{display:'inline-flex',alignItems:'center',gap:3,background:`${condColor(c)}18`,border:`1px solid ${condColor(c)}55`,borderRadius:20,padding:'2px 7px',fontFamily:"'Cinzel',serif",fontSize:9,color:condColor(c),cursor:'pointer'}}><div style={{width:5,height:5,borderRadius:'50%',background:condColor(c)}}/>{c} <span style={{opacity:0.6,marginLeft:2}}>✕</span></div>))}<button onClick={e=>setCondPicker({entityId:selectedNpc.id,entityType:'npc',anchorRect:e.currentTarget.getBoundingClientRect()})} style={{display:'inline-flex',alignItems:'center',background:'rgba(184,137,42,0.08)',border:'1px solid rgba(184,137,42,0.25)',borderRadius:20,padding:'2px 7px',fontFamily:"'Cinzel',serif",fontSize:9,color:'#e8c040',cursor:'pointer'}}>+ Add</button></div></div>
