@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
+import { logHerculesEvent } from './lib/herculesLog';
 
 // ─── SOTERIA TRAVEL REFERENCE ─────────────────────────────────────────────────
 // Lark flight speed: ~175 miles per turn (day) in good conditions
@@ -83,22 +84,31 @@ function ComposeForm({ char, campaignId, npcs, players, onSent, onCancel, isDM }
   if (!body.trim() || !recipientName.trim()) return;
   if (!isDM && recipientType === 'player' && !warned) { setWarned(true); return; }
   setSending(true);
-  await supabase.from('larks').insert({
+  const larkPayload = {
     campaign_id:    String(campaignId),
     sender_id:      char?.id ? String(char.id) : null,
     sender_name:    isDM ? (senderName.trim() || 'The Architect') : (char?.name || 'Unknown'),
     recipient_type: recipientType,
     recipient_name: recipientName.trim(),
-    recipient_id:   recipientType === 'player' ? recipientId : null, // Set recipient_id for player larks
+    recipient_id:   recipientType === 'player' ? recipientId : null,
     subject:        subject.trim() || null,
     body:           body.trim(),
     delivery_estimate: estimate,
     status:         'in_flight',
+  };
+  await supabase.from('larks').insert(larkPayload);
+  await logHerculesEvent(campaignId, {
+    type: 'lark_sent',
+    actor_name: larkPayload.sender_name,
+    actor_id: larkPayload.sender_id,
+    description: `${larkPayload.sender_name} sent a Lark to ${larkPayload.recipient_name}${larkPayload.subject ? ` about "${larkPayload.subject}"` : ''}.${estimate ? ` ${estimate}` : ''}`,
+    dm_approved: isDM ? true : null,
+    outcome: isDM ? 'Lark sent by the Architect.' : null,
+    scribe_suggestion: 'Suggested outcome: approve delivery as written, delay it, intercept it, or write the consequence it creates in the world.',
   });
   setSending(false);
   onSent();
 };
-
   const npcList = npcs || [];
   const playerList = players || [];
 
@@ -221,17 +231,33 @@ function LarkCard({ lark, isDM, onReply, onDeliver }) {
   const submitReply = async () => {
     if (!reply.trim()) return;
     setSaving(true);
+    const replyText = reply.trim();
     await supabase.from('larks').update({
-      reply: reply.trim(),
+      reply: replyText,
       status: 'replied',
       replied_at: new Date().toISOString(),
     }).eq('id', lark.id);
+    await logHerculesEvent(lark.campaign_id, {
+      type: 'lark_replied',
+      actor_name: lark.recipient_name || 'Lark Recipient',
+      actor_id: null,
+      description: `${lark.recipient_name || 'Lark Recipient'} replied to ${lark.sender_name || 'the sender'}: "${replyText}"`,
+      dm_approved: true,
+      outcome: 'Lark reply sent by the Architect.',
+    });
     setSaving(false);
     onReply?.();
   };
-
   const deliver = async () => {
     await supabase.from('larks').update({ status: 'delivered' }).eq('id', lark.id);
+    await logHerculesEvent(lark.campaign_id, {
+      type: 'lark_delivered',
+      actor_name: 'The Architect',
+      actor_id: null,
+      description: `Lark delivered: ${lark.sender_name || 'Unknown'} to ${lark.recipient_name || 'Unknown'}${lark.subject ? ` - ${lark.subject}` : ''}.`,
+      dm_approved: true,
+      outcome: 'Lark delivery confirmed by the Architect.',
+    });
     onDeliver?.();
   };
 

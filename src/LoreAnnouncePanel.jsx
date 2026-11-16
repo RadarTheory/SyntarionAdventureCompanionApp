@@ -4,6 +4,7 @@ import { COLORS } from './constants';
 import { buildLiveNpcRoster } from './scribe-context';
 import { LOCATIONS } from './MapPanel';
 import { logSessionEvent } from './lib/sessionEvents';
+import { logHerculesEvent } from './lib/herculesLog';
 
 const SpeechRecognitionImpl = typeof window !== 'undefined'
   ? (window.SpeechRecognition || window.webkitSpeechRecognition)
@@ -268,24 +269,17 @@ CRITICAL OUTPUT RULES:
       content: `[PLAYER ROLL] ${description}`,
     });
 
-    const { data: hSession } = await supabase.from('hercules_sessions')
-      .select('id').eq('campaign_id', String(campaignId)).eq('status', 'active')
-      .order('created_at', { ascending: false }).limit(1).maybeSingle();
-
-    if (hSession?.id) {
-      await supabase.from('hercules_events').insert({
-        session_id: hSession.id,
-        type: 'player_roll',
-        actor_name: actorName,
-        actor_id: matchingCharacter?.id ? String(matchingCharacter.id) : null,
-        description,
-        roll,
-        modifier,
-        total,
-        dm_approved: true,
-        outcome: 'Recorded by the DM.',
-      });
-    }
+    await logHerculesEvent(campaignId, {
+      type: 'player_roll',
+      actor_name: actorName,
+      actor_id: matchingCharacter?.id ? String(matchingCharacter.id) : null,
+      description,
+      roll,
+      modifier,
+      total,
+      dm_approved: true,
+      outcome: 'Recorded by the DM.',
+    });
 
     setRollDraft({ playerName: '', purpose: '', roll: '', modifier: '0' });
     setRollSaved(true);
@@ -379,20 +373,15 @@ CRITICAL OUTPUT RULES:
         })
       ));
 
-      // 3. Log to Hercules event log
-      const { data: hSession } = await supabase.from('hercules_sessions')
-        .select('id').eq('campaign_id', String(campaignId)).eq('status', 'active')
-        .order('created_at', { ascending: false }).limit(1).maybeSingle();
-      if (hSession?.id) {
-        await supabase.from('hercules_events').insert({
-          session_id: hSession.id,
-          type: 'lore',
-          actor_name: 'The Architect',
-          actor_id: null,
-          description: `⟦ LORE ⟧ ${entryTitle} — ${text.trim()}`,
-          dm_approved: true,
-        });
-      }
+      // 3. Log to Hercules continuity.
+      await logHerculesEvent(campaignId, {
+        type: 'lore',
+        actor_name: 'The Architect',
+        actor_id: null,
+        description: `[LORE] ${entryTitle} - ${text.trim()}`,
+        dm_approved: true,
+        outcome: 'Lore announced by the Architect.',
+      });
 
       // 4. Send to player inboxes
       await Promise.all(selected.map(charId =>

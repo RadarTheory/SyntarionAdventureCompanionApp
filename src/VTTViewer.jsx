@@ -4,6 +4,7 @@ import { COLORS, ALL_CLASSES, combatConditions, condColor } from './constants';
 import { computeCrowdedKeys, tokenLayoutKey } from './lib/tokenLayout';
 import { logSessionEvent } from './lib/sessionEvents';
 import { useActiveGameSession } from './lib/session';
+import { logHerculesEvent } from './lib/herculesLog';
 
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 8;
@@ -793,21 +794,14 @@ useEffect(() => {
     setPendingMoves(next);
     pendingMovesRef.current = next;
 
-    const { data: hsession } = await supabase
-      .from('hercules_sessions').select('id')
-      .eq('campaign_id', campaignId).eq('status', 'active')
-      .order('created_at', { ascending: false }).limit(1).maybeSingle();
-    if (hsession?.id) {
-      const myMoves = next.filter(m => m.characterId === userCharId);
-      await supabase.from('hercules_events').insert({
-        session_id: hsession.id,
-        type: 'move_request',
-        actor_name: userChar?.name || 'Player',
-        actor_id: userCharId,
-        description: `${userChar?.name || 'Player'} requests move — waypoint ${myMoves.length}.`,
-      });
-    }
     const myMoves = next.filter(m => m.characterId === userCharId);
+    await logHerculesEvent(campaignId, {
+      type: 'move_request',
+      actor_name: userChar?.name || 'Player',
+      actor_id: userCharId,
+      description: `${userChar?.name || 'Player'} requests to ${intent.toLowerCase()} - waypoint ${myMoves.length} at ${coordText({ x, y })}${note ? `: ${note}` : ''}.`,
+      scribe_suggestion: 'Suggested outcome: approve the move, deny it, or write the final movement beat before the token position changes.',
+    });
     await logSessionEvent(campaignId, activeGameSessionId, 'vtt_token_move_requested', {
       actor_id: userCharId,
       actor_name: userChar?.name || 'Player',

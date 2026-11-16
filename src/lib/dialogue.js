@@ -1,5 +1,6 @@
 import supabase from './supabase';
 import { logSessionEvent } from './sessionEvents';
+import { logHerculesEvent } from './herculesLog';
 
 // ─── BROADCAST — same 4-destination pipe LoreAnnouncePanel uses ──────────────
 // Fires to: DM Memory · Player Grimoires (per participant) · Hercules Log (if combat active) · Player Inboxes
@@ -19,22 +20,17 @@ export async function broadcastDialogueLine({ campaignId, sessionId, participant
     content: `[DIALOGUE] ${speakerName}: ${content}`,
   });
 
-  // 2. Hercules combat log, only if combat is active
-  const { data: hsession } = await supabase.from('hercules_sessions').select('id')
-    .eq('campaign_id', String(campaignId)).eq('status', 'active')
-    .order('created_at', { ascending: false }).limit(1).maybeSingle();
+  // 2. Hercules continuity log.
+  await logHerculesEvent(campaignId, {
+    type: 'dialogue',
+    actor_name: speakerName,
+    actor_id: null,
+    description: `${speakerName}: "${content}"`,
+    dm_approved: isDM ? true : null,
+    outcome: isDM ? 'Dialogue spoken by the Architect.' : null,
+  });
 
-  if (hsession?.id) {
-    await supabase.from('hercules_events').insert({
-      session_id: hsession.id,
-      type: 'dialogue',
-      actor_name: speakerName,
-      actor_id: null,
-      description: `${speakerName}: "${content}"`,
-    });
-  }
-
-  // 3. Player inboxes (only when DM/entity speaks — player's own line doesn't need to message themself)
+  // 3. Player inboxes
   if (isDM && participantIds?.length) {
     await Promise.all(participantIds.map(charId =>
       supabase.from('messages').insert({

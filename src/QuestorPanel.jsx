@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
+import { resolveEquipSlot } from './lib/equipSlot';
 import { COLORS } from './constants';
 import { grantAp } from './leveling';
 import { playSfxByKey } from './soundLibrary';
@@ -378,6 +379,8 @@ export function QuestorDMPanel({ campaignId, onClose }) {
           name: quest.reward_item_name,
           description: `Misc|${quest.reward_item_desc || 'Quest reward'}`,
           attuned: false, bonuses: {}, weight: 1,
+          // Quest rewards are always 'Misc', so gear needs a catalog slot to be equippable.
+          equip_slot: await resolveEquipSlot(quest.reward_item_name),
         });
       }
 

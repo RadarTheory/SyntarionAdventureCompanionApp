@@ -3,6 +3,7 @@ import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { getOrCreateConversation, postDialogueLine } from './lib/dialogue';
 import { logSessionEvent } from './lib/sessionEvents';
+import { logHerculesEvent } from './lib/herculesLog';
 import { useActiveGameSession, useProximity, entitiesNearCharacter } from "./lib/session";
 
 function useDraggable(initial = { x: 24, y: 24 }) {
@@ -226,16 +227,12 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
       visibility: 'dm',
     });
 
-    const { data: hsession } = await supabase.from('hercules_sessions').select('id')
-      .eq('campaign_id', String(campaignId)).eq('status', 'active')
-      .order('created_at', { ascending: false }).limit(1).maybeSingle();
-    if (hsession?.id) {
-      await supabase.from('hercules_events').insert({
-        session_id: hsession.id, type: 'intent',
-        actor_name: actorName, actor_id: actorId,
-        description: `[Intent] ${text}`,
-      });
-    }
+    await logHerculesEvent(campaignId, {
+      type: 'intent',
+      actor_name: actorName,
+      actor_id: actorId,
+      description: `[Intent] ${text}`,
+    });
   };
 
   // Speech, optionally carrying an intent (e.g. deception) the DM alone can see
@@ -277,16 +274,12 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
       content: `[SPEECH→${target.name}] ${actorName}: "${text}"`,
     });
 
-    const { data: hsession } = await supabase.from('hercules_sessions').select('id')
-      .eq('campaign_id', String(campaignId)).eq('status', 'active')
-      .order('created_at', { ascending: false }).limit(1).maybeSingle();
-    if (hsession?.id) {
-      await supabase.from('hercules_events').insert({
-        session_id: hsession.id, type: 'speech',
-        actor_name: actorName, actor_id: actorId,
-        description: `${actorName} says to ${target.name}: "${text}"`,
-      });
-    }
+    await logHerculesEvent(campaignId, {
+      type: 'speech',
+      actor_name: actorName,
+      actor_id: actorId,
+      description: `${actorName} says to ${target.name}: "${text}"`, 
+    });
   };
 
   // Spoken aloud — no specific target, just said into the scene
@@ -309,16 +302,12 @@ export default function IntentDeclare({ campaignId, char, compact = false, embed
       content: `[SPEECH] ${actorName}: "${text}"`,
     });
 
-    const { data: hsession } = await supabase.from('hercules_sessions').select('id')
-      .eq('campaign_id', String(campaignId)).eq('status', 'active')
-      .order('created_at', { ascending: false }).limit(1).maybeSingle();
-    if (hsession?.id) {
-      await supabase.from('hercules_events').insert({
-        session_id: hsession.id, type: 'speech',
-        actor_name: actorName, actor_id: actorId,
-        description: `${actorName} says: "${text}"`,
-      });
-    }
+    await logHerculesEvent(campaignId, {
+      type: 'speech',
+      actor_name: actorName,
+      actor_id: actorId,
+      description: `${actorName} says: "${text}"`, 
+    });
   };
 
   const submit = async () => {

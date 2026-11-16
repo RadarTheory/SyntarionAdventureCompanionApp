@@ -14,6 +14,7 @@
 import { useState } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
+import { logHerculesEvent } from './lib/herculesLog';
 
 // ─── SEED DATA ────────────────────────────────────────────────────────────────
 // Structured to be DB-replaceable. Each entry maps to one of the 7 magic or
@@ -440,8 +441,15 @@ function AbilityCard({ entry, char, campaignId, onRoll, disabled, onRequestUse }
         sender_name: char?.name || 'Player',
         character_id: char?.id ? String(char.id) : null,
         campaign_id: campaignId,
-        content: `[ABILITY REQUEST] ${char?.name || 'Player'} is requesting use of **${entry.name}** (${entry.disciplineLabel} — ${entry.axis === 'magic' ? 'Spell' : 'Schematic'}) against their current alignment. Reason: alignment gating. Please approve or deny.`,
+        content: `[ABILITY REQUEST] ${char?.name || 'Player'} is requesting use of **${entry.name}** (${entry.disciplineLabel} - ${entry.axis === 'magic' ? 'Spell' : 'Schematic'}) against their current alignment. Reason: alignment gating. Please approve or deny.`,
         session_id: null,
+      });
+      await logHerculesEvent(campaignId, {
+        type: 'ability_request',
+        actor_name: char?.name || 'Player',
+        actor_id: char?.id ? String(char.id) : null,
+        description: `${char?.name || 'Player'} requests use of ${entry.name} [${entry.disciplineLabel} - ${entry.axis === 'magic' ? 'Spell' : 'Schematic'}] against alignment gating.`,
+        scribe_suggestion: 'Suggested outcome: approve the ability, deny it, or write the altered cost/consequence before it enters the story.',
       });
       setRequested(true);
     } catch (e) {

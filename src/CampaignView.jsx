@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import supabase from './lib/supabase';
-import { resolveEquipSlots } from './lib/equipSlot';
+import { resolveEquipSlot, resolveEquipSlots } from './lib/equipSlot';
 import medallion from './assets/medallion.png';
 import { useDevice } from './useDevice';
 import { COLORS, CAMPAIGNS, ALL_STATS, ALL_CLASSES, ACTIONS, getRaceDisplay, EQUIP_SLOT_GROUPS } from './constants';
@@ -28,6 +28,7 @@ import PortraitUpload from "./PortraitUpload";
 import HandbookBookmark from './HandbookBookmark';
 import MenuMusicPlayer from './MenuMusicPlayer';
 import GameSessionOverlay from './GameSessionOverlay';
+import { logHerculesEvent } from './lib/herculesLog';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -90,6 +91,13 @@ function itemFitsSlot(slot, item) {
   if (item?.equip_slot) return SLOT_GROUPS[slot].includes(item.equip_slot);
   return (SLOT_CATEGORIES[slot] || []).includes(item?.category);
 }
+// The item key a character slot implies, for gear unequipped with no slot of its
+// own. Relic and Artifact take any accessory, so they map to none.
+const UNEQUIP_SLOT_KEY = {
+  Head: 'head', Torso: 'torso', Waist: 'waist', Hands: 'hands', Greaves: 'greaves', Boots: 'boots',
+  'Main Hand': 'blade', 'Off-Hand': 'offhand', 'Side-Weapon': 'sidearm', Heavy: 'heavy',
+  'Ring I': 'ring', 'Ring II': 'ring', Neck: 'neck', Charm: 'charm',
+};
 const USE_CATEGORIES = new Set(['Weapons','Magic Items','Artifacts','Spellcasting Items','Consumables']);
 const USE_KEYWORDS = ['action','cast','activate','once per','bonus action','trigger','expend','channel','invoke'];
 function hasUse(item) {
@@ -369,7 +377,7 @@ function HerculesLite({ campaignId, char, onClose }) {
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {!session ? (
-          <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', marginTop: 20 }}>No active combat. The Architect will call for battle.</div>
+          <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', marginTop: 20 }}>HERCULES continuity is standing by. Rolls, spells, movement, and story beats will appear here for Architect approval.</div>
         ) : (
           <>
             {!alreadyRolled ? (
@@ -1385,7 +1393,12 @@ function InventoryPanel({ char, onInventoryChange, isDM = false, campaignId }) {
           if (unslotted.length) {
             try {
               const found = await resolveEquipSlots(unslotted);
-              pack.forEach(p => { if (!p.equip_slot && found[p.name]) p.equip_slot = found[p.name]; });
+              pack.forEach(p => {
+                if (p.equip_slot || !found[p.name]) return;
+                p.equip_slot = found[p.name];
+                // Write it back so the row stays fixed for every other reader.
+                if (p.id) supabase.from('character_items').update({ equip_slot: p.equip_slot }).eq('id', p.id).then(() => {});
+              });
               Object.values(equipped).forEach(e => { if (!e.equip_slot && found[e.name]) e.equip_slot = found[e.name]; });
             } catch (_) { }
           }
@@ -1559,13 +1572,18 @@ function InventoryPanel({ char, onInventoryChange, isDM = false, campaignId }) {
         };
 
         const unequipItem = async () => {
+          // Older equipped rows carry neither a slot nor a "Category|" prefix, so
+          // they would drop into the pack as 'Misc' and never fit anywhere again.
+          // Fall back to the catalog, then to the slot the item is leaving.
+          const equip_slot = item.equip_slot || await resolveEquipSlot(item.name) || UNEQUIP_SLOT_KEY[slot] || null;
+          const fallbackCategory = UNEQUIP_SLOT_KEY[slot] ? 'Misc' : 'Artifacts';
           const packRow = {
             character_id: String(char.id),
             slot: `pack__${Date.now()}`,
             name: item.name,
-            description: item.description?.includes('|') ? item.description : `Misc|${item.description || ''}`,
+            description: item.description?.includes('|') ? item.description : `${fallbackCategory}|${item.description || ''}`,
             attuned: false, bonuses: {}, equipped: false, weight: 1,
-            equip_slot: item.equip_slot || null,
+            equip_slot,
           };
           const { data: newRow } = await supabase.from('character_items').insert(packRow).select().single();
           await supabase.from('character_items').delete().eq('character_id', String(char.id)).eq('slot', slot);
@@ -1573,7 +1591,7 @@ function InventoryPanel({ char, onInventoryChange, isDM = false, campaignId }) {
           delete newItems[slot];
           setItems(newItems);
           onInventoryChange(newItems);
-          if (newRow) setPackItems(prev => [...prev, { id: newRow.id, name: item.name, category: item.description?.includes('|') ? item.description.split('|')[0] : 'Misc', desc: item.description?.includes('|') ? item.description.split('|').slice(1).join('|') : (item.description || ''), qty: 1, equip_slot: item.equip_slot || null }]);
+          if (newRow) setPackItems(prev => [...prev, { id: newRow.id, name: item.name, category: newRow.description.split('|')[0], desc: item.description?.includes('|') ? item.description.split('|').slice(1).join('|') : (item.description || ''), qty: 1, equip_slot }]);
           setPlayerSlot(null);
         };
 
@@ -1784,7 +1802,7 @@ function LootboxPanel({ campaignId, userChar, onClaimed }) {
     const items = boxItems[box.id] || [];
 
     // Write all items to character's pack
-    const rows = items.map(item => ({
+    const rows = await Promise.all(items.map(async item => ({
       character_id: String(userChar.id),
       slot: `pack__${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       name: item.item_name,
@@ -1792,8 +1810,8 @@ function LootboxPanel({ campaignId, userChar, onClaimed }) {
       attuned: false,
       bonuses: {},
       weight: item.qty || 1,
-      equip_slot: item.item_equip_slot || null,
-    }));
+      equip_slot: await resolveEquipSlot(item.item_name, item.item_equip_slot || null),
+    })));
 
     if (rows.length > 0) {
       await supabase.from('character_items').insert(rows);
@@ -2136,29 +2154,30 @@ useEffect(() => {
     const roll = Math.floor(Math.random() * 20) + 1;
     const modifier = Number(userChar.actionBonuses?.[action] || 0);
     const total = roll + modifier;
-    const { data: hsession, error: sessionError } = await supabase.from('hercules_sessions').select('id').eq('campaign_id', String(campaign.id)).eq('status', 'active').order('created_at', { ascending: false }).limit(1).maybeSingle();
-    if (sessionError || !hsession?.id) { console.error('No active Hercules session found for action roll:', sessionError); setRollingAction(null); return; }
-    await supabase.from('hercules_events').insert({ session_id: hsession.id, type: 'action', actor_name: userChar.name || 'Player', actor_id: String(userChar.id), description: `${userChar.name || 'Player'} used ${action}: d20 ${roll}${modifier ? ` + ${modifier}` : ''} = ${total}.` });
+    await logHerculesEvent(campaign.id, {
+      type: 'action',
+      actor_name: userChar.name || 'Player',
+      actor_id: String(userChar.id),
+      roll,
+      modifier,
+      total,
+      description: `${userChar.name || 'Player'} used ${action}: d20 ${roll}${modifier ? ` + ${modifier}` : ''} = ${total}.`,
+    });
     setRollingAction(null);
   };
-
   const rollAbility = async (entry, modifier) => {
     const roll = Math.floor(Math.random() * 20) + 1;
     const total = roll + modifier;
-    const { data: hsession } = await supabase
-      .from('hercules_sessions').select('id')
-      .eq('campaign_id', String(campaign.id)).eq('status', 'active')
-      .order('created_at', { ascending: false }).limit(1).maybeSingle();
-    if (!hsession?.id) return;
-    await supabase.from('hercules_events').insert({
-      session_id: hsession.id,
+    await logHerculesEvent(campaign.id, {
       type: 'ability',
       actor_name: userChar?.name || 'Player',
       actor_id: userChar?.id ? String(userChar.id) : null,
+      roll,
+      modifier,
+      total,
       description: `${userChar?.name || 'Player'} used ${entry.name} [${entry.disciplineLabel}]: d20 ${roll} ${modifier >= 0 ? '+' : ''}${modifier} = ${total}.`,
     });
   };
-
   const handleAssign = async () => {
     if (!userChar?.id) return;
     setAssigning(true);
@@ -2167,7 +2186,6 @@ useEffect(() => {
   };
 
   const logRoll = async payload => {
-    const { data: hsession, error: sessionError } = await supabase.from('hercules_sessions').select('id').eq('campaign_id', String(campaign.id)).eq('status', 'active').order('created_at', { ascending: false }).limit(1).maybeSingle();
     const dice = payload?.diceResults || payload?.results || payload?.rolls || payload?.dice || [];
     const diceList = Array.isArray(dice) ? dice.map(d => Number(d?.value ?? d?.roll ?? d)).filter(n => !Number.isNaN(n)) : [];
     const notation = payload?.notation || `${payload?.count || diceList.length || 1}d${payload?.sides || payload?.die || 20}`;
@@ -2176,25 +2194,18 @@ useEffect(() => {
     const flatModifier = Number(payload?.flatModifier ?? payload?.modifier ?? 0);
     const total = Number(payload?.total ?? payload?.result ?? diceTotal + statModifier + flatModifier);
     const diceText = diceList.length ? diceList.join(', ') : String(total);
-    const description = `${userChar?.name || 'Player'} rolled a ${diceText} in Astragal for a TOTAL of ${total}.`;
+    const description = `${userChar?.name || 'Player'} rolled ${notation} (${diceText}) in Astragal for a TOTAL of ${total}.`;
 
-    // Outside combat this used to console.error and discard the roll, so a roll
-    // made between encounters existed nowhere at all. Record it against the
-    // campaign instead; the Chronicle merges those in.
-    if (sessionError || !hsession?.id) {
-      if (!campaign?.id) return;
-      const { error: memErr } = await supabase.from('dm_memory').insert({
-        campaign_id: String(campaign.id),
-        category: 'roll',
-        content: description,
-      });
-      if (memErr) console.error('Failed to record Astragal roll:', memErr);
-      return;
-    }
-
-    await supabase.from('hercules_events').insert({ session_id: hsession.id, type: 'roll', actor_name: userChar?.name || 'Player', actor_id: userChar?.id ? String(userChar.id) : null, description });
+    const { error } = await logHerculesEvent(campaign.id, {
+      type: 'roll',
+      actor_name: userChar?.name || 'Player',
+      actor_id: userChar?.id ? String(userChar.id) : null,
+      modifier: payload?.totalBonus ?? statModifier + flatModifier,
+      total,
+      description,
+    });
+    if (error) throw error;
   };
-
   const renderTab = () => {
     switch (activeTab) {
       case 'Map':
@@ -2345,7 +2356,7 @@ useEffect(() => {
         },
         {
           id: 'hercules',
-          title: 'HERCULES — Combat Tracker',
+          title: 'HERCULES - Continuity Tracker',
           onClick: () => setShowHercules(o => !o),
           children: (
             <img

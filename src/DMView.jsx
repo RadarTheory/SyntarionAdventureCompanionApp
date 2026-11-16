@@ -40,6 +40,7 @@ import MenuMusicPlayer from './MenuMusicPlayer';
 import GameSessionOverlay from './GameSessionOverlay';
 import { playSfxByKey } from './soundLibrary';
 import { LEVEL_CAP, apForLevel, getLevelProgress, grantAp } from './leveling';
+import { logHerculesEvent } from './lib/herculesLog';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe - an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -1703,15 +1704,7 @@ const renderTab = () => {
 
   const logDmAstragalToHercules = async payload => {
     const currentCampaignId = activeCampaignTab;
-
-    const { data: hsession, error: sessionError } = await supabase
-      .from('hercules_sessions')
-      .select('id')
-      .eq('campaign_id', String(currentCampaignId))
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    if (!currentCampaignId) return;
 
     const dice =
       payload?.diceResults ||
@@ -1746,25 +1739,12 @@ const renderTab = () => {
       `Flat modifier: ${flatModifier >= 0 ? '+' : ''}${flatModifier}. ` +
       `Collected result: ${total}.`;
 
-    // Combat running: the roll belongs to that encounter's log. No combat: it
-    // used to be discarded with only a console line, which is why rolls made
-    // outside an encounter existed nowhere. Keep it against the campaign instead.
-    if (sessionError || !hsession?.id) {
-      if (!currentCampaignId) return;
-      const { error: memErr } = await supabase.from('dm_memory').insert({
-        campaign_id: String(currentCampaignId),
-        category: 'roll',
-        content: description,
-      });
-      if (memErr) console.error('Failed to record DM Astragal roll:', memErr);
-      return;
-    }
-
-    const { error } = await supabase.from('hercules_events').insert({
-      session_id: hsession.id,
+    const { error } = await logHerculesEvent(currentCampaignId, {
       type: 'dm_roll',
       actor_name: 'The Architect',
       actor_id: null,
+      modifier: statModifier + flatModifier,
+      total,
       description,
     });
 
@@ -1772,7 +1752,6 @@ const renderTab = () => {
       console.error('Failed to log DM Astragal roll to Hercules:', error);
     }
   };
-
   const activeToolIds = [
     showAstragal && 'astragal',
     showHercules && 'hercules',
@@ -2016,7 +1995,7 @@ const renderTab = () => {
         </DraggablePanel>
       )}
       {showHercules && (
-        <DraggablePanel {...panelPriority('hercules')} defaultX={72} defaultY={40} onClose={() => setShowHercules(false)} title="HERCULES - Combat Tracker" width={920} accentColor="rgba(200,168,74,0.35)">
+        <DraggablePanel {...panelPriority('hercules')} defaultX={72} defaultY={40} onClose={() => setShowHercules(false)} title="HERCULES - Continuity Tracker" width={920} accentColor="rgba(200,168,74,0.35)">
           <HerculesCombat defaultCampaignId={activeCampaignTab} embedded />
         </DraggablePanel>
       )}
@@ -2074,7 +2053,7 @@ const renderTab = () => {
         },
         {
           id: 'hercules',
-          title: 'HERCULES - Combat Tracker',
+          title: 'HERCULES - Continuity Tracker',
           onClick: () => setShowHercules(o => !o),
           children: <img src="/HerculesCombat.png" alt="HERCULES" draggable={false} style={{ width: '150%', height: '150%', objectFit: 'contain', pointerEvents: 'none' }} />,
         },

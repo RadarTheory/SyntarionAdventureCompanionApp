@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { COLORS, slotOptionsForCategory } from './constants';
 import supabase from './lib/supabase';
+import { resolveEquipSlot } from './lib/equipSlot';
 
 const CAT_COLOR = {
   Currency: COLORS.tech || '#2D9E7A',
@@ -83,6 +84,7 @@ function GrantModal({ item, onClose }) {
       bonuses: { ...(item.effect?.bonuses || {}), ...(item.apBonus > 0 ? { apBonus: item.apBonus } : {}) },
       ap_bonus: item.apBonus || 0,
       weight: qty,
+      equip_slot: await resolveEquipSlot(item.name, item.equip_slot || null),
     });
     if (!error) {
       await supabase.from('messages').insert({

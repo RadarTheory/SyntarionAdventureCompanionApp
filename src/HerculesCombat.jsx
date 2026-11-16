@@ -4,6 +4,7 @@ import { COLORS } from './constants';
 import { SOTERIA_BESTIARY } from './soteria-bestiary';
 import DMSpeakPanel from './DMSpeakPanel';
 import { advanceCampaignClockByCombatTurn } from "./lib/soteriaclock";
+import { getOrCreateHerculesSession } from "./lib/herculesLog";
 
 function getBestiaryText() {
   if (typeof SOTERIA_BESTIARY === 'string') return SOTERIA_BESTIARY;
@@ -490,14 +491,22 @@ useEffect(() => {
       return;
     }
 
-    setSession(data || null);
-
     if (data?.id) {
+      setSession(data);
+      activeSessionIdRef.current = data.id;
       await loadEvents(data.id);
       await loadInitiative(data.id);
     } else {
-      setEvents([]);
-      setInitiative([]);
+      const { session: continuity } = await getOrCreateHerculesSession(campaignId);
+      setSession(continuity || null);
+      activeSessionIdRef.current = continuity?.id || null;
+      if (continuity?.id) {
+        await loadEvents(continuity.id);
+        await loadInitiative(continuity.id);
+      } else {
+        setEvents([]);
+        setInitiative([]);
+      }
     }
   }, [campaignId, loadEvents, loadInitiative]);
 
@@ -658,10 +667,12 @@ useEffect(() => {
       return;
     }
 
-    activeSessionIdRef.current = null;
-    setSession(null);
-    setEvents([]);
+    const { session: continuity } = await getOrCreateHerculesSession(campaignId);
+    activeSessionIdRef.current = continuity?.id || null;
+    setSession(continuity || null);
     setInitiative([]);
+    if (continuity?.id) await loadEvents(continuity.id);
+    else setEvents([]);
     setSaving(false);
   };
 
@@ -1395,7 +1406,7 @@ const denyEvent = async event => {
         }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        title="HERCULES Combat Tracker"
+        title="HERCULES Continuity Tracker"
         style={{
           position: 'fixed',
           left: buttonPos.x,
@@ -1616,7 +1627,7 @@ const denyEvent = async event => {
             <div className="hercules-panel initiative-panel" style={{ ...panelStyle(), display: isMobile && mobileTab !== 'initiative' ? 'none' : 'flex', ...(isMobile ? { minHeight: 'calc(100dvh - 140px)' } : {}) }}>
               <SectionTitle>Initiative</SectionTitle>
 
-              {!session && <EmptyText>No active combat.</EmptyText>}
+              {!session && <EmptyText>HERCULES continuity is standing by.</EmptyText>}
 
               {session && initiative.length === 0 && <EmptyText>Waiting for players to roll initiative.</EmptyText>}
 

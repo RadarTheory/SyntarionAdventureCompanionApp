@@ -214,7 +214,7 @@ export default function HerculesPlayer({ campaignId, char }) {
   if (!session) {
     return (
       <div style={{ padding: '20px 14px', textAlign: 'center' }}>
-        <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No active combat. The Architect will call for battle.</div>
+        <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>HERCULES continuity is standing by. Rolls, spells, movement, and story beats will appear here for Architect approval.</div>
       </div>
     );
   }

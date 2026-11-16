@@ -1,34 +1,32 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import AstragalTray from './AstragalTray';
+import { DICE_SKINS, resolveDice } from './lib/astragalDice.js';
 import { COLORS } from './constants';
 import { playSfxByKey } from './soundLibrary';
+import { loadFinishes } from "./lib/diceFinishStore.js";
+import { loadOfficialFinishes } from "./lib/diceFinishBundle.js";
 
 const DIE_TYPES = [4, 6, 8, 10, 12, 20, 100];
 const DICE_COUNTS = [1, 2, 3, 4, 5, 6, 8, 10];
-
-function rollDie(sides) {
-  return Math.floor(Math.random() * sides) + 1;
-}
 
 function calculateModifier(score = 10) {
   return Math.floor((score - 10) / 2);
 }
 
-function getCritState(dieSides, diceResults, mode) {
-  if (dieSides !== 20) return null;
-
-  const natural = mode === 'disadvantage'
-    ? Math.min(...diceResults)
-    : mode === 'advantage'
-      ? Math.max(...diceResults)
-      : diceResults[0];
-
-  if (natural === 20) return 'critical_success';
-  if (natural === 1) return 'critical_failure';
-
-  return null;
+export default function Astragal(props) {
+  const [finishes, setFinishes] = useState({});
+  useEffect(() => {
+    let active = true;
+    Promise.allSettled([loadFinishes(), loadOfficialFinishes()]).then(([local, official]) => {
+      if (!active) return;
+      setFinishes({ ...local.value, ...official.value });
+    });
+    return () => { active = false; };
+  }, []);
+  return <AstragalRoller {...props} customFinishes={finishes} />;
 }
 
-export default function Astragal({
+export function AstragalRoller({
   character,
   actionName = 'Astragal',
   statKey = 'will',
@@ -38,110 +36,70 @@ export default function Astragal({
   occurrenceBonus = 0,
   temporaryBonus = 0,
   onResult,
+  customFinishes = {},
+  preferredSkin = null,
 }) {
   const [dieSides, setDieSides] = useState(20);
   const [diceCount, setDiceCount] = useState(1);
   const [flatModifier, setFlatModifier] = useState(0);
   const [mode, setMode] = useState('normal');
   const [rolling, setRolling] = useState(false);
-  const [diceFaces, setDiceFaces] = useState([]);
+  const [skin, setSkin] = useState('bone');
+  const [trayStatus, setTrayStatus] = useState({ ready: false, error: null });
+  const [rollError, setRollError] = useState(null);
+  const trayRef = useRef(null), rollingRef = useRef(false), mountedRef = useRef(true);
+  const handleTrayStatus = useCallback(status => setTrayStatus(status), []);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
+  const savedIds = Object.keys(customFinishes).filter(id => id !== 'draft');
+  const finishes = savedIds.length ? customFinishes : { bone: DICE_SKINS.bone, ...customFinishes };
+  const selectedSkin = preferredSkin && finishes[preferredSkin] ? preferredSkin : finishes[skin] ? skin : savedIds[0] ?? 'bone';
 
   const effectiveDiceCount =
     dieSides === 20 && mode !== 'normal'
       ? 2
       : diceCount;
 
-  const handleRoll = () => {
-    if (rolling) return;
-
-    setRolling(true);
-    setResult(null);
-
-    const statScore = character?.stats?.[statKey] || 10;
+  const handleRoll = async () => {
+    if (rollingRef.current || !trayStatus.ready) return;
+    rollingRef.current = true;
+    setRolling(true); setResult(null); setRollError(null);
+    const rawScore = character?.stats?.[statKey] ?? character?.data?.stats?.[statKey] ?? 10;
+    const statScore = Number.isFinite(Number(rawScore)) ? Number(rawScore) : 10;
     const statModifier = calculateModifier(statScore);
-
-    const totalBonus =
-      statModifier +
-      itemBonus +
-      conditionBonus +
-      occurrenceBonus +
-      temporaryBonus +
-      flatModifier;
-
-    let ticks = 0;
-
-    const interval = setInterval(() => {
-      setDiceFaces(
-        Array.from(
-          { length: effectiveDiceCount },
-          () => rollDie(dieSides)
-        )
-      );
-
-      ticks += 1;
-
-      if (ticks >= 14) {
-        clearInterval(interval);
-
-        const finalRolls = Array.from(
-          { length: effectiveDiceCount },
-          () => rollDie(dieSides)
-        );
-
-        let usedRolls = finalRolls;
-
-        if (dieSides === 20 && mode === 'advantage') {
-          usedRolls = [Math.max(...finalRolls)];
-        }
-
-        if (dieSides === 20 && mode === 'disadvantage') {
-          usedRolls = [Math.min(...finalRolls)];
-        }
-
-        const diceTotal = usedRolls.reduce((sum, n) => sum + n, 0);
-        const total = diceTotal + totalBonus;
-        const crit = getCritState(dieSides, finalRolls, mode);
-        if (crit === 'critical_success') playSfxByKey('ui-dice-crit-success');
-        if (crit === 'critical_failure') playSfxByKey('ui-dice-crit-fail');
-
-        const payload = {
-          type: 'ROLL',
-          actorId: character?.id || null,
-          actorName: character?.name || 'Unknown',
-          actionName,
-          rollType,
-          notation:
-            dieSides === 20 && mode !== 'normal'
-              ? `${mode} d20${flatModifier >= 0 ? '+' : ''}${flatModifier}`
-              : `${diceCount}d${dieSides}${flatModifier >= 0 ? '+' : ''}${flatModifier}`,
-          statKey,
-          statScore,
-          statModifier,
-          itemBonus,
-          conditionBonus,
-          occurrenceBonus,
-          temporaryBonus,
-          flatModifier,
-          diceResults: finalRolls,
-          usedRolls,
-          diceTotal,
-          totalBonus,
-          total,
-          crit,
-          mode,
-          timestamp: new Date().toISOString(),
-        };
-
-        setDiceFaces(finalRolls);
-        setResult(payload);
-        setHistory(prev => [payload, ...prev.slice(0, 14)]);
-        setRolling(false);
-
-        onResult?.(payload);
-      }
-    }, 70);
+    const number = value => Number.isFinite(Number(value)) ? Number(value) : 0;
+    const totalBonus = statModifier + [itemBonus, conditionBonus, occurrenceBonus, temporaryBonus, flatModifier].reduce((sum, value) => sum + number(value), 0);
+    try {
+      const physical = await trayRef.current.roll({ sides: dieSides, count: effectiveDiceCount, skin: finishes[selectedSkin] });
+      if (!mountedRef.current) return;
+      const resolved = resolveDice({ sides: dieSides, count: effectiveDiceCount, mode, physicalValues: physical.values });
+      const payload = {
+        type: 'ROLL', actorId: character?.id || null, actorName: character?.name || 'Unknown',
+        actionName, rollType,
+        notation: dieSides === 20 && mode !== 'normal'
+          ? `${mode} d20${flatModifier >= 0 ? '+' : ''}${flatModifier}`
+          : `${diceCount}d${dieSides}${flatModifier >= 0 ? '+' : ''}${flatModifier}`,
+        statKey, statScore, statModifier, itemBonus: number(itemBonus), conditionBonus: number(conditionBonus),
+        occurrenceBonus: number(occurrenceBonus), temporaryBonus: number(temporaryBonus), flatModifier: number(flatModifier),
+        ...resolved, totalBonus, total: resolved.diceTotal + totalBonus, mode,
+        timestamp: new Date().toISOString(), rollId: globalThis.crypto.randomUUID(),
+        source: 'astragal-physics-v1', randomSource: 'web-crypto', skin: selectedSkin,
+        physicalDice: physical.physicalDice, durationMs: physical.durationMs,
+      };
+      setResult(payload); setHistory(previous => [payload, ...previous.slice(0, 14)]);
+      try {
+        if (resolved.crit === 'critical_success') playSfxByKey('ui-dice-crit-success');
+        if (resolved.crit === 'critical_failure') playSfxByKey('ui-dice-crit-fail');
+      } catch { /* Audio must never invalidate a completed roll. */ }
+      try { await onResult?.(payload); }
+      catch { if (mountedRef.current) setRollError('Your roll stands, but the campaign log could not save it. Keep this result.'); }
+    } catch (error) {
+      if (mountedRef.current) setRollError(error.message || 'The cast could not finish. Please try again.');
+    } finally {
+      rollingRef.current = false;
+      if (mountedRef.current) setRolling(false);
+    }
   };
 
   const selectStyle = {
@@ -193,9 +151,10 @@ export default function Astragal({
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
         <select
+          aria-label="Number of dice"
           value={diceCount}
           onChange={e => setDiceCount(Number(e.target.value))}
-          disabled={dieSides === 20 && mode !== 'normal'}
+          disabled={rolling || (dieSides === 20 && mode !== 'normal')}
           style={{
           ...selectStyle,
           background: '#2b2118',
@@ -220,6 +179,8 @@ export default function Astragal({
         </select>
 
               <select
+          aria-label="Die type"
+          disabled={rolling}
           value={dieSides}
           onChange={e => setDieSides(Number(e.target.value))}
           style={{
@@ -247,9 +208,11 @@ export default function Astragal({
 
         <input
           type="number"
+          disabled={rolling}
           value={flatModifier}
           onChange={e => setFlatModifier(Number(e.target.value))}
           title="Flat modifier"
+          aria-label="Flat modifier"
           style={{
             width: 72,
             background: 'rgba(240,238,235,0.06)',
@@ -274,6 +237,7 @@ export default function Astragal({
             <button
               key={value}
               type="button"
+              disabled={rolling}
               onClick={() => setMode(value)}
               style={{
                 flex: 1,
@@ -301,8 +265,9 @@ export default function Astragal({
       )}
 
       <button
+        type="button"
         onClick={handleRoll}
-        disabled={rolling}
+        disabled={rolling || !trayStatus.ready}
         style={{
           width: '100%',
           background: COLORS.magicBg,
@@ -326,39 +291,19 @@ export default function Astragal({
             : `Roll ${diceCount}d${dieSides}`}
       </button>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: 10,
-          flexWrap: 'wrap',
-          marginBottom: 14,
-        }}
-      >
-        {diceFaces.map((face, i) => (
-          <div
-            key={`${face}-${i}`}
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 10,
-              background: 'rgba(240,238,235,0.05)',
-              border: `1px solid ${COLORS.border}`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontFamily: "'Cinzel', serif",
-              fontSize: 20,
-              color: COLORS.text,
-              transform: rolling
-                ? `rotate(${(i + 1) * 24}deg) scale(1.04)`
-                : 'rotate(0deg) scale(1)',
-              transition: 'all 0.08s ease',
-            }}
-          >
-            {face}
-          </div>
-        ))}
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, color: COLORS.dim, fontSize: 11 }}>
+        Dice finish
+        <select aria-label="Dice finish" value={selectedSkin} onChange={event => setSkin(event.target.value)} disabled={rolling || !!preferredSkin} style={{ ...selectStyle, minWidth: 0 }}>
+          {Object.entries(finishes).map(([id, finish]) => <option key={id} value={id} style={{ background: '#231d17' }}>{finish.name}</option>)}
+        </select>
+      </label>
+      <AstragalTray ref={trayRef} onStatus={handleTrayStatus} />
+      <div role="status" aria-live="polite" style={{ color: COLORS.dim, fontSize: 10, lineHeight: 1.5, marginBottom: 12 }}>
+        {rolling ? 'Dice in motion — waiting for them to settle.' : result ? 'Cast complete · the settled faces are your result.' : trayStatus.ready ? 'Physical dice · cast to roll.' : trayStatus.error ? '3D tray unavailable.' : 'Preparing the dice tray…'}
+        {dieSides === 100 && <div>Each d100 is one die numbered 1–100.</div>}
+        {dieSides === 4 && <div>Read the d4 at its upper point.</div>}
       </div>
+      {(rollError || trayStatus.error) && <div role="alert" style={{ color: '#efb98a', fontSize: 12, lineHeight: 1.5, marginBottom: 12 }}>{rollError || trayStatus.error}</div>}
 
       {result && (
         <div

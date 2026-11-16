@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
 import { COLORS, CAMPAIGNS } from './constants';
+import { logHerculesEvent } from './lib/herculesLog';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -64,21 +65,18 @@ function CastForPlayerModal({ disc, spell, characters, onConfirm, onClose }) {
       dm_note:          'Cast by the Architect.',
     });
 
-    // Log to Hercules
-    const { data: hsession } = await supabase.from('hercules_sessions').select('id')
-      .eq('campaign_id', String(selectedChar.campaign || '')).eq('status', 'active')
-      .order('created_at', { ascending: false }).limit(1).maybeSingle();
-
-    if (hsession?.id) {
-      await supabase.from('hercules_events').insert({
-        session_id:  hsession.id,
-        type:        'cast_resolved',
-        actor_name:  selectedChar.name || 'Player',
-        actor_id:    String(selectedChar.id),
-        description: `The Architect casts ${spell.name} [${disc.label}] for ${selectedChar.name}: d20 ${roll} ${modifier >= 0 ? '+' : ''}${modifier} = ${total}.`,
-        dm_approved: true,
-      });
-    }
+    // Log to Hercules continuity, even outside combat.
+    await logHerculesEvent(selectedChar.campaign, {
+      type: 'cast_resolved',
+      actor_name: selectedChar.name || 'Player',
+      actor_id: String(selectedChar.id),
+      roll,
+      modifier,
+      total,
+      description: `The Architect casts ${spell.name} [${disc.label}] for ${selectedChar.name}: d20 ${roll} ${modifier >= 0 ? '+' : ''}${modifier} = ${total}.`,
+      dm_approved: true,
+      outcome: 'Cast by the Architect.',
+    });
 
     // Notify player via message
     if (selectedChar.campaign) {
@@ -202,16 +200,14 @@ export default function CastorDMPanel({ onPendingChange, onClose }) {
     setResolving(req.id);
     const note = dmNotes[req.id]?.trim() || null;
     await supabase.from('cast_requests').update({ status, dm_note: note, resolved_at: new Date().toISOString() }).eq('id', req.id);
-    const { data: hsession } = await supabase.from('hercules_sessions').select('id')
-      .eq('campaign_id', String(req.campaign_id)).eq('status', 'active')
-      .order('created_at', { ascending: false }).limit(1).maybeSingle();
-    if (hsession?.id) {
-      await supabase.from('hercules_events').insert({
-        session_id: hsession.id, type: 'cast_resolved', actor_name: 'The Architect', actor_id: null,
-        description: `${status === 'approved' ? 'APPROVED' : 'DENIED'}: ${req.character_name}'s request to cast ${req.ability_name} [${req.discipline_label}].${note ? ` Note: "${note}"` : ''}`,
-        dm_approved: status === 'approved',
-      });
-    }
+    await logHerculesEvent(req.campaign_id, {
+      type: 'cast_resolved',
+      actor_name: 'The Architect',
+      actor_id: null,
+      description: `${status === 'approved' ? 'APPROVED' : 'DENIED'}: ${req.character_name}'s request to cast ${req.ability_name} [${req.discipline_label}].${note ? ` Note: "${note}"` : ''}`,
+      dm_approved: status === 'approved',
+      outcome: note || (status === 'approved' ? 'Cast approved by the Architect.' : 'Cast denied by the Architect.'),
+    });
     setDmNotes(p => { const n = { ...p }; delete n[req.id]; return n; });
     setResolving(null);
     loadRequests();

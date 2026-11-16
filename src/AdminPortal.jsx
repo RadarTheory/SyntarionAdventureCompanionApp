@@ -7,6 +7,7 @@ import HandbookBookmark from './HandbookBookmark';
 import AdminSidebar from './AdminSidebar';
 import AdminDashboard from './AdminDashboard';
 import GatePanel from './GatePanel';
+import AdminDice from './AdminDice';
 import { ALL_TABLES } from './adminTables';
 
 const ADMIN_UUID = import.meta.env.VITE_DM_USER_ID || 'fd2b5a52-e179-4234-9265-9b5ab36d6ace';
@@ -325,6 +326,7 @@ export default function AdminPortal() {
         {view === 'dashboard' && <AdminDashboard onOpenTable={chooseTable} />}
 
         {view === 'gate' && <GatePanel />}
+        {view === 'dice' && <AdminDice />}
 
         {view === 'upload' && <CompendiumUpload />}
 

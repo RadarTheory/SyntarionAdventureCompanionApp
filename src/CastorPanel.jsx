@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
+import { logHerculesEvent } from './lib/herculesLog';
 
 // ─── TIER LABELS ──────────────────────────────────────────────────────────────
 const MAGIC_TIERS = ['Mote', 'Charm', 'Spell', 'Weave', 'Weave (Hidden)'];
@@ -1027,19 +1028,13 @@ function CastorInner({ char, campaignId, onClose, onBadgeChange }) {
     }).select().single();
 
     if (!error && req) {
-      const { data: hsession } = await supabase.from('hercules_sessions').select('id')
-        .eq('campaign_id', String(campaignId)).eq('status', 'active')
-        .order('created_at', { ascending: false }).limit(1).maybeSingle();
-      if (hsession?.id) {
-        await supabase.from('hercules_events').insert({
-          session_id:  hsession.id,
-          type:        'cast_request',
-          actor_name:  char.name || 'Player',
-          actor_id:    String(char.id),
-          description: `${char.name || 'Player'} requests to ${axisLabel.toLowerCase()} ${ability.name} [${tierName}] — awaiting Architect approval.${note ? ` Note: "${note}"` : ''}`,
-          dm_approved: false,
-        });
-      }
+      await logHerculesEvent(campaignId, {
+        type: 'cast_request',
+        actor_name: char.name || 'Player',
+        actor_id: String(char.id),
+        description: `${char.name || 'Player'} requests to ${axisLabel.toLowerCase()} ${ability.name} [${tierName}] - awaiting Architect approval.${note ? ` Note: "${note}"` : ''}`,
+        scribe_suggestion: `${char.name || 'Player'} wants to ${axisLabel.toLowerCase()} ${ability.name}. Suggested outcome: approve, deny, or shape the final effect and story beat.`,
+      });
       loadRequests();
     }
   };

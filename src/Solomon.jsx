@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import supabase from './lib/supabase';
+import { resolveEquipSlot } from './lib/equipSlot';
 import { COLORS } from './constants';
 import { playSfxByKey, playCoinSfx } from './soundLibrary';
 
@@ -186,6 +187,8 @@ export default function Solomon({ campaignId, onClose }) {
     } else {
       // Write to character's pack
       const description = `${item.item_category || 'Misc'}|${item.item_desc || ''}${item.note ? ' — ' + item.note : ''}`;
+      // Without a slot a 'Misc' row fits no equip slot at all, so fall back to the catalog.
+      const equip_slot = await resolveEquipSlot(item.item_name, item.item_equip_slot || null);
       await supabase.from('character_items').insert({
         character_id: item.claimed_by,
         slot: `pack__${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -194,6 +197,7 @@ export default function Solomon({ campaignId, onClose }) {
         attuned: false,
         bonuses: {},
         weight: item.qty || 1,
+        equip_slot,
       });
       playCoinSfx({ name: item.item_name, description, weight: item.qty || 1 });
     }

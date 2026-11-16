@@ -9,6 +9,7 @@ const TOP_TABS = [
   ['timeline', 'Timeline'],
   ['upload', 'Scribe'],
   ['gate', 'Gate'],
+  ['dice', 'Dice'],
 ];
 
 const inputStyle = { background: '#1a1714', border: '1px solid #3a352e', borderRadius: 6, padding: '7px 9px', color: '#f0eeeb', fontSize: 10, fontFamily: 'monospace', outline: 'none' };
