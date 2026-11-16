@@ -8,7 +8,10 @@
     "build": "vite build",
     "lint": "eslint .",
     "check:races": "node scripts/check-race-registries.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sync:constellation": "node scripts/sync-constellation.mjs",
+    "check:constellation": "npm --prefix constellation run check",
+    "constellation": "node constellation/server.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

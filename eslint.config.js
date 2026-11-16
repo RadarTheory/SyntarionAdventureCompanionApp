@@ -5,7 +5,8 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // constellation/ (and its generated copy in public/) has its own checks: npm run check:constellation.
+  globalIgnores(['dist', 'public/constellation', 'constellation']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [

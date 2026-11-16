@@ -65,6 +65,15 @@ supabase functions deploy transcribe --no-verify-jwt
 
 A Supabase project with the Syntarion schema (characters, campaigns, modules, `hercules_events`, `grimoire_entries`, `larks`, `vtt_sessions`, and related tables) is required. The schema is not currently published as a migration set.
 
+## The Constellation (abilities)
+
+The character sheet's Abilities tab is the Syntarion Constellation. Its source lives in this repo at `constellation/` (the only copy; edit it there). `vite.config.js` copies the runtime files into `public/constellation/` (git-ignored) on every dev start, every build, and whenever a constellation file changes, and `src/ConstellationTab.jsx` shows it in an iframe. `npm run sync:constellation` does the copy by hand; `npm run check:constellation` runs its syntax checks and tests; `npm run constellation` serves it alone on http://127.0.0.1:4177 for quick layout work (builds there are local-only, not tied to a character).
+
+- **AP** is spent on abilities. It is stored in `at_current` / `at_total` and granted as the character levels. **XP** is experience: it is stored in `ap_total` and sets the level. Only the labels say AP and XP; the columns keep their names.
+- Purchases are instant. The build is stored as constellation unlock ids in the character's `data.abilities`, on that character's `characters` row, so it belongs to whoever owns the character and is read and written under the same access rules as the rest of the sheet.
+- A character still holding abilities from the earlier tree has them cleared once, with their AP refunded, the first time the tab opens.
+- The casting panel (`src/AbilitiesPanel.jsx`) lists the abilities a character has learned. Each draws on its line's trait pool in `char.disciplines`. A use costs 1 from that pool for now, until amounts are decided.
+
 ## Project Status
 
 Syntarion is in active solo development and currently runs live campaigns for a private group. The long-term vision is a modular platform where Soteria ships as the flagship module and other DMs can publish their own worlds.

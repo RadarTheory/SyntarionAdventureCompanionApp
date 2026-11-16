@@ -1,0 +1,45 @@
+/* Cosmic atmosphere: luminous depth, quiet motion, legible foreground. */
+.map{isolation:isolate;background:radial-gradient(ellipse at 45% 70%,#10292366,transparent 65%),#080f0e}
+.cosmic-atmosphere,.cosmic-particles{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1}
+.cosmic-atmosphere{overflow:hidden;background:radial-gradient(ellipse at 20% 34%,#42734b19,transparent 46%),radial-gradient(ellipse at 65% 20%,#2a628c24,transparent 43%),radial-gradient(ellipse at 90% 52%,#ad753119,transparent 39%)}
+.cosmic-atmosphere:before,.cosmic-atmosphere:after{content:'';position:absolute;inset:-25%;background:radial-gradient(ellipse at 39% 65%,color-mix(in srgb,var(--map-color) 16%,transparent),transparent 44%),radial-gradient(ellipse at 62% 28%,#98b7c610,transparent 38%);transform:rotate(-18deg);animation:nebula-drift 38s ease-in-out infinite alternate;will-change:transform,opacity}
+.cosmic-atmosphere:after{inset:-10%;background:conic-gradient(from 220deg at 50% 83%,transparent 0deg,color-mix(in srgb,var(--map-color) 8%,transparent) 12deg,transparent 42deg,transparent 55deg,#92b9cb08 64deg,transparent 90deg);animation-duration:51s;animation-delay:-17s;filter:blur(24px)}
+.cosmic-particles{z-index:0;opacity:.95;mix-blend-mode:screen}.map svg{z-index:1}.map-caption,.map-legend,.zoom{z-index:3}.map-vignette{z-index:2;box-shadow:inset 0 0 90px 12px #060b0940}
+.cosmic-star{animation:stellar-twinkle var(--twinkle-duration,6s) ease-in-out var(--twinkle-delay,0s) infinite alternate;transform-box:fill-box;transform-origin:center}
+.cluster{opacity:.85;transition:opacity 1.2s}.cluster.cluster-selected{opacity:1}.cluster .cluster-label{filter:drop-shadow(0 0 5px color-mix(in srgb,var(--node-color) 50%,transparent));animation:discipline-breathe 8s ease-in-out infinite}
+.cluster-selected .cluster-label{filter:drop-shadow(0 0 8px var(--node-color));fill:var(--node-color)}
+.cluster .node-border{filter:drop-shadow(0 0 3px color-mix(in srgb,var(--node-color) 65%,transparent));opacity:.95}
+.cluster-selected .node-border{stroke-width:1.6;filter:drop-shadow(0 0 5px var(--node-color))}
+.cluster-selected .thread{opacity:.43}.thread.bright{opacity:.9;filter:drop-shadow(0 0 3px currentColor);animation:thread-breathe 6s ease-in-out infinite}
+.star-node>path{filter:drop-shadow(0 0 4px var(--node-color,var(--accent)));transition:filter .6s}
+.selected-node>path,.star-node:hover>path,.star-node:focus-visible>path{filter:drop-shadow(0 0 5px var(--node-color,var(--accent))) drop-shadow(0 0 14px var(--node-color,var(--accent)))}
+.selected-node .selection-ring{stroke-width:1.2;opacity:.85;animation:orbit-turn 65s linear infinite;transform-box:fill-box;transform-origin:center}
+.selected-node .node-label{fill:#f2fae8;filter:drop-shadow(0 0 4px var(--node-color,var(--accent)))}
+.focus-origin{filter:drop-shadow(0 0 10px var(--accent));animation:discipline-breathe 7s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.node-corona{fill:var(--node-color,var(--accent));opacity:.11;filter:blur(9px);animation:corona-breathe 6s ease-in-out infinite;transform-box:fill-box;transform-origin:center;pointer-events:none}
+.discipline{transition:box-shadow .8s,border-color .8s,background .8s}.discipline.selected{box-shadow:inset 0 0 35px color-mix(in srgb,var(--accent) 7%,transparent),0 0 24px color-mix(in srgb,var(--accent) 9%,transparent);border-color:color-mix(in srgb,var(--accent) 56%,transparent)}
+.discipline-symbol{filter:drop-shadow(0 0 5px color-mix(in srgb,var(--accent) 45%,transparent));animation:discipline-breathe 9s ease-in-out infinite}.discipline.selected .discipline-symbol{filter:drop-shadow(0 0 8px var(--accent))}.discipline.selected:after{animation:discipline-breathe 6s ease-in-out infinite;box-shadow:0 0 12px var(--accent),0 0 26px color-mix(in srgb,var(--accent) 35%,transparent)}
+.detail-emblem div{animation:discipline-breathe 7s ease-in-out infinite;text-shadow:0 0 14px color-mix(in srgb,var(--accent) 70%,transparent),0 0 40px color-mix(in srgb,var(--accent) 35%,transparent)}
+.detail-emblem i+i{animation:emblem-orbit 80s linear infinite}.details{box-shadow:inset 0 60px 90px -90px var(--accent);transition:box-shadow 1.2s}.class-choice.chosen{filter:drop-shadow(0 0 5px color-mix(in srgb,var(--class-color) 55%,transparent))}
+.selected-ability .ability-icon{filter:drop-shadow(0 0 7px var(--accent))}.awaken:enabled{box-shadow:0 0 18px color-mix(in srgb,var(--accent) 14%,transparent)}.awaken:enabled:hover{box-shadow:0 0 25px color-mix(in srgb,var(--accent) 30%,transparent)}
+.reveal{box-shadow:inset 0 0 30px #b39add05}.reveal:hover{border-color:#b39add88;box-shadow:inset 0 0 30px #b39add10,0 0 25px #b39add13}.sealed-icon{filter:drop-shadow(0 0 8px #b39add99);animation:discipline-breathe 7s ease-in-out infinite}
+.motion-toggle{font-size:11.5px;letter-spacing:0.5px;background:transparent;border:1px solid #ffffff15;padding:6px 8px;color:#98a98e;white-space:nowrap}.motion-toggle:hover{border-color:var(--accent);color:var(--accent)}.map-toolbar{gap:10px}.map-toolbar>#map-count{margin-left:auto}
+/* Bloom fades to transparent before its own edges so scaling never shows a hard boundary. */.map:after{content:'';position:absolute;left:var(--bloom-x,50%);top:var(--bloom-y,62%);width:var(--bloom-size,760px);height:var(--bloom-size,760px);margin:calc(var(--bloom-size,760px)/-2) 0 0 calc(var(--bloom-size,760px)/-2);z-index:2;pointer-events:none;opacity:0;background:radial-gradient(closest-side,color-mix(in srgb,var(--bloom-color,var(--map-color)) 34%,transparent),color-mix(in srgb,var(--bloom-color,var(--map-color)) 10%,transparent) 55%,transparent)}.map.cosmic-bloom:after{animation:reveal-bloom 2.5s ease-out both}
+@keyframes stellar-twinkle{0%,15%{opacity:.2;transform:scale(.85)}65%,100%{opacity:.95;transform:scale(1.15)}}
+@keyframes nebula-drift{from{transform:translate3d(-2%,1%,0) rotate(-18deg) scale(1);opacity:.6}to{transform:translate3d(3%,-2%,0) rotate(-8deg) scale(1.12);opacity:1}}
+@keyframes discipline-breathe{0%,100%{opacity:.7}50%{opacity:1}}
+@keyframes thread-breathe{0%,100%{opacity:.55}50%{opacity:.95}}
+@keyframes corona-breathe{0%,100%{opacity:.1;transform:scale(.85)}50%{opacity:.25;transform:scale(1.2)}}
+@keyframes orbit-turn{to{transform:rotate(360deg)}}
+@keyframes emblem-orbit{from{transform:rotate(45deg)}to{transform:rotate(405deg)}}
+@keyframes reveal-bloom{0%{opacity:0;transform:scale(.65)}22%{opacity:.85}100%{opacity:0;transform:scale(1.3)}}
+/* Motion control also stops CSS. Reduced motion defaults to a still, luminous sky. */
+html[data-motion="off"] .map *,html[data-motion="off"] .map *:before,html[data-motion="off"] .map *:after,html[data-motion="off"] .map:after,html[data-motion="off"] .discipline *,html[data-motion="off"] .discipline:after,html[data-motion="off"] .detail-emblem *,html[data-motion="off"] .sealed-icon{animation:none!important}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+@media(max-width:650px){.motion-toggle{font-size:11px;padding:6px}.cosmic-atmosphere:after{filter:none}.map-toolbar{gap:6px}}
+/* Shared sky geometry is independent of the selected practice and sidebar content. */
+.workspace{align-items:start;overflow-anchor:none}.map-panel{height:850px;align-self:start}.map{min-height:0}.class-panel,.details{align-self:stretch;min-height:850px}
+.star-node:not(.selected-node) .selection-ring,.star-node:not(.selected-node) .node-corona{visibility:hidden}.star-node.selected-node>path{transform:scale(1.65);transform-box:fill-box;transform-origin:center}.ability-list:focus-visible{outline:1px solid var(--accent);outline-offset:5px}
+@media(min-width:1600px){.map-panel{height:900px}.class-panel,.details{min-height:900px}}
+@media(max-width:950px){.map-panel{height:760px}.class-panel{min-height:760px}.details{min-height:0}}
+@media(max-width:650px){.map-panel{height:620px}.class-panel{min-height:0}.map{min-height:0}}

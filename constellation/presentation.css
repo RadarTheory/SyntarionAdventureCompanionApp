@@ -1,0 +1,481 @@
+/* Astronomical atlas: the sky is the primary surface. */
+:root{--panel:#0e1412;--muted:#939b90;--line:#c3d2bc13}body{background:radial-gradient(ellipse at 50% 0,#26372c12,transparent 55%),#0a0f0d}
+.topbar{height:65px;padding:0 2.5%;border-color:#d2dfc00b}.brand{font-size:17px;letter-spacing:3.6px}.brandmark{font-size:34px;top:0}.brand small{font-size:11px}.topbar nav{font-size:11.5px;letter-spacing:1.3px}.local{font-size:11px}main{padding:27px 2.5% 0;max-width:1920px}.heading{margin-bottom:23px}.heading .eyebrow{font-size:11.5px;letter-spacing:1.3px;margin-bottom:9px}h1{font-size:35px;letter-spacing:-.7px;margin-bottom:7px}.intro{font-size:11px;color:#9ca58f}.points strong{font-size:28px}.points div>span{font-size:11px}.point-symbol{font-size:27px}.points button{font-size:15px;padding:8px 10px;border-color:#c3d2bc15}
+.disciplines{gap:10px;margin-bottom:22px}.discipline,.reveal{height:82px;padding:13px 18px;gap:14px;background:#11181399}.discipline small,.reveal small{font-size:11px;letter-spacing:1.3px}.discipline strong{font-size:17px}.discipline-symbol{font-size:28px}.discipline em,.reveal em{font-size:11.5px}.discipline.selected{box-shadow:inset 0 0 35px color-mix(in srgb,var(--accent) 4%,transparent),0 0 18px color-mix(in srgb,var(--accent) 5%,transparent)}.discipline.selected:after{box-shadow:0 0 9px color-mix(in srgb,var(--accent) 60%,transparent)}
+.workspace{grid-template-columns:170px minmax(0,1fr) 250px;border-color:#b9c8ae14;background:#0b110e;align-items:start}.class-panel{padding:21px 14px 0;border-color:#b9c8ae10;background:linear-gradient(100deg,#101712,#0b110f)}.panel-title{font-size:11px;letter-spacing:1.3px;color:#8b9781}.class-panel h2{font-size:15px;margin:13px 0 16px}.search{padding:7px;background:#0a0f0b;border-color:#b9c8ae13}.search input{font-size:11.5px}.doctrine-group h3{font-size:11px;letter-spacing:0.9px;color:#b1b59e}.doctrine-group>p{font-size:11px;color:#7c8977}.doctrine-group .attribute-row{padding:10px 0}.attribute-row{gap:9px}.attribute-icon{font-size:14px;color:#8e9e83}.attribute-row small{font-size:11px;letter-spacing:1.3px;margin-bottom:7px}.class-choice{font-size:12px;opacity:.85}.class-choice.chosen{opacity:1;font-weight:700}.class-choice+.class-choice:before{margin-right:5px}.attribute-row>div>div{gap:5px}.sidebar-bottom{opacity:.6}.doctrine-note{font-size:11px;line-height:1.8}.revealed-group{padding-top:14px;margin-top:19px}
+.map-panel{height:825px;background:#080e0d}.class-panel,.details{min-height:825px}.map-toolbar{padding:13px 16px;border-color:#d2dfc00a;background:#0b110e}.segmented{border:0;background:none;gap:15px;padding:0}.segmented button{padding:7px 0;font-size:12px;color:#7f8d7a;border-bottom:1px solid transparent}.segmented button.active{background:none;border-bottom-color:#b1ba98;box-shadow:none;color:#d0d6bc}.map-toolbar>#map-count{font-size:11px;letter-spacing:1.3px}.motion-toggle{font-size:11px;padding:5px 7px;border-color:#c3d2bc10;color:#7e8e76}.map{background:radial-gradient(ellipse at 43% 38%,#1c2a301a,transparent 60%),#080f0e;min-height:0}.map-caption{top:24px;left:24px}.map-caption .eyebrow{font-size:11px;letter-spacing:1.3px;opacity:.7}.map-caption h2{font-family:Manrope,Arial,sans-serif;font-size:11px;font-weight:400;letter-spacing:1px;color:#a3af9a}.map-vignette{box-shadow:inset 0 0 65px 8px #050a0740}.cosmic-particles{opacity:.65}.cosmic-atmosphere{background:radial-gradient(ellipse at 16% 38%,#47714b12,transparent 42%),radial-gradient(ellipse at 48% 40%,#5f4b7d15,transparent 31%),radial-gradient(ellipse at 74% 30%,#3d6c8e14,transparent 40%),radial-gradient(ellipse at 84% 76%,#8d6c3710,transparent 35%)}.cosmic-atmosphere:before{opacity:.5}.cosmic-atmosphere:after{opacity:.3}.map-footer{padding:12px 17px;font-size:11px;border-color:#d2dfc00e;background:#0b110e}.map-legend{font-size:11px;gap:13px;left:18px;bottom:19px;opacity:.75}.zoom{bottom:12px;right:12px;padding:3px;background:#0c130fd9;border-color:#c3d2bc1c}.zoom button{font-size:16px}.zoom span{font-size:11.5px}
+.cluster{opacity:.88}.cluster .cluster-label{font-size:24px;font-weight:500;letter-spacing:4px;filter:none;animation:none}.cluster-selected .cluster-label{filter:drop-shadow(0 0 9px color-mix(in srgb,var(--node-color) 45%,transparent))}.cluster-sub{font-size:15px;letter-spacing:2.2px;fill:#9ba994}.node-label{font-family:Manrope,Arial,sans-serif;font-size:17px;font-weight:500;letter-spacing:.8px;fill:#b6c0ac}.selected-node .node-label{fill:#edf3e1;filter:none;font-weight:700}.thread{opacity:.29;stroke-width:.8}.cluster-selected .thread{opacity:.42}.thread.bright{opacity:.62;stroke-width:1;filter:none}.nexus-thread{stroke-width:.7;opacity:.17}.nexus-thread.bright{opacity:.35}.cluster .node-border{filter:drop-shadow(0 0 3px color-mix(in srgb,var(--node-color) 45%,transparent));stroke-width:1;fill:#0b1511}.cluster-selected .node-border{filter:drop-shadow(0 0 5px color-mix(in srgb,var(--node-color) 70%,transparent));stroke-width:1.2}.stellar-core{filter:drop-shadow(0 0 4px var(--node-color))}.selected-node .stellar-core{filter:drop-shadow(0 0 7px var(--node-color)) drop-shadow(0 0 15px color-mix(in srgb,var(--node-color) 55%,transparent))}.star-node.selected-node .stellar-core{transform:scale(1.3);transform-box:fill-box;transform-origin:center}.selected-node .selection-ring{stroke-width:.7;opacity:.6}.focus-origin{filter:drop-shadow(0 0 7px #a2b79366);opacity:.7;animation:none}.origin-label{font-size:15px;letter-spacing:2.6px;fill:#8e9c86}.orbit{stroke:#a2b79322}.praethacy-halo{fill:none;stroke:#b39add;stroke-width:.6;opacity:.19}.praethacy-halo path{opacity:.6}.region-mist{pointer-events:none}.celestial-dust{pointer-events:none}
+.details{padding:21px 18px 0;border-color:#b9c8ae10;background:linear-gradient(160deg,#111914,#0c120f 55%);box-shadow:none}.detail-emblem{height:58px;width:70px;margin:20px auto 14px}.detail-emblem div{font-size:37px;text-shadow:0 0 20px color-mix(in srgb,var(--accent) 30%,transparent)}.detail-emblem i{inset:11px;border-color:color-mix(in srgb,var(--accent) 20%,transparent)}.detail-emblem i+i{inset:5px}.details>.eyebrow{font-size:11px;letter-spacing:1.3px}.details>h2{font-size:27px;margin:8px 0 10px}.doctrine-kind{font-size:11px;letter-spacing:1.3px;opacity:.8;margin-bottom:12px}.detail-summary{font-size:12.5px;line-height:1.8;color:#9ba58d;margin-bottom:20px}.class-meta{display:none}.discipline-setup{font-size:11.5px;margin:0 0 20px;border-top:1px solid #c3d2bc12;border-bottom:1px solid #c3d2bc12;padding:8px 0}.discipline-setup summary{color:#a6b398}.discipline-setup dl{border:0;padding:0 0 6px}.category-tabs{gap:8px;margin-bottom:14px}.category-tabs button{font-size:12px}.ability-list{max-height:245px}.ability-item{padding:11px 7px;margin-bottom:5px;gap:9px}.ability-item>span+span{font-size:12.5px}.ability-item small{font-size:11px;letter-spacing:1px;color:#7b8b6f}.ability-item.selected-ability{background:color-mix(in srgb,var(--accent) 5%,transparent);border-color:color-mix(in srgb,var(--accent) 23%,transparent)}.ability-icon{font-size:17px;opacity:.8}.ability-description{margin-top:15px;padding-top:17px}.ability-description h3{font-size:13px}.ability-description p{font-size:12.5px;line-height:1.85;color:#98a28b}.ability-description .eyebrow{font-size:11px}.awaken{padding:12px 10px;font-size:12px;background:color-mix(in srgb,var(--accent) 83%,#b8bfa2);box-shadow:none!important}.explore{padding:10px;font-size:11.5px;border-color:#c3d2bc15;color:#98a98a}.lineage{font-size:11.5px;color:#839477}.detail-bottom{font-size:11px;letter-spacing:0.8px;padding:23px 0 17px}.page-footer{padding:17px 0 21px;font-size:11px;opacity:.75}
+@media(min-width:1500px){.workspace{grid-template-columns:190px minmax(0,1fr) 270px}.map-panel{height:900px}.class-panel,.details{min-height:900px}.details{padding:24px}.class-panel{padding:24px 17px}.node-label{font-size:16px}}
+@media(max-width:1150px) and (min-width:951px){main{padding-left:16px;padding-right:16px}.workspace{grid-template-columns:153px minmax(0,1fr) 226px}.details{padding:20px 14px 0}.class-panel{padding:20px 12px 0}.class-choice{font-size:11.5px}.attribute-row{gap:7px}.category-tabs button{font-size:11.5px}.map-toolbar>#map-count{display:none}.discipline,.reveal{padding:12px}.discipline strong{font-size:16px}}
+@media(max-width:950px){.workspace{grid-template-columns:165px minmax(0,1fr)}.map-panel{height:820px}.class-panel{min-height:820px}.details{min-height:0;padding:24px;grid-column:1/-1}.details>.detail-emblem{margin:10px auto}.details>.class-meta{display:none}.details>.discipline-setup{grid-row:7}.details>.explore{grid-row:8}.details>.lineage{grid-row:9}.details>.detail-bottom{grid-row:10}.ability-list{max-height:230px}.map-toolbar>#map-count{display:none}}
+@media(max-width:650px){.topbar{height:60px;padding:0 15px}.brand{font-size:15px;padding-left:32px}.brandmark{font-size:28px}.brand small{font-size:11px}.local{font-size:11px}main{padding:22px 12px 0}.heading{margin-bottom:20px}h1{font-size:27px}.intro{font-size:12px}.heading .eyebrow{font-size:11px;letter-spacing:1.3px}.points strong{font-size:24px}.points div>span{font-size:11px}.points button{padding:3px 9px}.disciplines{gap:7px;margin-bottom:15px}.discipline,.reveal{height:75px;padding:11px;gap:8px}.discipline-symbol{font-size:24px;width:24px}.discipline strong{font-size:15px}.discipline small,.reveal small{font-size:11px}.discipline em,.reveal em{font-size:11px}.reveal strong{font-size:12px}.workspace{grid-template-columns:minmax(0,1fr)}.class-panel{min-height:0;padding:12px}.map-panel{height:680px}.map-toolbar{padding:11px 14px}.map-caption{left:18px;top:20px}.map-caption h2{font-size:12.5px}.map svg{min-width:600px}.details{display:block;padding:23px}.details>.detail-summary{font-size:11px}.details>.doctrine-kind{font-size:11px}.details>.discipline-setup{font-size:12.5px}.category-tabs button{font-size:12.5px}.ability-item>span+span{font-size:11px}.ability-description p{font-size:11px}.details>h2{font-size:29px}.awaken{font-size:11px}.map-legend{gap:8px;font-size:11px}.page-footer{font-size:11px}.class-choice{font-size:12.5px}.doctrine-group h3{font-size:11.5px}.doctrine-group>p{font-size:11.5px}.attribute-row small{font-size:11px}}
+.class-panel,.details,.map-panel{min-width:0}.workspace{min-width:0}
+@media(max-width:1150px) and (min-width:951px){.class-panel h2{font-size:13px}}
+.reveal-progress{display:flex;gap:8px;margin-top:5px;font-size:11px;line-height:1.5;color:#9a92a6;white-space:nowrap}.reveal-progress>span{display:block}.reveal-locked:disabled{opacity:.72;cursor:not-allowed}.reveal-locked:disabled:hover{box-shadow:inset 0 0 30px #b39add05;border-color:#b39add32}.reveal-ready{border-color:#b39add88}.reveal-ready .reveal-progress{color:#c7b5df}.reveal-locked .sealed-icon{opacity:.45}.reveal>span+span{min-width:0}
+@media(max-width:1150px){.reveal-progress{display:block;font-size:11px;line-height:1.45}.reveal,.discipline{min-height:88px}.reveal-progress>span{display:inline}.reveal-progress>span+span:before{content:' · '}}
+@media(max-width:650px){.reveal-progress{font-size:11px;white-space:normal}.reveal .sealed-icon{font-size:20px}.reveal strong{font-size:11px}.reveal-progress>span{display:block}.reveal-progress>span+span:before{content:none}}
+.brand{padding-left:51px}.brandmark.brand-logo{display:block;width:40px;height:40px;object-fit:contain;left:0;top:50%;transform:translateY(-50%);border-radius:3px}
+@media(max-width:650px){.brand{padding-left:41px}.brandmark.brand-logo{width:32px;height:32px}}
+.detail-emblem>.class-portrait{position:relative;display:grid;place-items:center;width:60px;height:60px;line-height:1}.class-portrait-png{position:absolute;inset:0;width:60px;height:60px;object-fit:contain;opacity:0;filter:drop-shadow(0 0 10px color-mix(in srgb,var(--accent) 45%,transparent));transition:opacity .25s}.class-portrait-png.class-png-ready{opacity:1}.class-portrait.has-class-icon>.portrait-fallback{visibility:hidden}.detail-emblem:has(.has-class-icon)>i{opacity:.3;pointer-events:none}
+.class-star-png{opacity:0;pointer-events:none;filter:drop-shadow(0 0 3px var(--node-color));transition:opacity .25s}.class-star-png.class-png-ready{opacity:.9}.star-node.has-class-icon>.stellar-core,.star-node.has-class-icon>.node-border{visibility:hidden}.selected-node>.class-star-png{opacity:1;filter:drop-shadow(0 0 5px var(--node-color)) drop-shadow(0 0 11px color-mix(in srgb,var(--node-color) 45%,transparent))}
+.brandmark.brand-logo{background:transparent;border:0;border-radius:0;box-shadow:none}
+.practice-symbol{display:inline-block;flex-shrink:0;width:32px;height:32px;background-color:var(--practice-color,var(--accent));-webkit-mask-image:var(--practice-image);mask-image:var(--practice-image);-webkit-mask-size:contain;mask-size:contain;-webkit-mask-position:center;mask-position:center;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;vertical-align:middle}.discipline-symbol.practice-symbol{width:34px;height:34px}.detail-practice-icon{width:15px;height:15px}.portrait-fallback>.practice-symbol{width:43px;height:43px}.practice-badge{opacity:.65;filter:drop-shadow(0 0 5px color-mix(in srgb,var(--node-color) 50%,transparent));pointer-events:none}.cluster-selected .practice-badge{opacity:1;filter:drop-shadow(0 0 8px color-mix(in srgb,var(--node-color) 65%,transparent))}.veil-toggle>.practice-symbol{width:17px;height:17px}
+.thread.committed{opacity:1;stroke-width:1.8;filter:drop-shadow(0 0 2px currentColor) drop-shadow(0 0 7px currentColor);animation:none}.nexus-thread.committed{opacity:.9;stroke-width:1.5}.star-node.committed-node .node-corona{visibility:visible;opacity:.22;animation:none}.committed-node>.class-star-png.class-png-ready{opacity:1;filter:drop-shadow(0 0 3px var(--node-color)) drop-shadow(0 0 10px var(--node-color)) drop-shadow(0 0 18px color-mix(in srgb,var(--node-color) 55%,transparent))}.committed-node .stellar-core{filter:drop-shadow(0 0 6px var(--node-color))}.committed-node .node-label{fill:var(--node-color);font-weight:700;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--node-color) 60%,transparent))}
+.awakened-ring{fill:none;stroke:none;pointer-events:none}.available-node .awakened-ring{stroke:var(--node-color);stroke-width:1.1;stroke-dasharray:2.5 4;opacity:.55;animation:available-breathe 4.5s ease-in-out infinite}@keyframes available-breathe{0%,100%{opacity:.3}50%{opacity:.75}}.unexplored-node>.class-star-png.class-png-ready,.unexplored-node>.stellar-core{opacity:.38;filter:grayscale(.85)}.unexplored-node .node-label{fill:#77806f}.unexplored-node.selected-node>.class-star-png.class-png-ready{opacity:.7}.map-legend i.available{border-style:dashed}.committed-node .awakened-ring{fill:color-mix(in srgb,var(--node-color) 12%,#0b1511);stroke:var(--node-color);stroke-width:2;filter:drop-shadow(0 0 4px var(--node-color)) drop-shadow(0 0 12px color-mix(in srgb,var(--node-color) 60%,transparent))}
+@media(max-width:650px){.discipline-symbol.practice-symbol{width:27px;height:27px}}
+.mastery-ring{fill:none;stroke:none;pointer-events:none}.mastered-node .mastery-ring{stroke:var(--node-color);stroke-width:1.2;opacity:.85;filter:drop-shadow(0 0 4px var(--node-color))}
+.sealed-node .awakened-ring{stroke:#8a9184;stroke-width:1;stroke-dasharray:1.5 3.5;opacity:.6}.sealed-node>.class-star-png.class-png-ready,.sealed-node>.stellar-core{opacity:.3;filter:grayscale(1)}.sealed-node .node-label{fill:#6d7569}.sealed-node.selected-node>.class-star-png.class-png-ready{opacity:.6}
+.thread-hint{stroke-dasharray:2 5;opacity:.35;stroke-width:1}.unknown-star{opacity:.5;animation:available-breathe 5s ease-in-out infinite}
+.relic .node-label{fill:#c9cdbf}.relic-sub{font-size:12px;letter-spacing:1.8px;fill:#8b9684}.relic>path{opacity:.35}.relic .awakened-ring{fill:none;stroke:var(--node-color);stroke-dasharray:2 4;opacity:.4}.relic-claimed>path{opacity:1;filter:drop-shadow(0 0 6px var(--node-color))}.relic-claimed .awakened-ring{stroke-dasharray:none;opacity:.9;filter:drop-shadow(0 0 8px var(--node-color))}
+.self-thread:not(.committed){opacity:0}.calling-sky .self-thread:not(.committed){opacity:.22}
+.map-legend i.mastered{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 2px #0b110e,0 0 0 3px var(--accent)}.map-legend i.sealed{border-style:dotted;opacity:.6}
+.map-caption .to-atlas{pointer-events:auto;margin-top:12px;background:#0c130fe6;border:1px solid #ffffff1c;color:#c2cbb5;font-size:12.5px;padding:7px 11px;letter-spacing:0.5px}.to-atlas:hover{border-color:var(--accent)}.to-atlas[hidden]{display:none}
+.mastery{margin:0 0 14px;font-size:12.5px;color:#c6cbb9}.mastery>span{display:block}.mastery i{display:block;height:3px;background:#ffffff12;margin:8px 0 6px;position:relative;overflow:hidden}.mastery i:after{content:'';position:absolute;inset:0;transform-origin:left;transform:scaleX(var(--fill));background:var(--accent);box-shadow:0 0 8px var(--accent)}.mastery small{font-size:11.5px;color:#87937c;letter-spacing:0.3px}.mastery.is-mastered>span{color:var(--accent)}
+.sealed-note{font-size:12px;color:#dbb47f;margin:-4px 0 12px}.calling-toggle{width:100%;margin:0 0 16px}.titles{font-size:12px;color:#c6cbb9;line-height:1.8;margin:12px 0 0}.titles span{display:block;font-size:11px;letter-spacing:1.3px;color:#87937c}
+/* No outline rings: state reads from glow intensity alone. */
+.star-node .awakened-ring,.star-node .mastery-ring,.relic .awakened-ring{stroke:none!important;fill:none!important;filter:none!important;animation:none!important}
+.committed-node>.class-star-png.class-png-ready{opacity:1;filter:drop-shadow(0 0 3px var(--node-color)) drop-shadow(0 0 10px var(--node-color)) drop-shadow(0 0 22px color-mix(in srgb,var(--node-color) 65%,transparent))}
+.mastered-node>.class-star-png.class-png-ready{filter:drop-shadow(0 0 4px var(--node-color)) drop-shadow(0 0 14px var(--node-color)) drop-shadow(0 0 32px var(--node-color))}.star-node.mastered-node .node-corona{visibility:visible;opacity:.34}
+.available-node>.class-star-png.class-png-ready{animation:available-glow 4.5s ease-in-out infinite}@keyframes available-glow{0%,100%{filter:drop-shadow(0 0 1px color-mix(in srgb,var(--node-color) 35%,transparent))}50%{filter:drop-shadow(0 0 6px color-mix(in srgb,var(--node-color) 100%,transparent))}}
+.relic-claimed>path{filter:drop-shadow(0 0 5px var(--node-color)) drop-shadow(0 0 14px var(--node-color))}
+.map-legend i.mastered{box-shadow:0 0 5px var(--accent),0 0 10px var(--accent)}
+
+.aspect-glyph{display:inline-block;width:17px;height:17px;font-size:0;background:currentColor;-webkit-mask:var(--glyph) center/contain no-repeat;mask:var(--glyph) center/contain no-repeat}.doctrine-kind .aspect-glyph{width:13px;height:13px;margin-right:7px;vertical-align:-2px}
+.deeper-in{font-size:12px;color:#8d978a;line-height:1.7;margin:8px 0 0;padding:9px 0 0;border-top:1px dashed #ffffff10}.deeper-in span{display:block;font-size:11px;letter-spacing:1.3px;color:#6f7b6b;margin-bottom:3px}
+.retained{font-size:12px;color:#aeb8a6;line-height:1.75;margin:-2px 0 14px}.retained span{display:block;font-size:11px;letter-spacing:1.3px;color:#87937c;margin-bottom:3px}.retained b{font-weight:600;color:var(--accent);margin-right:4px}
+.awaken.blocked{background:transparent;color:color-mix(in srgb,var(--accent) 70%,#e6dcc4);border:1px dashed color-mix(in srgb,var(--accent) 45%,transparent);font-weight:600;opacity:1;cursor:not-allowed}.awaken.blocked:after{display:none}.go-parent{width:100%;border-color:color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)}
+/* Unlock stars: one per awakened node, in the discipline's color. */
+.unlock-star{fill:var(--node-color);filter:drop-shadow(0 0 2px var(--node-color)) drop-shadow(0 0 5px var(--node-color));pointer-events:none;transform-box:fill-box;transform-origin:center;animation:unlock-twinkle 3.5s ease-in-out var(--twinkle-delay,0s) infinite}
+.unlock-star.pop{animation:unlock-pop .9s cubic-bezier(.2,1.6,.4,1) both,unlock-twinkle 3.5s ease-in-out .9s infinite}
+@keyframes unlock-pop{0%{transform:scale(0) rotate(-45deg);opacity:0}45%{transform:scale(2.6) rotate(0);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes unlock-twinkle{0%,100%{opacity:.7}50%{opacity:1}}
+.aspect-figure{pointer-events:none}.aspect-star{opacity:.55;filter:drop-shadow(0 0 3px currentColor);animation:aspect-twinkle 6s ease-in-out var(--twinkle-delay,0s) infinite}@keyframes aspect-twinkle{0%,100%{opacity:.4}50%{opacity:.75}}
+/* Endpoint classes are the monument at the top of each calling's sky. */
+.endpoint-node .node-label{font-family:Cinzel,Georgia,serif;font-size:25px;font-weight:500;letter-spacing:3.5px}
+.endpoint-node>.node-corona{visibility:visible!important;opacity:.14}.endpoint-node.committed-node>.node-corona{opacity:.3}.endpoint-node.mastered-node>.node-corona{opacity:.45}
+.endpoint-rays{stroke:var(--node-color);stroke-width:1.4;stroke-linecap:round;opacity:.22;transform-box:fill-box;transform-origin:center;animation:endpoint-turn 90s linear infinite;pointer-events:none}
+.committed-node .endpoint-rays{opacity:.55;filter:drop-shadow(0 0 4px var(--node-color))}.mastered-node .endpoint-rays{opacity:.85;filter:drop-shadow(0 0 6px var(--node-color)) drop-shadow(0 0 14px var(--node-color))}.sealed-node .endpoint-rays{opacity:.1}
+@keyframes endpoint-turn{to{transform:rotate(360deg)}}
+.level-ladder{display:flex;gap:4px;flex-wrap:wrap;margin:0 0 10px}.level-ladder span{font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;color:#77806f;border:1px dashed #ffffff18;padding:3px 6px}.level-ladder span.held{color:#0f150f;background:var(--accent);border:1px solid var(--accent);box-shadow:0 0 8px color-mix(in srgb,var(--accent) 45%,transparent)}
+.empty-list{font-size:12.5px;color:#8d978a;line-height:1.7;margin:10px 0 14px}
+/* Magic | Tech axis (mirrors Syntarion's slider). */
+.axis-meter{--axis:#8d978a;margin:-12px 0 22px;padding:14px 18px 10px;border:1px solid #ffffff10;background:linear-gradient(90deg,color-mix(in srgb,#94c493 5%,transparent),transparent 35%,transparent 65%,color-mix(in srgb,#80b8d8 5%,transparent)),#101511}
+.axis-head{display:flex;justify-content:space-between;font-size:11.5px;letter-spacing:1.3px;color:#8d978a;margin-bottom:10px}.axis-head i{font-style:normal;color:#4f5b4c;margin:0 4px}.axis-head span+span{color:var(--axis);transition:color .6s}
+.axis-track{position:relative;height:4px;border-radius:2px;background:linear-gradient(90deg,#94c49333,#ffffff10 50%,#80b8d833)}
+.axis-fill{position:absolute;top:0;bottom:0;border-radius:2px;background:var(--axis);box-shadow:0 0 10px var(--axis);transition:left .6s,width .6s,background .6s}
+.axis-tick{position:absolute;top:-4px;width:1px;height:12px;background:#ffffff26}
+.axis-needle{position:absolute;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--axis);box-shadow:0 0 0 3px #101511,0 0 12px var(--axis),0 0 24px var(--axis);transition:left .6s,background .6s}
+.axis-meter[data-mode="unaligned"] .axis-needle{box-shadow:0 0 0 3px #101511}.axis-meter[data-mode="nihimence"] .axis-track{background:linear-gradient(90deg,#e2ac6b22,#e2ac6b55 50%,#e2ac6b22)}
+.axis-scale{display:flex;justify-content:space-between;font-size:11px;letter-spacing:1.3px;color:#6f7b6b;margin-top:8px}.axis-scale span:first-child{color:#94c493aa}.axis-scale span:last-child{color:#80b8d8aa}
+.axis-counts{margin:6px 0 0;font-size:11.5px;letter-spacing:0.8px;color:#6f7b6b;text-align:center}
+/* A centered needle is colorless; it takes the axis color only once it leans toward Magic or Tech. */
+.axis-meter[data-centered] .axis-needle{background:#151b17;border:1px solid #9aa596;box-shadow:0 0 0 3px #101511}.axis-meter[data-centered] .axis-head span+span{color:#9aa596}
+/* Sleek axis in the map's top-right corner: one glowing line, a small needle, labels at its ends. */
+/* It fills the top band from just past the widest caption ("Alchemist's constellation" ends 176px in) to the map's right edge. */
+.map-axis{position:absolute;top:30px;left:208px;right:24px;z-index:1;width:auto;min-width:200px;margin:0;padding:0;border:0;background:none}
+.map-axis .axis-head{display:grid;grid-template-columns:auto 1fr auto;align-items:end;gap:8px;margin-bottom:7px;font-size:11px;letter-spacing:1.3px}
+.map-axis .axis-head span:first-child{color:#94c493aa}.map-axis .axis-head span:last-child{color:#80b8d8aa}
+.map-axis .axis-head b{font-weight:600;text-align:center;color:var(--axis);transition:color .6s}.map-axis[data-centered] .axis-head b{color:#9aa596}
+.map-axis .axis-track{height:2px;border-radius:1px;background:linear-gradient(90deg,#94c49355,#ffffff14 50%,#80b8d855)}
+.map-axis[data-mode="nihimence"] .axis-track{background:linear-gradient(90deg,#e2ac6b33,#e2ac6b88 50%,#e2ac6b33)}
+.map-axis .axis-tick{top:-3px;height:8px;background:#ffffff1f}
+.map-axis .axis-needle{width:8px;height:8px;margin:-4px 0 0 -4px;box-shadow:0 0 0 2px #0b110f,0 0 8px var(--axis),0 0 16px var(--axis)}
+.map-axis[data-centered] .axis-needle{background:#151b17;border:1px solid #9aa596;box-shadow:0 0 0 2px #0b110f}
+.map-axis .axis-fill{box-shadow:0 0 6px var(--axis)}
+/* Phones: a compact meter sits between the caption (ends 68px) and the practice symbols (start 97px). */
+@media(max-width:650px){.map-axis{top:70px;left:22px;right:22px;min-width:0}.map-axis .axis-head{font-size:11px;margin-bottom:5px}}
+/* Stars show focus with their glow; no square focus box around the star. */
+.star-node:focus,.star-node:focus-visible{outline:none}
+/* Readability pass (October 29): the Your path box is gone, so the sky takes its width; the detail panel keeps a readable 310–340px.
+   This block has the final say on column widths; below 950px the panel moves under the sky. */
+.workspace{grid-template-columns:minmax(0,1fr) 320px}
+@media(min-width:1500px){.workspace{grid-template-columns:minmax(0,1fr) 340px}}
+@media(max-width:1150px){.workspace{grid-template-columns:minmax(0,1fr) 300px}}
+@media(max-width:950px){.workspace{grid-template-columns:minmax(0,1fr)}.details{grid-column:auto}}
+/* Phone layout (October 29): sky near the top, a pinned Awaken dock, and 44px tap targets. */
+.dock{display:none}
+@media(max-width:650px){
+main{display:flex;flex-direction:column;padding-bottom:0}
+.heading{order:0;margin-bottom:12px;gap:12px}.heading .eyebrow,.heading .intro{display:none}.heading h1{font-size:26px;margin:0}
+.workspace{order:1;display:flex;flex-direction:column}
+.disciplines{order:2;margin:18px 0 0}
+.page-footer{order:3;padding-bottom:120px}
+.map-panel{order:1;height:auto}
+.map{height:62vh;min-height:420px;flex:none}
+.details{order:2}
+.dock{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;gap:12px;align-items:center;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:#0c120ff2;border-top:1px solid #ffffff1f;backdrop-filter:blur(8px)}
+.dock-info{all:unset;flex:1;min-width:0;min-height:44px;display:flex;flex-direction:column;justify-content:center;cursor:pointer}
+.dock-info small{font-size:11px;letter-spacing:1.3px;color:#8d978a}
+.dock-info b{font-size:15px;font-weight:600;color:#e6eadc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dock-info em{font-style:normal;font-size:11px;color:#dbb47f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dock-awaken{flex:none;min-height:48px;padding:0 18px;background:var(--accent);color:#10180e;font-weight:800;font-size:13px;letter-spacing:.4px;border:0}
+.dock-awaken:disabled{background:transparent;color:#9aa596;border:1px dashed #ffffff33;opacity:1}
+/* 44px tap targets (Apple and Google minimum). */
+.class-choice{min-height:44px;min-width:44px;padding:0 4px}
+.category-tabs button,.segmented button,#reset,.explore,.to-atlas,.ability-item,.discipline-setup summary,.lineage summary,.search,.veil-toggle,.motion-toggle{min-height:44px}
+.zoom button{min-width:44px;min-height:44px}
+.awaken{min-height:48px}.category-tabs button{min-width:44px}#reset{min-width:44px}
+.heading{flex-direction:row;align-items:center;justify-content:space-between}.heading>div:first-child{min-width:0}
+.points{display:flex;flex-direction:row;align-items:center;gap:8px;flex-wrap:nowrap}.points .point-symbol{font-size:20px}.points strong{font-size:24px;white-space:nowrap}.points strong:after{content:' AP';font-size:12px;letter-spacing:1px;color:#959a8b}.points div>span{display:none}
+.points button{margin:0;width:44px;height:44px;padding:0;display:grid;place-items:center}.points button span{display:none}
+
+.brand{min-height:44px;display:flex;align-items:center}
+.map .star-node>circle[fill="transparent"]{r:46px}
+}
+/* Sealed stars on the sky (the Veil, the Void): shown only once their gate holds, with a slow pulse. Glow only, no rings. */
+.seal-node{cursor:pointer;outline:none}
+.seal-glow{fill:var(--node-color);opacity:.05;filter:blur(8px);pointer-events:none}
+.seal-glyph{opacity:.4;filter:drop-shadow(0 0 3px var(--node-color))}
+.seal-label{fill:color-mix(in srgb,var(--node-color) 55%,#8d978a);letter-spacing:2px}
+.seal-progress{font-size:13px;letter-spacing:1.4px;fill:#7f8a78}
+.seal-node:hover .seal-glyph,.seal-node:focus-visible .seal-glyph{opacity:.75}
+.seal-ready .seal-glyph{opacity:1;filter:drop-shadow(0 0 6px var(--node-color)) drop-shadow(0 0 16px var(--node-color));animation:seal-pulse 2.6s ease-in-out infinite}
+.seal-ready .seal-glow{opacity:.3;animation:seal-pulse 2.6s ease-in-out infinite}
+.seal-ready .seal-label{fill:var(--node-color)}.seal-ready .seal-progress{fill:color-mix(in srgb,var(--node-color) 80%,#fff)}
+@keyframes seal-pulse{0%,100%{opacity:.55}50%{opacity:1}}
+.veil-close{background:none;border:1px dashed #b39add55;color:#c6b4e6;font-size:11px;letter-spacing:1px;padding:6px 10px;min-height:32px}.veil-close[hidden]{display:none}
+/* The selected constellation is a drawer over the right of the sky: it slides in on selection and recedes when closed. */
+.workspace{position:relative;display:block!important;overflow:hidden}
+.workspace .map-panel{height:clamp(560px,76vh,880px)}
+.workspace .details{position:absolute;top:0;right:0;bottom:0;width:340px;max-width:100%;overflow-y:auto;z-index:6;display:flex!important;flex-direction:column;border-left:1px solid var(--line);background:linear-gradient(150deg,#17201899,transparent 40%),#111612f5;box-shadow:-24px 0 60px #0009;transform:translateX(102%);visibility:hidden;transition:transform .35s ease,visibility 0s linear .35s}
+.workspace.drawer-open .details{transform:none;visibility:visible;transition:transform .35s ease}
+.drawer-close{margin-left:12px;width:32px;height:32px;display:grid;place-items:center;background:none;border:1px solid #ffffff1c;color:#c2cbb5;font-size:18px;line-height:1}.drawer-close:hover{border-color:var(--accent)}
+.details .panel-title{position:sticky;top:-24px;z-index:1}
+.drawer-tab{position:absolute;right:0;top:50%;z-index:5;transform:translateY(-50%);writing-mode:vertical-rl;padding:16px 9px;background:#111612ee;border:1px solid #ffffff1c;border-right:0;color:var(--accent);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;min-width:36px}
+.workspace.drawer-open .drawer-tab{display:none}
+.workspace.drawer-open .map-axis{right:364px}
+@media(max-width:650px){
+.workspace .map-panel{height:auto}
+.workspace .details{position:fixed;top:0;bottom:0;width:100%;z-index:30;padding-bottom:110px}
+.drawer-tab{display:none}
+.dock{z-index:40}
+.workspace.drawer-open .map-axis{right:22px}
+.drawer-close{width:44px;height:44px}.segmented button{min-width:44px}.veil-close{min-height:44px}
+}
+/* Sky text sizes (October 29 readability pass), in sky units; scoped to #stars so this block outranks every earlier width rule.
+   Label offsets in atlas-layout.js and calling-layout.js were re-placed for these sizes. */
+#stars .node-label{font-size:21px;letter-spacing:.6px}
+#stars .endpoint-node .node-label{font-size:28px;letter-spacing:3px}
+#stars .cluster .cluster-label{font-size:27px;letter-spacing:3.5px}
+#stars .cluster-sub{font-size:19px;letter-spacing:1.8px}
+#stars .origin-label{font-size:19px;letter-spacing:2.2px}
+#stars .relic-sub{font-size:16px;letter-spacing:1.5px}
+#stars .seal-progress{font-size:17px;letter-spacing:1.2px}
+#stars .seal-label{font-size:18px;letter-spacing:1.1px}
+/* Saga of Soteria: nine aspect glyphs, always open, in the sky's bottom-left corner (the user removed the collapsed state: nothing could close it again). */
+.saga{position:relative;flex:none;width:126px;height:126px;cursor:pointer;outline:none}
+.saga-back{position:absolute;inset:4px;border-radius:10px;background:linear-gradient(135deg,#94c493,#80b8d8 38%,#e2ac6b 70%,#b39add);opacity:.85;box-shadow:inset 0 0 46px 4px #0b110fcc;transition:opacity .4s ease-in-out}
+.saga-grid{position:absolute;inset:4px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:0;transition:inset .4s ease-in-out,gap .4s ease-in-out}
+.saga-tile{all:unset;box-sizing:border-box;display:grid;place-items:center;cursor:pointer;--tile:#c4b389;background:#0b110f38;border:1px solid #ffffff14;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);transition:.4s ease-in-out,background-color .2s,border-color .2s,box-shadow .2s}
+.saga-tile:nth-child(1){border-top-left-radius:10px}.saga-tile:nth-child(3){border-top-right-radius:10px}.saga-tile:nth-child(7){border-bottom-left-radius:10px}.saga-tile:nth-child(9){border-bottom-right-radius:10px}
+.saga-glyph{width:58%;height:58%;background:#d9d0ac;-webkit-mask:var(--glyph) center/contain no-repeat;mask:var(--glyph) center/contain no-repeat;opacity:0;transition:opacity .25s,background-color .2s}
+.saga-text{position:absolute;inset:0;display:grid;place-items:center;text-align:center;font-family:Cinzel,Georgia,serif;font-size:12px;line-height:1.5;letter-spacing:3px;color:#f3ecd4;text-shadow:0 0 10px #0b110f,0 0 2px #0b110f;pointer-events:none;transition:opacity .4s ease-in-out}
+.saga:hover .saga-back,.saga:focus-within .saga-back,.saga.open .saga-back{opacity:0}
+.saga:hover .saga-grid,.saga:focus-within .saga-grid,.saga.open .saga-grid{inset:0;gap:5px}
+.saga:hover .saga-tile,.saga:focus-within .saga-tile,.saga.open .saga-tile{border-radius:8px;background:#121915e6;border-color:#ffffff1f;box-shadow:0 4px 18px #0006}
+.saga:hover .saga-glyph,.saga:focus-within .saga-glyph,.saga.open .saga-glyph{opacity:.9}
+.saga:hover .saga-text,.saga:focus-within .saga-text,.saga.open .saga-text{opacity:0}
+.saga .saga-tile:hover,.saga .saga-tile:focus-visible,.saga .saga-tile.pinned{background:color-mix(in srgb,var(--tile) 26%,#121915);border-color:var(--tile);box-shadow:0 0 16px color-mix(in srgb,var(--tile) 45%,transparent)}
+.saga .saga-tile:hover .saga-glyph,.saga .saga-tile:focus-visible .saga-glyph,.saga .saga-tile.pinned .saga-glyph{background:#fff;opacity:1}
+/* A glyph lights its callings on the sky and dims everything else. */
+#stars.aspect-focus .star-node,#stars.aspect-focus .seal-node{transition:opacity .3s}
+#stars.aspect-focus .star-node:not(.aspect-lit),#stars.aspect-focus .seal-node{opacity:.22}
+#stars.aspect-focus .aspect-lit>.class-star-png.class-png-ready{opacity:1;filter:drop-shadow(0 0 5px var(--node-color)) drop-shadow(0 0 14px var(--node-color))}
+#stars.aspect-focus .aspect-lit .node-label{fill:#f3f6ea}
+@media(max-width:650px){
+.saga{width:144px;height:144px}
+.saga-text{font-size:11px}
+}
+/* The legend lives in the footer bar under the sky, so nothing in the sky can collide with it. */
+.map-footer{align-items:center}
+.map-footer .map-legend{position:static;display:flex;gap:16px;align-items:center;font-size:11px;letter-spacing:.6px;color:#9ca793;pointer-events:none;margin:0 auto}
+@media(max-width:650px){.map-footer{flex-wrap:wrap;gap:8px}.map-footer .map-legend{order:3;width:100%;justify-content:center;gap:12px}}
+/* The header text is gone (the user struck it): the page title stays for screen readers only. */
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* Points and the Saga card stack in the sky's bottom-left corner; Reset build sits at the left of the footer bar. */
+.map-hud{position:absolute;left:24px;bottom:22px;z-index:4;display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.map-hud .points{display:flex;align-items:center;gap:10px;margin:0;padding:8px 12px;background:#0b110fcc;border:1px solid #ffffff14;backdrop-filter:blur(4px)}
+.map-hud .point-symbol{font-size:20px}.map-hud .points strong{font-size:26px;line-height:1}.map-hud #points-note{display:block;margin-top:4px;font-size:11px;line-height:1.45;letter-spacing:.8px;color:#959a8b;white-space:nowrap}
+.footer-reset{background:none;border:1px solid #ffffff1c;color:#c2cbb5;font-size:11px;letter-spacing:.6px;padding:6px 10px;margin-right:16px;min-height:32px;flex:none}.footer-reset:hover{border-color:var(--accent)}
+.map-footer>span:first-of-type{margin-right:auto}
+@media(max-width:650px){
+.map-panel>.map-hud{position:static;flex-direction:row;justify-content:center;align-items:center;gap:16px;margin:14px auto}
+.map-hud #points-note{display:block}
+.footer-reset{min-height:44px;min-width:44px}
+}
+/* With the header gone, the sky panel fills the window height. */
+.workspace .map-panel{height:clamp(560px,calc(100vh - 110px),980px)}
+@media(max-width:650px){.workspace .map-panel{height:auto}}
+/* The points box and the Saga card share one width (user): the card grows to the points box, staying square. */
+@media(min-width:651px){.map-hud{align-items:stretch}.map-hud>.saga{width:auto;height:auto;aspect-ratio:1}}
+/* Ceremonies (ceremony.js). Press-and-hold to buy: the button fills while held. */
+.hold-button{position:relative;isolation:isolate;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.hold-button::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,color-mix(in srgb,var(--accent,#c4b389) 20%,transparent),color-mix(in srgb,var(--accent,#c4b389) 55%,transparent));box-shadow:0 0 18px color-mix(in srgb,var(--accent,#c4b389) 45%,transparent);transform:scaleX(0);transform-origin:left;transition:transform .18s ease-out;pointer-events:none}
+.hold-button.holding::before{transform:scaleX(1);transition:transform var(--hold-ms,650ms) linear}
+.hold-button.holding{box-shadow:0 0 22px color-mix(in srgb,var(--accent,#c4b389) 40%,transparent)}
+/* The toast can carry Undo. */
+#toast .toast-action{pointer-events:auto;margin-left:14px;padding:4px 12px;min-height:28px;background:none;border:1px solid #ffffff2e;border-radius:4px;color:#f3ecd4;font:inherit;letter-spacing:.6px;cursor:pointer}
+#toast .toast-action:hover,#toast .toast-action:focus-visible{border-color:var(--accent,#c4b389);background:#ffffff0d}
+@media(max-width:650px){#toast{bottom:96px}#toast .toast-action{min-height:44px;min-width:44px}}
+/* AP counts down with a small −n drifting off it. */
+.map-hud .points>div{position:relative}
+.points-float{position:absolute;left:44px;top:-4px;font-size:15px;font-weight:600;color:var(--accent,#c4b389);text-shadow:0 0 10px currentColor;pointer-events:none}
+/* Mastery: the title is set on the sky for a few seconds. Glow only. */
+.mastery-title{position:absolute;left:50%;top:38%;z-index:6;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:8px;text-align:center;pointer-events:none;color:#f3ecd4;animation:title-in 1.4s cubic-bezier(.2,.7,.2,1) both}
+.mastery-title .mastery-eyebrow{font-size:12px;letter-spacing:4px;text-transform:uppercase;color:var(--title-color)}
+.mastery-title strong{font-family:Cinzel,Georgia,serif;font-weight:500;font-size:clamp(34px,6vw,64px);letter-spacing:.12em;text-transform:uppercase;line-height:1;text-shadow:0 0 18px var(--title-color),0 0 46px color-mix(in srgb,var(--title-color) 60%,transparent),0 2px 6px #000}
+.mastery-title small{font-size:13px;letter-spacing:1px;color:#c9ccbc;text-shadow:0 1px 6px #000}
+.mastery-title::before{content:'';position:absolute;inset:-40px -90px;z-index:-1;background:radial-gradient(ellipse,color-mix(in srgb,var(--title-color) 22%,#080f0ecc) 0,#080f0e99 45%,transparent 72%)}
+.mastery-title.leaving{animation:title-out .9s ease-in both}
+@keyframes title-in{0%{opacity:0;letter-spacing:.5em;filter:blur(8px)}60%{opacity:1;filter:blur(0)}100%{opacity:1}}
+@keyframes title-out{to{opacity:0;transform:translate(-50%,-56%);filter:blur(4px)}}
+[data-motion="off"] .mastery-title,[data-motion="off"] .mastery-title.leaving{animation:none}
+/* The hold's light: a bright leading edge travels across the button, and along the star's thread on the sky. */
+.hold-button::before{transform:none;width:0;transition:width .26s ease-out;background:linear-gradient(90deg,color-mix(in srgb,var(--accent,#c4b389) 12%,transparent),color-mix(in srgb,var(--accent,#c4b389) 48%,transparent) 88%,#fff8 100%);box-shadow:4px 0 14px color-mix(in srgb,var(--accent,#c4b389) 80%,transparent),1px 0 0 #fffc}
+.hold-button.holding::before{transform:none;width:100%;transition:width var(--hold-ms,650ms) linear}
+.thread-charge .charge-trail{fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;filter:drop-shadow(0 0 3px currentColor) drop-shadow(0 0 9px currentColor)}
+.thread-charge .charge-head{fill:#fff;filter:drop-shadow(0 0 4px #fff) drop-shadow(0 0 10px currentColor) drop-shadow(0 0 18px currentColor)}
+/* Drawer: one scroll, not a list scrolling inside a scrolling panel; Awaken pinned at the foot. */
+@media(min-width:651px){
+.workspace .details{min-height:0}
+.workspace .details .ability-list{max-height:none;overflow:visible}
+.workspace .details .drawer-action{position:sticky;bottom:-24px;z-index:2;margin:auto -24px -24px;padding:14px 24px 18px;background:linear-gradient(180deg,#0e1512d9,#0e1512 40%);border-top:1px solid var(--line);box-shadow:0 -12px 24px #0b110f}
+.workspace .details .drawer-action .awaken{width:100%;margin:0}
+}
+@media(max-width:650px){.workspace .details .drawer-action{margin-top:12px}}
+/* Every scrollbar follows the interface: thin, dark track, thumb in the current practice's accent. */
+html,body,*{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--accent,#c4b389) 45%,#2a332c) transparent}
+html{scrollbar-color:color-mix(in srgb,var(--accent,#c4b389) 40%,#2a332c) #080f0e}
+/* The themed tooltip (tooltip.js) replaces the browser's native ones. */
+#ui-tip{position:fixed;z-index:60;max-width:280px;padding:7px 12px;font-size:12px;line-height:1.45;letter-spacing:.3px;color:#e6e9da;background:#0e1512f2;border:1px solid color-mix(in srgb,var(--accent,#c4b389) 38%,#ffffff14);border-radius:6px;box-shadow:0 8px 28px #000a,0 0 18px color-mix(in srgb,var(--accent,#c4b389) 16%,transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .16s ease-out,transform .16s ease-out}
+#ui-tip[data-side="below"]{transform:translateY(-4px)}
+#ui-tip.show{opacity:1;transform:none}
+/* The toast matches the drawer and tooltip: dark glass, accent edge. */
+#toast{background:#0e1512f2;border:1px solid color-mix(in srgb,var(--accent,#c4b389) 35%,#ffffff14);border-radius:8px;color:#e6e9da;font-size:12.5px;letter-spacing:.3px;display:flex;align-items:center;gap:4px;box-shadow:0 12px 40px #000b,0 0 22px color-mix(in srgb,var(--accent,#c4b389) 14%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#toast::before{content:'✦';margin-right:8px;color:var(--accent,#c4b389);text-shadow:0 0 8px currentColor}
+/* The unlocked discipline's symbol flashes above its name. */
+.mastery-symbol{width:84px;height:84px;display:grid;place-items:center;animation:symbol-flash 2.4s ease-out both}
+.mastery-symbol .class-portrait{width:84px;height:84px;display:grid;place-items:center;position:relative}
+.mastery-symbol .class-portrait-png{width:84px;height:84px;filter:drop-shadow(0 0 6px var(--title-color)) drop-shadow(0 0 18px var(--title-color))}
+.mastery-symbol .portrait-fallback{position:absolute;color:var(--title-color)}
+.mastery-symbol .class-png-ready~.portrait-fallback,.mastery-symbol .class-portrait.has-class-icon .portrait-fallback{display:none}
+@keyframes symbol-flash{0%{opacity:0;transform:scale(.6);filter:brightness(3) blur(4px)}12%{opacity:1;transform:scale(1.12);filter:brightness(2.6)}24%{filter:brightness(1)}36%{filter:brightness(2.2)}48%{filter:brightness(1)}60%{filter:brightness(1.8)}100%{opacity:1;transform:scale(1);filter:brightness(1)}}
+[data-motion="off"] .mastery-symbol{animation:none}
+/* Psynth, the revealed hidden star, keeps a standing violet presence on the atlas: a breathing glow, never a ring. */
+.star-node[data-star-disc="praethacy"] .node-corona{visibility:visible!important;opacity:.24;animation:psynth-breathe 5.5s ease-in-out infinite}
+.star-node[data-star-disc="praethacy"].committed-node .node-corona{opacity:.34}
+.cluster[data-cluster="praethacy"] .region-mist{opacity:1.6;filter:saturate(1.3)}
+@keyframes psynth-breathe{0%,100%{transform:scale(.9);opacity:.18}50%{transform:scale(1.25);opacity:.36}}
+[data-motion="off"] .star-node[data-star-disc="praethacy"] .node-corona{animation:none}
+/* Unlock stars: brighter, shaped by kind, white-cored, and slowly orbiting their calling (glow only, no rings). */
+.unlock-star{fill:color-mix(in srgb,var(--node-color) 72%,#fff);filter:drop-shadow(0 0 1.5px #fff8) drop-shadow(0 0 4px var(--node-color)) drop-shadow(0 0 9px var(--node-color))}
+.unlock-star .unlock-core{fill:#fff}
+.unlock-star[data-kind="levels"]{filter:drop-shadow(0 0 2px #fffa) drop-shadow(0 0 5px var(--node-color)) drop-shadow(0 0 12px var(--node-color))}
+.unlock-stars{transform-box:view-box;animation:unlock-orbit 45s linear infinite}
+.endpoint-node .unlock-stars{animation-duration:70s}
+@keyframes unlock-orbit{to{transform:rotate(360deg)}}
+@keyframes unlock-twinkle{0%,100%{opacity:.78}50%{opacity:1}}
+[data-motion="off"] .unlock-stars{animation:none}
+/* Selection is shown by glow alone (user: no outline rings); the dashed selection ring is gone. */
+.selection-ring{display:none!important}
+.star-node.selected-node:not(.committed-node):not(.mastered-node) .node-corona{opacity:.24}
+/* Background aspect figures: each star twinkles on its own, and a light runs along the glyph, flaring each star in turn. */
+.aspect-star{opacity:.7;transform-box:fill-box;transform-origin:center;animation:aspect-twinkle 6s ease-in-out var(--twinkle-delay,0s) infinite,aspect-trace 7s ease-out var(--trace-delay,0s) infinite}
+@keyframes aspect-twinkle{0%,100%{fill-opacity:.55}50%{fill-opacity:1}}
+@keyframes aspect-trace{0%{opacity:.7;transform:scale(1);filter:drop-shadow(0 0 3px currentColor)}4%{opacity:.95;transform:scale(1.4);filter:brightness(1.45) drop-shadow(0 0 6px currentColor) drop-shadow(0 0 20px color-mix(in srgb,currentColor 55%,transparent))}16%,100%{opacity:.7;transform:scale(1);filter:drop-shadow(0 0 3px currentColor)}}
+[data-motion="off"] .aspect-star{animation:none}
+/* Until a class in the calling is awakened, its aspect glyph stays still and faint. */
+.aspect-figure:not(.figure-lit) .aspect-star{animation:none;opacity:.4;fill-opacity:.7}
+/* Before a class is awakened its drawer stays closed: its first purchase sits above the points box (hold to awaken). */
+.hud-awaken[hidden]{display:none}
+.hud-awaken-btn{display:grid;gap:3px;width:100%;padding:10px 12px;text-align:left;cursor:pointer;color:#0b110f;background:color-mix(in srgb,var(--accent,#c4b389) 82%,#fff);border:1px solid color-mix(in srgb,var(--accent,#c4b389) 60%,#fff);border-radius:4px;box-shadow:0 0 18px color-mix(in srgb,var(--accent,#c4b389) 35%,transparent);font:inherit}
+.hud-awaken-btn b{font-size:13px;font-weight:600}
+.hud-awaken-btn small{font-size:11px;letter-spacing:.6px;opacity:.75}
+.hud-awaken-btn:disabled{cursor:default;color:#c9ccbc;background:#0b110fcc;border:1px dashed #ffffff2e;box-shadow:none}
+.hud-awaken-btn.hold-button::before{background:linear-gradient(90deg,#ffffff22,#ffffffaa 90%,#fff);box-shadow:4px 0 14px #fff,1px 0 0 #fff}
+@media(max-width:650px){.hud-awaken{display:none!important}}
+/* The corner stack keeps one fixed width whatever the class (names and costs never resize it), and the Awaken button
+   rises in like smoke: blurred and faint to sharp and full, each time the selection changes. */
+@media(min-width:651px){.map-hud{width:176px}}
+.hud-awaken-btn{min-height:68px;align-content:center;gap:2px;animation:hud-smoke .75s cubic-bezier(.2,.7,.2,1) both}
+.hud-awaken-btn b,.hud-awaken-btn small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hud-awaken-btn b{margin-top:2px}
+@keyframes hud-smoke{0%{opacity:0;filter:blur(10px) brightness(1.5);transform:translateY(6px) scale(.97)}55%{opacity:.8;filter:blur(2.5px) brightness(1.15)}100%{opacity:1;filter:none;transform:none}}
+[data-motion="off"] .hud-awaken-btn{animation:none}
+/* Ability list: what can be bought now glows in the accent; learned rows read settled; locked rows recede. */
+.ability-item.can-buy{border-color:color-mix(in srgb,var(--accent) 55%,transparent);background:color-mix(in srgb,var(--accent) 9%,transparent);box-shadow:inset 3px 0 0 var(--accent),0 0 14px color-mix(in srgb,var(--accent) 18%,transparent)}
+.ability-item.can-buy .ability-icon{color:var(--accent);text-shadow:0 0 8px var(--accent)}
+.ability-item.can-buy b{color:var(--accent)}
+.ability-item.can-buy small{color:color-mix(in srgb,var(--accent) 70%,#c9ccbc)}
+.ability-item.is-learned .ability-icon{color:var(--accent)}
+.ability-item.is-learned small{color:color-mix(in srgb,var(--accent) 55%,#8a947f)}
+.ability-item.is-locked{opacity:.5}
+.ability-item.is-locked.selected-ability{opacity:.8}
+/* A calling's description sits beside the corner Awaken button and rises in like smoke a beat after it. */
+.hud-awaken{position:relative}
+.hud-lore{position:absolute;left:calc(100% + 14px);top:0;width:280px;padding:12px 14px;background:#0b110fd9;border:1px solid color-mix(in srgb,var(--accent,#c4b389) 30%,#ffffff12);border-radius:6px;box-shadow:0 10px 30px #0008;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:none;animation:hud-smoke 1.1s cubic-bezier(.2,.7,.2,1) .9s both}
+.hud-lore span{display:block;margin-bottom:6px;font-size:11px;letter-spacing:1.4px;color:var(--accent,#c4b389)}
+.hud-lore p{margin:0;font-size:12.5px;line-height:1.55;color:#d8dccb}
+[data-motion="off"] .hud-lore{animation:none}
+.hud-lore.above{left:0;top:auto;bottom:calc(100% + 12px);width:260px}
+/* The description is set on the sky itself: no box, smaller type, only a soft shadow for legibility (user). */
+.hud-lore{padding:0;background:none;border:0;border-radius:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+.hud-lore span{font-size:11px;margin-bottom:5px;text-shadow:0 1px 3px #000,0 0 10px #080f0e}
+.hud-lore p{font-size:11.5px;line-height:1.5;color:#cfd4c3;text-shadow:0 1px 2px #000,0 0 8px #080f0e,0 0 16px #080f0e}
+/* The class symbol floats above the corner Awaken button (outside the stack's flow, so nothing below moves). */
+.hud-symbol{position:absolute;left:50%;bottom:calc(100% + 12px);width:64px;height:64px;margin-left:-32px;display:grid;place-items:center;pointer-events:none;animation:hud-smoke .9s cubic-bezier(.2,.7,.2,1) .15s both}
+.hud-symbol .class-portrait{position:relative;width:64px;height:64px;display:grid;place-items:center;background:none;border:0;box-shadow:none}
+.hud-symbol .class-portrait-png{width:64px;height:64px;filter:drop-shadow(0 0 6px var(--accent,#c4b389)) drop-shadow(0 0 16px color-mix(in srgb,var(--accent,#c4b389) 55%,transparent))}
+.hud-symbol .portrait-fallback{position:absolute;color:var(--accent,#c4b389);font-size:28px}
+.hud-symbol .class-portrait.has-class-icon .portrait-fallback{display:none}
+.hud-lore.above{bottom:calc(100% + 92px)}
+[data-motion="off"] .hud-symbol{animation:none}
+/* On the atlas the caption is just THE CELESTIAL ATLAS, set larger in the display face; the empty title collapses. */
+.map-caption.atlas-caption #map-title{display:none}
+.map-caption.atlas-caption .eyebrow{display:block;max-width:170px;white-space:normal;line-height:1.3;font-family:Cinzel,Georgia,serif;font-size:16px;font-weight:500;letter-spacing:2.5px;color:#dfe3d2;text-shadow:0 0 14px #080f0e}
+/* The celebration stays centred on the sky whatever the drawer does, and sits above it if the two ever meet. */
+.mastery-title{z-index:7}
+/* The drawer only ever scrolls up and down. */
+.workspace .details{overflow-x:hidden}
+/* The sky centres in the space beside the corner stack, which leaves room for a calling's description next to the Awaken button. */
+@media(min-width:651px){#map>#stars{left:212px;width:calc(100% - 212px)}}
+
+/* The drawer fits one screen and never scrolls as a whole: identity, progress, what to buy, what it does, and the button. */
+.workspace .details{padding:0;overflow:hidden;display:flex!important;flex-direction:column}
+.details .drawer-head{position:static;flex:none;display:flex;align-items:center;justify-content:flex-start;gap:12px;padding:14px 12px 10px 16px;font-size:inherit;letter-spacing:0;color:inherit}
+.drawer-head .detail-emblem{flex:none;width:56px;height:56px;margin:0}
+.drawer-head .detail-emblem>.class-portrait{width:56px;height:56px}
+.drawer-head .class-portrait-png{width:56px;height:56px}
+.drawer-titles{flex:1;min-width:0}
+.drawer-titles .eyebrow{margin:0;text-align:left;font-size:11px;letter-spacing:1.3px}
+.drawer-titles h2{margin:2px 0 3px;text-align:left;font-size:23px;line-height:1.15;overflow-wrap:anywhere}
+.drawer-titles .doctrine-kind{margin:0;text-align:left;font-size:11px;letter-spacing:1.1px;line-height:1.3}
+.drawer-head .drawer-close{flex:none;align-self:flex-start;margin-left:auto}
+.workspace .details .detail-summary{flex:none;margin:0 0 10px;padding:0 16px;text-align:left;font-size:12px;line-height:1.55}
+.workspace .details .mastery{flex:none;display:grid;grid-template-columns:auto 1fr;align-items:baseline;column-gap:10px;margin:0 0 6px;padding:0 16px}
+.workspace .details .mastery small{text-align:right;font-size:11px}
+.workspace .details .mastery i{grid-column:1/-1;margin:6px 0 0}
+.workspace .details .mastery.is-mastered small{display:none}
+.workspace .details .mastery.is-mastered>span{grid-column:1/-1}
+.workspace .details .sealed-note{flex:none;margin:0 0 6px;padding:0 16px;font-size:11.5px}
+.workspace .details .category-tabs{flex:none;margin:0 16px;gap:4px}
+.workspace .details .category-tabs button{padding:8px 0;font-size:12px}
+.workspace .details .ability-list{flex:0 1 auto;min-height:0;max-height:none;overflow-y:auto;margin:0;padding:8px 16px 0}
+.workspace .details .ability-item{min-height:34px;margin:0 0 4px;padding:5px 9px;gap:8px}
+.ability-item .row-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ability-item .row-state{flex:none;margin:0;font-size:11px;letter-spacing:.8px}
+.ability-item .row-state:empty{display:none}
+.ability-item>b{flex:none;margin-left:0;white-space:nowrap;font-size:11.5px}
+.workspace .details .ability-description{flex:1 1 0;min-height:0;overflow-y:auto;margin:6px 0 0;padding:10px 16px 8px;border-top:1px solid var(--line)}
+.workspace .details .ability-description .eyebrow{display:block;margin:0 0 4px}
+.description-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px}
+.workspace .details .description-head h3{margin:0;font-size:14px;line-height:1.25}
+.workspace .details .description-head .level-ladder{flex:none;display:flex;gap:3px;margin:0}
+.workspace .details .description-head .level-ladder span{width:12px;height:4px;padding:0;border:0;background:#ffffff1f}
+.workspace .details .description-head .level-ladder span.held{background:var(--accent);border:0;box-shadow:0 0 6px color-mix(in srgb,var(--accent) 55%,transparent)}
+.workspace .details .description-text{margin:0;font-size:12.5px;line-height:1.6}
+.workspace .details .ability-description .go-parent{width:100%;margin:8px 0 0;padding:7px 9px;font-size:11.5px}
+.workspace .details .empty-list{flex:1;margin:10px 16px;font-size:12px}
+.workspace .details .drawer-action{flex:none;position:static;margin:0;padding:10px 16px 14px;box-shadow:none;background:none;border-top:1px solid var(--line)}
+.workspace .details .drawer-action .awaken{margin:0;min-height:42px}
+/* Short windows give up the summary first, so the buying controls keep their room. */
+@media(max-height:720px){.workspace .details .detail-summary{display:none}}
+@media(max-height:600px){.drawer-head .detail-emblem,.drawer-head .detail-emblem>.class-portrait,.drawer-head .class-portrait-png{width:40px;height:40px}.details .drawer-head{padding:8px 10px 6px 14px}.drawer-titles .doctrine-kind{display:none}}
+@media(max-width:650px){
+.workspace .details{padding:0 0 92px}
+.workspace .details .ability-item{min-height:44px}
+.workspace .details .drawer-action{display:none}
+.drawer-head .drawer-close{width:44px;height:44px}
+}
+/* Tall windows spend their spare height on breathing room rather than a gap above the button. */
+@media(min-width:651px) and (min-height:780px){
+.details .drawer-head{padding:18px 12px 14px 18px;gap:14px}
+.drawer-head .detail-emblem,.drawer-head .detail-emblem>.class-portrait,.drawer-head .class-portrait-png{width:64px;height:64px}
+.drawer-titles h2{font-size:26px}
+.workspace .details .detail-summary{padding:0 18px;margin-bottom:16px;font-size:13px;line-height:1.6}
+.workspace .details .mastery{padding:0 18px;margin-bottom:12px}
+.workspace .details .category-tabs{margin:0 18px}
+.workspace .details .category-tabs button{padding:10px 0;font-size:12.5px}
+.workspace .details .ability-list{padding:12px 18px 0}
+.workspace .details .ability-item{min-height:44px;margin-bottom:6px;padding:8px 11px}
+.ability-item .row-name{font-size:13.5px}
+.workspace .details .ability-description{margin-top:10px;padding:14px 18px 10px}
+.workspace .details .description-head h3{font-size:16px}
+.workspace .details .description-text{font-size:13.5px;line-height:1.65}
+.workspace .details .drawer-action{padding:12px 18px 16px}
+.workspace .details .drawer-action .awaken{min-height:48px}
+}
+/* A long ability text borrows room from the rows so it can still be read whole. */
+.workspace .details.long-text .ability-item{min-height:32px;margin-bottom:3px;padding:4px 9px}
+.workspace .details.long-text .description-text{font-size:12.5px;line-height:1.5}
+.workspace .details.long-text .ability-description{margin-top:4px;padding-top:8px}
+/* The workspace follows the window, so the drawer's foot and its button are always on screen. */
+@media(min-width:651px){
+.workspace{min-height:0}
+.workspace .map-panel{height:clamp(440px,calc(100vh - 110px),980px)}
+}
+/* Short laptop windows: tighter rows leave room to read, and the way back moves clear of the points box. */
+@media(min-width:651px) and (max-height:720px){
+.workspace .details .ability-item{min-height:30px;margin-bottom:3px;padding:3px 9px}
+.workspace .details .category-tabs button{padding:6px 0}
+.workspace .details .ability-list{padding-top:6px}
+.workspace .details .drawer-action{padding:8px 16px 10px}
+.workspace .details .drawer-action .awaken{min-height:38px;padding:8px 10px}
+}
+@media(min-width:651px) and (max-height:660px){
+.map-caption .to-atlas{position:absolute;left:184px;top:34px;white-space:nowrap}
+}
+/* Two tabs share the width evenly. */
+.workspace .details .category-tabs button{flex:1;text-align:center}
+
+/* Readable class symbols (user, 2026-11-15: hard to see even zoomed in). A thin dark edge keeps each symbol's lines apart,
+   and the glows are tighter so they no longer swallow the shape. Overrides the class-star-png rules above. */
+.class-star-png{filter:drop-shadow(0 0 1px #000d) drop-shadow(0 0 3px color-mix(in srgb,var(--node-color) 60%,transparent))}
+.committed-node>.class-star-png.class-png-ready{filter:drop-shadow(0 0 1px #000d) drop-shadow(0 0 5px var(--node-color)) drop-shadow(0 0 14px color-mix(in srgb,var(--node-color) 45%,transparent))}
+.mastered-node>.class-star-png.class-png-ready{filter:drop-shadow(0 0 1px #000d) drop-shadow(0 0 6px var(--node-color)) drop-shadow(0 0 18px color-mix(in srgb,var(--node-color) 60%,transparent))}
+#stars.aspect-focus .aspect-lit>.class-star-png.class-png-ready{filter:drop-shadow(0 0 1px #000d) drop-shadow(0 0 5px var(--node-color)) drop-shadow(0 0 12px var(--node-color))}
+/* A dark disc behind each symbol hides the threads that run to the star's centre. */
+.icon-backdrop{fill:color-mix(in srgb,#05080b 86%,var(--node-color));opacity:.88;pointer-events:none}.unexplored-node .icon-backdrop,.sealed-node .icon-backdrop{opacity:.6}
+/* Feathered backing disc (user, 2026-11-15): the edge fades into the sky instead of ending in a hard ring. */
+.icon-backdrop{filter:blur(3.5px)}
+/* The backing disc is a radial fade (see #icon-backdrop-fade in index.html), so mastered stars' glow shows no dark ring. Replaces the flat fill and blur above. */
+.icon-backdrop{fill:url(#icon-backdrop-fade);filter:none;opacity:1}.unexplored-node .icon-backdrop,.sealed-node .icon-backdrop{opacity:.7}
+/* Selected stars hold a steady glow (user, 2026-11-15: Fighter was "literally pulsing"). The breathing scale grew with the bigger stars; only the gentle symbol pulse on buyable stars remains. */
+.star-node.selected-node .node-corona{animation:none;transform:none}
+.star-node.selected-node:not(.committed-node):not(.mastered-node) .node-corona{opacity:.18}
+
+/* Video game pass (user, 2026-11-15). Thread sparks: a small bright bead with a glow in the thread's colour. */
+.thread-spark{fill:#fff;pointer-events:none;filter:drop-shadow(0 0 2px currentColor) drop-shadow(0 0 6px currentColor) drop-shadow(0 0 12px currentColor)}
+/* Stars answer the pointer: the symbol lifts slightly and its label brightens. */
+.star-node>.class-star-png{transform-box:fill-box;transform-origin:center;transition:transform .22s cubic-bezier(.2,1.4,.4,1),opacity .25s}
+.star-node:hover>.class-star-png,.star-node:focus-visible>.class-star-png{transform:scale(1.12)}
+.star-node .node-label{transition:filter .2s}
+.star-node:hover .node-label,.star-node:focus-visible .node-label{filter:brightness(1.35) drop-shadow(0 0 6px color-mix(in srgb,var(--node-color) 55%,transparent))}
+[data-motion="off"] .star-node>.class-star-png{transition:none}
+/* Stronger hover (user, 2026-11-15): the symbol lifts 20% and lights up under the pointer. */
+.star-node:hover>.class-star-png.class-png-ready,.star-node:focus-visible>.class-star-png.class-png-ready{transform:scale(1.2);opacity:1;filter:drop-shadow(0 0 1px #000d) drop-shadow(0 0 6px var(--node-color)) drop-shadow(0 0 16px var(--node-color)) drop-shadow(0 0 28px color-mix(in srgb,var(--node-color) 55%,transparent));animation:none}
+.star-node:hover>.node-corona,.star-node:focus-visible>.node-corona{visibility:visible;opacity:.32}
+
+/* Threads fade out as they reach a star (mask built in threadHoles), so symbols stay clear without a dark disc
+   dimming the sky around them (user, 2026-11-15). The .icon-backdrop rules above are now unused. */
+#stars .thread{mask:url(#thread-holes)}
+
+/* What an ability consumes: its line's row of the sheet's Magic | Tech table. */
+.ability-description .consumes{margin:.55rem 0 0;display:flex;align-items:baseline;gap:.45rem;flex-wrap:wrap;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted,#a9a6b8)}
+.ability-description .consumes b{color:var(--accent);font-weight:600;letter-spacing:.16em;text-shadow:0 0 10px color-mix(in srgb,var(--accent) 45%,transparent)}
+.ability-description .consumes small{font-size:.66rem;opacity:.7;letter-spacing:.12em}
+
+/* Highlighting an aspect from the legend leaves lit only the threads that belong to it. */
+#stars .thread{transition:opacity .3s}
+#stars.aspect-focus .thread:not(.aspect-lit){opacity:.06!important}
+#stars.aspect-focus .thread-spark,#stars.aspect-focus .spark{opacity:0}
+
+/* NEW PATH: one symbol per class the path opens, each in its own colour. */
+.mastery-title .mastery-eyebrow:empty{display:none}
+.mastery-symbol:has(.mastery-symbols){width:auto}
+.mastery-symbols{display:flex;gap:22px;justify-content:center}
+.mastery-symbols>span{display:grid;place-items:center}
+
+/* Host mode (inside Syntarion): the host page supplies the header and owns saving, so the explorer's own chrome is hidden. */
+.hosted .topbar,.hosted .page-footer{display:none}

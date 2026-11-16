@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { createRequire } from 'node:module'
+import { syncConstellation, CONSTELLATION_DIR } from './scripts/sync-constellation.mjs'
 
 const require = createRequire(import.meta.url)
 const { generate: generateMaps, MAPS_DIR } = require('./scripts/generate-maps-manifest.cjs')
@@ -29,9 +30,35 @@ function mapsManifestPlugin() {
   }
 }
 
+// The constellation's source is constellation/; public/constellation/ is generated from it so the iframe can load it.
+function constellationPlugin() {
+  return {
+    name: 'syntarion-constellation',
+    buildStart() {
+      syncConstellation()
+    },
+    configureServer(server) {
+      syncConstellation()
+      server.watcher.add(CONSTELLATION_DIR)
+      let timer
+      const onChange = (file) => {
+        if (!file.startsWith(CONSTELLATION_DIR)) return
+        clearTimeout(timer)
+        timer = setTimeout(() => {
+          const files = syncConstellation()
+          server.config.logger.info(`  constellation synced — ${files} entries`)
+        }, 150)
+      }
+      server.watcher.on('change', onChange)
+      server.watcher.on('add', onChange)
+      server.watcher.on('unlink', onChange)
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), mapsManifestPlugin()],
+  plugins: [react(), mapsManifestPlugin(), constellationPlugin()],
   resolve: {
     dedupe: ['react', 'react-dom'],
   },
