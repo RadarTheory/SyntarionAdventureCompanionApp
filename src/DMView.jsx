@@ -384,6 +384,7 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
   const [condPicker, setCondPicker] = useState(false);
   const [condSearch, setCondSearch] = useState('');
   const [showConstellation, setShowConstellation] = useState(false);
+  const [spendAp, setSpendAp] = useState(true);
   const classInfo = classLabel(useConstellation(), data);
   const apTotal = data.apTotal ?? data.ap_total ?? 0;
   const atCurrent = data.atCurrent ?? data.at_current ?? data.apCurrent ?? 0;
@@ -552,11 +553,18 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
         <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', inset: 0, zIndex: 2, background: '#0c100f', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderBottom: `1px solid ${COLORS.border}`, background: '#13100d' }}>
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: COLORS.text }}>{char.name}'s Constellation</div>
-            <div style={{ flex: 1, fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Changes spend this character's AP and save immediately. Award XP in the editor to give them more.</div>
+            <div style={{ flex: 1, fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+              {spendAp ? `Purchases spend this character's AP (${atCurrent} left) and save immediately.` : 'Free edits: purchases and undos leave their AP untouched. Changes still save immediately.'}
+            </div>
+            <div role="group" aria-label="AP cost" style={{ display: 'flex', border: `1px solid ${COLORS.borderMid}`, borderRadius: 6, overflow: 'hidden' }}>
+              {[[true, 'Spend their AP'], [false, 'Free']].map(([value, text]) => (
+                <button key={text} onClick={() => setSpendAp(value)} aria-pressed={spendAp === value} style={{ background: spendAp === value ? (value ? COLORS.magicBg : 'rgba(240,238,235,0.12)') : 'transparent', border: 'none', padding: '6px 10px', cursor: 'pointer', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: spendAp === value ? COLORS.text : COLORS.dim, fontFamily: "'Cinzel', serif" }}>{text}</button>
+              ))}
+            </div>
             <button onClick={() => setShowConstellation(false)} style={{ background: 'transparent', border: `1px solid ${COLORS.borderMid}`, borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.text, fontFamily: "'Cinzel', serif" }}>Close</button>
           </div>
           <div style={{ flex: 1, minHeight: 0 }}>
-            <ConstellationTab char={data} onUpdateChar={next => { setData(prev => ({ ...prev, ...next })); onRefresh?.(); }} />
+            <ConstellationTab dm spendAp={spendAp} char={data} onUpdateChar={next => { setData(prev => ({ ...prev, ...next })); onRefresh?.(); }} />
           </div>
         </div>
       )}

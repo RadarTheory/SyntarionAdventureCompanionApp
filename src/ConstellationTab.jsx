@@ -54,15 +54,24 @@ function oldBuildRefund(row, data) {
   return { count: bought.length + granted.length, refund, nudge };
 }
 
-export default function ConstellationTab({ char, onUpdateChar }) {
+// The DM opens a character's constellation from their editor (DMView.jsx) with dm set: opening it never makes the automatic
+// first-star purchase, and spendAp (the DM's switch) decides whether a change costs the character AP. With it off the
+// constellation is shown FREE_AP to spend, and purchases and refunds leave the character's AP untouched.
+const FREE_AP = 999;
+
+export default function ConstellationTab({ char, onUpdateChar, dm = false, spendAp = true }) {
   const frame = useRef(null);
   const charRef = useRef(char);
+  const spendRef = useRef(spendAp);
+  const updateRef = useRef(onUpdateChar);
   const queue = useRef(Promise.resolve());
   const [notice, setNotice] = useState(null);
   const [ready, setReady] = useState(false);
   const [migrated, setMigrated] = useState(false);
 
   useEffect(() => { charRef.current = char; }, [char]);
+  useEffect(() => { spendRef.current = spendAp; }, [spendAp]);
+  useEffect(() => { updateRef.current = onUpdateChar; }, [onUpdateChar]);
 
   const learnedOf = c => (Array.isArray(c.abilities) ? c.abilities : []).filter(key => !isOldKey(key));
   const sendInit = useCallback(() => {
@@ -70,7 +79,7 @@ export default function ConstellationTab({ char, onUpdateChar }) {
     frame.current?.contentWindow?.postMessage({
       type: 'init',
       learned: learnedOf(c),
-      available: Math.max(0, Number(c.atCurrent ?? c.at_current ?? 0) || 0),
+      available: spendRef.current ? Math.max(0, Number(c.atCurrent ?? c.at_current ?? 0) || 0) : FREE_AP,
       characterId: c.id,
       startingCalling: startingCallingOf(c),
     }, window.location.origin);
@@ -98,7 +107,7 @@ export default function ConstellationTab({ char, onUpdateChar }) {
         // The class declared at creation is opened as the character's first purchase, at its normal price, on a fresh build.
         // With too little AP it waits for the first points to arrive. Once opened, or once the player buys anything else, the flag
         // keeps a later reset or refund from buying it again: after that, every choice is the player's.
-        try {
+        if (!dm) try {
           const d = await loadConstellation();
           const start = startingNodeId(d, current);
           if (start) {
@@ -114,7 +123,7 @@ export default function ConstellationTab({ char, onUpdateChar }) {
           }
         } catch { /* the declared class is still highlighted; it just was not opened */ }
         if (cancelled) return;
-        if (current !== charRef.current) onUpdateChar?.(current);
+        if (current !== charRef.current) updateRef.current?.(current);
         if (summary?.count) setNotice({ type: 'ok', msg: `Your earlier abilities were cleared for the new constellation · ${summary.refund} AP returned.` });
         setMigrated(true);
       } catch (e) {
@@ -122,7 +131,7 @@ export default function ConstellationTab({ char, onUpdateChar }) {
       }
     })();
     return () => { cancelled = true; };
-  }, [migrated, char?.id, onUpdateChar]);
+  }, [migrated, char?.id, dm]);
 
   // Messages from the constellation: 'ready' asks for the build, 'save' reports a change to it.
   useEffect(() => {
@@ -137,7 +146,7 @@ export default function ConstellationTab({ char, onUpdateChar }) {
       queue.current = queue.current.then(async () => {
         try {
           const nextData = await updateCharacter(charRef.current.id, ({ data, ap }) => ({
-            ap: Math.max(0, ap - spentDelta),
+            ap: spendRef.current ? Math.max(0, ap - spentDelta) : ap,
             fields: {
               abilities: msg.learned.filter(k => typeof k === 'string' && !isOldKey(k)),
               sliders: { ...(data.sliders || {}), magicTech: clampAxis((data.sliders?.magicTech || 0) + axisDelta) },
@@ -145,7 +154,7 @@ export default function ConstellationTab({ char, onUpdateChar }) {
           }));
           const next = { ...charRef.current, ...nextData };
           charRef.current = next;
-          onUpdateChar?.(next);
+          updateRef.current?.(next);
         } catch (err) {
           setNotice({ type: 'error', msg: `${err.message || 'Save failed.'} Reopen the tab to reload your build.` });
         }
@@ -153,11 +162,11 @@ export default function ConstellationTab({ char, onUpdateChar }) {
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [migrated, sendInit, onUpdateChar]);
+  }, [migrated, sendInit]);
 
   // A grant from elsewhere (the DM levelling the character) reaches the open constellation.
   const available = char.atCurrent ?? char.at_current ?? 0;
-  useEffect(() => { if (ready) sendInit(); }, [available, ready, sendInit]);
+  useEffect(() => { if (ready) sendInit(); }, [available, spendAp, ready, sendInit]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
