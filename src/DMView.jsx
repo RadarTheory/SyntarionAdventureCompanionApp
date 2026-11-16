@@ -40,7 +40,8 @@ import MenuMusicPlayer from './MenuMusicPlayer';
 import GameSessionOverlay from './GameSessionOverlay';
 import { playSfxByKey } from './soundLibrary';
 import { LEVEL_CAP, apForLevel, getLevelProgress, grantAp } from './leveling';
-import { logHerculesEvent } from './lib/herculesLog';
+import { logAstragalRoll } from './lib/herculesLog';
+import LearnedAbilitiesList from './LearnedAbilitiesList';
 
 const SOTERIA_DM_CONTEXT = `
 You are The Scribe - an ancient archival intelligence in the world of Soteria, 178 Era of Unity.
@@ -746,6 +747,9 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
           ))}
         </div>
         <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${COLORS.border}` }}>
+          <LearnedAbilitiesList abilities={data.abilities} />
+        </div>
+        <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${COLORS.border}` }}>
           <DMMemoryPanel characterId={char.id} />
         </div>
 
@@ -1323,6 +1327,9 @@ export default function DMView({ user, session, onHome, darkMode = true, module 
         if (row?.campaign_id && String(row.campaign_id) !== String(cid)) return;
         // dm_roll and architect_edict are the DM's own doing.
         if (['roll', 'initiative'].includes(row?.type)) bumpChronicle();
+        if (row?.type === 'roll' && String(row.campaign_id) === String(cid)) {
+          pushEventToast('roll', row.description || `${row.actor_name || 'Player'} rolled ${row.total ?? 'an unknown result'}.`);
+        }
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'vtt_sessions', filter: `campaign_id=eq.${cid}` }, ({ new: row }) => {
         const count = (row?.pending_moves || []).length;
@@ -1702,56 +1709,9 @@ const renderTab = () => {
   }
 };
 
-  const logDmAstragalToHercules = async payload => {
-    const currentCampaignId = activeCampaignTab;
-    if (!currentCampaignId) return;
-
-    const dice =
-      payload?.diceResults ||
-      payload?.results ||
-      payload?.rolls ||
-      payload?.dice ||
-      [];
-
-    const diceList = Array.isArray(dice)
-      ? dice.map(d => Number(d?.value ?? d?.roll ?? d)).filter(n => !Number.isNaN(n))
-      : [];
-
-    const notation =
-      payload?.notation ||
-      `${payload?.count || diceList.length || 1}d${payload?.sides || payload?.die || 20}`;
-
-    const diceTotal =
-      payload?.diceTotal ??
-      diceList.reduce((sum, value) => sum + value, 0);
-
-    const statModifier = Number(payload?.statModifier ?? payload?.statMod ?? 0);
-    const flatModifier = Number(payload?.flatModifier ?? payload?.modifier ?? 0);
-    const total = Number(payload?.total ?? payload?.result ?? (diceTotal + statModifier + flatModifier));
-
-    const diceText = diceList.length ? diceList.join(', ') : 'unknown';
-
-    const description =
-      `The Architect rolls the bones: ${notation}. ` +
-      `Dice: ${diceText}. ` +
-      `Dice total: ${diceTotal}. ` +
-      `Stat modifier: ${statModifier >= 0 ? '+' : ''}${statModifier}. ` +
-      `Flat modifier: ${flatModifier >= 0 ? '+' : ''}${flatModifier}. ` +
-      `Collected result: ${total}.`;
-
-    const { error } = await logHerculesEvent(currentCampaignId, {
-      type: 'dm_roll',
-      actor_name: 'The Architect',
-      actor_id: null,
-      modifier: statModifier + flatModifier,
-      total,
-      description,
-    });
-
-    if (error) {
-      console.error('Failed to log DM Astragal roll to Hercules:', error);
-    }
-  };
+  const logDmAstragalToHercules = activeCampaignTab
+    ? payload => logAstragalRoll(activeCampaignTab, payload, { architect: true })
+    : undefined;
   const activeToolIds = [
     showAstragal && 'astragal',
     showHercules && 'hercules',
@@ -1797,7 +1757,7 @@ const renderTab = () => {
         <div role="status" style={{ position: 'fixed', right: isMobile ? 12 : 24, bottom: isMobile ? 96 : 116, zIndex: 320001, width: 'min(340px, calc(100vw - 24px))', background: 'rgba(14,11,8,0.96)', border: '1px solid rgba(200,168,74,0.45)', borderRadius: 10, padding: '12px 14px', boxShadow: '0 18px 50px rgba(0,0,0,0.7)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 5 }}>
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#e8c84a' }}>
-              {eventToast.kind === 'intent' ? 'Intent Declared' : 'Move Requested'}
+              {eventToast.kind === 'intent' ? 'Intent Declared' : eventToast.kind === 'roll' ? 'Player Roll' : 'Move Requested'}
               {eventToast.count > 1 && ` ×${eventToast.count}`}
             </div>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
@@ -2002,7 +1962,7 @@ const renderTab = () => {
       {showAstragal && (
         <DraggablePanel {...panelPriority('astragal')} defaultX={108} defaultY={80} onClose={() => setShowAstragal(false)} title="ASTRAGAL - Fate Cast in Bone" width={380} accentColor="rgba(240,238,235,0.18)">
           <div style={{ padding: 14 }}>
-            <Astragal character={characters?.[0]} actionName="Astragal" statKey="will" notation="1d20" onResult={logDmAstragalToHercules} />
+            <Astragal character={characters?.[0]} actionName="General roll" statKey="will" onResult={logDmAstragalToHercules} />
           </div>
         </DraggablePanel>
       )}

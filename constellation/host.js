@@ -1,5 +1,5 @@
 // Host mode: Syntarion embeds the constellation in an iframe (index.html?host=syntarion) and owns the build.
-// The parent sends {type:'init', learned, available, characterId} once the page says it is ready, and may send it
+// The parent sends {type:'init', learned, available, characterId, startingCalling} once the page says it is ready, and may send it
 // again later (for example after the DM grants AP). The page reports each change to the build as
 // {type:'save', learned, spentDelta, magicTechDelta}: the AP spent (positive) or refunded (negative) and the
 // Magic | Tech shift since the last report, so the parent applies them to the character without overwriting grants
@@ -16,7 +16,7 @@ export function hostInit(onUpdate){
     let first=true;
     window.addEventListener('message',e=>{
       if(e.origin!==location.origin||e.source!==window.parent||e.data?.type!=='init')return;
-      const data={learned:Array.isArray(e.data.learned)?e.data.learned:[],available:Math.max(0,Number(e.data.available)||0),characterId:e.data.characterId??null};
+      const data={learned:Array.isArray(e.data.learned)?e.data.learned:[],available:Math.max(0,Number(e.data.available)||0),characterId:e.data.characterId??null,startingCalling:typeof e.data.startingCalling==='string'?e.data.startingCalling:null};
       if(first){first=false;resolve(data);}else onUpdate?.(data);
     });
     send({type:'ready'});

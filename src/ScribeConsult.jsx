@@ -3,6 +3,7 @@ import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { SOTERIA_LORE } from './soteria-lore';
 import { buildScribeContext } from './scribe-context';
+import { learnedAbilitiesText } from './constellationAbilities';
 import { useDisplayName } from './lib/displayName';
 
 const SOTERIA_CONTEXT = `
@@ -25,7 +26,7 @@ VOICE:
 ${SOTERIA_LORE}
 `;
 
-function buildCharacterContext(char) {
+function buildCharacterContext(char, learned = '') {
   const campaign = null; // Campaign context not needed for Scribe
   return `
 CHARACTER CONSULTING THE SCRIBE:
@@ -51,6 +52,9 @@ Dream: ${char?.stats?.dream || 8}
 XP: ${char?.apTotal || 0}
 AP Current: ${char?.atCurrent ?? char?.at_current ?? 0}
 AP Total: ${char?.atTotal ?? char?.at_total ?? 0}
+
+CONSTELLATION ABILITIES LEARNED:
+${learned || 'None yet.'}
 `.trim();
 }
 
@@ -119,8 +123,9 @@ export function ScribeConsult({ char, onUpdateChar }) {
     setMessages(nextMessages);
 
     try {
+      const learned = await learnedAbilitiesText(char);
       const worldContext = await buildScribeContext(userMsg, 10000, char?.campaign || char?.campaign_id || null);
-      const systemPrompt = `${SOTERIA_CONTEXT}\n\nWORLD KNOWLEDGE (relevant excerpts):\n${worldContext}\n\n${buildCharacterContext(char)}\n\nThe person speaking to you is ${displayName || 'the traveler'}. Address them by that display name naturally when appropriate.\n\nThis response costs the adventurer 1 AP. Make the answer useful, specific, and worthy of the cost.`.trim();
+      const systemPrompt = `${SOTERIA_CONTEXT}\n\nWORLD KNOWLEDGE (relevant excerpts):\n${worldContext}\n\n${buildCharacterContext(char, learned)}\n\nThe person speaking to you is ${displayName || 'the traveler'}. Address them by that display name naturally when appropriate.\n\nThis response costs the adventurer 1 AP. Make the answer useful, specific, and worthy of the cost.`.trim();
       const geminiHistory = nextMessages.map(m => ({ role: m.role === 'player' ? 'user' : 'assistant', content: m.content }));
       const answer = await callGemini(systemPrompt, geminiHistory);
 

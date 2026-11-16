@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { logHerculesEvent } from './lib/herculesLog';
+import { DISCIPLINE_META, poolOf, loadConstellation, learnedEntries } from './constellationAbilities';
 
 // ─── TIER LABELS ──────────────────────────────────────────────────────────────
 const MAGIC_TIERS = ['Mote', 'Charm', 'Spell', 'Weave', 'Weave (Hidden)'];
@@ -957,6 +958,88 @@ function AbilityCard({ ability, charLevel, char, campaignId, requests, onSubmit 
   );
 }
 
+// ─── CONSTELLATION ABILITY CARD ───────────────────────────────────────────────
+// An ability the character bought in the Constellation. It has no level-gated tiers; the character holds it at some
+// level of its line, and the cast goes to the Architect through the same cast_requests queue as a racial one.
+function ConstellationCard({ entry, char, requests, onSubmit }) {
+  const [open, setOpen] = useState(false);
+  const [note, setNote] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const meta       = DISCIPLINE_META[entry.discipline] || {};
+  const axisColor  = entry.axis === 'magic' ? COLORS.magic : COLORS.tech;
+  const color      = meta.color || axisColor;
+  const axisLabel  = entry.axis === 'magic' ? 'Cast' : 'Deploy';
+  const pool       = poolOf(char, entry.currencyKey);
+  const canAfford  = pool >= entry.cost;
+  const hasPending = requests.some(r => r.ability_id === `constellation:${entry.id}` && r.status === 'pending');
+
+  const submit = async () => {
+    if (submitting || !canAfford) return;
+    setSubmitting(true);
+    await onSubmit(entry, note.trim());
+    setNote('');
+    setOpen(false);
+    setSubmitting(false);
+  };
+
+  return (
+    <div style={{ borderRadius: 8, overflow: 'hidden', border: `1px solid ${open ? color + '44' : COLORS.border}`, marginBottom: 6, transition: 'border-color 0.15s' }}>
+      <button onClick={() => setOpen(o => !o)} style={{ width: '100%', background: open ? `${color}08` : COLORS.card, border: 'none', padding: '10px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, textAlign: 'left' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: COLORS.text, letterSpacing: '0.04em' }}>{entry.name}</div>
+            {hasPending && <div style={{ fontSize: 7, color: COLORS.deity, fontFamily: "'Cinzel', serif", background: COLORS.deityBg, border: `1px solid ${COLORS.deity}`, borderRadius: 3, padding: '1px 5px' }}>PENDING</div>}
+          </div>
+          <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", marginTop: 2 }}>{entry.className} · level {entry.level} of {entry.levels} · {entry.type}</div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <div style={{ fontSize: 7, color, fontFamily: "'Cinzel', serif", background: `${color}11`, border: `1px solid ${color}44`, borderRadius: 3, padding: '1px 6px', letterSpacing: '0.08em' }}>
+            {entry.disciplineLabel.toUpperCase()}
+          </div>
+          <div style={{ fontSize: 10, color: COLORS.dim, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▾</div>
+        </div>
+      </button>
+
+      {open && (
+        <div style={{ padding: '10px 12px', borderTop: `1px solid ${COLORS.border}`, background: COLORS.surface, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ fontSize: 10, color: COLORS.text, fontFamily: 'Georgia, serif', lineHeight: 1.5 }}>{entry.effect}</div>
+          <div style={{ fontSize: 8, color: canAfford ? color : '#e05a5a', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+            {entry.cost} {entry.currencyLabel} per use (provisional) · Pool: {pool}
+          </div>
+          <textarea value={note} onChange={e => setNote(e.target.value)}
+            placeholder="Optional note to the Architect…" rows={2}
+            style={{ width: '100%', background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '7px 10px', fontFamily: 'Georgia, serif', fontSize: 10, color: COLORS.text, outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
+          <button onClick={submit} disabled={submitting || !canAfford || hasPending}
+            style={{ width: '100%', background: canAfford && !hasPending ? `${color}18` : 'transparent', border: `1px solid ${canAfford && !hasPending ? color + '66' : COLORS.border}`, borderRadius: 7, padding: '9px', cursor: submitting || !canAfford || hasPending ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: canAfford && !hasPending ? color : COLORS.dim, fontWeight: 700, letterSpacing: '0.1em' }}>
+            {submitting ? `${axisLabel}ing…` : hasPending ? 'Awaiting the Architect' : !canAfford ? `Not enough ${entry.currencyLabel}` : `⬡ ${axisLabel} ${entry.name}`}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── CONSTELLATION SECTION ────────────────────────────────────────────────────
+function ConstellationSection({ title, axis, entries, char, requests, onSubmit }) {
+  const [open, setOpen] = useState(true);
+  const color = axis === 'magic' ? COLORS.magic : COLORS.tech;
+  const axisEntries = entries.filter(e => e.axis === axis);
+  if (axisEntries.length === 0) return null;
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <button onClick={() => setOpen(o => !o)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'transparent', border: 'none', borderBottom: `1px solid ${color}22`, padding: '8px 0', cursor: 'pointer', marginBottom: open ? 10 : 0 }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, color, letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 700 }}>{title}</div>
+        <div style={{ fontSize: 9, color, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▾</div>
+      </button>
+      {open && axisEntries.map(entry => (
+        <ConstellationCard key={entry.id} entry={entry} char={char} requests={requests} onSubmit={onSubmit} />
+      ))}
+    </div>
+  );
+}
+
 // ─── AXIS SECTION ─────────────────────────────────────────────────────────────
 function AxisSection({ title, abilities, charLevel, char, campaignId, requests, onSubmit, axis }) {
   const [open, setOpen] = useState(true);
@@ -984,6 +1067,17 @@ function CastorInner({ char, campaignId, onClose, onBadgeChange }) {
 
   const abilities  = getAbilitiesForChar(char);
   const charLevel  = char?.charLevel || 1;
+
+  // What the character has learned in the Constellation (null while its data loads).
+  const [learned, setLearned] = useState(null);
+  const learnedKey = JSON.stringify(char?.abilities || []);
+  useEffect(() => {
+    let live = true;
+    loadConstellation()
+      .then(d => { if (live) setLearned(learnedEntries(d, JSON.parse(learnedKey))); })
+      .catch(() => { if (live) setLearned([]); });
+    return () => { live = false; };
+  }, [learnedKey]);
 
   useEffect(() => {
     if (!char?.id) return;
@@ -1039,8 +1133,45 @@ function CastorInner({ char, campaignId, onClose, onBadgeChange }) {
     }
   };
 
+  const handleConstellationSubmit = async (entry, note) => {
+    if (!char?.id) return;
+    const axisLabel = entry.axis === 'magic' ? 'Cast' : 'Deploy';
+    const statVal   = entry.statKey ? (char?.stats?.[entry.statKey] || 8) : 8;
+    const label     = `${entry.className} · ${entry.type}`;
+
+    const { data: req, error } = await supabase.from('cast_requests').insert({
+      campaign_id:      String(campaignId),
+      character_id:     String(char.id),
+      character_name:   char.name || 'Unknown',
+      ability_id:       `constellation:${entry.id}`,
+      ability_name:     entry.name,
+      discipline_label: label,
+      axis:             entry.axis,
+      stat_key:         entry.statKey || '',
+      modifier:         statVal - 8,
+      cost:             entry.cost,
+      currency_key:     entry.currencyLabel.toUpperCase(),
+      status:           'pending',
+      dm_note:          note || null,
+      resolved_at:      null,
+    }).select().single();
+
+    if (!error && req) {
+      await logHerculesEvent(campaignId, {
+        type: 'cast_request',
+        actor_name: char.name || 'Player',
+        actor_id: String(char.id),
+        description: `${char.name || 'Player'} requests to ${axisLabel.toLowerCase()} ${entry.name} [${label}] - awaiting Architect approval.${note ? ` Note: "${note}"` : ''}`,
+        scribe_suggestion: `${char.name || 'Player'} wants to ${axisLabel.toLowerCase()} ${entry.name}, a Constellation ability. Suggested outcome: approve, deny, or shape the final effect and story beat.`,
+      });
+      loadRequests();
+    }
+  };
+
+  const learnedList = learned || [];
   const hasMagic = abilities.some(a => a.axis === 'magic');
   const hasTech  = abilities.some(a => a.axis === 'tech');
+  const nothing  = abilities.length === 0 && learnedList.length === 0;
 
   return (
     <>
@@ -1064,18 +1195,24 @@ function CastorInner({ char, campaignId, onClose, onBadgeChange }) {
       {/* Body */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
         {tab === 'catalog' && (
-          abilities.length === 0 ? (
+          learned === null && abilities.length === 0 ? (
             <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '40px 0' }}>
-              No racial abilities found. Contact the Architect.
+              Reading your constellation…
+            </div>
+          ) : nothing ? (
+            <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', textAlign: 'center', padding: '40px 0' }}>
+              No racial or constellation abilities found. Awaken abilities in the Constellation, or contact the Architect.
             </div>
           ) : (
             <div>
               {hasMagic && (
-                <AxisSection title="Magicka — Magic Abilities" axis="magic" abilities={abilities} charLevel={charLevel} char={char} campaignId={campaignId} requests={requests} onSubmit={handleSubmit} />
+                <AxisSection title="Magicka — Racial Magic" axis="magic" abilities={abilities} charLevel={charLevel} char={char} campaignId={campaignId} requests={requests} onSubmit={handleSubmit} />
               )}
+              <ConstellationSection title="Magicka — Constellation Spells" axis="magic" entries={learnedList} char={char} requests={requests} onSubmit={handleConstellationSubmit} />
               {hasTech && (
-                <AxisSection title="Ingenium — Tech Abilities" axis="tech" abilities={abilities} charLevel={charLevel} char={char} campaignId={campaignId} requests={requests} onSubmit={handleSubmit} />
+                <AxisSection title="Ingenium — Racial Tech" axis="tech" abilities={abilities} charLevel={charLevel} char={char} campaignId={campaignId} requests={requests} onSubmit={handleSubmit} />
               )}
+              <ConstellationSection title="Ingenium — Constellation Schematics" axis="tech" entries={learnedList} char={char} requests={requests} onSubmit={handleConstellationSubmit} />
             </div>
           )
         )}
@@ -1125,7 +1262,7 @@ export default function CastorPanel({ char, campaignId, onClose, onBadgeChange, 
       <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(56,189,248,0.14)', background: 'rgba(56,189,248,0.04)', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#7dd3fc', letterSpacing: '0.18em', fontWeight: 700 }}>CASTOR</div>
-          <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>{char?.name} · Racial Abilities</div>
+          <div style={{ fontSize: 9, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: 2 }}>{char?.name} · Racial &amp; Constellation Abilities</div>
         </div>
         <button onClick={onClose} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: COLORS.dim }}>✕</button>
       </div>

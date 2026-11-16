@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
+import { loadConstellation, startingCallingOf, startingNodeId } from './constellationAbilities';
 // The old tree's costs and Magic | Tech nudges (AbilityTree.jsx), needed only to refund an old build.
 const OLD_MAGIC_PATHS = new Set(['divine', 'spiritual', 'arcane', 'wild', 'runic', 'mythic', 'shadow']);
 const tierCost = tier => (tier === 'base' ? 0 : tier === 't2' ? 2 : 3);
@@ -71,6 +72,7 @@ export default function ConstellationTab({ char, onUpdateChar }) {
       learned: learnedOf(c),
       available: Math.max(0, Number(c.atCurrent ?? c.at_current ?? 0) || 0),
       characterId: c.id,
+      startingCalling: startingCallingOf(c),
     }, window.location.origin);
   }, []);
 
@@ -92,7 +94,20 @@ export default function ConstellationTab({ char, onUpdateChar }) {
           };
         });
         if (cancelled) return;
-        if (nextData) onUpdateChar?.({ ...charRef.current, ...nextData });
+        let current = nextData ? { ...charRef.current, ...nextData } : charRef.current;
+        // The class chosen at creation is the build's first star: held for free, so it is written once and costs no AP.
+        try {
+          const start = startingNodeId(await loadConstellation(), current);
+          if (start) {
+            const withStart = await updateCharacter(char.id, ({ data, ap }) => {
+              const held = Array.isArray(data.abilities) ? data.abilities : [];
+              return held.includes(start) ? null : { ap, fields: { abilities: [start, ...held.filter(k => !isOldKey(k))] } };
+            });
+            if (withStart) current = { ...current, ...withStart };
+          }
+        } catch { /* the constellation still shows the starting star; it is saved with the next purchase */ }
+        if (cancelled) return;
+        if (current !== charRef.current) onUpdateChar?.(current);
         if (summary?.count) setNotice({ type: 'ok', msg: `Your earlier abilities were cleared for the new constellation · ${summary.refund} AP returned.` });
         setMigrated(true);
       } catch (e) {

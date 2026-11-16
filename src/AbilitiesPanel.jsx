@@ -15,75 +15,13 @@ import { useEffect, useState } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { logHerculesEvent } from './lib/herculesLog';
+import { DISCIPLINE_META, poolOf, loadConstellation, learnedEntries } from './constellationAbilities';
 
 // ─── LEARNED ABILITIES ────────────────────────────────────────────────────────
 // The panel lists the abilities the character has bought in the Constellation (the Abilities tab), read from
-// data.abilities, using the constellation's own data module (public/constellation/data.js, synced from the
-// constellation project). Each ability draws on its line's row of the character sheet's Magic | Tech table
+// data.abilities, using the constellation's own data module (constellation/data.js, served from /constellation/; see
+// constellationAbilities.js). Each ability draws on its line's row of the character sheet's Magic | Tech table
 // (traitFor), so the pools are the sheet's 16 traits, keyed by trait name in char.disciplines.
-
-// Sheet rows: trait key → discipline label, trait label and colour. Rows that existed before keep their colour.
-const DISCIPLINE_META = {
-  sanctus: { label: 'Divine',      trait: 'Sanctus', color: '#e8d9a7',    axis: 'magic' },
-  sacral:  { label: 'Spirit',      trait: 'Sacral',  color: COLORS.magic, axis: 'magic' },
-  mana:    { label: 'Magic',       trait: 'Mana',    color: '#a78bfa',    axis: 'magic' },
-  chi:     { label: 'Nature',      trait: 'Chi',     color: '#86efac',    axis: 'magic' },
-  gnosis:  { label: 'Glyph',       trait: 'Gnosis',  color: '#fbbf24',    axis: 'magic' },
-  shaeid:  { label: 'Light',       trait: 'Shaeid',  color: '#fef9c3',    axis: 'magic' },
-  wraill:  { label: 'Shadow',      trait: 'Wraill',  color: '#a8a29e',    axis: 'magic' },
-  phorym:  { label: 'Imagination', trait: 'Phorym',  color: '#f0abfc',    axis: 'magic' },
-  lithium: { label: 'Fortitude',   trait: 'Lithium', color: '#94a3b8',    axis: 'tech'  },
-  steam:   { label: 'Grit',        trait: 'Steam',   color: '#fb923c',    axis: 'tech'  },
-  crhon:   { label: 'Volition',    trait: 'Crhon',   color: '#fda4af',    axis: 'tech'  },
-  cell:    { label: 'Reason',      trait: 'Cell',    color: '#c084fc',    axis: 'tech'  },
-  zinc:    { label: 'Focus',       trait: 'Zinc',    color: '#38bdf8',    axis: 'tech'  },
-  null:    { label: 'Ingenuity',   trait: 'Null',    color: '#e2e8f0',    axis: 'tech'  },
-  volt:    { label: 'Matter',      trait: 'Volt',    color: '#4ade80',    axis: 'tech'  },
-  ion:     { label: 'Gain',        trait: 'Ion',     color: COLORS.tech,  axis: 'tech'  },
-};
-
-// Pools saved under the panel's earlier keys are still read, so nothing a character held is lost.
-const LEGACY_POOL = { chi: 'essence', ion: 'gain', steam: 'grit', zinc: 'focus', volt: 'matter', cell: 'reason', lithium: 'fortitude', null: 'ingenuity' };
-const poolOf = (char, key) => Number(char?.disciplines?.[key] ?? char?.disciplines?.[LEGACY_POOL[key]] ?? 0) || 0;
-
-// The class's aspect sets the roll stat. Affect rolls Essence (the sheet's earlier rule); Hope has no stat yet.
-const ASPECT_STAT = { Soul: 'soul', Spirit: 'spirit', Mind: 'mind', Body: 'body', Will: 'will', Whim: 'whim', Dream: 'dream', Affect: 'essence' };
-
-// Placeholder: what one use costs from the trait's pool is not decided yet, so every use costs 1.
-const USE_COST = 1;
-
-let constellationData = null;
-function loadConstellation() {
-  constellationData ??= import(/* @vite-ignore */ new URL('/constellation/data.js', window.location.origin).href);
-  return constellationData;
-}
-
-// One entry per learned ability, at the highest level the character holds.
-function learnedEntries(d, learned) {
-  const held = new Set((Array.isArray(learned) ? learned : []).filter(id => typeof id === 'string' && !id.includes('|')));
-  const out = [];
-  for (const cls of d.classes) {
-    if (![...held].some(id => id.startsWith(`${cls.id}:`))) continue;
-    const t = d.traitFor(cls);
-    if (!t) continue;
-    const key = t.trait.toLowerCase(), meta = DISCIPLINE_META[key];
-    for (const e of d.abilityEntries(cls, 'abilities')) {
-      const owned = e.nodes.filter(n => held.has(n.id));
-      if (!owned.length) continue;
-      const top = owned.at(-1);
-      out.push({
-        id: e.key, name: e.name, className: cls.name,
-        type: top.levelName, level: owned.length, levels: e.nodes.length,
-        discipline: key, disciplineLabel: meta?.label || t.discipline,
-        cost: USE_COST, currencyKey: key, currencyLabel: t.trait,
-        statKey: ASPECT_STAT[cls.attribute] || null,
-        effect: top.description || e.description || '',
-        axis: t.column === 'Magic' ? 'magic' : 'tech',
-      });
-    }
-  }
-  return out;
-}
 
 const TYPE_COLORS = {
   Combat:  '#e05a5a',
