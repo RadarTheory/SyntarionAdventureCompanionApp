@@ -86,3 +86,30 @@ export function startingNodeId(d, char) {
   const cls = d.classById(startingCallingOf(char));
   return cls && !cls.rootId && !cls.secret && !cls.hidden ? d.levelId(cls.id, 0) : null;
 }
+
+// What opening that star costs on a fresh build: its first level plus the first-purchase point.
+export const startingCost = (d, nodeId) => d.nodeCost(d.classLevelNodes(d.classById(nodeId.split(':')[0]))[0], []);
+
+// Every class the character has awakened (any level bought), with the highest level held and whether it is their declared class.
+// A star can be open with no abilities bought yet, so this is what shows a character's stars before learnedEntries has any.
+export function awakenedStars(d, char) {
+  const held = new Set((Array.isArray(char?.abilities) ? char.abilities : []).filter(id => typeof id === 'string' && !id.includes('|')));
+  const start = startingNodeId(d, char);
+  const stars = [];
+  for (const cls of d.classes) {
+    const levels = d.classLevelNodes(cls);
+    const owned = levels.filter(n => held.has(n.id));
+    const owns = owned.length || [...held].some(id => id.startsWith(`${cls.id}:`));
+    if (!owns) continue;
+    const t = d.traitFor(cls);
+    const meta = t && DISCIPLINE_META[t.trait.toLowerCase()];
+    const top = owned.at(-1);
+    stars.push({
+      id: cls.id, name: cls.name, isStart: !!start && start.startsWith(`${cls.id}:`),
+      levelName: top?.levelName || '', level: owned.length, levels: levels.length,
+      abilities: d.abilityEntries(cls, 'abilities').filter(e => e.nodes.some(n => held.has(n.id))).length,
+      color: meta?.color || null,
+    });
+  }
+  return stars;
+}

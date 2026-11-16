@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 import { logHerculesEvent } from './lib/herculesLog';
-import { DISCIPLINE_META, poolOf, loadConstellation, learnedEntries } from './constellationAbilities';
+import { DISCIPLINE_META, poolOf, loadConstellation, learnedEntries, awakenedStars } from './constellationAbilities';
 
 // ─── LEARNED ABILITIES ────────────────────────────────────────────────────────
 // The panel lists the abilities the character has bought in the Constellation (the Abilities tab), read from
@@ -315,12 +315,13 @@ function AbilitySection({ title, axis, entries, char, campaignId, onRoll, disabl
 export default function AbilitiesPanel({ char, campaignId, onRoll }) {
   // null while the constellation's data loads; then one entry per learned ability.
   const [entries, setEntries] = useState(null);
+  const [stars, setStars] = useState([]);
   const [loadError, setLoadError] = useState(null);
-  const learnedKey = JSON.stringify(char?.abilities || []);
+  const learnedKey = JSON.stringify([char?.abilities || [], char?.cid || null]);
   useEffect(() => {
     let live = true;
     loadConstellation()
-      .then(d => { if (live) setEntries(learnedEntries(d, JSON.parse(learnedKey))); })
+      .then(d => { if (live) { const [abilities, cid] = JSON.parse(learnedKey); setEntries(learnedEntries(d, abilities)); setStars(awakenedStars(d, { abilities, cid })); } })
       .catch(() => { if (live) setLoadError('The constellation could not be loaded.'); });
     return () => { live = false; };
   }, [learnedKey]);
@@ -377,7 +378,22 @@ export default function AbilitiesPanel({ char, campaignId, onRoll }) {
 
       {loadError && <div style={{ fontSize: 11, color: '#e05a5a', fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>{loadError}</div>}
       {!loadError && entries === null && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>Reading your constellation…</div>}
-      {entries && !entries.length && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>No abilities learned yet. Awaken them in the Constellation, on your sheet's Abilities tab.</div>}
+      {stars.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ ...label8(), marginBottom: 6 }}>Your Stars</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {stars.map(st => (
+              <div key={st.id} style={{ border: `1px solid ${(st.color || COLORS.muted)}55`, background: `${st.color || COLORS.muted}10`, borderRadius: 7, padding: '6px 10px' }}>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: st.color || COLORS.text, letterSpacing: '0.05em' }}>{st.name}{st.isStart ? ' · declared class' : ''}</div>
+                <div style={{ fontSize: 8, color: COLORS.dim, fontFamily: "'Cinzel', serif", marginTop: 2 }}>
+                  {st.levelName ? `${st.levelName.toUpperCase()} · ` : ''}level {st.level} of {st.levels} · {st.abilities} abilit{st.abilities === 1 ? 'y' : 'ies'}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {entries && !entries.length && <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic', marginBottom: 16 }}>{stars.length ? "Your star is open, but no abilities are awakened yet. Spend AP on them in the Constellation, on your sheet's Abilities tab." : "No abilities learned yet. Awaken them in the Constellation, on your sheet's Abilities tab."}</div>}
 
       {/* ── SPELLS ── */}
       <AbilitySection

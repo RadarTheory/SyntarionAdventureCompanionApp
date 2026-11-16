@@ -716,12 +716,7 @@ export function levelReach(cls,learned){const counts=awakenedCounts(learned);ret
 export function threadWalked(fromId,toId,learned){const first=learned.findIndex(id=>classOfNode(id)===toId);if(first<0)return false;let seen=0;for(let i=0;i<first;i++)if(classOfNode(learned[i])===fromId&&++seen>=pathsNeed(classById(fromId)))return true;return false;}
 export function masteredClasses(learned){const counts=awakenedCounts(learned);return classes.filter(c=>(counts.get(c.id)||0)>=pathsNeed(c));}
 export function costOf(id){const parts=id.split(':');return parts[2]==='levels'?Number(parts[3])+1:1;}
-// The starting calling (chosen at character creation) is the build's first star, held for free: its first level is always in the
-// build, costs nothing, and cannot be refunded or reset away. Only the 16 open callings can start a build.
-let startingStar=null;
-export function setStartingCalling(id){const cls=id?classById(id):null;startingStar=cls&&!cls.rootId&&!cls.secret&&!cls.hidden?levelId(cls.id,0):null;return startingStar;}
-export const startingNode=()=>startingStar;
-export function spentPoints(learned){const credit=startingStar&&learned.includes(startingStar)?costOf(startingStar)+FIRST_ABILITY_SURCHARGE:0;return learned.reduce((sum,id)=>sum+costOf(id),0)+FIRST_ABILITY_SURCHARGE*awakenedCounts(learned).size-credit;}
+export function spentPoints(learned){return learned.reduce((sum,id)=>sum+costOf(id),0)+FIRST_ABILITY_SURCHARGE*awakenedCounts(learned).size;}
 // The one-time extra point lands on a class's first purchase, normally its first level: the price of opening another class.
 export function nodeCost(node,learned){return node.cost+(awakenedCounts(learned).has(classOfNode(node.id))?0:FIRST_ABILITY_SURCHARGE);}
 // A subclass opens once any parent is mastered; you become aware of it once any parent is awakened.
@@ -749,9 +744,8 @@ function canAdvance(cls,learned,points){return PLAYABLE.some(category=>abilityNo
 export function classState(cls,learned,points=STARTING_POINTS){if(!classKnown(cls,learned))return 'unknown';const count=awakenedCount(cls,learned);if(isComplete(cls,learned))return 'mastered';if(count)return 'awakened';if(!classUnlocked(cls,learned))return 'sealed';return canAdvance(cls,learned,points)?'available':'unexplored';}
 // Saved builds are re-checked: unknown nodes and nodes whose prerequisites are gone are dropped, and a build that overspends the starting points resets.
 export function repairLearned(saved,points=STARTING_POINTS){const all=allUnlocks();let kept=[...new Set((Array.isArray(saved)?saved:[]).filter(id=>all.has(id)))];
-if(startingStar&&all.has(startingStar)&&!kept.includes(startingStar))kept.unshift(startingStar);
 for(let changed=true;changed;){const next=kept.filter(id=>prerequisitesMet(id,kept));changed=next.length!==kept.length;kept=next;}
-return spentPoints(kept)>points?(startingStar?[startingStar]:[]):kept;}
+return spentPoints(kept)>points?[]:kept;}
 let knownUnlocks;
 let nodeIndex;
 const allNodes=()=>nodeIndex??=new Map(classes.flatMap(c=>PLAYABLE.flatMap(category=>abilityNodes(c,setupForClass(c),category))).map(n=>[n.id,n]));

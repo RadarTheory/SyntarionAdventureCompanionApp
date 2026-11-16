@@ -2,7 +2,7 @@ import {renderSharedMap,homePan} from './shared-map.js';
 import {renderCallingMap} from './calling-layout.js';
 import {classPortrait,hydrateClassIcons} from './class-icons.js';
 import {practiceSymbol} from './practice-icons.js';
-import {disciplines,classes,roots,attributes,abilityEntries,classLevelNodes,buyVerb,visibleClasses,restoreSelection,setupForClass,praethacyEligibility,nullRevealed,canLearn,classById,classKnown,isMastered,isComplete,reachableNodes,awakenedCount,masteredClasses,unlockRequirement,repairLearned,setStartingCalling,startingNode,spentPoints,nodeCost,blockReason,nextParent,magicTechAxis,AXIS_LIMIT,MASTERY,STARTING_POINTS,CALLING_LORE,traitFor} from './data.js';
+import {disciplines,classes,roots,attributes,abilityEntries,classLevelNodes,buyVerb,visibleClasses,restoreSelection,setupForClass,praethacyEligibility,nullRevealed,canLearn,classById,classKnown,isMastered,isComplete,reachableNodes,awakenedCount,masteredClasses,unlockRequirement,repairLearned,spentPoints,nodeCost,blockReason,nextParent,magicTechAxis,AXIS_LIMIT,MASTERY,STARTING_POINTS,CALLING_LORE,traitFor} from './data.js';
 import {DEV_MODE,setStartingPoints} from './config.js';
 import {HOSTED,hostInit,hostSave} from './host.js';
 import {aspectForClass,doctrineGroups,hopeAspect} from './doctrine.js';
@@ -11,13 +11,15 @@ const $=s=>document.querySelector(s);
 const motion=()=>document.documentElement.dataset.motion!=='off';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Inside Syntarion the character's build and AP come from the parent page; only view state (open sky, selection) stays on the device.
-const hosted=await hostInit(update=>{setStartingCalling(update.startingCalling);learned=repairLearned(learned,Infinity);setStartingPoints(update.available+spentPoints(learned));render();});
+// The class declared at character creation: highlighted on the sky, and where a fresh build opens. Opening it is the player's purchase like any other.
+let declared=null;const declare=id=>{declared=roots.find(r=>r.id===id&&!r.secret&&!r.hidden)?.id||null;let style=document.getElementById('declared-style');if(!style){style=document.createElement('style');style.id='declared-style';document.head.append(style);}
+style.textContent=declared?`[data-star-class="${declared}"] .node-corona{visibility:visible!important;opacity:.34;animation:psynth-breathe 5.5s ease-in-out infinite}[data-motion="off"] [data-star-class="${declared}"] .node-corona{animation:none}`:'';};
+const hosted=await hostInit(update=>{declare(update.startingCalling);setStartingPoints(update.available+spentPoints(learned));render();});
 if(HOSTED)document.documentElement.classList.add('hosted');
 const storageKey=hosted?`syntarion-atlas-host-${hosted.characterId??'character'}`:'syntarion-atlas-v1';
 let saved={};try{saved=JSON.parse(localStorage.getItem(storageKey)||'{}')||{};}catch{}
-if(hosted){setStartingCalling(hosted.startingCalling);const held=repairLearned(hosted.learned,Infinity);saved.learned=held;setStartingPoints(hosted.available+spentPoints(held));
-// A build opening for the first time sits on its starting calling, already awakened.
-if(startingNode()&&!saved.classId){const start=classById(startingNode().split(':')[0]);saved.classId=start.id;saved.calling=start.id;}}
+if(hosted){declare(hosted.startingCalling);const held=repairLearned(hosted.learned,Infinity);saved.learned=held;setStartingPoints(hosted.available+spentPoints(held));
+if(declared&&!saved.classId){saved.classId=declared;saved.calling=declared;}}
 let learned=repairLearned(saved.learned);
 let reported={spent:spentPoints(learned),axis:magicTechAxis(learned).value,key:JSON.stringify(learned)};
 let {revealed,selectedClass,disciplineId}=restoreSelection(saved,learned);
@@ -148,7 +150,7 @@ for(let i=0;i<3;i++){const c=card.getBoundingClientRect(),near=marks.filter(r=>r
 const phone=matchMedia('(max-width:650px)');function placeSaga(){const hud=$('#map-hud');if(phone.matches){if(hud.parentElement!==$('.map-panel'))$('.map-panel').insertBefore(hud,$('.map-footer'));}else if(hud.parentElement!==$('#map'))$('#map').append(hud);}
 phone.addEventListener('change',placeSaga);
 function render(){if(nullOpen&&!nullRevealed(learned)){nullOpen=false;if(calling==='null')calling=null;if(selectedClass.secret){selectedClass=classById('fighter');disciplineId=selectedClass.discipline;selectedAbility=null;}save();}if(revealed&&!praethacyEligibility(learned).eligible){revealed=false;if(calling==='warden')calling=null;if(selectedClass.hidden)selectedClass=classes.find(c=>c.id==='weaver');disciplineId=selectedClass.discipline;selectedAbility=null;save();}if(!classKnown(selectedClass,learned)){selectedClass=classById(selectedClass.rootId);disciplineId=selectedClass.discipline;selectedAbility=null;}document.documentElement.style.setProperty('--accent',d().color);placeSaga();renderVeil();renderAxis();renderSaga();renderDetails();renderMap();$('#points').textContent=STARTING_POINTS-spentPoints(learned);$('#points-note').innerHTML=`AP AVAILABLE<br>${spentPoints(learned)} SPENT${DEV_MODE&&!HOSTED?' · DEV':''}`;$('#learned-count').textContent=`${learned.length} STARS AWAKENED`;}
-$('#to-atlas').onclick=leaveCalling;$('#drawer-tab').onclick=()=>setDrawer(true);window.addEventListener('keydown',e=>{if(e.key==='Escape'&&drawerOpen)setDrawer(false);if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&lastBuy&&!e.target.closest?.('input,textarea')){e.preventDefault();undo();}});$('#overview').onclick=()=>{if(calling)leaveCalling();};$('#focus').onclick=inspectAbilities;$('#reset').onclick=()=>{const refund=spentPoints(learned);learned=repairLearned([]);lastBuy=null;save();render();notify(`Build reset · ${refund} AP refunded`);};
+$('#to-atlas').onclick=leaveCalling;$('#drawer-tab').onclick=()=>setDrawer(true);window.addEventListener('keydown',e=>{if(e.key==='Escape'&&drawerOpen)setDrawer(false);if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&lastBuy&&!e.target.closest?.('input,textarea')){e.preventDefault();undo();}});$('#overview').onclick=()=>{if(calling)leaveCalling();};$('#focus').onclick=inspectAbilities;$('#reset').onclick=()=>{const refund=spentPoints(learned);learned=[];lastBuy=null;save();render();notify(`Build reset · ${refund} AP refunded`);};
 function zoom(delta){scale=Math.min(1.8,Math.max(.65,scale+delta));renderMap();}$('#zoom-in').onclick=()=>zoom(.1);$('#zoom-out').onclick=()=>zoom(-.1);$('#recenter').onclick=()=>{scale=1;pan={...homePan};renderMap();};
 $('#map').addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?-.05:.05);},{passive:false});
 $('#stars').addEventListener('pointerdown',e=>{if(e.button!==0)return;drag={x:e.clientX,y:e.clientY,pan:{...pan}};moved=false;});

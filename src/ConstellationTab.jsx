@@ -11,7 +11,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
-import { loadConstellation, startingCallingOf, startingNodeId } from './constellationAbilities';
+import { loadConstellation, startingCallingOf, startingNodeId, startingCost } from './constellationAbilities';
 // The old tree's costs and Magic | Tech nudges (AbilityTree.jsx), needed only to refund an old build.
 const OLD_MAGIC_PATHS = new Set(['divine', 'spiritual', 'arcane', 'wild', 'runic', 'mythic', 'shadow']);
 const tierCost = tier => (tier === 'base' ? 0 : tier === 't2' ? 2 : 3);
@@ -95,17 +95,22 @@ export default function ConstellationTab({ char, onUpdateChar }) {
         });
         if (cancelled) return;
         let current = nextData ? { ...charRef.current, ...nextData } : charRef.current;
-        // The class chosen at creation is the build's first star: held for free, so it is written once and costs no AP.
+        // The class declared at creation is opened once, as the character's first purchase at its normal price, on a fresh
+        // build with the AP for it. The flag keeps a later reset or refund from buying it again: after this, every choice is the player's.
         try {
-          const start = startingNodeId(await loadConstellation(), current);
+          const d = await loadConstellation();
+          const start = startingNodeId(d, current);
           if (start) {
+            const cost = startingCost(d, start);
             const withStart = await updateCharacter(char.id, ({ data, ap }) => {
-              const held = Array.isArray(data.abilities) ? data.abilities : [];
-              return held.includes(start) ? null : { ap, fields: { abilities: [start, ...held.filter(k => !isOldKey(k))] } };
+              if (data.constellationStart) return null;
+              const held = (Array.isArray(data.abilities) ? data.abilities : []).filter(k => !isOldKey(k));
+              const open = held.length === 0 && ap >= cost;
+              return { ap: open ? ap - cost : ap, fields: { constellationStart: true, ...(open ? { abilities: [start] } : {}) } };
             });
             if (withStart) current = { ...current, ...withStart };
           }
-        } catch { /* the constellation still shows the starting star; it is saved with the next purchase */ }
+        } catch { /* the declared class is still highlighted; it just was not opened */ }
         if (cancelled) return;
         if (current !== charRef.current) onUpdateChar?.(current);
         if (summary?.count) setNotice({ type: 'ok', msg: `Your earlier abilities were cleared for the new constellation · ${summary.refund} AP returned.` });

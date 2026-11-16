@@ -82,17 +82,3 @@ const [grit]=classLevelNodes(nul);assert.equal(blockReason(grit,one).kind,'veile
 test('Null purchases pull the needle back toward Neutral, never past it',()=>{const weaver=firstNodes('weaver',4);assert.equal(magicTechAxis(weaver).value,-1);assert.equal(magicTechAxis([...weaver,...firstNodes('null',2)]).value,-0.5);const cancelled=magicTechAxis([...weaver,...firstNodes('null',6)]);assert.equal(cancelled.value,0);assert.ok(Object.is(cancelled.value,0),'no negative zero');assert.equal(cancelled.label,'Neutral');assert.equal(magicTechAxis([...firstNodes('scholar',3),...firstNodes('null',2)]).value,0.25,'it pulls a Tech lean back too');});
 
 test('host mode: the AP pool set by Syntarion is the one every purchase check uses',async()=>{const config=await import('./config.js'),data=await import('./data.js'),host=await import('./host.js');assert.equal(host.HOSTED,false,'outside a browser the page is never hosted');const before=config.STARTING_POINTS,first=classLevelNodes(classById('weaver'))[0];try{data.setStartingPoints(0);assert.equal(data.STARTING_POINTS,0);assert.equal(canLearn(first,[]),false,'no AP, nothing to buy');data.setStartingPoints(5);assert.equal(canLearn(first,[]),true);}finally{data.setStartingPoints(before);}});
-
-test('a starting calling is the build\'s first star: held free, never refunded, never reset away',async()=>{const data=await import('./data.js');
-try{assert.equal(data.setStartingCalling('fighter'),levelId('fighter',0),'a calling starts the build with its first level');
-const start=levelId('fighter',0);
-assert.deepEqual(data.repairLearned([]),[start],'an empty build holds the starting star');
-assert.equal(data.spentPoints([start]),0,'the starting star costs nothing');
-assert.equal(data.spentPoints([start,levelId('fighter',1)]),costOf(levelId('fighter',1)),'only what is bought after it is spent');
-const bought=data.repairLearned([levelId('weaver',0)]);assert.ok(bought.includes(start)&&bought.includes(levelId('weaver',0)),'purchases keep the start');
-assert.equal(data.spentPoints(bought),costOf(levelId('weaver',0))+1,'another class still pays its first-purchase point');
-assert.equal(data.repairLearned([levelId('weaver',0),levelId('weaver',1),levelId('weaver',2)],1).includes(start),true,'an overspent build falls back to the start, not to nothing');
-assert.deepEqual(data.repairLearned([levelId('weaver',0),levelId('weaver',1),levelId('weaver',2)],1),[start]);
-for(const bad of [null,undefined,'','nope','null','warden','archon'])assert.equal(data.setStartingCalling(bad),null,`${bad} cannot start a build`);
-assert.deepEqual(data.repairLearned([]),[],'no starting calling, no starting star');
-}finally{data.setStartingCalling(null);}});
