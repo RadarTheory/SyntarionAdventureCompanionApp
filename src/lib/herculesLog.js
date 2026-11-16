@@ -102,3 +102,17 @@ export async function logHerculesEvent(campaignId, event) {
   if (insertError) console.error('[Hercules] Failed to log continuity event:', insertError);
   return { data, error: insertError, session };
 }
+
+export async function logAstragalRoll(campaignId, payload, { architect = false } = {}) {
+  const name = architect ? 'The Architect' : payload.actorName;
+  const natural = payload.crit === 'critical_success' ? ' · Nat 20' : payload.crit === 'critical_failure' ? ' · Nat 1' : '';
+  const { error } = await logHerculesEvent(campaignId, {
+    type: architect ? 'dm_roll' : 'roll',
+    actor_name: name,
+    actor_id: architect || !payload.actorId ? null : String(payload.actorId),
+    modifier: payload.totalBonus,
+    total: payload.total,
+    description: `${name} · ${payload.actionName} · ${payload.notation} (${payload.diceResults.join(', ')}) → ${payload.total}${natural}`,
+  });
+  if (error) throw error;
+}

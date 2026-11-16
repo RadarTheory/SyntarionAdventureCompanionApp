@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Astragal from './Astragal';
+import { logAstragalRoll } from './lib/herculesLog';
 
 function AstragalButton({ character, onResult, darkMode = true }) {
   const savedPos = (() => {
@@ -141,10 +142,10 @@ function AstragalButton({ character, onResult, darkMode = true }) {
         >
           <Astragal
             character={character}
-            actionName="Astragal"
+            actionName="General roll"
             statKey="will"
             notation="1d20"
-            onResult={onResult}
+            onResult={onResult || (character?.id && character.campaign_id ? payload => logAstragalRoll(character.campaign_id, payload) : undefined)}
           />
 
           <button

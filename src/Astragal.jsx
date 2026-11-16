@@ -42,6 +42,7 @@ export function AstragalRoller({
   const [dieSides, setDieSides] = useState(20);
   const [diceCount, setDiceCount] = useState(1);
   const [flatModifier, setFlatModifier] = useState(0);
+  const [purpose, setPurpose] = useState('');
   const [mode, setMode] = useState('normal');
   const [rolling, setRolling] = useState(false);
   const [skin, setSkin] = useState('bone');
@@ -76,7 +77,7 @@ export function AstragalRoller({
       const resolved = resolveDice({ sides: dieSides, count: effectiveDiceCount, mode, physicalValues: physical.values });
       const payload = {
         type: 'ROLL', actorId: character?.id || null, actorName: character?.name || 'Unknown',
-        actionName, rollType,
+        actionName: purpose.trim() || actionName, rollType,
         notation: dieSides === 20 && mode !== 'normal'
           ? `${mode} d20${flatModifier >= 0 ? '+' : ''}${flatModifier}`
           : `${diceCount}d${dieSides}${flatModifier >= 0 ? '+' : ''}${flatModifier}`,
@@ -297,9 +298,22 @@ export function AstragalRoller({
           {Object.entries(finishes).map(([id, finish]) => <option key={id} value={id} style={{ background: '#231d17' }}>{finish.name}</option>)}
         </select>
       </label>
-      <AstragalTray ref={trayRef} onStatus={handleTrayStatus} />
+      {onResult && (
+        <label style={{ display: 'grid', gap: 6, marginBottom: 10, color: COLORS.dim, fontSize: 11 }}>
+          Roll purpose
+          <input
+            value={purpose}
+            onChange={event => setPurpose(event.target.value)}
+            disabled={rolling}
+            maxLength={120}
+            placeholder="e.g. Search the room"
+            style={selectStyle}
+          />
+        </label>
+      )}
+      <AstragalTray ref={trayRef} onStatus={handleTrayStatus} critical={result?.crit} logo={finishes[result?.skin]?.logo} />
       <div role="status" aria-live="polite" style={{ color: COLORS.dim, fontSize: 10, lineHeight: 1.5, marginBottom: 12 }}>
-        {rolling ? 'Dice in motion — waiting for them to settle.' : result ? 'Cast complete · the settled faces are your result.' : trayStatus.ready ? 'Physical dice · cast to roll.' : trayStatus.error ? '3D tray unavailable.' : 'Preparing the dice tray…'}
+        {rolling && !result ? 'Dice in motion — waiting for them to settle.' : result ? (result.crit === 'critical_success' ? 'Natural 20. Critical success.' : result.crit === 'critical_failure' ? 'Natural 1. Critical failure.' : 'Cast complete · the settled faces are your result.') : trayStatus.ready ? 'Physical dice · cast to roll.' : trayStatus.error ? '3D tray unavailable.' : 'Preparing the dice tray…'}
         {dieSides === 100 && <div>Each d100 is one die numbered 1–100.</div>}
         {dieSides === 4 && <div>Read the d4 at its upper point.</div>}
       </div>

@@ -1,0 +1,50 @@
+.astragal-critical {
+  position: absolute;
+  top: clamp(20px, 8vh, 80px);
+  left: 50%;
+  translate: -50%;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 12px 26px;
+  border: 1px solid currentColor;
+  border-radius: 12px;
+  background: rgba(25, 19, 13, 0.94);
+  box-shadow: 0 6px 32px #0009;
+  font: 700 18px Cinzel, Georgia, serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.astragal-critical--success {
+  color: #ffda82;
+  animation: astragal-critical-rise 420ms ease-out both;
+}
+
+.astragal-critical--failure {
+  color: #ffa28e;
+  animation: astragal-critical-drop 300ms ease-out both;
+}
+
+.astragal-critical__mark {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  text-align: center;
+  font-size: 62px;
+  line-height: 80px;
+  filter: drop-shadow(0 2px 5px #000);
+}
+
+@keyframes astragal-critical-rise {
+  from { opacity: 0; transform: translateY(16px) scale(0.78); }
+  70% { transform: scale(1.06); }
+}
+
+@keyframes astragal-critical-drop {
+  from { opacity: 0; transform: translateY(-14px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .astragal-critical { animation: none; }
+}

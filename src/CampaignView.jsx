@@ -28,7 +28,7 @@ import PortraitUpload from "./PortraitUpload";
 import HandbookBookmark from './HandbookBookmark';
 import MenuMusicPlayer from './MenuMusicPlayer';
 import GameSessionOverlay from './GameSessionOverlay';
-import { logHerculesEvent } from './lib/herculesLog';
+import { logAstragalRoll, logHerculesEvent } from './lib/herculesLog';
 
 function label8() {
   return { fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.muted, fontFamily: "'Cinzel', serif" };
@@ -2185,27 +2185,7 @@ useEffect(() => {
     setAssigning(false); onAssign(String(campaign.id));
   };
 
-  const logRoll = async payload => {
-    const dice = payload?.diceResults || payload?.results || payload?.rolls || payload?.dice || [];
-    const diceList = Array.isArray(dice) ? dice.map(d => Number(d?.value ?? d?.roll ?? d)).filter(n => !Number.isNaN(n)) : [];
-    const notation = payload?.notation || `${payload?.count || diceList.length || 1}d${payload?.sides || payload?.die || 20}`;
-    const diceTotal = payload?.diceTotal ?? diceList.reduce((sum, v) => sum + v, 0);
-    const statModifier = Number(payload?.statModifier ?? payload?.statMod ?? 0);
-    const flatModifier = Number(payload?.flatModifier ?? payload?.modifier ?? 0);
-    const total = Number(payload?.total ?? payload?.result ?? diceTotal + statModifier + flatModifier);
-    const diceText = diceList.length ? diceList.join(', ') : String(total);
-    const description = `${userChar?.name || 'Player'} rolled ${notation} (${diceText}) in Astragal for a TOTAL of ${total}.`;
-
-    const { error } = await logHerculesEvent(campaign.id, {
-      type: 'roll',
-      actor_name: userChar?.name || 'Player',
-      actor_id: userChar?.id ? String(userChar.id) : null,
-      modifier: payload?.totalBonus ?? statModifier + flatModifier,
-      total,
-      description,
-    });
-    if (error) throw error;
-  };
+  const logRoll = payload => logAstragalRoll(campaign.id, payload);
   const renderTab = () => {
     switch (activeTab) {
       case 'Map':
@@ -2537,7 +2517,7 @@ useEffect(() => {
       {showAstragal && (
         <DraggablePanel {...panelPriority('astragal')} defaultX={108} defaultY={300} onClose={() => setShowAstragal(false)} title="Astragal — Fate Cast in Bone" width={320} accentColor="rgba(240,238,235,0.12)">
           <div style={{ padding: 14 }}>
-            <Astragal character={userChar} actionName="Astragal Roll" statKey="will" onResult={logRoll} />
+            <Astragal character={userChar} actionName="General roll" statKey="will" onResult={logRoll} />
           </div>
         </DraggablePanel>
       )}
