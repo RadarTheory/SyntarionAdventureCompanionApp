@@ -363,12 +363,35 @@ function AssignOwnerPanel({ char }) {
   );
 }
 
+// The character's data blob as it is in the database right now.
+async function readCharacterData(id) {
+  const { data: row, error } = await supabase.from('characters').select('data').eq('id', id).maybeSingle();
+  if (error) throw error;
+  if (!row) throw new Error('Character not found.');
+  return (typeof row.data === 'string' ? JSON.parse(row.data || '{}') : row.data) || {};
+}
+// Top-level fields of the editor's copy that differ from what it last knew (row columns are never part of the blob).
+const ROW_FIELDS = new Set(['id', 'status', 'campaign_id', 'user_id']);
+function changedFields(before, after) {
+  const patch = {};
+  for (const key of Object.keys(after)) {
+    if (ROW_FIELDS.has(key)) continue;
+    if (JSON.stringify(after[key]) !== JSON.stringify(before[key])) patch[key] = after[key];
+  }
+  return patch;
+}
+
 // CHARACTER EDITOR
 function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
   // `char` is spread first: spreading it last let an undefined char.sprite_url
   // overwrite the token.sprite_url fallback, so a character whose token was only
   // recorded under `token` read as having none.
-  const [data, setData] = useState({ ...char, portrait_url: char.portrait_url || char.data?.portrait_url || null, sprite_url: char.sprite_url || char.data?.sprite_url || char.token?.sprite_url || char.data?.token?.sprite_url || null });
+  const [data, setData] = useState(() => ({ ...char, portrait_url: char.portrait_url || char.data?.portrait_url || null, sprite_url: char.sprite_url || char.data?.sprite_url || char.token?.sprite_url || char.data?.token?.sprite_url || null }));
+  // What the editor last knew to be in the database. Save writes only the fields the DM changed since then, merged into a
+  // fresh read of the character, so whatever the player did meanwhile (purchases, pools, notes, gear) is kept.
+  // Anything this editor writes straight away (conditions, portrait, token, level, XP, the constellation) updates it too.
+  const baseline = useRef(data);
+  const known = patch => { baseline.current = { ...baseline.current, ...patch }; };
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [note, setNote] = useState('');
@@ -420,8 +443,15 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
   const handleSave = async (newStatus) => {
     setSaving(true);
     setSaveError('');
-    const { id, status, campaign_id, user_id, ...blob } = data;
-    const { data: updated, error } = await supabase.from('characters').update({ data: { ...blob, portrait_url: data.portrait_url || null, sprite_url: selectedSpriteUrl || data.sprite_url || null, token: { ...(data.token || {}), sprite_url: selectedSpriteUrl || data.sprite_url || null, generation_count: spriteGenerationCount, status: (selectedSpriteUrl || data.sprite_url) ? 'selected' : 'not_selected' } }, status: newStatus || data.status, campaign_id: data.campaign || null }).eq('id', char.id).select('id');
+    let current;
+    try { current = await readCharacterData(char.id); } catch (e) { setSaving(false); setSaveError(`Save failed: ${e.message}`); return; }
+    const patch = changedFields(baseline.current, data);
+    const spriteUrl = selectedSpriteUrl || data.sprite_url || null;
+    if (spriteUrl !== (baseline.current.sprite_url || null) || spriteGenerationCount !== (baseline.current.token?.generation_count || 0)) {
+      patch.sprite_url = spriteUrl;
+      patch.token = { ...(current.token || {}), sprite_url: spriteUrl, generation_count: spriteGenerationCount, status: spriteUrl ? 'selected' : 'not_selected' };
+    }
+    const { data: updated, error } = await supabase.from('characters').update({ data: { ...current, ...patch }, status: newStatus || data.status, campaign_id: data.campaign || null }).eq('id', char.id).select('id');
     // Same guard as assign/unassign above: RLS reports a filtered write as
     // success with zero rows, which would look like a save that stuck.
     if (error || !updated?.length) {
@@ -429,6 +459,7 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
       setSaveError(error ? `Save failed: ${error.message}` : 'Nothing was written — a database policy blocked this update. Nothing was saved.');
       return;
     }
+    baseline.current = { ...data, ...patch };
     if (note && (newStatus === 'rejected' || newStatus === 'approved')) {
       await supabase.from('messages').insert({ character_id: char.id, campaign_id: data.campaign, type: 'dm_reply', content: note, sender_name: 'The Architect', is_dm: true });
     }
@@ -449,6 +480,7 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
     const { data: row } = await supabase.from('characters').select('data').eq('id', char.id).maybeSingle();
     const existing = typeof row?.data === 'string' ? JSON.parse(row.data || '{}') : (row?.data || {});
     await supabase.from('characters').update({ data: { ...existing, conditions: next } }).eq('id', char.id);
+    known({ conditions: next });
   };
   const setStat = (key, val) => setData(prev => ({ ...prev, stats: { ...prev.stats, [key]: parseInt(val) || 8 } }));
 
@@ -462,7 +494,9 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
       if (result?.level_after && result.level_after > levelBefore) playSfxByKey('ui-level-up-chime');
       const nextAtCurrent = atCurrent + (result?.at_granted || 0);
       const nextAtTotal = atTotal + (result?.at_granted || 0);
-      setData(prev => ({ ...prev, apTotal: result?.ap_after ?? apTotal + amount, apCurrent: result?.ap_after ?? apTotal + amount, charLevel: result?.level_after ?? prev.charLevel, atCurrent: nextAtCurrent, atTotal: nextAtTotal, at_current: nextAtCurrent, at_total: nextAtTotal }));
+      const granted = { apTotal: result?.ap_after ?? apTotal + amount, apCurrent: result?.ap_after ?? apTotal + amount, charLevel: result?.level_after ?? data.charLevel, atCurrent: nextAtCurrent, atTotal: nextAtTotal, at_current: nextAtCurrent, at_total: nextAtTotal };
+      known(granted);
+      setData(prev => ({ ...prev, ...granted }));
       setApGrant('');
       setApReason('');
       onSave?.();
@@ -481,8 +515,7 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
     const nextApTotal = apForLevel(targetLevel);
     const nextAtCurrent = Math.max(0, atCurrent + levelDelta * AP_PER_LEVEL);
     const nextAtTotal = Math.max(0, atTotal + levelDelta * AP_PER_LEVEL);
-    const nextData = {
-      ...data,
+    const levelFields = {
       apTotal: nextApTotal,
       apCurrent: nextApTotal,
       charLevel: targetLevel,
@@ -492,7 +525,6 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
       at_current: nextAtCurrent,
       at_total: nextAtTotal,
     };
-    const { id, status, campaign_id, user_id, ...blob } = nextData;
     setSaving(true);
     setSaveError('');
     try {
@@ -506,11 +538,12 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
         at_total: nextAtTotal,
         atCurrent: nextAtCurrent,
         atTotal: nextAtTotal,
-        data: blob,
+        data: { ...(await readCharacterData(char.id)), ...levelFields },
       }).eq('id', char.id).select('id');
       if (error) throw error;
       if (!updated?.length) throw new Error('Nothing was written — a database policy blocked this update. The level was not saved.');
-      setData(nextData);
+      known(levelFields);
+      setData(prev => ({ ...prev, ...levelFields }));
       setLevelDraft(String(targetLevel));
       onRefresh?.(); // refresh the roster but keep the sheet open
     } catch (e) {
@@ -565,7 +598,7 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
             <button onClick={() => setShowConstellation(false)} style={{ background: 'transparent', border: `1px solid ${COLORS.borderMid}`, borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.text, fontFamily: "'Cinzel', serif" }}>Close</button>
           </div>
           <div style={{ flex: 1, minHeight: 0 }}>
-            <ConstellationTab dm spendAp={spendAp} char={data} onUpdateChar={next => { setData(prev => ({ ...prev, ...next })); onRefresh?.(); }} />
+            <ConstellationTab dm spendAp={spendAp} char={data} onUpdateChar={next => { known(next); setData(prev => ({ ...prev, ...next })); onRefresh?.(); }} />
           </div>
         </div>
       )}
@@ -580,8 +613,9 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
             onUploaded={async (url) => {
               set('portrait_url', url);
               await supabase.from('characters').update({
-                data: { ...data, portrait_url: url }
+                data: { ...(await readCharacterData(char.id)), portrait_url: url }
               }).eq('id', char.id);
+              known({ portrait_url: url });
             }}
           />
         </div>
@@ -626,6 +660,7 @@ function CharacterEditor({ char, onSave, onRefresh, onClose, campaigns = [] }) {
             if (error) throw new Error(`The archive refused the token: ${error.message}`);
             if (!updated?.length) throw new Error('Nothing was written — a database policy blocked this update. The token was not saved.');
 
+            known({ sprite_url: url, token: nextToken });
             setData(prev => ({ ...prev, sprite_url: url, token: nextToken }));
             await syncSpriteToVttSessions(url);
             onRefresh?.(); // refresh the roster without closing the sheet mid-review

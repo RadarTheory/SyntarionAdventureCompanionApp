@@ -237,7 +237,7 @@ function MoralCompass({ moral, magicTech }) {
     <div className="cs-panel">
       <SectionTitle>Moral compass</SectionTitle>
       <div className="cs-compass">
-        <svg viewBox="0 0 220 220" role="img" aria-label={`Moral compass: ${moralWord} ${fmt(moral)}, ${leanWord} ${fmt(magicTech)}`}>
+        <svg viewBox="-42 0 304 224" role="img" aria-label={`Moral compass: ${moralWord} ${fmt(moral)}, ${leanWord} ${fmt(magicTech)}`}>
           <defs>
             <radialGradient id="cs-compass-bg"><stop offset="0" stopColor="#1c1813" /><stop offset="1" stopColor={SKY} /></radialGradient>
             <linearGradient id="cs-compass-mt" x1="0" x2="1"><stop offset="0" stopColor={COLORS.magic} stopOpacity="0.22" /><stop offset="0.5" stopColor="#000" stopOpacity="0" /><stop offset="1" stopColor={COLORS.tech} stopOpacity="0.22" /></linearGradient>
@@ -260,8 +260,8 @@ function MoralCompass({ moral, magicTech }) {
           <circle cx={cx} cy={cy} r="2.5" fill={GOLD} />
           <text x={cx} y="12" textAnchor="middle" className="cs-compass-label" fill="#e8d9a7">GOOD</text>
           <text x={cx} y="216" textAnchor="middle" className="cs-compass-label" fill={COLORS.warn}>EVIL</text>
-          <text x="6" y={cy + 3} textAnchor="start" className="cs-compass-label" fill={COLORS.magicText}>MAGIC</text>
-          <text x="214" y={cy + 3} textAnchor="end" className="cs-compass-label" fill={COLORS.techText}>TECH</text>
+          <text x="-38" y={cy + 3} textAnchor="start" className="cs-compass-label" fill={COLORS.magicText}>MAGIC</text>
+          <text x="258" y={cy + 3} textAnchor="end" className="cs-compass-label" fill={COLORS.techText}>TECH</text>
         </svg>
         <div className="cs-compass-read">
           <div><b style={{ color: moral >= 0 ? '#e8d9a7' : COLORS.warn }}>{moralWord}</b><small>{moral > 0 ? '+' : ''}{fmt(moral)} of ±4</small></div>
@@ -447,6 +447,10 @@ export default function CharacterSheetPage({ char, effectiveStats, onUpdateChar,
       {/* Hero */}
       <div className="cs-hero">
         <div className="cs-portrait"><PortraitUpload currentUrl={char.portrait_url} onUploaded={uploadPortrait} size={120} /></div>
+        <div className="cs-emblems">
+          {raceKey && <Emblem src={`/RaceIcons/${raceKey}.png`} color={GOLD} title={getRaceDisplay(char.race, char.rv, char.pmV)} />}
+          {classIcon && <Emblem src={`/constellation/${classIcon.src}`} color={classColor} title={[label?.name, label?.trait].filter(Boolean).join(' · ')} />}
+        </div>
         <div className="cs-hero-main">
           <div className="cs-eyebrow">{[`Level ${level}`, label?.title].filter(Boolean).join(' · ')}</div>
           <h1 className="cs-name">{char.name || 'Unnamed'}</h1>
@@ -461,64 +465,59 @@ export default function CharacterSheetPage({ char, effectiveStats, onUpdateChar,
             <div><b style={{ color: '#d6b85a' }}>{coin || '—'}</b><small>Coin</small></div>
           </div>
         </div>
-        <div className="cs-emblems">
-          {raceKey && <Emblem src={`/RaceIcons/${raceKey}.png`} color={GOLD} title={getRaceDisplay(char.race, char.rv, char.pmV)} />}
-          {classIcon && <Emblem src={`/constellation/${classIcon.src}`} color={classColor} title={[label?.name, label?.trait].filter(Boolean).join(' · ')} />}
-        </div>
       </div>
 
-      <div className="cs-grid cs-grid-sky">
-        <CharacterSky char={char} onOpen={onOpenAbilities} />
-        <div className="cs-stack">
+      {/* Two continuous columns, so panels stack without gaps: the sky, attributes and notes on the left; who they are
+          to the world (compass, renown, regard), their scales and pools on the right. One column on narrow screens. */}
+      <div className="cs-layout">
+        <div className="cs-col">
+          <CharacterSky char={char} onOpen={onOpenAbilities} />
+          <div className="cs-panel">
+            <SectionTitle>Attributes</SectionTitle>
+            <div className="cs-attr-cols">
+              <div>
+                <div className="cs-axis" style={{ color: COLORS.magicText }}>Magic axis</div>
+                {MAGIC_STATS.map(s => <Attribute key={s.key} stat={s} axis="magic" effectiveStats={effectiveStats} char={char} />)}
+              </div>
+              <div>
+                <div className="cs-axis" style={{ color: COLORS.techText }}>Tech axis</div>
+                {TECH_STATS.map(s => <Attribute key={s.key} stat={s} axis="tech" effectiveStats={effectiveStats} char={char} />)}
+              </div>
+            </div>
+          </div>
+          <div className="cs-panel">
+            <SectionTitle>Notes</SectionTitle>
+            <textarea className="cs-notes" value={playerNotes} onChange={e => handleNotesChange(e.target.value)} placeholder="Personal notes, reminders, goals…" rows={4} />
+          </div>
+        </div>
+        <div className="cs-col">
           <MoralCompass moral={moral} magicTech={magicTech} />
           <Standing char={char} reputations={reputations} />
           <Regard char={char} reputations={reputations} />
-        </div>
-      </div>
-
-      <div className="cs-grid cs-grid-attrs">
-        <div className="cs-panel">
-          <SectionTitle>Attributes</SectionTitle>
-          <div className="cs-attr-cols">
-            <div>
-              <div className="cs-axis" style={{ color: COLORS.magicText }}>Magic axis</div>
-              {MAGIC_STATS.map(s => <Attribute key={s.key} stat={s} axis="magic" effectiveStats={effectiveStats} char={char} />)}
-            </div>
-            <div>
-              <div className="cs-axis" style={{ color: COLORS.techText }}>Tech axis</div>
-              {TECH_STATS.map(s => <Attribute key={s.key} stat={s} axis="tech" effectiveStats={effectiveStats} char={char} />)}
-            </div>
+          <div className="cs-panel">
+            <SectionTitle>Scales</SectionTitle>
+            <Gauge label="Vitals" value={stat('body') + stat('will')} max={40} note="Body + Will" color="#e05a5a" />
+            <Gauge label="Stamina" value={stat('body') + stat('whim')} max={40} note="Body + Whim" color="#e08a5a" />
+            <Gauge label="Resolve" value={stat('soul') + stat('dream')} max={40} note="Soul + Dream" color={COLORS.magic} />
+            <div style={{ height: 8 }} />
+            <Balance left="Will" right="Whim" a={stat('will')} b={stat('whim')} colorA={COLORS.techText} colorB={COLORS.spiritText} />
+            <Balance left="Soul" right="Spirit" a={stat('soul')} b={stat('spirit')} colorA={COLORS.magicText} colorB={COLORS.deityText} />
           </div>
-        </div>
-        <div className="cs-panel">
-          <SectionTitle>Scales</SectionTitle>
-          <Gauge label="Vitals" value={stat('body') + stat('will')} max={40} note="Body + Will" color="#e05a5a" />
-          <Gauge label="Stamina" value={stat('body') + stat('whim')} max={40} note="Body + Whim" color="#e08a5a" />
-          <Gauge label="Resolve" value={stat('soul') + stat('dream')} max={40} note="Soul + Dream" color={COLORS.magic} />
-          <div style={{ height: 8 }} />
-          <Balance left="Will" right="Whim" a={stat('will')} b={stat('whim')} colorA={COLORS.techText} colorB={COLORS.spiritText} />
-          <Balance left="Soul" right="Spirit" a={stat('soul')} b={stat('spirit')} colorA={COLORS.magicText} colorB={COLORS.deityText} />
-        </div>
-      </div>
-
-      {pools.length > 0 && (
-        <div className="cs-panel">
-          <SectionTitle right={<span className="cs-sub">refill on a long rest</span>}>Trait pools</SectionTitle>
-          <div className="cs-pools">
-            {pools.map(p => (
-              <div key={p.key} className="cs-pool" style={{ borderColor: `${p.meta.color || GOLD}44` }}>
-                <div className="cs-sub" style={{ textTransform: 'uppercase', letterSpacing: '0.12em' }}>{p.meta.label || p.key} · {p.meta.trait || p.key}</div>
-                <div className="cs-pool-val" style={{ color: p.meta.color || GOLD }}>{p.pool}<small> / {p.max}</small></div>
-                <div className="cs-pool-pips">{Array.from({ length: Math.min(p.max, 20) }, (_, i) => <i key={i} style={{ background: i < p.pool ? (p.meta.color || GOLD) : 'transparent', borderColor: p.meta.color || GOLD }} />)}</div>
+          {pools.length > 0 && (
+            <div className="cs-panel">
+              <SectionTitle right={<span className="cs-sub">refill on a long rest</span>}>Trait pools</SectionTitle>
+              <div className="cs-pools">
+                {pools.map(p => (
+                  <div key={p.key} className="cs-pool" style={{ borderColor: `${p.meta.color || GOLD}44` }}>
+                    <div className="cs-sub" style={{ textTransform: 'uppercase', letterSpacing: '0.12em' }}>{p.meta.label || p.key} · {p.meta.trait || p.key}</div>
+                    <div className="cs-pool-val" style={{ color: p.meta.color || GOLD }}>{p.pool}<small> / {p.max}</small></div>
+                    <div className="cs-pool-pips">{Array.from({ length: Math.min(p.max, 20) }, (_, i) => <i key={i} style={{ background: i < p.pool ? (p.meta.color || GOLD) : 'transparent', borderColor: p.meta.color || GOLD }} />)}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
-      )}
-
-      <div className="cs-panel">
-        <SectionTitle>Notes</SectionTitle>
-        <textarea className="cs-notes" value={playerNotes} onChange={e => handleNotesChange(e.target.value)} placeholder="Personal notes, reminders, goals…" rows={4} />
       </div>
     </div>
   );
@@ -537,7 +536,7 @@ const CSS = `
 .cs-big{font-family:'Cinzel',serif;font-size:34px;font-weight:700;line-height:1}
 .cs-chip{display:inline-flex;align-items:center;border:1px solid;border-radius:999px;padding:3px 10px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em}
 .cs-title{color:#ecd99a;border-color:rgba(200,168,74,.4);background:rgba(200,168,74,.08)}
-.cs-hero{display:grid;grid-template-columns:auto 1fr auto;gap:22px;align-items:center;padding:22px 24px;border-radius:12px;border:1px solid rgba(200,168,74,.25);background:radial-gradient(ellipse at 80% 20%,rgba(111,158,120,.12),transparent 55%),radial-gradient(ellipse at 10% 100%,rgba(74,136,184,.10),transparent 50%),linear-gradient(180deg,#121614,#0d0b09);box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.cs-hero{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:22px;align-items:center;padding:22px 24px;border-radius:12px;border:1px solid rgba(200,168,74,.25);background:radial-gradient(ellipse at 80% 20%,rgba(111,158,120,.12),transparent 55%),radial-gradient(ellipse at 10% 100%,rgba(74,136,184,.10),transparent 50%),linear-gradient(180deg,#121614,#0d0b09);box-shadow:0 18px 40px rgba(0,0,0,.35)}
 .cs-portrait{flex-shrink:0}
 .cs-eyebrow{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:${GOLD};margin-bottom:6px}
 .cs-name{margin:0;font-family:'Cinzel',serif;font-size:30px;font-weight:700;letter-spacing:.04em;line-height:1.1;color:#f6f0e2;text-shadow:0 0 24px rgba(200,168,74,.15)}
@@ -550,10 +549,8 @@ const CSS = `
 .cs-emblems{display:flex;flex-direction:column;gap:14px}
 .cs-emblem{position:relative;display:grid;place-items:center;filter:drop-shadow(0 0 14px color-mix(in srgb,var(--glow) 45%,transparent))}
 .cs-emblem-frame{position:absolute;inset:12%;transform:rotate(45deg);border:1px solid;border-radius:6px;background:radial-gradient(circle,color-mix(in srgb,var(--glow) 22%,transparent),rgba(8,10,9,.9) 70%)}
-.cs-grid{display:grid;gap:16px}
-.cs-grid-sky{grid-template-columns:minmax(0,1.75fr) minmax(0,1fr)}
-.cs-grid-attrs{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
-.cs-stack{display:grid;gap:16px;align-content:start}
+.cs-layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:16px;align-items:start}
+.cs-col{display:grid;gap:16px;min-width:0}
 .cs-sky-panel{padding-bottom:12px}
 .cs-sky{border-radius:8px;overflow:hidden;background:radial-gradient(ellipse at 50% 60%,#14201c 0%,${SKY} 70%);border:1px solid rgba(255,255,255,.05)}
 .cs-sky svg{display:block;width:100%;height:auto}
@@ -565,10 +562,10 @@ const CSS = `
 @media (prefers-reduced-motion:reduce){.cs-thread{animation:none}}
 .cs-sky-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
 .cs-sky-count{margin-left:auto;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:${COLORS.dim}}
-.cs-compass{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}
-.cs-compass svg{width:100%;max-width:220px;height:auto;display:block;margin:0 auto}
+.cs-compass{display:grid;gap:10px}
+.cs-compass svg{width:100%;max-width:250px;height:auto;display:block;margin:0 auto}
 .cs-compass-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.2em}
-.cs-compass-read{display:grid;gap:12px}
+.cs-compass-read{display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:center;border-top:1px solid rgba(240,238,235,.06);padding-top:10px}
 .cs-compass-read b{display:block;font-family:'Cinzel',serif;font-size:14px}
 .cs-compass-read small{font-size:9px;color:${COLORS.dim}}
 .cs-attr-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
@@ -595,14 +592,12 @@ const CSS = `
 .cs-regard{display:grid;gap:6px}.cs-regard>div{display:flex;justify-content:space-between;gap:10px;padding-bottom:6px;border-bottom:1px solid rgba(240,238,235,.06);font-size:12px}.cs-regard b{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.08em}
 .cs-notes{width:100%;box-sizing:border-box;background:rgba(0,0,0,.25);border:1px solid rgba(240,238,235,.08);border-radius:8px;padding:10px 12px;color:${COLORS.text};font-size:12px;font-family:Georgia,serif;outline:none;resize:vertical}
 .cs-notes:focus{border-color:rgba(200,168,74,.4)}
-@media (max-width:860px){.cs-grid-sky,.cs-grid-attrs{grid-template-columns:1fr}}
+@media (max-width:900px){.cs-layout{grid-template-columns:1fr}}
 @media (max-width:620px){
   .cs-hero{grid-template-columns:1fr;justify-items:center;text-align:center;padding:18px 16px}
   .cs-emblems{flex-direction:row;order:-1}
   .cs-hero-stats,.cs-hero-titles{justify-content:center}
   .cs-name{font-size:24px}
   .cs-attr-cols{grid-template-columns:1fr}
-  .cs-compass{grid-template-columns:1fr}
-  .cs-compass-read{grid-template-columns:1fr 1fr;text-align:center}
 }
 `;
