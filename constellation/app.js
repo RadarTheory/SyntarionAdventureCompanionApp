@@ -2,7 +2,7 @@ import {renderSharedMap,homePan} from './shared-map.js';
 import {renderCallingMap} from './calling-layout.js';
 import {classPortrait,hydrateClassIcons} from './class-icons.js';
 import {practiceSymbol} from './practice-icons.js';
-import {disciplines,classes,roots,attributes,abilityEntries,classLevelNodes,buyVerb,visibleClasses,restoreSelection,setupForClass,praethacyEligibility,nullRevealed,canLearn,classById,classKnown,isMastered,isComplete,reachableNodes,awakenedCount,masteredClasses,unlockRequirement,repairLearned,spentPoints,nodeCost,blockReason,nextParent,magicTechAxis,AXIS_LIMIT,MASTERY,STARTING_POINTS,CALLING_LORE,traitFor} from './data.js';
+import {disciplines,classes,roots,attributes,abilityEntries,classLevelNodes,buyVerb,visibleClasses,restoreSelection,setupForClass,praethacyEligibility,nullRevealed,canLearn,classById,classKnown,isMastered,isComplete,reachableNodes,awakenedCount,masteredClasses,unlockRequirement,repairLearned,spentPoints,nodeCost,blockReason,nextParent,magicTechAxis,AXIS_LIMIT,MASTERY,STARTING_POINTS,CALLING_LORE,ASPECT_LORE,traitFor} from './data.js';
 import {DEV_MODE,setStartingPoints} from './config.js';
 import {HOSTED,PICKING,hostInit,hostSave,hostPick,hostUse,onHostReply} from './host.js';
 import {renderHeld} from './held-abilities.js';
@@ -145,7 +145,11 @@ $('#axis-meter').title=counts;$('#axis-meter').innerHTML=`<div class="axis-head"
 // Order matches The Lockcaste's cover (user: this order matters), read across each row; all nine stay equally bright here.
 const SAGA=['Will','Mind','Dream','Spirit','Hope','Soul','Affect','Body','Whim'];let sagaPinned=null;
 const aspectNamed=name=>name==='Hope'?hopeAspect:doctrineGroups.flatMap(g=>g.aspects).find(a=>a.name===name);
-function highlightAspect(name){const svg=$('#stars');svg.classList.toggle('aspect-focus',!!name);const has=id=>!!name&&classById(id)?.attribute===name;svg.querySelectorAll('[data-star-class]').forEach(el=>el.classList.toggle('aspect-lit',has(el.dataset.starClass)));
+// An aspect's description drifts in beside the Saga card while it is highlighted, set like the calling's (user, 2026-11-16).
+// It stays put while the same aspect stays highlighted, so moving between hover and pin does not replay the smoke.
+function showAspectLore(name){const saga=$('#saga');if(!saga)return;const card=saga.querySelector('.aspect-lore'),lore=name&&ASPECT_LORE[name];if(card&&card.dataset.aspect===(name||''))return;card?.remove();if(!lore)return;
+saga.insertAdjacentHTML('beforeend',`<aside class="hud-lore aspect-lore" data-aspect="${esc(name)}"><span>${esc(name.toUpperCase())} · ${esc(lore.term.toUpperCase())}</span><p>${esc(lore.text)}</p></aside>`);}
+function highlightAspect(name){showAspectLore(name);const svg=$('#stars');svg.classList.toggle('aspect-focus',!!name);const has=id=>!!name&&classById(id)?.attribute===name;svg.querySelectorAll('[data-star-class]').forEach(el=>el.classList.toggle('aspect-lit',has(el.dataset.starClass)));
 // Only threads that belong to the highlighted aspect stay lit: a Self thread to one of its callings, or a link whose two ends both carry it.
 svg.querySelectorAll('.thread').forEach(el=>el.classList.toggle('aspect-lit',el.dataset.selfThread?has(el.dataset.selfThread):!!el.dataset.linkClass&&has(el.dataset.linkClass)&&has(el.dataset.linkFrom)));}
 function renderSaga(){const saga=$('#saga'),shown=visibleClasses(revealed,true,learned,nullOpen);

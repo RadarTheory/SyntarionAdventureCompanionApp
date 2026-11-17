@@ -11,6 +11,9 @@ import { loadConstellation, startingCallingOf } from './constellationAbilities';
 // (ConstellationTab.jsx). cid stays one of the wizard's CLASSES ids, so boons, stats and the Magic | Tech lean are unchanged.
 // ═════════════════════════════════════════════════════════════════════════════
 const SRC = '/constellation/index.html?host=syntarion&pick=1';
+// A calling's first star costs 2 AP. Pick mode buys nothing, but with 0 AP the sky reads "Needs 2 AP · 0 left" and
+// looks blocked, so a new character comes to this step holding the 2 AP their calling costs (user, 2026-11-16).
+const CALLING_AP = 2;
 
 export default function StepClass({
   cp, setCp, cid, setCid,
@@ -32,7 +35,7 @@ export default function StepClass({
 
   const sendInit = useCallback(() => {
     frame.current?.contentWindow?.postMessage({
-      type: 'init', learned: [], available: 0, characterId: 'wizard',
+      type: 'init', learned: [], available: CALLING_AP, characterId: 'wizard',
       startingCalling: startingCallingOf({ cid: cidRef.current }),
     }, window.location.origin);
   }, []);

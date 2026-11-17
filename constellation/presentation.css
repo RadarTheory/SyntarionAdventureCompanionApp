@@ -323,6 +323,9 @@ html{scrollbar-color:color-mix(in srgb,var(--accent,#c4b389) 40%,#2a332c) #080f0
 .hud-lore{padding:0;background:none;border:0;border-radius:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
 .hud-lore span{font-size:11px;margin-bottom:5px;text-shadow:0 1px 3px #000,0 0 10px #080f0e}
 .hud-lore p{font-size:11.5px;line-height:1.5;color:#cfd4c3;text-shadow:0 1px 2px #000,0 0 8px #080f0e,0 0 16px #080f0e}
+/* An aspect's description: the same card and smoke as the calling's, beside the Saga card instead of the Awaken button. */
+.saga>.aspect-lore{width:260px;z-index:2}
+@media(max-width:650px){.saga>.aspect-lore{left:0;top:calc(100% + 10px);width:min(280px,calc(100vw - 48px))}}
 /* The class symbol floats above the corner Awaken button (outside the stack's flow, so nothing below moves). */
 .hud-symbol{position:absolute;left:50%;bottom:calc(100% + 12px);width:64px;height:64px;margin-left:-32px;display:grid;place-items:center;pointer-events:none;animation:hud-smoke .9s cubic-bezier(.2,.7,.2,1) .15s both}
 .hud-symbol .class-portrait{position:relative;width:64px;height:64px;display:grid;place-items:center;background:none;border:0;box-shadow:none}
