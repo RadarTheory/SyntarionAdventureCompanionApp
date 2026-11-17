@@ -33,23 +33,13 @@ const clamp = (v, min = -4, max = 4) => Math.max(min, Math.min(max, v));
 // LIVE SLIDER PANEL
 // Read only for the player. Fixed — bottom on mobile, right panel on desktop.
 //
-// Sliders:
-//   MORALITY     — -4 (dark) to +4 (light)
+// Sliders (the two axes the sheet's compass uses; Dark | Light is no longer shown, user 2026-11-16 —
+// morality is still computed and saved with the character):
 //   MAGIC | TECH — -4 (magic) to +4 (tech)
 //   WILL | WHIM  — -4 (whim/dex) to +4 (will/str)
 // ═════════════════════════════════════════════════════════════════════════════
-function SliderPanel({ morality, magicTech, willWhim, isMobile }) {
+function SliderPanel({ magicTech, willWhim, isMobile }) {
   const sliders = [
-    {
-      id: 'morality',
-      label: 'MORALITY',
-      value: morality,
-      leftLabel: 'Dark',
-      rightLabel: 'Light',
-      leftColor: COLORS.warn,
-      rightColor: COLORS.magic,
-      trackColor: (v) => v < 0 ? COLORS.warn : COLORS.magic,
-    },
     {
       id: 'magictech',
       label: 'MAGIC  |  TECH',
@@ -553,7 +543,6 @@ export default function Wizard({ onComplete, onHome }) {
 
       {/* ── SLIDER PANEL (fixed, read only) ── */}
       <SliderPanel
-        morality={morality}
         magicTech={magicTech}
         willWhim={willWhim}
         isMobile={isMobile}

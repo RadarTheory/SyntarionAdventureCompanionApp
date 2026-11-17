@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useDevice } from './useDevice';
 import { COLORS, CLASSES } from './constants';
-import { loadConstellation, startingCallingOf } from './constellationAbilities';
+import { startingCallingOf } from './constellationAbilities';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // STEP CLASS
@@ -21,12 +21,31 @@ export default function StepClass({
   goNext, goBack,
 }) {
   const { isMobile } = useDevice();
+  const anchor = useRef(null);
+  const [top, setTop] = useState(null);
   const frame = useRef(null);
   const cidRef = useRef(cid);
-  const [data, setData] = useState(null);
 
   useEffect(() => { cidRef.current = cid; }, [cid]);
-  useEffect(() => { loadConstellation().then(setData).catch(() => {}); }, []);
+
+  // The sky fills the page below the wizard's step bar (user, 2026-11-16): the step's own column is only 680px wide, so
+  // measure where the scrolling content area starts and lay a fixed layer from there to the side panel.
+  useLayoutEffect(() => {
+    const measure = () => {
+      const area = anchor.current?.parentElement?.parentElement;
+      if (!area) return;
+      // Start right under the step bar itself: on phones the wizard pads the bar's wrapper with room for the bottom panel.
+      const bar = area.previousElementSibling?.firstElementChild;
+      setTop(Math.round(bar ? bar.getBoundingClientRect().bottom : area.getBoundingClientRect().top));
+    };
+    // The header and step bar settle after fonts load and as they wrap, so measure again whenever the page reflows.
+    measure();
+    document.fonts?.ready?.then(measure);
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    ro?.observe(document.body);
+    window.addEventListener('resize', measure);
+    return () => { ro?.disconnect(); window.removeEventListener('resize', measure); };
+  }, []);
 
   // When class changes, regenerate boons with correct path
   useEffect(() => {
@@ -57,134 +76,45 @@ export default function StepClass({
   }, [sendInit, setCid, setCp]);
 
   const canAdvance = !!cid;
-  const calling = data && cid ? data.classById(startingCallingOf({ cid })) : null;
-  const practice = calling ? data.disciplines.find(p => p.id === calling.discipline) : null;
-  const trait = calling ? data.traitFor(calling) : null;
-  const lore = calling ? data.CALLING_LORE?.[calling.id] : null;
-  const abilities = calling ? data.abilityEntries(calling, 'abilities') : [];
-  const color = practice?.color || (cp === 'magic' ? COLORS.magic : COLORS.tech);
+  const SKY = '#0c100f';
+
+  const navBtn = (enabled) => ({
+    background: enabled ? 'rgba(200,168,74,0.12)' : 'transparent',
+    border: `1px solid ${enabled ? 'rgba(200,168,74,0.45)' : COLORS.border}`,
+    borderRadius: 3, padding: isMobile ? '8px 12px' : '9px 18px',
+    color: enabled ? COLORS.text : COLORS.dim, cursor: enabled ? 'pointer' : 'default',
+    fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase',
+    whiteSpace: 'nowrap', transition: 'all 0.15s',
+  });
 
   return (
-    <div>
+    <div ref={anchor}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
       `}</style>
 
-      {/* Title */}
+      {/* The whole step is the map: a fixed layer from the step bar down, left of the Magic | Tech panel (above it on phones),
+          with only the Belief / Stats buttons along its foot. */}
       <div style={{
-        fontFamily: "'Cinzel', serif",
-        fontSize: isMobile ? 18 : 22,
-        fontWeight: 700,
-        color: COLORS.text,
-        letterSpacing: '0.06em',
-        marginBottom: 4,
-      }}>Choose your Calling</div>
-      <div style={{
-        fontSize: 11,
-        color: COLORS.muted,
-        fontFamily: 'Georgia, serif',
-        fontStyle: 'italic',
-        marginBottom: 16,
-        lineHeight: 1.6,
-      }}>
-        Every character begins at The Self. Select the star of the calling your story starts from to see what it can do.
-        It becomes your first star in the Constellation, and you can awaken others later.
-      </div>
-
-      {/* Current selection */}
-      <div style={{
-        marginBottom: 14,
-        padding: '10px 14px',
-        background: calling ? `${color}14` : COLORS.card,
-        border: `1px solid ${calling ? color + '88' : COLORS.border}`,
-        borderRadius: 3,
-        minHeight: 38,
-      }}>
-        {calling ? (
-          <>
-            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 12, color, letterSpacing: '0.08em' }}>
-              {calling.name}
-              <span style={{ fontSize: 9, color: COLORS.muted, letterSpacing: '0.12em', marginLeft: 10 }}>
-                {[practice?.name, calling.attribute, trait && `${trait.discipline} / ${trait.trait}`].filter(Boolean).join(' · ').toUpperCase()}
-              </span>
-            </div>
-            {lore && <div style={{ fontSize: 11, color: COLORS.textSub, fontFamily: 'Georgia, serif', lineHeight: 1.55, marginTop: 4 }}>{lore}</div>}
-            {abilities.length > 0 && (
-              <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '4px 16px' }}>
-                {abilities.map(a => (
-                  <div key={a.key} style={{ fontSize: 10, color: COLORS.muted, fontFamily: 'Georgia, serif', lineHeight: 1.45 }}>
-                    <span style={{ fontFamily: "'Cinzel', serif", color, letterSpacing: '0.04em' }}>{a.name}</span> — {a.description}
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        ) : (
-          <div style={{ fontSize: 11, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No calling chosen yet.</div>
-        )}
-      </div>
-
-      {/* The constellation, wider than the wizard's column where the screen allows */}
-      <div style={{
-        position: 'relative', left: '50%', transform: 'translateX(-50%)',
-        width: 'min(1180px, calc(100vw - 32px))',
-        height: isMobile ? '62vh' : 'min(70vh, 720px)', minHeight: 380,
-        marginBottom: 20, borderRadius: 6, overflow: 'hidden',
-        border: `1px solid ${COLORS.border}`, background: '#0c100f',
+        position: 'fixed', top: top ?? 0, left: 0, right: isMobile ? 0 : 200, bottom: isMobile ? 64 : 0,
+        visibility: top == null ? 'hidden' : 'visible',
+        display: 'flex', flexDirection: 'column', background: SKY, zIndex: 5,
       }}>
         <iframe
           ref={frame}
           src={SRC}
           title="Choose your calling"
-          style={{ width: '100%', height: '100%', border: 0, display: 'block' }}
+          style={{ flex: 1, width: '100%', border: 0, display: 'block', background: SKY }}
         />
-      </div>
-
-      {/* Navigation */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingTop: 16,
-        borderTop: `1px solid ${COLORS.border}`,
-      }}>
-        <button
-          onClick={goBack}
-          style={{
-            background: 'transparent',
-            border: `1px solid ${COLORS.border}`,
-            borderRadius: 2,
-            padding: '10px 20px',
-            color: COLORS.muted,
-            cursor: 'pointer',
-            fontFamily: "'Cinzel', serif",
-            fontSize: 9,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-          }}
-        >
-          ← Belief
-        </button>
-
-        <button
-          onClick={goNext}
-          disabled={!canAdvance}
-          style={{
-            background: canAdvance ? COLORS.surface : 'transparent',
-            border: `1px solid ${canAdvance ? COLORS.borderMid : COLORS.border}`,
-            borderRadius: 2,
-            padding: '10px 24px',
-            color: canAdvance ? COLORS.text : COLORS.dim,
-            cursor: canAdvance ? 'pointer' : 'default',
-            fontFamily: "'Cinzel', serif",
-            fontSize: 9,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            transition: 'all 0.15s',
-          }}
-        >
-          Stats →
-        </button>
+        {/* The way on, in a bar along the bottom: everything else is the map (user, 2026-11-16). */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+          padding: isMobile ? '8px 12px' : '10px 22px',
+          background: `linear-gradient(0deg, #121614, ${SKY})`, borderTop: '1px solid rgba(200,168,74,0.14)',
+        }}>
+          <button onClick={goBack} style={navBtn(true)}>← Belief</button>
+          <button onClick={goNext} disabled={!canAdvance} style={navBtn(canAdvance)}>Stats →</button>
+        </div>
       </div>
     </div>
   );
