@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useDevice } from './useDevice';
 import { COLORS, ALL_STATS, DEFAULT_STATS } from './constants';
 import StepStage from './wizard/StepStage';
+import AstragalTray from './AstragalTray';
 import './wizard/stats.css';
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -12,8 +13,12 @@ import './wizard/stats.css';
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ─── DICE ─────────────────────────────────────────────────────────────────────
+// Stats are rolled on the Astragal tray, the app's own physical dice (user, 2026-11-17): sixteen d4s, cast as two
+// handfuls of eight (the tray takes up to ten at once), read in order as one 2d4 per stat. Where the tray can't run
+// (no WebGL), the same 2d4 are drawn without the animation.
 const roll2d4 = () => Math.ceil(Math.random() * 4) + Math.ceil(Math.random() * 4);
 const rollSet = () => Array.from({ length: 8 }, () => 8 + roll2d4());
+const fromDice = (faces) => Array.from({ length: 8 }, (_, i) => 8 + faces[i * 2] + faces[i * 2 + 1]);
 
 // ─── THE CHART ────────────────────────────────────────────────────────────────
 // Degrees clockwise from the top: Tech down the right half, Magic down the left.
@@ -62,9 +67,26 @@ export default function StepStats({
   );
 
   // ── Roll ──
-  const doRoll = () => {
-    setCurrentRoll(rollSet());
+  const tray = useRef(null);
+  const [trayReady, setTrayReady] = useState(false);
+  const [casting, setCasting] = useState(false);
+  const onTrayStatus = useCallback(({ ready }) => setTrayReady(!!ready), []);
+  const doRoll = async () => {
+    if (casting) return;
     setSelectedIdx(null);
+    if (!trayReady || !tray.current) { setCurrentRoll(rollSet()); return; }
+    setCasting(true);
+    setCurrentRoll(null);
+    try {
+      const first = await tray.current.roll({ sides: 4, count: 8 });
+      const second = await tray.current.roll({ sides: 4, count: 8 });
+      const faces = [...(first?.values || []), ...(second?.values || [])].map(Number);
+      setCurrentRoll(faces.length === 16 && faces.every(n => n >= 1 && n <= 4) ? fromDice(faces) : rollSet());
+    } catch {
+      setCurrentRoll(rollSet());
+    } finally {
+      setCasting(false);
+    }
   };
 
   const saveRoll = () => {
@@ -125,7 +147,7 @@ export default function StepStats({
   const assignedCount = Object.keys(assigned).length;
   const allAssigned   = assignedCount === 8;
   const slotsUsed     = savedSets.filter(Boolean).length;
-  const canRoll       = activeSet === null && slotsUsed < 3;
+  const canRoll       = activeSet === null && slotsUsed < 3 && !casting;
   const canSave       = !!currentRoll && canRoll;
   const canAdvance    = mode === 'manual' || allAssigned;
   const statTotal     = ALL_STATS.reduce((sum, s) => sum + (stats[s.key] || 8), 0);
@@ -216,6 +238,7 @@ export default function StepStats({
                 : holding && <p className="wz-hint">Touch a star on the chart to give it this value.</p>}
             </div>
           )}
+          {mode === 'roll' && <div hidden><AstragalTray ref={tray} onStatus={onTrayStatus} /></div>}
           <h3>Set your stats</h3>
           <p>Each stat starts at 8. Roll 2d4 per stat (adds 2–8). Save up to 3 sets and assign from the best one.</p>
 
@@ -228,7 +251,7 @@ export default function StepStats({
           {mode === 'roll' && (
             <>
               <div className="sf-actions">
-                <button type="button" className="sf-btn gold" onClick={doRoll} disabled={!canRoll}>✦ ROLL 8×(2D4)</button>
+                <button type="button" className="sf-btn gold" onClick={doRoll} disabled={!canRoll}>{casting ? 'THE DICE ARE CAST…' : '✦ ROLL 8×(2D4)'}</button>
                 {currentRoll && canSave && <button type="button" className="sf-btn" onClick={saveRoll}>SAVE THIS SET</button>}
                 {(slotsUsed > 0 || assignedCount > 0) && <button type="button" className="sf-btn" onClick={handleReset}>RESET</button>}
               </div>

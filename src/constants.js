@@ -82,19 +82,20 @@ export const RACES = [
 
 export const RACE_VARIANT_DESCS = {
 
+  // The creator's own descriptions, and only these (user, 2026-11-17).
   addamar: {
-    Veridoran: "The Veridoran are the most recognizable face of Addamar civilization — diplomatic, traditional, and deeply tied to the Sovereign Kingdom and the Avalor line. Their cities are built on precedent and protocol, and their people tend to carry a sense of inherited duty before inherited property. The Veinrunner cuts through their heartland, and the relationship between old Veridoran law and industrial expansion is, at best, unresolved.",
-    Brunar: "The Brunar are a trade people shaped by the desert routes of the Bin Daevebad Emirate. Every agreement is a negotiation, every meal a form of diplomacy, and hospitality is not a courtesy but a moral obligation. They move between cultures with ease and distrust those who cannot do the same. The Sultan's court is formal; the caravan roads are not.",
-    Matekwan: "The Matekwan trace their heritage to the Obasanar Empire, where the ancestors speak through the rustling of the maize and the crack of river stone. Their spiritual relationship to the land predates most of the kingdoms around them, and they have watched the age of steam arrive with clear eyes and measured silence.",
-    Vàld: "The Vàld are a seafaring people from the Kingdom of Diymyr, where the Jarls still hold the old codes and the Shieldmaidens train alongside their brothers. They arrived on the Soterian continent with purpose — resource, conquest, or curiosity depending on the generation — and have not fully integrated into any one culture since.",
-    Pontunean: "The Pontuneans come from the industrial Kingdom of Elddim, where the Consul and Praetor govern through civic law and technical ambition. They are philosophical by reputation and mechanically gifted by necessity. The Veinrunner was built in part by Pontunean engineers, and they are not entirely sure whether to be proud of that.",
-    'Sunoàca': "The Sunoàca are bound to the Paxatzal Empire and the spiritual authority of its High Priest. Their traditions run deep into ceremony, sacrifice, and the careful management of divine favor. They are not numerous on the Soterian continent, but those who make the crossing tend to arrive carrying something — obligation, exile, or a mission the High Priest has not publicly announced.",
-    "Jiro'Ќi": "The Jiro'Ќi are the strategic class of the Takedara Dynasty, raised under the Shogun's court in a culture that prizes restraint, precision, and the long view. They do not improvise if they can help it. They do not speak if silence communicates more. And they do not forget a debt — owed or owing.",
-    Varid: "The Varid come from the Castillon Republic, where Don Alejandro Castillo's family has governed through trade alliances, aesthetic influence, and carefully maintained ambiguity about how much power they actually hold. Varid culture is vibrant and performative on the surface and deeply calculating underneath.",
-    Tachechana: "The Tachechana are a ceremonial people from the Kohana Tribe, where the Chief's authority is spiritual as much as political. Rites of passage, seasonal observances, and the correct way to greet the dead are not customs — they are obligations. Those who leave the tribe carry those obligations with them whether they intend to or not.",
-    Eryatav: "The Eryatav come from the Volkovia Tsardom, where the Tzar rules through a combination of mystical authority and iron administration. Their culture has a reputation for the arcane that is partly earned and partly projection — but the Eryatav have rarely bothered to correct it.",
-    Rajava: "The Rajava trace their lineage to the Singhara Maharaja, where caste, devotion, and the philosophical ordering of the cosmos are not abstractions but daily practice. The Maharaja's court is one of the oldest continuous governments in the known world, and the Rajava carry that age in the way they speak about time.",
-    Ahnkir: "The Ahnkir come from the Sahure Pharaonic Dynasty of Khemtara, where Pharaoh Rahotep Sahure the Eternal has ruled — officially — for longer than most kingdoms have existed. Their culture is built on permanence: permanent law, permanent hierarchy, permanent memory. Outsiders find them inscrutable. The Ahnkir find outsiders temporary.",
+    Veridoran: "Northern human culture associated with Avaloran industry, cities, law, and engineering.",
+    Brunar: "Desert-linked humans known for caravan trade, hospitality, negotiation, and hard-won survival.",
+    Matekwan: "Humans whose communities place importance on ancestral traditions, cultivated land, and spiritual practice.",
+    Hrald: "Human lineage represented in the taxonomy; homeland and defining culture remain to be detailed.",
+    Pontunean: "Human people associated in earlier lore with philosophy, scholarship, and considered debate.",
+    'Sunoàca': "Human people whose traditions emphasize nature, reciprocity, and ritual offerings.",
+    Caanan: "Human lineage represented in the taxonomy; homeland and defining culture remain to be detailed.",
+    Tachechana: "Human people whose identity is closely linked to ceremony, social observances, and the keeping of custom.",
+    Eryatav: "Human people linked to mystic traditions and an awareness of unfamiliar or ancient forces.",
+    "Jiro'Ќi": "Human people distinguished by strategic discipline, deliberate action, and martial traditions.",
+    Rajava: "Human people whose teachings emphasize spiritual order, discernment, and religious observance.",
+    Ahnkir: "Human people associated with dynastic lineage, historical records, and established institutions.",
     default: "An Addamar without a fixed cultural home — carrying one name from one place and a face that belongs to another. The most adaptable people in Soteria rarely stay defined by a single origin.",
   },
 
