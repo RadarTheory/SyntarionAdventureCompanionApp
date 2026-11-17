@@ -8,9 +8,6 @@
 .rf-field.returning { animation: rf-return .6s var(--ease) both; pointer-events: none; }
 @keyframes rf-return { from { transform: scale(2.6); opacity: 0; filter: blur(6px); } to { transform: none; opacity: 1; filter: none; } }
 
-.rf-caption { position: absolute; top: 22px; left: 26px; pointer-events: none; z-index: 1; }
-.rf-caption small { display: block; font-size: 10px; letter-spacing: 1.6px; color: #879581; margin-bottom: 7px; font-family: Cinzel, Georgia, serif; }
-.rf-caption h2 { margin: 0; font-family: Cinzel, Georgia, serif; font-weight: 400; font-size: 17px; color: #c5ccbb; letter-spacing: .5px; }
 
 .rf-threads { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .rf-threads line { stroke-width: 1; opacity: .16; transition: opacity .4s; }
@@ -46,8 +43,6 @@
 .rf-sign.lit .rf-name, .rf-sign.chosen .rf-name { color: #eef1da; }
 .rf-sub { display: block; font-family: Georgia, serif; font-size: 9.5px; letter-spacing: .3px; color: #7c877a; margin-top: 2px; }
 
-.rf-loreband { position: absolute; left: 50%; bottom: 3.5%; transform: translateX(-50%); width: min(560px, calc(100% - 48px)); text-align: center; min-height: 64px; }
-.rf-hint { margin: 0; font-size: 11.5px; font-style: italic; color: #6f7f67; letter-spacing: .3px; animation: wz-arrive 1s var(--ease) .4s both; }
 
 /* ── The dive ── */
 .rd { position: absolute; inset: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(320px, 1fr); animation: wz-arrive .6s var(--ease) .25s both; }
@@ -120,8 +115,6 @@
 .rd-portrait { margin-bottom: 16px; }
 
 @media (max-width: 767px) {
-  .rf-caption { top: 14px; left: 14px; }
-  .rf-caption h2 { font-size: 14px; }
   .rf-ring { width: 40px; height: 40px; }
   .rf-name { font-size: 9px; letter-spacing: .6px; }
   .rf-sub { display: none; }

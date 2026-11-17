@@ -1,17 +1,90 @@
 import { useState } from 'react';
 import { useDevice } from './useDevice';
 import { COLORS, GODS, SPIRITS, UNAFFILIATED } from './constants';
+import StepStage from './wizard/StepStage';
+import './wizard/belief.css';
 
-// ─── STYLE HELPERS ────────────────────────────────────────────────────────────
-const sectionLabel = {
-  fontSize: 8,
-  letterSpacing: '0.14em',
-  textTransform: 'uppercase',
-  fontFamily: "'Cinzel', serif",
-  display: 'block',
-  marginBottom: 10,
-  marginTop: 20,
+// ═════════════════════════════════════════════════════════════════════════════
+// STEP BELIEF (user, 2026-11-17)
+// On the wizard's full-page stage: every faith is a star. Sanctus, the gods, is a ring of the Soterian pantheon with
+// the Primordials and Celestials inside it; Sacral, the spirits, is three elemental diamonds; the unaffiliated stances
+// are a quiet row beneath. Resting on a star reads it a beat later; choosing one settles it. What is saved is as
+// before: beliefType ('god' | 'spirit' | 'unaffiliated') with deity, spirit or beliefSub.
+// ═════════════════════════════════════════════════════════════════════════════
+
+const KINDS = {
+  god:          { accent: COLORS.deityText,        title: 'SANCTUS',      sub: 'THE GODS' },
+  spirit:       { accent: COLORS.spiritText,       title: 'SACRAL',       sub: 'THE SPIRITS' },
+  unaffiliated: { accent: COLORS.unaffiliatedText, title: 'UNAFFILIATED', sub: 'NO ALLEGIANCE' },
 };
+
+// ── Where each star sits, as percentages of its constellation's box ──
+function godStars() {
+  const byLabel = Object.fromEntries(GODS.map(g => [g.label, g.list]));
+  const ring = byLabel.Soterian || GODS[0]?.list || [];
+  const stars = ring.map((g, i) => {
+    const a = -Math.PI / 2 + (i / ring.length) * Math.PI * 2;
+    return { item: g, x: 50 + Math.cos(a) * 40, y: 54 + Math.sin(a) * 34 };
+  });
+  const pair = (list, y) => (list || []).slice(0, 2).map((g, i) => ({ item: g, x: i ? 61 : 39, y }));
+  const prim = pair(byLabel.Primordials, 44), cel = pair(byLabel.Celestials, 64);
+  return {
+    stars: [...stars, ...prim, ...cel],
+    lines: [prim, cel].filter(p => p.length === 2).map(([a, b]) => [a, b]),
+    groups: [['PRIMORDIALS', 50, 37], ['CELESTIALS', 50, 73]],
+    ring: { cx: 50, cy: 54, rx: 40, ry: 34 },
+  };
+}
+function spiritStars(isMobile) {
+  const centres = isMobile ? [[50, 19], [50, 52], [50, 85]] : [[50, 31], [24, 72], [76, 72]];
+  const ox = isMobile ? 25 : 12, oy = isMobile ? 9 : 13;
+  const offs = [[0, -oy], [ox, 0], [0, oy], [-ox, 0]];
+  const stars = [], lines = [], groups = [];
+  SPIRITS.forEach((group, gi) => {
+    const [cx, cy] = centres[gi] || [50, 50];
+    const pts = group.list.slice(0, 4).map((s, i) => ({ item: s, x: cx + offs[i][0], y: cy + offs[i][1] }));
+    stars.push(...pts);
+    pts.forEach((p, i) => { if (pts.length > 1) lines.push([p, pts[(i + 1) % pts.length]]); });
+    groups.push([group.label.replace(/ elemental$/i, '').toUpperCase(), cx, cy]);
+  });
+  return { stars, lines, groups };
+}
+function stanceStars() {
+  return { stars: UNAFFILIATED.map((u, i) => ({ item: { ...u, name: u.label }, x: 14 + i * (72 / Math.max(1, UNAFFILIATED.length - 1)), y: 58 })), lines: [], groups: [] };
+}
+
+function Constellation({ kind, layout, box, lit, chosen, onLit, onChoose, interactive }) {
+  const k = KINDS[kind];
+  return (
+    <div className="bf-box" style={{ ...box, '--accent': k.accent }}>
+      <svg aria-hidden="true">
+        {layout.ring && <ellipse cx={`${layout.ring.cx}%`} cy={`${layout.ring.cy}%`} rx={`${layout.ring.rx}%`} ry={`${layout.ring.ry}%`} />}
+        {layout.lines.map(([a, b], i) => <line key={i} x1={`${a.x}%`} y1={`${a.y}%`} x2={`${b.x}%`} y2={`${b.y}%`} />)}
+      </svg>
+      <div className="bf-title"><b>{k.title}</b><small>{k.sub}</small></div>
+      {layout.groups.map(([label, x, y]) => <div key={label} className="bf-group" style={{ left: `${x}%`, top: `${y}%` }}>{label}</div>)}
+      {layout.stars.map(({ item, x, y }) => {
+        const id = `${kind}:${item.id || item.name}`;
+        return (
+          <button
+            key={id} type="button"
+            className={`bf-star${lit === id ? ' lit' : ''}${chosen === id ? ' chosen' : ''}`}
+            style={{ left: `${x}%`, top: `${y}%` }}
+            onMouseEnter={() => interactive && onLit(id)}
+            onMouseLeave={() => interactive && onLit(null)}
+            onFocus={() => interactive && onLit(id)}
+            onBlur={() => interactive && onLit(null)}
+            onClick={() => onChoose(kind, item)}
+            aria-label={`${item.name}${item.domain ? `, ${item.domain}` : ''}`}
+            aria-pressed={chosen === id}
+          >
+            <i /><span>{item.name}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 // ═════════════════════════════════════════════════════════════════════════════
 // STEP BELIEF
@@ -22,486 +95,80 @@ export default function StepBelief({
   deity, setDeity,
   spirit, setSpirit,
   goNext, goBack,
+  magicTech = 0, willWhim = 0,
 }) {
-  const { isMobile, isDesktop } = useDevice();
-  const [expandedItem, setExpandedItem] = useState(null);
+  const { isMobile } = useDevice();
+  const [lit, setLit] = useState(null);
 
-  // ── Type selector ──
-  const handleTypeSelect = (type) => {
-    setBeliefType(type);
-    setDeity(null);
-    setSpirit(null);
-    setBeliefSub(null);
-    setExpandedItem(null);
+  const choose = (kind, item) => {
+    setBeliefType(kind);
+    setDeity(kind === 'god' ? item.name : null);
+    setSpirit(kind === 'spirit' ? item.name : null);
+    setBeliefSub(kind === 'unaffiliated' ? item.id : null);
   };
 
-  // ── God selection ──
-  const handleGodClick = (name) => {
-    if (expandedItem === name) {
-      // Already expanded — select it and collapse
-      setDeity(name);
-      setExpandedItem(null);
-    } else {
-      setExpandedItem(name);
-    }
-  };
+  const chosen = beliefType === 'god' && deity ? `god:${deity}`
+    : beliefType === 'spirit' && spirit ? `spirit:${spirit}`
+    : beliefType === 'unaffiliated' && beliefSub ? `unaffiliated:${beliefSub}` : null;
 
-  // ── Spirit selection ──
-  const handleSpiritClick = (name) => {
-    if (expandedItem === name) {
-      setSpirit(name);
-      setExpandedItem(null);
-    } else {
-      setExpandedItem(name);
-    }
+  const find = (id) => {
+    if (!id) return null;
+    const [kind, key] = [id.slice(0, id.indexOf(':')), id.slice(id.indexOf(':') + 1)];
+    const item = kind === 'god' ? GODS.flatMap(g => g.list).find(g => g.name === key)
+      : kind === 'spirit' ? SPIRITS.flatMap(g => g.list).find(s => s.name === key)
+      : UNAFFILIATED.find(u => u.id === key);
+    return item ? { kind, item } : null;
   };
+  const shown = find(lit) || find(chosen);
+  const showingChosen = !lit || lit === chosen;
+  const canAdvance = !!chosen;
 
-  // ── Unaffiliated selection ──
-  const handleUnaffiliatedClick = (id) => {
-    setBeliefSub(id);
-    setExpandedItem(null);
-  };
+  const boxes = isMobile
+    ? { god: { height: 430 }, spirit: { height: 660 }, unaffiliated: { height: 110 } }
+    : {
+      god: { left: '3%', top: '9%', width: '45%', height: '60%' },
+      spirit: { left: '52%', top: '9%', width: '45%', height: '60%' },
+      unaffiliated: { left: '27%', top: '70%', width: '46%', height: '12%' },
+    };
+  const common = { lit, chosen, onLit: setLit, onChoose: choose, interactive: !isMobile };
 
-  const cols = isDesktop ? 4 : 2;
-  const canAdvance = beliefType !== null;
-
-  // Current selection label
-  const selectionLabel = () => {
-    if (!beliefType) return null;
-    if (beliefType === 'god') return deity ? `${deity}` : 'Choose a god below';
-    if (beliefType === 'spirit') return spirit ? `${spirit}` : 'Choose a spirit below';
-    if (beliefType === 'unaffiliated') return beliefSub
-      ? UNAFFILIATED.find(u => u.id === beliefSub)?.label
-      : 'Choose below';
-    return null;
-  };
+  const lore = (
+    <div className="wz-loreband">
+      {shown ? (
+        <div className={`wz-lore${showingChosen ? ' now' : ''}`} key={`${lit || chosen}`} style={{ '--accent': KINDS[shown.kind].accent }}>
+          <span>
+            {(shown.item.name || shown.item.label).toUpperCase()}{shown.item.domain ? ` · ${shown.item.domain.toUpperCase()}` : ''}
+            {showingChosen && chosen && <em className="wz-chosen-mark" style={{ fontStyle: 'normal' }}>· CHOSEN</em>}
+          </span>
+          <p>{shown.item.desc}</p>
+          {shown.item.affil && <small className="bf-lore-domain">{shown.item.affil}</small>}
+        </div>
+      ) : (
+        <p className="wz-hint">{isMobile ? 'Touch a star to take it as your faith.' : 'Rest on a star to read it. Choose one to take it as your faith.'}</p>
+      )}
+    </div>
+  );
 
   return (
-    <div>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
-      `}</style>
-
-      {/* ── Section title ── */}
-      <div style={{
-        fontFamily: "'Cinzel', serif",
-        fontSize: isMobile ? 18 : 22,
-        fontWeight: 700,
-        color: COLORS.text,
-        letterSpacing: '0.06em',
-        marginBottom: 4,
-      }}>Choose your Belief</div>
-      <div style={{
-        fontSize: 11,
-        color: COLORS.muted,
-        fontFamily: 'Georgia, serif',
-        fontStyle: 'italic',
-        marginBottom: 20,
-        lineHeight: 1.6,
-      }}>
-        A patron god, a spirit, or no affiliation. Tap any entry to read more before committing.
-      </div>
-
-      {/* ── Belief type selector ── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr 1fr',
-        gap: 8,
-        marginBottom: 24,
-      }}>
-        {[
-          { id: 'god',          label: 'Patron God',    sub: 'Sanctus',  color: COLORS.deity,       bg: COLORS.deityBg,       border: COLORS.deity       },
-          { id: 'spirit',       label: 'Spirit',         sub: 'Sacral',   color: COLORS.spirit,      bg: COLORS.spiritBg,      border: COLORS.spirit      },
-          { id: 'unaffiliated', label: 'Unaffiliated',   sub: '',         color: COLORS.unaffiliated, bg: COLORS.unaffiliatedBg, border: COLORS.unaffiliated },
-        ].map(t => {
-          const isActive = beliefType === t.id;
-          return (
-            <button
-              key={t.id}
-              onClick={() => handleTypeSelect(t.id)}
-              style={{
-                background: isActive ? t.bg : 'transparent',
-                border: `1.5px solid ${isActive ? t.border : COLORS.border}`,
-                borderRadius: 3,
-                padding: isMobile ? '12px 8px' : '14px 12px',
-                cursor: 'pointer',
-                textAlign: 'center',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              <div style={{
-                fontFamily: "'Cinzel', serif",
-                fontSize: isMobile ? 11 : 13,
-                fontWeight: 700,
-                color: isActive ? t.color : COLORS.muted,
-                letterSpacing: '0.06em',
-                marginBottom: t.sub ? 4 : 0,
-              }}>{t.label}</div>
-              {t.sub && (
-                <div style={{
-                  fontSize: 9,
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  color: isActive ? t.color : COLORS.dim,
-                  opacity: 0.7,
-                  fontFamily: "'Cinzel', serif",
-                }}>{t.sub}</div>
-              )}
-            </button>
-          );
+    <StepStage
+      back={{ label: 'Race', onClick: goBack }}
+      next={{ label: 'Class', onClick: goNext, disabled: !canAdvance }}
+      magicTech={magicTech} willWhim={willWhim}
+    >
+      <svg className="wz-dust" aria-hidden="true">
+        {Array.from({ length: 90 }, (_, i) => {
+          const x = (i * 37.3) % 100, y = (i * 61.7 + (i % 7) * 13) % 100;
+          return <circle key={i} cx={`${x}%`} cy={`${y}%`} r={i % 9 ? 0.6 : 1.1} fill="#dfe3d2" opacity={0.1 + ((i * 13) % 30) / 100} />;
         })}
+      </svg>
+      <div className={`bf${lit ? ' focusing' : ''}`}>
+        <div className="wz-caption"><small>THE FAITHS OF SOTERIA</small><h2>Choose your belief</h2></div>
+        {isMobile && lore}
+        <Constellation kind="god" layout={godStars()} box={boxes.god} {...common} />
+        <Constellation kind="spirit" layout={spiritStars(isMobile)} box={boxes.spirit} {...common} />
+        <Constellation kind="unaffiliated" layout={stanceStars()} box={boxes.unaffiliated} {...common} />
+        {!isMobile && lore}
       </div>
-
-      {/* ── Selection display ── */}
-      {selectionLabel() && (
-        <div style={{
-          marginBottom: 16,
-          padding: '10px 14px',
-          background: beliefType === 'god' ? COLORS.deityBg : beliefType === 'spirit' ? COLORS.spiritBg : COLORS.unaffiliatedBg,
-          border: `1px solid ${beliefType === 'god' ? COLORS.deity : beliefType === 'spirit' ? COLORS.spirit : COLORS.unaffiliated}`,
-          borderRadius: 3,
-          fontFamily: 'Georgia, serif',
-          fontStyle: 'italic',
-          fontSize: 12,
-          color: beliefType === 'god' ? COLORS.deityText : beliefType === 'spirit' ? COLORS.spiritText : COLORS.unaffiliatedText,
-        }}>
-          {selectionLabel()}
-        </div>
-      )}
-
-      {/* ── GODS ── */}
-      {beliefType === 'god' && GODS.map(group => (
-        <div key={group.label}>
-          <span style={{ ...sectionLabel, color: COLORS.deityText }}>{group.label}</span>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(${cols}, 1fr)`,
-            gap: 8,
-            marginBottom: 16,
-            alignItems: 'stretch',
-          }}>
-            {group.list.map(g => {
-              const isSelected = deity === g.name;
-              const isExpanded = expandedItem === g.name;
-              return (
-                <div
-                  key={g.name}
-                  style={{ gridColumn: isExpanded ? '1 / -1' : 'auto' }}
-                >
-                  <div
-                    onClick={() => handleGodClick(g.name)}
-                    style={{
-                      background: isSelected ? COLORS.deityBg : isExpanded ? 'rgba(168,85,247,0.06)' : COLORS.card,
-                      border: `1.5px solid ${isSelected ? COLORS.deity : isExpanded ? COLORS.deityDim : COLORS.border}`,
-                      borderRadius: 3,
-                      padding: '11px 13px',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                      height: '100%',
-                    }}
-                  >
-                    {/* Card header */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <div style={{
-                          fontFamily: "'Cinzel', serif",
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color: isSelected ? COLORS.deityText : COLORS.text,
-                          marginBottom: 3,
-                          letterSpacing: '0.04em',
-                        }}>{g.name}</div>
-                        <div style={{
-                          fontSize: 9,
-                          color: COLORS.muted,
-                          marginBottom: 4,
-                        }}>{g.domain}</div>
-                        <div style={{
-                          fontSize: 8,
-                          color: COLORS.dim,
-                          fontStyle: 'italic',
-                        }}>{g.affil}</div>
-                      </div>
-                      {isSelected && (
-                        <span style={{
-                          fontSize: 8,
-                          letterSpacing: '0.08em',
-                          textTransform: 'uppercase',
-                          color: COLORS.deityText,
-                          fontFamily: "'Cinzel', serif",
-                          background: COLORS.deityBg,
-                          border: `1px solid ${COLORS.deity}`,
-                          borderRadius: 2,
-                          padding: '2px 6px',
-                          flexShrink: 0,
-                          marginLeft: 6,
-                        }}>Chosen</span>
-                      )}
-                    </div>
-
-                    {/* Expanded description */}
-                    {isExpanded && (
-                      <div
-                        onClick={e => e.stopPropagation()}
-                        style={{
-                          marginTop: 12,
-                          paddingTop: 12,
-                          borderTop: `1px solid ${COLORS.border}`,
-                        }}
-                      >
-                        <p style={{
-                          fontSize: 12,
-                          color: COLORS.textSub,
-                          fontFamily: 'Georgia, serif',
-                          fontStyle: 'italic',
-                          lineHeight: 1.75,
-                          margin: '0 0 12px',
-                        }}>{g.desc}</p>
-                        <button
-                          onClick={() => { setDeity(g.name); setExpandedItem(null); }}
-                          style={{
-                            background: COLORS.deityBg,
-                            border: `1px solid ${COLORS.deity}`,
-                            borderRadius: 2,
-                            padding: '8px 18px',
-                            cursor: 'pointer',
-                            fontFamily: "'Cinzel', serif",
-                            fontSize: 10,
-                            letterSpacing: '0.12em',
-                            textTransform: 'uppercase',
-                            color: COLORS.deityText,
-                          }}
-                        >
-                          Choose {g.name}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-
-      {/* ── SPIRITS ── */}
-      {beliefType === 'spirit' && SPIRITS.map(group => (
-        <div key={group.label}>
-          <span style={{ ...sectionLabel, color: COLORS.spiritText }}>{group.label}</span>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(${cols}, 1fr)`,
-            gap: 8,
-            marginBottom: 16,
-            alignItems: 'stretch',
-          }}>
-            {group.list.map(s => {
-              const isSelected = spirit === s.name;
-              const isExpanded = expandedItem === s.name;
-              return (
-                <div
-                  key={s.name}
-                  style={{ gridColumn: isExpanded ? '1 / -1' : 'auto' }}
-                >
-                  <div
-                    onClick={() => handleSpiritClick(s.name)}
-                    style={{
-                      background: isSelected ? COLORS.spiritBg : isExpanded ? 'rgba(249,115,22,0.06)' : COLORS.card,
-                      border: `1.5px solid ${isSelected ? COLORS.spirit : isExpanded ? COLORS.spiritDim : COLORS.border}`,
-                      borderRadius: 3,
-                      padding: '11px 13px',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                      height: '100%',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <div style={{
-                          fontFamily: "'Cinzel', serif",
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color: isSelected ? COLORS.spiritText : COLORS.text,
-                          marginBottom: 3,
-                          letterSpacing: '0.04em',
-                        }}>{s.name}</div>
-                        <div style={{
-                          fontSize: 9,
-                          color: COLORS.muted,
-                          marginBottom: 4,
-                        }}>{s.domain}</div>
-                        <div style={{
-                          fontSize: 8,
-                          color: COLORS.dim,
-                          fontStyle: 'italic',
-                        }}>{s.affil}</div>
-                      </div>
-                      {isSelected && (
-                        <span style={{
-                          fontSize: 8,
-                          letterSpacing: '0.08em',
-                          textTransform: 'uppercase',
-                          color: COLORS.spiritText,
-                          fontFamily: "'Cinzel', serif",
-                          background: COLORS.spiritBg,
-                          border: `1px solid ${COLORS.spirit}`,
-                          borderRadius: 2,
-                          padding: '2px 6px',
-                          flexShrink: 0,
-                          marginLeft: 6,
-                        }}>Chosen</span>
-                      )}
-                    </div>
-
-                    {isExpanded && (
-                      <div
-                        onClick={e => e.stopPropagation()}
-                        style={{
-                          marginTop: 12,
-                          paddingTop: 12,
-                          borderTop: `1px solid ${COLORS.border}`,
-                        }}
-                      >
-                        <p style={{
-                          fontSize: 12,
-                          color: COLORS.textSub,
-                          fontFamily: 'Georgia, serif',
-                          fontStyle: 'italic',
-                          lineHeight: 1.75,
-                          margin: '0 0 12px',
-                        }}>{s.desc}</p>
-                        <button
-                          onClick={() => { setSpirit(s.name); setExpandedItem(null); }}
-                          style={{
-                            background: COLORS.spiritBg,
-                            border: `1px solid ${COLORS.spirit}`,
-                            borderRadius: 2,
-                            padding: '8px 18px',
-                            cursor: 'pointer',
-                            fontFamily: "'Cinzel', serif",
-                            fontSize: 10,
-                            letterSpacing: '0.12em',
-                            textTransform: 'uppercase',
-                            color: COLORS.spiritText,
-                          }}
-                        >
-                          Choose {s.name}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-
-      {/* ── UNAFFILIATED ── */}
-      {beliefType === 'unaffiliated' && (
-        <div>
-          <span style={{ ...sectionLabel, color: COLORS.unaffiliatedText }}>Choose your stance</span>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(${Math.min(4, cols * 2)}, 1fr)`,
-            gap: 8,
-            marginBottom: 16,
-          }}>
-            {UNAFFILIATED.map(u => {
-              const isSelected = beliefSub === u.id;
-              return (
-                <div
-                  key={u.id}
-                  onClick={() => handleUnaffiliatedClick(u.id)}
-                  style={{
-                    background: isSelected ? COLORS.unaffiliatedBg : COLORS.card,
-                    border: `1.5px solid ${isSelected ? COLORS.unaffiliated : COLORS.border}`,
-                    borderRadius: 3,
-                    padding: '13px',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    height: '100%',
-                  }}
-                >
-                  <div style={{
-                    fontFamily: "'Cinzel', serif",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: isSelected ? COLORS.unaffiliatedText : COLORS.text,
-                    marginBottom: 6,
-                    letterSpacing: '0.04em',
-                  }}>{u.label}</div>
-                  <div style={{
-                    fontSize: 11,
-                    color: COLORS.muted,
-                    fontFamily: 'Georgia, serif',
-                    fontStyle: 'italic',
-                    lineHeight: 1.5,
-                  }}>{u.desc}</div>
-                  {isSelected && (
-                    <div style={{
-                      marginTop: 8,
-                      fontSize: 8,
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                      color: COLORS.unaffiliatedText,
-                      fontFamily: "'Cinzel', serif",
-                    }}>Selected</div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ── Navigation ── */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingTop: 16,
-        marginTop: 8,
-        borderTop: `1px solid ${COLORS.border}`,
-      }}>
-        <button
-          onClick={goBack}
-          style={{
-            background: 'transparent',
-            border: `1px solid ${COLORS.border}`,
-            borderRadius: 2,
-            padding: '10px 20px',
-            color: COLORS.muted,
-            cursor: 'pointer',
-            fontFamily: "'Cinzel', serif",
-            fontSize: 9,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-          }}
-        >
-          ← Race
-        </button>
-
-        <button
-          onClick={goNext}
-          disabled={!canAdvance}
-          style={{
-            background: canAdvance ? COLORS.surface : 'transparent',
-            border: `1px solid ${canAdvance ? COLORS.borderMid : COLORS.border}`,
-            borderRadius: 2,
-            padding: '10px 24px',
-            color: canAdvance ? COLORS.text : COLORS.dim,
-            cursor: canAdvance ? 'pointer' : 'default',
-            fontFamily: "'Cinzel', serif",
-            fontSize: 9,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            transition: 'all 0.15s',
-          }}
-        >
-          Class →
-        </button>
-      </div>
-    </div>
+    </StepStage>
   );
 }

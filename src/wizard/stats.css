@@ -1,0 +1,83 @@
+/* ─── Stats step on the stage (user, 2026-11-17) ──────────────────────────────────────────────────────────────────
+   The eight stats as stars around a chart, Magic's four on the left and Tech's on the right; each star sits as far out
+   as its value, and the shape they draw is the character. Rolling and assigning happen in the panel beside it. */
+
+.sf { position: absolute; inset: 0; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(330px, 1fr); }
+.sf-chart { position: relative; min-height: 0; }
+.sf-chart svg { position: absolute; left: 0; top: 62px; width: 100%; height: calc(100% - 136px); overflow: visible; }
+.sf-ring { fill: none; stroke: #c4c4a326; stroke-width: .8; }
+.sf-ring.mid { stroke-dasharray: 3 6; }
+.sf-spoke { stroke: #ffffff10; stroke-width: 1; }
+.sf-shape { stroke-width: 1.2; transition: all .5s cubic-bezier(.2,.7,.2,1); }
+.sf-ringlabel { fill: #6f7f67; font-size: 9px; font-family: Cinzel, Georgia, serif; letter-spacing: 1px; }
+.sf-half { font-family: Cinzel, Georgia, serif; font-size: 11px; letter-spacing: 3px; }
+
+.sf-node { cursor: default; outline: none; }
+.sf-node.can, .sf-node.undo { cursor: pointer; }
+.sf-node circle.dot { fill: #0a120e; stroke: var(--accent); stroke-width: 1.2; transition: r .4s, fill .3s; }
+.sf-node.set circle.dot, .sf-node.lit circle.dot { fill: var(--accent); }
+.sf-node.lit circle.dot, .sf-node:focus-visible circle.dot { filter: drop-shadow(0 0 6px var(--accent)); }
+.sf-node circle.target { fill: none; stroke: var(--accent); stroke-dasharray: 2 4; opacity: 0; transition: opacity .3s; }
+.sf-node.can circle.target { opacity: .85; animation: sf-breathe 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes sf-breathe { 50% { transform: scale(1.25); opacity: .35; } }
+.sf-node text { font-family: Cinzel, Georgia, serif; fill: #b3c0ab; transition: fill .3s; }
+.sf-node text.name { font-size: 12px; letter-spacing: 1.4px; }
+.sf-node text.equiv { font-size: 9px; fill: #6f7f67; font-family: Georgia, serif; letter-spacing: .2px; }
+.sf-node text.val { font-size: 15px; fill: var(--accent); }
+.sf-node.lit text.name, .sf-node.set text.name { fill: #eef1da; }
+
+.sf .wz-loreband { bottom: 10px; width: min(480px, calc(100% - 48px)); }
+
+.sf-panel { overflow-y: auto; padding: 26px 30px 22px 6px; scrollbar-width: thin; scrollbar-color: #56694d transparent; }
+.sf-panel h3 { margin: 0 0 4px; font-family: Cinzel, Georgia, serif; font-weight: 400; font-size: 22px; color: var(--ink); }
+.sf-panel > p { margin: 0 0 16px; font-size: 12px; font-style: italic; color: #8b948c; line-height: 1.6; }
+.sf-seg { display: inline-flex; padding: 3px; background: #080d0a; border: 1px solid #ffffff0b; margin-bottom: 16px; }
+.sf-seg button { background: none; border: 0; font: 12px Georgia, serif; color: #818e7e; padding: 7px 14px; cursor: pointer; }
+.sf-seg button.on { background: #202a21; color: #c9d5be; box-shadow: 0 1px 4px #0003; }
+.sf-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.sf-btn {
+  background: none; border: 1px solid #ffffff1c; color: #c2cbb5; font: 9.5px Cinzel, Georgia, serif; letter-spacing: 1.4px;
+  padding: 10px 14px; cursor: pointer; transition: background .2s, border-color .2s;
+}
+.sf-btn:hover:enabled { background: #ffffff08; border-color: #8f8970; }
+.sf-btn:disabled { opacity: .35; cursor: default; }
+.sf-btn.gold { background: rgba(196,179,137,.14); border-color: rgba(196,179,137,.5); color: var(--ink); }
+
+.sf-label { display: block; font-family: Cinzel, Georgia, serif; font-size: 9px; letter-spacing: 1.6px; color: #879581; margin-bottom: 8px; }
+.sf-motes { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.sf-mote {
+  min-width: 40px; padding: 8px 6px; text-align: center; font: 15px Cinzel, Georgia, serif; color: #c9d0bf; background: #0c100e;
+  border: 1px solid var(--line); cursor: pointer; transition: all .2s; animation: wz-smoke .7s var(--ease) both;
+}
+.sf-mote:hover:enabled { border-color: #8f8970; }
+.sf-mote.sel { background: rgba(196,179,137,.18); border-color: var(--gold); color: #fff; box-shadow: 0 0 12px rgba(196,179,137,.3); }
+.sf-mote.used { opacity: .3; cursor: default; }
+.sf-mote:disabled { cursor: default; }
+.sf-set { border: 1px solid var(--line); padding: 12px 12px 10px; margin-bottom: 10px; transition: opacity .3s, border-color .3s, background .3s; }
+.sf-set.active { border-color: rgba(196,179,137,.35); background: rgba(196,179,137,.04); }
+.sf-set.locked { opacity: .35; }
+.sf-set header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 9px; font: 9px Cinzel, Georgia, serif; letter-spacing: 1.4px; color: #929b8d; }
+.sf-set header b { font-weight: 400; color: var(--ink); }
+.sf-set .sf-motes { margin-bottom: 4px; }
+.sf-note { font-size: 11.5px; font-style: italic; color: #8b948c; margin: 4px 0 0; }
+.sf-empty { border: 1px dashed var(--line); padding: 16px; text-align: center; font-size: 12px; font-style: italic; color: #6f7f67; margin-bottom: 16px; }
+.sf-committed { font: 10px Cinzel, Georgia, serif; letter-spacing: 1.6px; color: var(--gold); margin: 6px 0 0; }
+
+.sf-manual { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
+.sf-manual label { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--line); padding: 6px 0; }
+.sf-manual label span { font: 11px Cinzel, Georgia, serif; letter-spacing: 1px; color: var(--accent); }
+.sf-manual label small { display: block; font: italic 9.5px Georgia, serif; color: #6f7f67; letter-spacing: 0; }
+.sf-manual input { width: 52px; text-align: center; background: #0c100e; border: 1px solid var(--line); color: #e3e7d8; font: 15px Cinzel, Georgia, serif; padding: 5px 4px; outline: none; }
+.sf-manual input:focus { border-color: var(--accent); }
+.sf-total { margin-top: 16px; font: 10px Cinzel, Georgia, serif; letter-spacing: 1.6px; color: #879581; }
+.sf-total b { font-weight: 400; color: var(--ink); font-size: 13px; margin-left: 6px; }
+
+@media (max-width: 767px) {
+  .sf { display: block; overflow-y: auto; }
+  .sf-chart { height: 400px; }
+  .sf-chart svg { top: 50px; height: calc(100% - 56px); }
+  .sf .wz-loreband { position: relative; left: auto; bottom: auto; transform: none; width: auto; padding: 0 16px; min-height: 0; margin-bottom: 10px; }
+  .sf-panel { overflow: visible; padding: 4px 16px 24px; }
+  .sf-node text.name { font-size: 10px; letter-spacing: .6px; }
+  .sf-node text.equiv { display: none; }
+}

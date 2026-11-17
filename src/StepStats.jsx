@@ -1,17 +1,38 @@
 import { useState } from 'react';
 import { useDevice } from './useDevice';
 import { COLORS, ALL_STATS, DEFAULT_STATS } from './constants';
+import StepStage from './wizard/StepStage';
+import './wizard/stats.css';
+
+// ═════════════════════════════════════════════════════════════════════════════
+// STEP STATS (user, 2026-11-17)
+// On the wizard's full-page stage: the eight stats are stars around a chart, Magic's four on the left half and
+// Tech's on the right, each sitting as far out as its value, so the shape they draw is the character. Rolling,
+// saving up to three sets, choosing a value and giving it to a stat all work exactly as before; manual entry too.
+// ═════════════════════════════════════════════════════════════════════════════
 
 // ─── DICE ─────────────────────────────────────────────────────────────────────
 const roll2d4 = () => Math.ceil(Math.random() * 4) + Math.ceil(Math.random() * 4);
 const rollSet = () => Array.from({ length: 8 }, () => 8 + roll2d4());
 
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
-const magicStats = ALL_STATS.filter(s => s.axis === 'magic');
-const techStats  = ALL_STATS.filter(s => s.axis === 'tech');
-const axisColor  = (axis) => axis === 'magic' ? COLORS.magic     : COLORS.tech;
-const axisText   = (axis) => axis === 'magic' ? COLORS.magicText : COLORS.techText;
-const axisBg     = (axis) => axis === 'magic' ? COLORS.magicBg   : COLORS.techBg;
+// ─── THE CHART ────────────────────────────────────────────────────────────────
+// Degrees clockwise from the top: Tech down the right half, Magic down the left.
+const ANGLE = { will: 22.5, whim: 67.5, mind: 112.5, dream: 157.5, essence: 202.5, body: 247.5, soul: 292.5, spirit: 337.5 };
+const radius = (v) => Math.max(18, Math.min(205, 70 + ((Number(v) || 8) - 8) * 12.5));
+const at = (deg, r) => { const a = (deg * Math.PI) / 180; return { x: r * Math.sin(a), y: -r * Math.cos(a) }; };
+const accent = (axis) => axis === 'magic' ? COLORS.magicText : COLORS.techText;
+
+// What each stat is, read when resting on its star.
+const STAT_LORE = {
+  spirit:  'Presence and pull. How a room turns toward you, how a promise lands, how far your voice carries when it matters.',
+  soul:    'Faith given weight. The strength of what you hold sacred, and how much of the unseen will answer you.',
+  body:    'What the flesh can carry. Endurance, recovery, and the stubborn refusal to fall when you should.',
+  essence: 'Quiet knowing. Reading the world, the weather and the wounded; sensing what moves beneath the surface.',
+  will:    'Force of arm and intent. Lifting, breaking, holding the line when everything pushes back.',
+  whim:    'Speed of hand and foot. Balance, reflex, and the quick step no one sees coming.',
+  mind:    'Reason and recall. Study, craft, and the patient taking-apart of a problem.',
+  dream:   'Where you mean to go. Drive, focus, and the shape of the future you are building toward.',
+};
 
 // ═════════════════════════════════════════════════════════════════════════════
 // STEP STATS
@@ -20,8 +41,12 @@ export default function StepStats({
   stats, setStats,
   statMode, setStatMode,
   goNext, goBack,
+  magicTech = 0, willWhim = 0,
 }) {
   const { isMobile } = useDevice();
+  const [lit, setLit] = useState(null);
+  // The wizard starts in 'buy', which has no panel of its own; it has always behaved as rolling, so show it as Roll.
+  const mode = statMode === 'manual' ? 'manual' : 'roll';
 
   // ── Roll state ──
   const [savedSets, setSavedSets]     = useState([null, null, null]);
@@ -29,7 +54,7 @@ export default function StepStats({
   const [activeSet, setActiveSet]     = useState(null);
   const [selectedIdx, setSelectedIdx] = useState(null);
   const [assigned, setAssigned]       = useState({});
-  const [committed, setCommitted] = useState(false);
+  const [committed, setCommitted]     = useState(false);
 
   // ── Manual state ──
   const [manualVals, setManualVals] = useState(
@@ -55,29 +80,29 @@ export default function StepStats({
     setSelectedIdx(null);
   };
 
-const handleRollTap = (setIdx, rollIdx) => {
-  if (activeSet !== null && activeSet !== setIdx) return;
-  const alreadyAssigned = Object.values(assigned).includes(rollIdx);
-  if (alreadyAssigned) return;
-  setActiveSet(setIdx);
-  setSelectedIdx(selectedIdx === rollIdx ? null : rollIdx);
-};
+  const handleRollTap = (setIdx, rollIdx) => {
+    if (activeSet !== null && activeSet !== setIdx) return;
+    const alreadyAssigned = Object.values(assigned).includes(rollIdx);
+    if (alreadyAssigned) return;
+    setActiveSet(setIdx);
+    setSelectedIdx(selectedIdx === rollIdx ? null : rollIdx);
+  };
 
-const handleStatTap = (statKey) => {
-  if (activeSet !== null && selectedIdx !== null) {
-    const value = savedSets[activeSet][selectedIdx];
-    setAssigned(prev => ({ ...prev, [statKey]: selectedIdx }));
-    setStats(prev => ({ ...prev, [statKey]: value }));
-    setSelectedIdx(null);
-    return;
-  }
-  if (statKey in assigned) {
-    const newAssigned = { ...assigned };
-    delete newAssigned[statKey];
-    setAssigned(newAssigned);
-    setStats(prev => ({ ...prev, [statKey]: 8 }));
-  }
-};
+  const handleStatTap = (statKey) => {
+    if (activeSet !== null && selectedIdx !== null) {
+      const value = savedSets[activeSet][selectedIdx];
+      setAssigned(prev => ({ ...prev, [statKey]: selectedIdx }));
+      setStats(prev => ({ ...prev, [statKey]: value }));
+      setSelectedIdx(null);
+      return;
+    }
+    if (statKey in assigned) {
+      const newAssigned = { ...assigned };
+      delete newAssigned[statKey];
+      setAssigned(newAssigned);
+      setStats(prev => ({ ...prev, [statKey]: 8 }));
+    }
+  };
 
   const handleReset = () => {
     setSavedSets([null, null, null]);
@@ -102,413 +127,175 @@ const handleStatTap = (statKey) => {
   const slotsUsed     = savedSets.filter(Boolean).length;
   const canRoll       = activeSet === null && slotsUsed < 3;
   const canSave       = !!currentRoll && canRoll;
-  const canAdvance    = statMode === 'manual' || allAssigned;
+  const canAdvance    = mode === 'manual' || allAssigned;
   const statTotal     = ALL_STATS.reduce((sum, s) => sum + (stats[s.key] || 8), 0);
+  const holding       = mode === 'roll' && activeSet !== null && selectedIdx !== null;
 
-  // ── Stat block ──
-  const StatBlock = ({ statDef }) => {
-    const { key, label, equiv, axis } = statDef;
-    const val        = stats[key] || 8;
-    const isAssigned = key in assigned;
-    const isTarget   = statMode === 'roll' && activeSet !== null && selectedIdx !== null && !isAssigned;
-    const col        = axisColor(axis);
-    const pct        = Math.round(((val - 8) / 8) * 100);
-
-    return (
-      <div
-        onClick={() => statMode === 'roll' && (isTarget || isAssigned) && handleStatTap(key)}
-        style={{
-          background: isAssigned ? axisBg(axis) : isTarget ? 'rgba(240,238,235,0.04)' : COLORS.card,
-          border: `1.5px solid ${isAssigned ? col : isTarget ? COLORS.borderMid : COLORS.border}`,
-          borderRadius: 3,
-          padding: '10px 12px',
-          cursor: statMode === 'roll' && (isTarget || isAssigned) ? 'pointer' : 'default',
-          transition: 'all 0.15s ease',
-          boxSizing: 'border-box',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-          <div>
-            <div style={{
-              fontFamily: "'Cinzel', serif",
-              fontSize: 11,
-              fontWeight: 700,
-              color: isAssigned ? axisText(axis) : COLORS.text,
-              letterSpacing: '0.04em',
-            }}>{label}</div>
-            <div style={{ fontSize: 8, color: COLORS.dim, marginTop: 1 }}>{equiv}</div>
-          </div>
-
-          {statMode === 'roll' ? (
-            <div style={{
-              fontFamily: "'Cinzel', serif",
-              fontSize: 20,
-              fontWeight: 800,
-              color: isAssigned ? axisText(axis) : COLORS.muted,
-              minWidth: 28,
-              textAlign: 'right',
-            }}>{val}</div>
-          ) : (
-            <input
-              type="number"
-              min="1"
-              max="20"
-              value={manualVals[key]}
-              onChange={e => handleManual(key, e.target.value)}
-              inputMode="numeric"
-              style={{
-                width: 52,
-                textAlign: 'center',
-                fontSize: 16,
-                fontWeight: 800,
-                color: axisText(axis),
-                background: axisBg(axis),
-                border: `1.5px solid ${col}`,
-                borderRadius: 2,
-                padding: '4px 6px',
-                outline: 'none',
-                fontFamily: "'Cinzel', serif",
-              }}
-            />
-          )}
-        </div>
-
-        {/* Progress bar */}
-        <div style={{ height: 3, background: COLORS.dim, borderRadius: 2, overflow: 'hidden' }}>
-          <div style={{
-            height: '100%',
-            width: `${pct}%`,
-            background: col,
-            borderRadius: 2,
-            transition: 'width 0.3s ease',
-          }}/>
-        </div>
-
-        {statMode === 'roll' && isTarget && (
-          <div style={{
-            marginTop: 5,
-            fontSize: 8,
-            color: COLORS.borderMid,
-            fontFamily: "'Cinzel', serif",
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-          }}>Tap to assign</div>
-        )}
-      </div>
-    );
-  };
+  // ── The chart ──
+  const pts = ALL_STATS.map(s => ({ s, ...at(ANGLE[s.key] ?? 0, radius(stats[s.key])) }));
+  const shape = [...pts].sort((a, b) => (ANGLE[a.s.key] ?? 0) - (ANGLE[b.s.key] ?? 0)).map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const litStat = ALL_STATS.find(s => s.key === lit);
 
   return (
-    <div>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');`}</style>
-
-      {/* Title */}
-      <div style={{
-        fontFamily: "'Cinzel', serif",
-        fontSize: isMobile ? 18 : 22,
-        fontWeight: 700,
-        color: COLORS.text,
-        letterSpacing: '0.06em',
-        marginBottom: 4,
-      }}>Set your Stats</div>
-      <div style={{
-        fontSize: 11,
-        color: COLORS.muted,
-        fontFamily: 'Georgia, serif',
-        fontStyle: 'italic',
-        marginBottom: 20,
-        lineHeight: 1.6,
-      }}>
-        Each stat starts at 8. Roll 2d4 per stat (adds 2–8). Save up to 3 sets and assign from the best one.
-      </div>
-
-      {/* Mode toggle */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
-        {[['roll','Roll Stats'],['manual','Manual Entry']].map(([id, lbl]) => (
-          <button key={id} onClick={() => { setStatMode(id); handleReset(); }} style={{
-            background: statMode === id ? 'rgba(240,238,235,0.08)' : 'transparent',
-            border: `1px solid ${statMode === id ? COLORS.borderMid : COLORS.border}`,
-            borderRadius: 2,
-            padding: '8px 18px',
-            cursor: 'pointer',
-            fontFamily: "'Cinzel', serif",
-            fontSize: 10,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: statMode === id ? COLORS.text : COLORS.muted,
-            transition: 'all 0.12s',
-          }}>{lbl}</button>
-        ))}
-      </div>
-
-      {/* ── ROLL MODE ── */}
-      {statMode === 'roll' && (
-        <div>
-          {/* Controls */}
-          <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-            <button onClick={doRoll} disabled={!canRoll} style={{
-              background: canRoll ? COLORS.surface : 'transparent',
-              border: `1px solid ${canRoll ? COLORS.borderMid : COLORS.border}`,
-              borderRadius: 2,
-              padding: '10px 20px',
-              cursor: canRoll ? 'pointer' : 'default',
-              fontFamily: "'Cinzel', serif",
-              fontSize: 10,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              color: canRoll ? COLORS.text : COLORS.dim,
-            }}>✦ Roll 8×(2d4)</button>
-
-            {currentRoll && canSave && (
-              <button onClick={saveRoll} style={{
-                background: COLORS.magicBg,
-                border: `1px solid ${COLORS.magic}`,
-                borderRadius: 2,
-                padding: '10px 20px',
-                cursor: 'pointer',
-                fontFamily: "'Cinzel', serif",
-                fontSize: 10,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                color: COLORS.magicText,
-              }}>Save this set</button>
-            )}
-
-            {(slotsUsed > 0 || assignedCount > 0) && (
-              <button onClick={handleReset} style={{
-                background: 'transparent',
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: 2,
-                padding: '10px 16px',
-                cursor: 'pointer',
-                fontFamily: "'Cinzel', serif",
-                fontSize: 9,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                color: COLORS.muted,
-              }}>Reset</button>
-            )}
-          </div>
-
-          {/* Current unsaved roll preview */}
-          {currentRoll && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{
-                fontSize: 8,
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-                color: COLORS.muted,
-                fontFamily: "'Cinzel', serif",
-                marginBottom: 8,
-              }}>Current roll — save to keep</div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {currentRoll.map((val, i) => (
-                  <div key={i} style={{
-                    background: COLORS.card,
-                    border: `1px solid ${COLORS.border}`,
-                    borderRadius: 2,
-                    padding: '8px 12px',
-                    minWidth: 42,
-                    textAlign: 'center',
-                    fontFamily: "'Cinzel', serif",
-                    fontSize: 16,
-                    fontWeight: 800,
-                    color: COLORS.muted,
-                  }}>+{val - 8}</div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Saved sets */}
-          {savedSets.map((set, setIdx) => {
-            if (!set) return null;
-            const isActive = activeSet === setIdx;
-            const isLocked = activeSet !== null && activeSet !== setIdx;
-            const setTotal = set.reduce((a, b) => a + b, 0);
-
-            return (
-              <div key={setIdx} style={{
-                marginBottom: 14,
-                padding: '14px 16px',
-                background: isActive ? 'rgba(240,238,235,0.04)' : 'transparent',
-                border: `1px solid ${isActive ? COLORS.borderMid : COLORS.border}`,
-                borderRadius: 3,
-                opacity: isLocked ? 0.35 : 1,
-                transition: 'all 0.2s ease',
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <div style={{
-                    fontFamily: "'Cinzel', serif",
-                    fontSize: 9,
-                    letterSpacing: '0.14em',
-                    textTransform: 'uppercase',
-                    color: isActive ? COLORS.text : COLORS.muted,
-                  }}>
-                    Set {setIdx + 1}
-                    {isActive && <span style={{ color: COLORS.magic, marginLeft: 8 }}>● Active</span>}
-                    {isLocked && <span style={{ color: COLORS.dim, marginLeft: 8 }}>Locked</span>}
-                  </div>
-                  <div style={{ fontSize: 10, color: COLORS.muted, fontFamily: 'Georgia, serif' }}>
-                    Total: <span style={{ color: COLORS.text, fontWeight: 700 }}>{setTotal}</span>
-                  </div>
+    <StepStage
+      back={{ label: 'Class', onClick: goBack }}
+      next={{ label: 'Backstory', onClick: goNext, disabled: !canAdvance }}
+      magicTech={magicTech} willWhim={willWhim}
+    >
+      <div className="sf">
+        <div className="sf-chart">
+          <div className="wz-caption"><small>THE SHAPE OF YOU</small><h2>Your stats</h2></div>
+          <svg viewBox="-280 -262 560 524" preserveAspectRatio="xMidYMid meet" role="group" aria-label="Stats chart">
+            <defs>
+              <linearGradient id="sf-fill" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0" stopColor={COLORS.magic} stopOpacity=".28" />
+                <stop offset="1" stopColor={COLORS.tech} stopOpacity=".28" />
+              </linearGradient>
+              <linearGradient id="sf-edge" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0" stopColor={COLORS.magicText} />
+                <stop offset="1" stopColor={COLORS.techText} />
+              </linearGradient>
+            </defs>
+            {[8, 12, 16].map(v => <circle key={v} className={`sf-ring${v === 12 ? ' mid' : ''}`} r={radius(v)} />)}
+            {[8, 12, 16].map(v => <text key={v} className="sf-ringlabel" x={4} y={-radius(v) - 4}>{v}</text>)}
+            {ALL_STATS.map(s => { const e = at(ANGLE[s.key], 205); return <line key={s.key} className="sf-spoke" x1={0} y1={0} x2={e.x} y2={e.y} />; })}
+            <line x1={0} y1={-232} x2={0} y2={232} stroke="#ffffff14" strokeDasharray="2 6" />
+            <text className="sf-half" x={-262} y={-238} fill={COLORS.magicText}>MAGIC</text>
+            <text className="sf-half" x={262} y={-238} fill={COLORS.techText} textAnchor="end">TECH</text>
+            <polygon className="sf-shape" points={shape} fill="url(#sf-fill)" stroke="url(#sf-edge)" />
+            {pts.map(({ s, x, y }) => {
+              const isAssigned = s.key in assigned;
+              const can = mode === 'roll' && ((holding && !isAssigned) || isAssigned);
+              const label = at(ANGLE[s.key], 232);
+              const anchor = label.x < -6 ? 'end' : label.x > 6 ? 'start' : 'middle';
+              return (
+                <g
+                  key={s.key}
+                  className={`sf-node${holding && !isAssigned ? ' can' : ''}${can && isAssigned ? ' undo' : ''}${lit === s.key ? ' lit' : ''}${isAssigned || mode === 'manual' ? ' set' : ''}`}
+                  style={{ '--accent': accent(s.axis) }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`${s.label} ${stats[s.key] || 8}`}
+                  onMouseEnter={() => setLit(s.key)}
+                  onMouseLeave={() => setLit(null)}
+                  onFocus={() => setLit(s.key)}
+                  onBlur={() => setLit(null)}
+                  onClick={() => can && handleStatTap(s.key)}
+                  onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && can) { e.preventDefault(); handleStatTap(s.key); } }}
+                >
+                  <circle className="target" cx={x} cy={y} r={13} />
+                  <circle className="dot" cx={x} cy={y} r={isAssigned ? 7 : 5.5} />
+                  <circle cx={x} cy={y} r={22} fill="transparent" />
+                  <text className="name" x={label.x} y={label.y} textAnchor={anchor} dominantBaseline="middle">
+                    {s.label.toUpperCase()}<tspan className="val" dx={8}>{stats[s.key] || 8}</tspan>
+                  </text>
+                  <text className="equiv" x={label.x} y={label.y + 15} textAnchor={anchor} dominantBaseline="middle">{s.equiv}</text>
+                </g>
+              );
+            })}
+          </svg>
+          {!isMobile && (
+            <div className="wz-loreband">
+              {litStat ? (
+                <div className="wz-lore" key={litStat.key} style={{ '--accent': accent(litStat.axis) }}>
+                  <span>{litStat.label.toUpperCase()} · {litStat.equiv.toUpperCase()} · {litStat.axis === 'magic' ? 'MAGIC' : 'TECH'}</span>
+                  <p>{STAT_LORE[litStat.key]}</p>
                 </div>
-
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {set.map((val, rollIdx) => {
-                    const isAssignedRoll = isActive && Object.values(assigned).includes(rollIdx);
-                    const isSelected     = isActive && selectedIdx === rollIdx;
-                    return (
-                      <div
-                        key={rollIdx}
-                        onClick={() => !isLocked && handleRollTap(setIdx, rollIdx)}
-                        style={{
-                          background: isAssignedRoll ? COLORS.dim : isSelected ? COLORS.surface : COLORS.card,
-                          border: `1.5px solid ${isSelected ? COLORS.borderMid : COLORS.border}`,
-                          borderRadius: 2,
-                          padding: '8px 12px',
-                          minWidth: 42,
-                          textAlign: 'center',
-                          cursor: isLocked || isAssignedRoll ? 'default' : 'pointer',
-                          opacity: isAssignedRoll ? 0.4 : 1,
-                          transition: 'all 0.12s ease',
-                          fontFamily: "'Cinzel', serif",
-                          fontSize: 16,
-                          fontWeight: 800,
-                          color: isSelected ? COLORS.text : COLORS.textSub,
-                        }}
-                      >{val}</div>
-                    );
-                  })}
-                </div>
-
-                {isActive && selectedIdx !== null && (
-                  <div style={{ marginTop: 10, fontSize: 10, color: COLORS.borderMid, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
-                    Value <strong>{savedSets[activeSet][selectedIdx]}</strong> selected — tap a stat to assign it.
-                  </div>
-                )}
-
-                {isActive && (
-                  <div style={{ marginTop: 8, fontSize: 9, color: COLORS.muted, fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                    {assignedCount} / 8 assigned
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {/* Empty state */}
-          {slotsUsed === 0 && !currentRoll && (
-            <div style={{
-              padding: 20,
-              textAlign: 'center',
-              color: COLORS.dim,
-              fontFamily: 'Georgia, serif',
-              fontStyle: 'italic',
-              fontSize: 12,
-              border: `1px dashed ${COLORS.border}`,
-              borderRadius: 3,
-              marginBottom: 20,
-            }}>
-              Roll your stats above. Save up to 3 sets, then assign from your favourite.
+              ) : (
+                <p className="wz-hint">{holding ? 'Choose a star on the chart to give it this value.' : 'Rest on a star to read what it measures.'}</p>
+              )}
             </div>
           )}
         </div>
-      )}
 
-      {/* ── STAT GRID (both modes) ── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-        gap: 14,
-        marginBottom: 16,
-      }}>
-        <div>
-          <div style={{ fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.magicText, fontFamily: "'Cinzel', serif", marginBottom: 8 }}>
-            Magic / Spiritual
+        <div className="sf-panel">
+          {isMobile && (
+            <div className="wz-loreband">
+              {litStat
+                ? <div className="wz-lore now" key={litStat.key} style={{ '--accent': accent(litStat.axis) }}><span>{litStat.label.toUpperCase()} · {litStat.equiv.toUpperCase()}</span><p>{STAT_LORE[litStat.key]}</p></div>
+                : holding && <p className="wz-hint">Touch a star on the chart to give it this value.</p>}
+            </div>
+          )}
+          <h3>Set your stats</h3>
+          <p>Each stat starts at 8. Roll 2d4 per stat (adds 2–8). Save up to 3 sets and assign from the best one.</p>
+
+          <div className="sf-seg" role="group" aria-label="How to set stats">
+            {[['roll', 'Roll'], ['manual', 'Manual entry']].map(([id, lbl]) => (
+              <button key={id} type="button" className={mode === id ? 'on' : ''} onClick={() => { setStatMode(id); handleReset(); }}>{lbl}</button>
+            ))}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {magicStats.map(s => <StatBlock key={s.key} statDef={s} />)}
-          </div>
-        </div>
-        <div>
-          <div style={{ fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: COLORS.techText, fontFamily: "'Cinzel', serif", marginBottom: 8 }}>
-            Tech / Mortal
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {techStats.map(s => <StatBlock key={s.key} statDef={s} />)}
-          </div>
+
+          {mode === 'roll' && (
+            <>
+              <div className="sf-actions">
+                <button type="button" className="sf-btn gold" onClick={doRoll} disabled={!canRoll}>✦ ROLL 8×(2D4)</button>
+                {currentRoll && canSave && <button type="button" className="sf-btn" onClick={saveRoll}>SAVE THIS SET</button>}
+                {(slotsUsed > 0 || assignedCount > 0) && <button type="button" className="sf-btn" onClick={handleReset}>RESET</button>}
+              </div>
+
+              {currentRoll && (
+                <>
+                  <span className="sf-label">CURRENT ROLL · SAVE TO KEEP</span>
+                  <div className="sf-motes" key={currentRoll.join('-')}>
+                    {currentRoll.map((val, i) => <button key={i} type="button" className="sf-mote" disabled style={{ animationDelay: `${i * 0.05}s` }}>+{val - 8}</button>)}
+                  </div>
+                </>
+              )}
+
+              {savedSets.map((set, setIdx) => {
+                if (!set) return null;
+                const isActive = activeSet === setIdx;
+                const isLocked = activeSet !== null && activeSet !== setIdx;
+                const setTotal = set.reduce((a, b) => a + b, 0);
+                return (
+                  <div key={setIdx} className={`sf-set${isActive ? ' active' : ''}${isLocked ? ' locked' : ''}`}>
+                    <header>
+                      <span>SET {setIdx + 1}{isActive ? ' · ACTIVE' : isLocked ? ' · LOCKED' : ''}</span>
+                      <span>TOTAL <b>{setTotal}</b></span>
+                    </header>
+                    <div className="sf-motes">
+                      {set.map((val, rollIdx) => {
+                        const used = isActive && Object.values(assigned).includes(rollIdx);
+                        const sel = isActive && selectedIdx === rollIdx;
+                        return (
+                          <button
+                            key={rollIdx} type="button"
+                            className={`sf-mote${sel ? ' sel' : ''}${used ? ' used' : ''}`}
+                            disabled={isLocked || used}
+                            onClick={() => handleRollTap(setIdx, rollIdx)}
+                          >{val}</button>
+                        );
+                      })}
+                    </div>
+                    {isActive && selectedIdx !== null && <p className="sf-note">{savedSets[activeSet][selectedIdx]} chosen. Now touch a star on the chart to give it this value.</p>}
+                    {isActive && <p className="sf-note">{assignedCount} / 8 assigned{assignedCount ? ' · touch an assigned star to take its value back' : ''}</p>}
+                  </div>
+                );
+              })}
+
+              {slotsUsed === 0 && !currentRoll && (
+                <div className="sf-empty">Roll your stats. Save up to 3 sets, then assign from your favourite.</div>
+              )}
+
+              {allAssigned && !committed && <button type="button" className="sf-btn gold" onClick={() => setCommitted(true)}>✦ COMMIT STATS</button>}
+              {committed && <p className="sf-committed">✓ STATS COMMITTED</p>}
+            </>
+          )}
+
+          {mode === 'manual' && (
+            <div className="sf-manual">
+              {ALL_STATS.map(s => (
+                <label key={s.key} style={{ '--accent': accent(s.axis) }} onMouseEnter={() => setLit(s.key)} onMouseLeave={() => setLit(null)}>
+                  <span>{s.label.toUpperCase()}<small>{s.equiv}</small></span>
+                  <input type="number" min="1" max="20" inputMode="numeric" value={manualVals[s.key]} onChange={e => handleManual(s.key, e.target.value)} />
+                </label>
+              ))}
+            </div>
+          )}
+
+          <div className="sf-total">TOTAL<b>{statTotal}</b></div>
         </div>
       </div>
-
-      {/* Total */}
-      {statMode === 'roll' && allAssigned && !committed && (
-  <div style={{
-    display: 'flex',
-    justifyContent: 'flex-end',
-    marginBottom: 20,
-  }}>
-    <button
-      onClick={() => setCommitted(true)}
-      style={{
-        background: COLORS.magicBg,
-        border: `1px solid ${COLORS.magic}`,
-        borderRadius: 2,
-        padding: '10px 24px',
-        cursor: 'pointer',
-        fontFamily: "'Cinzel', serif",
-        fontSize: 10,
-        letterSpacing: '0.12em',
-        textTransform: 'uppercase',
-        color: COLORS.magicText,
-        fontWeight: 700,
-      }}
-    >✦ Commit Stats</button>
-  </div>
-)}
-
-{committed && (
-  <div style={{
-    display: 'flex',
-    justifyContent: 'flex-end',
-    marginBottom: 20,
-    fontSize: 10,
-    color: COLORS.magicText,
-    fontFamily: "'Cinzel', serif",
-    letterSpacing: '0.1em',
-    textTransform: 'uppercase',
-  }}>✓ Stats Committed</div>
-)}
-
-      {/* Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 16, borderTop: `1px solid ${COLORS.border}` }}>
-        <button onClick={goBack} style={{
-          background: 'transparent',
-          border: `1px solid ${COLORS.border}`,
-          borderRadius: 2,
-          padding: '10px 20px',
-          color: COLORS.muted,
-          cursor: 'pointer',
-          fontFamily: "'Cinzel', serif",
-          fontSize: 9,
-          letterSpacing: '0.14em',
-          textTransform: 'uppercase',
-        }}>← Class</button>
-
-        <button onClick={goNext} disabled={!canAdvance} style={{
-          background: canAdvance ? COLORS.surface : 'transparent',
-          border: `1px solid ${canAdvance ? COLORS.borderMid : COLORS.border}`,
-          borderRadius: 2,
-          padding: '10px 24px',
-          color: canAdvance ? COLORS.text : COLORS.dim,
-          cursor: canAdvance ? 'pointer' : 'default',
-          fontFamily: "'Cinzel', serif",
-          fontSize: 9,
-          letterSpacing: '0.14em',
-          textTransform: 'uppercase',
-          transition: 'all 0.15s',
-        }}>Backstory →</button>
-      </div>
-    </div>
+    </StepStage>
   );
 }

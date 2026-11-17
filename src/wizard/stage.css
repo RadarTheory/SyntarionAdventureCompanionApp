@@ -50,6 +50,14 @@
 .wz-track i { position: absolute; top: 0; bottom: 0; border-radius: 2px; transition: left .5s var(--ease), right .5s var(--ease), background .5s; }
 .wz-track::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #ffffff30; }
 
+/* What every step on the stage shares: its caption in the corner, and the band along the foot where lore is read. */
+.wz-caption { position: absolute; top: 22px; left: 26px; pointer-events: none; z-index: 1; }
+.wz-caption small { display: block; font-size: 10px; letter-spacing: 1.6px; color: #879581; margin-bottom: 7px; font-family: Cinzel, Georgia, serif; }
+.wz-caption h2 { margin: 0; font-family: Cinzel, Georgia, serif; font-weight: 400; font-size: 17px; color: #c5ccbb; letter-spacing: .5px; }
+.wz-loreband { position: absolute; left: 50%; bottom: 3.5%; transform: translateX(-50%); width: min(560px, calc(100% - 48px)); text-align: center; min-height: 64px; pointer-events: none; }
+.wz-hint { margin: 0; font-size: 11.5px; font-style: italic; color: #6f7f67; letter-spacing: .3px; animation: wz-arrive 1s var(--ease) .4s both; }
+.wz-chosen-mark { display: inline-block; margin-left: 8px; font-size: 9px; letter-spacing: 1.6px; color: var(--accent, var(--gold)); opacity: .8; }
+
 /* Lore: set on the sky itself, no box, rising out of a blur a beat after it is asked for. */
 .wz-lore { pointer-events: none; animation: wz-smoke 1.1s var(--ease) .9s both; }
 .wz-lore.now { animation-delay: .15s; }
@@ -64,6 +72,8 @@
 @keyframes wz-arrive { from { opacity: 0; filter: blur(6px); } to { opacity: 1; filter: none; } }
 
 @media (max-width: 767px) {
+  .wz-caption { top: 14px; left: 14px; }
+  .wz-caption h2 { font-size: 14px; }
   .wz-bar { padding: 8px 12px; gap: 10px; }
   .wz-nav { padding: 8px 11px; }
   .wz-leans { gap: 12px; }

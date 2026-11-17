@@ -1,0 +1,43 @@
+/* ─── Belief step on the stage (user, 2026-11-17) ─────────────────────────────────────────────────────────────────
+   The faiths as constellations: Sanctus (the gods) as a ring with the Primordials and Celestials inside it, Sacral
+   (the spirits) as three elemental diamonds, and the unaffiliated stances as a quiet row beneath. Plain stars only. */
+
+.bf { position: absolute; inset: 0; }
+.bf-box { position: absolute; }
+.bf-box svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.bf-box svg ellipse { fill: none; stroke: color-mix(in srgb, var(--accent) 22%, transparent); stroke-width: .8; }
+.bf-box svg line { stroke: var(--accent); stroke-width: 1; opacity: .22; transition: opacity .4s; }
+.bf.focusing .bf-box svg line { opacity: .1; }
+
+.bf-title { position: absolute; left: 50%; transform: translateX(-50%); top: 0; text-align: center; pointer-events: none; white-space: nowrap; }
+.bf-title b { display: block; font-family: Cinzel, Georgia, serif; font-weight: 400; font-size: 14px; letter-spacing: 4px; color: var(--accent); }
+.bf-title small { display: block; font-size: 8px; letter-spacing: 1.8px; color: #8d998b; margin-top: 4px; font-family: Cinzel, Georgia, serif; }
+.bf-group { position: absolute; transform: translate(-50%, -50%); font-family: Cinzel, Georgia, serif; font-size: 8px; letter-spacing: 1.8px; color: #8d998b; pointer-events: none; white-space: nowrap; }
+
+.bf-star {
+  position: absolute; transform: translate(-50%, -7px); background: none; border: 0; padding: 0; color: inherit; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; outline: none; transition: opacity .35s var(--ease);
+}
+.bf-star i {
+  width: 13px; height: 13px; border-radius: 50%; background: #0a120e; border: 1px solid color-mix(in srgb, var(--accent) 75%, transparent);
+  transition: background .3s, box-shadow .3s, transform .3s var(--ease);
+}
+.bf-star span { font-family: Cinzel, Georgia, serif; font-size: 10px; letter-spacing: 1.1px; color: #b3c0ab; white-space: nowrap; transition: color .3s; text-shadow: 0 1px 3px #000; }
+.bf.focusing .bf-star { opacity: .45; }
+.bf.focusing .bf-star.lit, .bf-star.chosen { opacity: 1; }
+.bf-star.lit i, .bf-star:focus-visible i { background: var(--accent); transform: scale(1.25); box-shadow: 0 0 10px var(--accent), 0 0 26px color-mix(in srgb, var(--accent) 40%, transparent); }
+.bf-star.lit span, .bf-star.chosen span { color: #eef1da; }
+.bf-star.chosen i { background: var(--accent); box-shadow: 0 0 12px var(--accent), 0 0 30px color-mix(in srgb, var(--accent) 45%, transparent); }
+.bf-star.chosen i::after { content: ''; position: absolute; left: 50%; top: 6px; width: 27px; height: 27px; margin: -13.5px 0 0 -13.5px; border-radius: 50%; border: 1px dashed var(--accent); opacity: .7; animation: bf-turn 18s linear infinite; }
+@keyframes bf-turn { to { transform: rotate(360deg); } }
+
+.bf-lore-domain { display: block; margin-top: 6px; font-size: 10.5px; font-style: italic; color: #879581; text-shadow: 0 1px 2px #000; }
+
+@media (max-width: 767px) {
+  .bf { overflow-y: auto; padding: 0 0 10px; }
+  .bf .wz-caption { position: relative; top: auto; left: auto; padding: 14px 14px 2px; }
+  .bf-box { position: relative; left: auto !important; top: auto !important; width: 100% !important; margin-bottom: 18px; }
+  .bf .wz-loreband { position: sticky; top: 0; left: auto; bottom: auto; transform: none; width: auto; z-index: 3; margin: 0 0 8px; padding: 10px 16px 18px; min-height: 0;
+    background: linear-gradient(180deg, var(--sky) 80%, transparent); }
+  .bf-star span { font-size: 9px; letter-spacing: .5px; }
+}

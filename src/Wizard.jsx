@@ -25,7 +25,7 @@ const STEPS = [
   { id: 'sheet',     label: 'Sheet'     },
 ];
 // Steps that fill the page on the shared stage (wizard/StepStage.jsx).
-const STAGED_STEPS = new Set(['race', 'class']);
+const STAGED_STEPS = new Set(['race', 'belief', 'class', 'stats', 'backstory']);
 
 // ─── SLIDER HELPERS ───────────────────────────────────────────────────────────
 // Clamps a slider value between -4 and +4

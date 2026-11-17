@@ -276,7 +276,7 @@ export default function StepRace({
                 return <line key={x.id} className={on ? 'lit' : ''} x1={`${a.x}%`} y1={`${a.y}%`} x2={`${b.x}%`} y2={`${b.y}%`} stroke={accentOf(x.tag)} />;
               }))}
             </svg>
-            <div className="rf-caption"><small>THE PEOPLES OF SOTERIA</small><h2>Choose your race</h2></div>
+            <div className="wz-caption"><small>THE PEOPLES OF SOTERIA</small><h2>Choose your race</h2></div>
             <div className="rf-axis"><span>MAGIC</span><span>TECH</span></div>
             {RACES.map(x => (
               <button
@@ -294,14 +294,14 @@ export default function StepRace({
                 <span className="rf-name">{x.name}<span className="rf-sub">{x.sub}</span></span>
               </button>
             ))}
-            <div className="rf-loreband">
+            <div className="wz-loreband">
               {hovered && !isMobile ? (
                 <div className="wz-lore" key={hovered.id} style={{ '--accent': accentOf(hovered.tag) }}>
                   <span>{hovered.name.toUpperCase()} · {hovered.sub.toUpperCase()} · {tagWord(hovered.tag).toUpperCase()}</span>
                   <p>{hovered.desc}</p>
                 </div>
               ) : (
-                <p className="rf-hint">{isMobile ? 'Touch a sign to go closer.' : 'Rest on a sign to read of its people. Choose one to go closer.'}</p>
+                <p className="wz-hint">{isMobile ? 'Touch a sign to go closer.' : 'Rest on a sign to read of its people. Choose one to go closer.'}</p>
               )}
             </div>
           </div>
