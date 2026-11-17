@@ -1,6 +1,6 @@
-import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
-import { useDevice } from './useDevice';
-import { COLORS, CLASSES } from './constants';
+import { useEffect, useRef, useCallback } from 'react';
+import { CLASSES } from './constants';
+import StepStage from './wizard/StepStage';
 import { startingCallingOf } from './constellationAbilities';
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -19,33 +19,12 @@ export default function StepClass({
   cp, setCp, cid, setCid,
   generateBoons, race,
   goNext, goBack,
+  magicTech = 0, willWhim = 0,
 }) {
-  const { isMobile } = useDevice();
-  const anchor = useRef(null);
-  const [top, setTop] = useState(null);
   const frame = useRef(null);
   const cidRef = useRef(cid);
 
   useEffect(() => { cidRef.current = cid; }, [cid]);
-
-  // The sky fills the page below the wizard's step bar (user, 2026-11-16): the step's own column is only 680px wide, so
-  // measure where the scrolling content area starts and lay a fixed layer from there to the side panel.
-  useLayoutEffect(() => {
-    const measure = () => {
-      const area = anchor.current?.parentElement?.parentElement;
-      if (!area) return;
-      // Start right under the step bar itself: on phones the wizard pads the bar's wrapper with room for the bottom panel.
-      const bar = area.previousElementSibling?.firstElementChild;
-      setTop(Math.round(bar ? bar.getBoundingClientRect().bottom : area.getBoundingClientRect().top));
-    };
-    // The header and step bar settle after fonts load and as they wrap, so measure again whenever the page reflows.
-    measure();
-    document.fonts?.ready?.then(measure);
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
-    ro?.observe(document.body);
-    window.addEventListener('resize', measure);
-    return () => { ro?.disconnect(); window.removeEventListener('resize', measure); };
-  }, []);
 
   // When class changes, regenerate boons with correct path
   useEffect(() => {
@@ -76,46 +55,21 @@ export default function StepClass({
   }, [sendInit, setCid, setCp]);
 
   const canAdvance = !!cid;
-  const SKY = '#0c100f';
 
-  const navBtn = (enabled) => ({
-    background: enabled ? 'rgba(200,168,74,0.12)' : 'transparent',
-    border: `1px solid ${enabled ? 'rgba(200,168,74,0.45)' : COLORS.border}`,
-    borderRadius: 3, padding: isMobile ? '8px 12px' : '9px 18px',
-    color: enabled ? COLORS.text : COLORS.dim, cursor: enabled ? 'pointer' : 'default',
-    fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase',
-    whiteSpace: 'nowrap', transition: 'all 0.15s',
-  });
-
+  // The whole step is the map, in the wizard's shared stage: only the step bar above and the foot bar below (user, 2026-11-16/17).
   return (
-    <div ref={anchor}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
-      `}</style>
-
-      {/* The whole step is the map: a fixed layer from the step bar down, left of the Magic | Tech panel (above it on phones),
-          with only the Belief / Stats buttons along its foot. */}
-      <div style={{
-        position: 'fixed', top: top ?? 0, left: 0, right: isMobile ? 0 : 200, bottom: isMobile ? 64 : 0,
-        visibility: top == null ? 'hidden' : 'visible',
-        display: 'flex', flexDirection: 'column', background: SKY, zIndex: 5,
-      }}>
-        <iframe
-          ref={frame}
-          src={SRC}
-          title="Choose your calling"
-          style={{ flex: 1, width: '100%', border: 0, display: 'block', background: SKY }}
-        />
-        {/* The way on, in a bar along the bottom: everything else is the map (user, 2026-11-16). */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
-          padding: isMobile ? '8px 12px' : '10px 22px',
-          background: `linear-gradient(0deg, #121614, ${SKY})`, borderTop: '1px solid rgba(200,168,74,0.14)',
-        }}>
-          <button onClick={goBack} style={navBtn(true)}>← Belief</button>
-          <button onClick={goNext} disabled={!canAdvance} style={navBtn(canAdvance)}>Stats →</button>
-        </div>
-      </div>
-    </div>
+    <StepStage
+      background={false}
+      back={{ label: 'Belief', onClick: goBack }}
+      next={{ label: 'Stats', onClick: goNext, disabled: !canAdvance }}
+      magicTech={magicTech} willWhim={willWhim}
+    >
+      <iframe
+        ref={frame}
+        src={SRC}
+        title="Choose your calling"
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0, display: 'block', background: '#0c100f' }}
+      />
+    </StepStage>
   );
 }

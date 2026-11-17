@@ -24,6 +24,8 @@ const STEPS = [
   { id: 'backstory', label: 'Backstory' },
   { id: 'sheet',     label: 'Sheet'     },
 ];
+// Steps that fill the page on the shared stage (wizard/StepStage.jsx).
+const STAGED_STEPS = new Set(['race', 'class']);
 
 // ─── SLIDER HELPERS ───────────────────────────────────────────────────────────
 // Clamps a slider value between -4 and +4
@@ -470,7 +472,10 @@ export default function Wizard({ onComplete, onHome }) {
     }
   };
 
-  const mainPadding = isDesktop ? '0 220px 0 0' : isMobile ? '0 0 80px 0' : '0';
+  // Steps drawn on the full-page stage (wizard/StepStage.jsx) carry the leans in their own foot bar, so the side panel
+  // and the room kept for it go (user, 2026-11-17). The rest keep the side panel until they move onto the stage too.
+  const staged = STAGED_STEPS.has(currentStep);
+  const mainPadding = staged ? '0' : isDesktop ? '0 220px 0 0' : isMobile ? '0 0 80px 0' : '0';
 
   return (
     <div style={{
@@ -542,11 +547,13 @@ export default function Wizard({ onComplete, onHome }) {
       </div>
 
       {/* ── SLIDER PANEL (fixed, read only) ── */}
-      <SliderPanel
-        magicTech={magicTech}
-        willWhim={willWhim}
-        isMobile={isMobile}
-      />
+      {!staged && (
+        <SliderPanel
+          magicTech={magicTech}
+          willWhim={willWhim}
+          isMobile={isMobile}
+        />
+      )}
     </div>
   );
 }

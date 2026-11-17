@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { useDevice } from './useDevice';
 import {
   COLORS, RACES, PM_MAJ, PM_MIN, PM_AEON, PM_ASTRAL,
@@ -6,118 +6,33 @@ import {
   PAMORPH_LORE, getRacialTraits,
 } from './constants';
 import supabase from './lib/supabase';
+import StepStage from './wizard/StepStage';
+import './wizard/race.css';
 const PortraitUpload = lazy(() => import('./PortraitUpload'));
 
-
-// ─── STYLE HELPERS ────────────────────────────────────────────────────────────
-const label = {
-  fontSize: 8,
-  letterSpacing: '0.14em',
-  textTransform: 'uppercase',
-  color: COLORS.muted,
-  fontFamily: "'Cinzel', serif",
-  display: 'block',
-  marginBottom: 6,
-};
-
-const inp = (extra = {}) => ({
-  background: COLORS.card,
-  border: `1px solid ${COLORS.border}`,
-  borderRadius: 2,
-  padding: '9px 12px',
-  color: COLORS.text,
-  fontSize: 13,
-  width: '100%',
-  outline: 'none',
-  boxSizing: 'border-box',
-  fontFamily: 'Georgia, serif',
-  inputMode: 'text',
-  ...extra,
-});
-
-const tagColor = (tag) => {
-  if (tag === 'magic') return { bg: COLORS.magicBg, color: COLORS.magicText, border: COLORS.magic };
-  if (tag === 'tech')  return { bg: COLORS.techBg,  color: COLORS.techText,  border: COLORS.tech  };
-  return { bg: 'rgba(160,160,160,0.12)', color: '#b0b0b0', border: 'rgba(160,160,160,0.3)' };
-};
+// ═════════════════════════════════════════════════════════════════════════════
+// STEP RACE (user, 2026-11-17)
+// On the wizard's full-page stage, like the Class step's constellation: the peoples of Soteria are signs on the sky,
+// set from Magic (left) to Tech (right) by each race's lean. Hovering one reads its lore a beat later, as the
+// constellation does; choosing one dives in, where its variants circle it, its traits are read, and the character is
+// named. The choices and what they set (race, rv, pmV, name, gender, age, portrait) are exactly as before.
+// ═════════════════════════════════════════════════════════════════════════════
 
 const raceIconSrc = (raceId) => raceId ? `/RaceIcons/${String(raceId).toLowerCase().replace(/[^a-z]/g, '')}.png` : null;
-
-function RaceSigil({ raceDef, selected = false, expanded = false, watermark = false }) {
-  const [failed, setFailed] = useState(false);
-  const tc = tagColor(raceDef?.tag);
-  const src = raceIconSrc(raceDef?.id);
-  const size = expanded ? 118 : watermark ? 58 : 42;
-  const initials = (raceDef?.name || '?').replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || '?';
-
-  const background = watermark
-    ? `radial-gradient(circle at center, ${tc.bg} 0%, rgba(240,238,235,0.045) 48%, transparent 76%)`
-    : expanded
-      ? `radial-gradient(circle at center, ${tc.bg} 0%, rgba(44,36,25,0.94) 56%, rgba(20,17,12,0.78) 100%)`
-      : tc.bg;
-
-  return (
-    <div
-      aria-hidden={watermark ? 'true' : undefined}
-      title={raceDef?.name}
-      style={{
-        width: size,
-        height: size,
-        borderRadius: expanded ? 8 : 4,
-        border: watermark ? 'none' : `1px solid ${selected ? tc.border : COLORS.border}`,
-        background,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: expanded ? 16 : 7,
-        boxSizing: 'border-box',
-        flexShrink: 0,
-        opacity: watermark ? (selected ? 0.34 : 0.24) : 1,
-        position: watermark ? 'absolute' : 'relative',
-        right: watermark ? 12 : undefined,
-        top: watermark ? '50%' : undefined,
-        transform: watermark ? 'translateY(-50%)' : undefined,
-        pointerEvents: watermark ? 'none' : 'auto',
-        overflow: 'hidden',
-        boxShadow: expanded ? `inset 0 0 32px rgba(0,0,0,0.35), 0 0 18px ${tc.bg}` : 'none',
-      }}
-    >
-      {src && !failed ? (
-        <img
-          src={src}
-          alt=""
-          onError={() => setFailed(true)}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            filter: expanded
-              ? 'invert(1) sepia(0.28) saturate(0.75) brightness(0.92) contrast(0.9) drop-shadow(0 0 10px rgba(200,168,74,0.18))'
-              : 'invert(1) sepia(0.22) saturate(0.65) brightness(0.86) contrast(0.92)',
-            mixBlendMode: 'screen',
-            opacity: expanded ? 0.82 : 0.68,
-          }}
-        />
-      ) : (
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: expanded ? 28 : 16, color: tc.color, letterSpacing: '0.08em', fontWeight: 700, opacity: expanded ? 0.85 : 0.68 }}>
-          {initials}
-        </div>
-      )}
-    </div>
-  );
-}
+const accentOf = (tag) => tag === 'magic' ? COLORS.magicText : tag === 'tech' ? COLORS.techText : '#c4b389';
+const tagWord = (tag) => tag === 'magic' ? 'Magic' : tag === 'tech' ? 'Tech' : 'Any path';
+const PM_GROUPS = [['Major bloodlines', PM_MAJ], ['Minor bloodlines', PM_MIN], ['Aeon bloodlines', PM_AEON], ['Astral bloodlines', PM_ASTRAL]];
+const pmName = (id) => [...PM_MAJ, ...PM_MIN, ...PM_AEON, ...PM_ASTRAL].find(b => b.id === id)?.name;
 
 // ─── RACE DISPLAY HELPER ──────────────────────────────────────────────────────
 export function getRaceDisplay(race, rv, pmV) {
   if (!race) return '';
-
   if (race === 'pamorph') {
     const all = [...PM_MAJ, ...PM_MIN];
     const bloodline = all.find(b => b.id === pmV);
     if (!bloodline) return "Pa'morph";
     return `Pa'morph · ${bloodline.name}`;
   }
-
   const raceData = RACES.find(r => r.id === race);
   if (!raceData) return race;
   if (rv) return `${raceData.name} · ${rv}`;
@@ -136,123 +51,124 @@ function resolveDesc(r, rv, pmV) {
   return variantDescs.default || r.desc;
 }
 
-function TraitBlock({ raceId, rv, pmV }) {
+// ─── THE FIELD'S LAYOUT ───────────────────────────────────────────────────────
+// One column per lean (-2 … +2), each people spaced down its column, alternate ones nudged aside so the columns read
+// as constellations rather than a table. Positions are percentages of the field.
+function seeded(seed) { return () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function layoutField(isMobile) {
+  const cols = new Map();
+  RACES.forEach(r => { const lean = Math.max(-2, Math.min(2, Math.round(r.lean || 0))); if (!cols.has(lean)) cols.set(lean, []); cols.get(lean).push(r); });
+  const at = {};
+  const x0 = isMobile ? 11 : 14, dx = isMobile ? 19.5 : 18;
+  const top = isMobile ? 16 : 19, span = isMobile ? 64 : 54;
+  for (const [lean, list] of cols) {
+    list.forEach((r, i) => {
+      const nudge = list.length > 3 ? (i % 2 ? 1 : -1) * (isMobile ? 2 : 3.2) : 0;
+      at[r.id] = { x: x0 + (lean + 2) * dx + nudge, y: top + (i + 0.5) * (span / list.length) };
+    });
+  }
+  return { at, cols };
+}
+const DUST = (() => { const rnd = seeded(1729); return Array.from({ length: 110 }, () => ({ x: rnd() * 100, y: rnd() * 100, r: rnd() < 0.9 ? 0.6 : 1.1, o: 0.12 + rnd() * 0.35 })); })();
+
+function Sigil({ r }) {
+  const [failed, setFailed] = useState(false);
+  const src = raceIconSrc(r.id);
+  return (
+    <span className="rf-ring">
+      {src && !failed
+        ? <img src={src} alt="" onError={() => setFailed(true)} />
+        : <b>{r.name.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase()}</b>}
+    </span>
+  );
+}
+
+function Traits({ raceId, rv, pmV }) {
   const traits = getRacialTraits(raceId, rv, pmV);
   if (!traits) return null;
   const { passive, active } = traits;
-
   return (
-    <div style={{ marginBottom: 14 }}>
-      {/* Passive */}
+    <div>
       {passive && (
-        <div style={{
-          background: 'rgba(240,238,235,0.04)',
-          border: `1px solid ${COLORS.border}`,
-          borderRadius: 2,
-          padding: '9px 11px',
-          marginBottom: 8,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-            <span style={{
-              fontSize: 7,
-              fontWeight: 700,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              fontFamily: "'Cinzel', serif",
-              color: COLORS.muted,
-              background: 'rgba(240,238,235,0.08)',
-              border: `1px solid ${COLORS.border}`,
-              borderRadius: 3,
-              padding: '1px 5px',
-            }}>Passive</span>
-            <span style={{
-              fontSize: 11,
-              fontWeight: 700,
-              fontFamily: "'Cinzel', serif",
-              color: COLORS.text,
-              letterSpacing: '0.03em',
-            }}>{passive.name}</span>
-          </div>
-          <p style={{
-            fontSize: 11,
-            color: COLORS.muted,
-            fontFamily: 'Georgia, serif',
-            lineHeight: 1.65,
-            margin: 0,
-          }}>{passive.text}</p>
+        <div className="rd-trait">
+          <small>PASSIVE</small><b>{passive.name}</b>
+          <p>{passive.text}</p>
         </div>
       )}
+      <div className="rd-trait">
+        <small className="active">ACTIVE · ONCE PER REST</small>{active && <b>{active.name}</b>}
+        {active
+          ? <p>{active.text}</p>
+          : <p className="wait">{raceId === 'pamorph' ? 'Choose a bloodline to see your active trait.' : 'Choose a variant to see your active trait.'}</p>}
+      </div>
+    </div>
+  );
+}
 
-      {/* Active */}
-      {active ? (
-        <div style={{
-          background: 'rgba(240,238,235,0.04)',
-          border: `1px solid ${COLORS.border}`,
-          borderRadius: 2,
-          padding: '9px 11px',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-            <span style={{
-              fontSize: 7,
-              fontWeight: 700,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              fontFamily: "'Cinzel', serif",
-              color: COLORS.deity,
-              background: COLORS.deityBg,
-              border: `1px solid ${COLORS.deity}`,
-              borderRadius: 3,
-              padding: '1px 5px',
-            }}>Active · Once per rest</span>
-            <span style={{
-              fontSize: 11,
-              fontWeight: 700,
-              fontFamily: "'Cinzel', serif",
-              color: COLORS.text,
-              letterSpacing: '0.03em',
-            }}>{active.name}</span>
-          </div>
-          <p style={{
-            fontSize: 11,
-            color: COLORS.muted,
-            fontFamily: 'Georgia, serif',
-            lineHeight: 1.65,
-            margin: 0,
-          }}>{active.text}</p>
-        </div>
-      ) : (
-        <div style={{
-          background: 'rgba(240,238,235,0.03)',
-          border: `1px solid ${COLORS.border}`,
-          borderRadius: 2,
-          padding: '9px 11px',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-            <span style={{
-              fontSize: 7,
-              fontWeight: 700,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              fontFamily: "'Cinzel', serif",
-              color: COLORS.dim,
-              background: 'rgba(131,115,100,0.12)',
-              border: `1px solid ${COLORS.dim}`,
-              borderRadius: 3,
-              padding: '1px 5px',
-            }}>Active · Once per rest</span>
-          </div>
-          <p style={{
-            fontSize: 11,
-            color: COLORS.dim,
-            fontFamily: 'Georgia, serif',
-            fontStyle: 'italic',
-            lineHeight: 1.65,
-            margin: 0,
-          }}>
-            {raceId === 'pamorph'
-              ? 'Select a bloodline above to see your active trait.'
-              : 'Select a variant above to see your active trait.'}
-          </p>
+/** Variants on a ring around the race's sign; the chosen one is joined to it by a thread. */
+function Orbit({ r, rv, setRv }) {
+  const box = useRef(null);
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = box.current; if (!el) return undefined;
+    const fit = () => setSize({ w: el.clientWidth, h: el.clientHeight });
+    fit();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(fit) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, []);
+  const variants = r.variants?.length > 1 ? r.variants : [];
+  const R = Math.max(120, Math.min(235, Math.min(size.w, size.h) / 2 - 56));
+  const cx = size.w / 2, cy = size.h / 2;
+  const spots = variants.map((v, i) => {
+    const a = -Math.PI / 2 + (i / variants.length) * Math.PI * 2;
+    return { v, x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R * 0.86 };
+  });
+  const chosen = spots.find(s => s.v === rv);
+  return (
+    <div className="rd-orbit" ref={box}>
+      {size.w > 0 && (
+        <svg aria-hidden="true">
+          <ellipse cx={cx} cy={cy} rx={R} ry={R * 0.86} fill="none" stroke="#c4c4a333" strokeWidth=".7" />
+          <circle className="dotted" cx={cx} cy={cy} r={92} />
+          {chosen && <line x1={cx} y1={cy} x2={chosen.x} y2={chosen.y} />}
+        </svg>
+      )}
+      <div className="rd-core"><Sigil r={r} /><strong>{r.name.toUpperCase()}</strong></div>
+      {size.w > 0 && spots.map((s, i) => (
+        <button key={s.v} type="button" className={`rd-variant${rv === s.v ? ' chosen' : ''}`}
+          style={{ left: s.x, top: s.y, animationDelay: `${0.35 + i * 0.05}s` }}
+          onClick={() => setRv(rv === s.v ? null : s.v)}>{s.v}</button>
+      ))}
+    </div>
+  );
+}
+
+/** Phones, and Pa'morph's many bloodlines: the sign above, the choices in rows below it. */
+function Chips({ r, rv, setRv, pmV, setPmV }) {
+  const groups = r.isPamorph
+    ? PM_GROUPS.filter(([, list]) => list.length)
+    : (r.variants?.length > 1 ? [[null, r.variants.map(v => ({ id: v, name: v }))]] : []);
+  const isOn = (id) => r.isPamorph ? pmV === id : rv === id;
+  const choose = (id) => r.isPamorph ? setPmV(pmV === id ? null : id) : setRv(rv === id ? null : id);
+  return (
+    <div className={`rd-orbit${r.isPamorph ? ' pm' : ''}`}>
+      <div className="rd-core"><Sigil r={r} /><strong>{r.name.toUpperCase()}</strong></div>
+      {groups.length > 0 && (
+        <div className="rd-bloodlines">
+          {groups.map(([title, list]) => (
+            <div className="rd-group" key={title || 'variants'}>
+              {title && <small>{title.toUpperCase()}</small>}
+              <div className="rd-chips">
+                {list.map((b, i) => (
+                  <button key={b.id} type="button" title={b.sub || undefined}
+                    className={`rd-variant${isOn(b.id) ? ' chosen' : ''}`}
+                    style={{ animationDelay: `${0.3 + i * 0.025}s` }}
+                    onClick={() => choose(b.id)}>{b.name}</button>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -267,16 +183,49 @@ export default function StepRace({
   fn, setFn, ln, setLn, age, setAge, gender, setGender,
   portraitUrl, setPortraitUrl,
   generateBoons, goNext, goBack,
+  magicTech = 0, willWhim = 0,
 }) {
-  const { isMobile, isDesktop } = useDevice();
-  const [expandedRace, setExpandedRace] = useState(race || null);
+  const { isMobile } = useDevice();
+  const { at, cols } = useMemo(() => layoutField(isMobile), [isMobile]);
+  // 'field' → 'diving' → 'dive' → 'rising' → 'field'. Coming back to this step with a race chosen opens on it.
+  const [phase, setPhase] = useState(race ? 'dive' : 'field');
+  const [hover, setHover] = useState(null);
+  const timer = useRef(null);
+  useEffect(() => () => clearTimeout(timer.current), []);
 
   useEffect(() => {
     if (race) generateBoons(race, null, null);
   }, [race]);
 
-  const namePool = race ? getNamePool(race, rv, pmV) : null;
+  const r = RACES.find(x => x.id === race) || null;
+  const lit = hover || (phase !== 'field' ? race : null);
+  const origin = at[lit || race] || { x: 50, y: 50 };
 
+  const choose = (x) => {
+    if (x.id !== race) {
+      setRace(x.id);
+      setRv(x.variants?.[0] || null);
+      setPmV(null);
+    }
+    setHover(x.id);
+    setPhase('diving');
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => { setPhase('dive'); setHover(null); }, 480);
+  };
+  const rise = () => {
+    setPhase('rising');
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setPhase('field'), 330);
+  };
+  useEffect(() => {
+    if (phase !== 'dive') return undefined;
+    const onKey = (e) => { if (e.key === 'Escape' && !e.target.closest?.('input,textarea')) rise(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [phase]);
+
+  // ── Names (unchanged generators) ──
+  const namePool = race ? getNamePool(race, rv, pmV) : null;
   const genFirst = () => {
     if (!race) return;
     const preferredPool = getNamePool(race, rv, pmV);
@@ -288,7 +237,6 @@ export default function StepRace({
     if (!pool.length) pool = [...(preferredPool.m || []), ...(preferredPool.f || [])];
     if (pool.length) setFn(pick(pool));
   };
-
   const genLast = () => {
     if (!namePool) return;
     if (race === 'chronison') {
@@ -299,457 +247,136 @@ export default function StepRace({
     if (namePool.s?.length) setLn(pick(namePool.s));
   };
 
-  const handleRaceClick = (r) => {
-  if (expandedRace === r.id) {
-    setExpandedRace(null);
-    return;
-  }
-  setRace(r.id);
-  setRv(r.variants?.[0] || null);
-  setPmV(null);
-  setExpandedRace(r.id);
-};
-
-  const cols = isDesktop ? 4 : 2;
   const canAdvance = !!race && !!fn;
+  const showField = phase === 'field' || phase === 'diving' || phase === 'rising';
+  const showDive = phase === 'dive' || phase === 'rising';
+  const hovered = RACES.find(x => x.id === hover);
+  const variantLabel = r?.isPamorph ? pmName(pmV) : (r?.variants?.length > 1 ? rv : null);
 
   return (
-    <div>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
-      `}</style>
-
-      <div style={{
-        fontFamily: "'Cinzel', serif",
-        fontSize: isMobile ? 18 : 22,
-        fontWeight: 700,
-        color: COLORS.text,
-        letterSpacing: '0.06em',
-        marginBottom: 4,
-      }}>Choose your Race</div>
-
-      <div style={{
-        fontSize: 11,
-        color: COLORS.muted,
-        fontFamily: 'Georgia, serif',
-        fontStyle: 'italic',
-        marginBottom: 20,
-        lineHeight: 1.6,
-      }}>
-        Tap a race to expand. Select a variant if applicable, then name your character.
-      </div>
-
-      {/* ── Race grid ── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: `repeat(${cols}, 1fr)`,
-        justifyItems: 'stretch',
-        gap: 8,
-        marginBottom: 20,
-        maxWidth: isDesktop ? 840 : '100%',
-      }}>
-        {RACES.map(r => {
-          const isSelected = race === r.id;
-          const isExpanded = expandedRace === r.id;
-          const tc = tagColor(r.tag);
-
-          return (
-            <div key={r.id} style={{ gridColumn: isExpanded ? `1 / -1` : 'auto' }}>
-              <div
-                onClick={() => handleRaceClick(r)}
-                style={{
-                  background: isSelected ? 'rgba(240,238,235,0.06)' : COLORS.card,
-                  border: `1.5px solid ${isSelected ? COLORS.borderMid : COLORS.border}`,
-                  borderRadius: 3,
-                  height: '100%',
-                  padding: isExpanded ? '11px 13px' : '11px 76px 11px 13px',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  boxShadow: isSelected ? `0 0 0 1px ${COLORS.borderMid}` : 'none',
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
+    <StepStage
+      back={{ label: 'Back', onClick: goBack }}
+      next={{ label: 'Belief', onClick: goNext, disabled: !canAdvance }}
+      magicTech={magicTech} willWhim={willWhim}
+    >
+      <div className="rf" style={{ '--magic': COLORS.magicText, '--tech': COLORS.techText }}>
+        {/* ── The field of peoples ── */}
+        {showField && (
+          <div
+            className={`rf-field${lit ? ' focusing' : ''}${phase === 'diving' ? ' away' : ''}${phase === 'rising' ? ' returning' : ''}`}
+            style={{ transformOrigin: `${origin.x}% ${origin.y}%` }}
+          >
+            <svg className="wz-dust" aria-hidden="true">
+              {DUST.map((d, i) => <circle key={i} cx={`${d.x}%`} cy={`${d.y}%`} r={d.r} fill="#dfe3d2" opacity={d.o} />)}
+            </svg>
+            <svg className="rf-threads" aria-hidden="true">
+              {[...cols.values()].flatMap(list => list.slice(1).map((x, i) => {
+                const a = at[list[i].id], b = at[x.id];
+                const on = lit === x.id || lit === list[i].id;
+                return <line key={x.id} className={on ? 'lit' : ''} x1={`${a.x}%`} y1={`${a.y}%`} x2={`${b.x}%`} y2={`${b.y}%`} stroke={accentOf(x.tag)} />;
+              }))}
+            </svg>
+            <div className="rf-caption"><small>THE PEOPLES OF SOTERIA</small><h2>Choose your race</h2></div>
+            <div className="rf-axis"><span>MAGIC</span><span>TECH</span></div>
+            {RACES.map(x => (
+              <button
+                key={x.id} type="button"
+                className={`rf-sign${lit === x.id ? ' lit' : ''}${race === x.id ? ' chosen' : ''}`}
+                style={{ left: `${at[x.id].x}%`, top: `${at[x.id].y}%`, '--accent': accentOf(x.tag) }}
+                onMouseEnter={() => phase === 'field' && setHover(x.id)}
+                onMouseLeave={() => phase === 'field' && setHover(null)}
+                onFocus={() => phase === 'field' && setHover(x.id)}
+                onBlur={() => phase === 'field' && setHover(null)}
+                onClick={() => choose(x)}
+                aria-label={`${x.name}, ${x.sub}`}
               >
-                {!isExpanded && <RaceSigil raceDef={r} selected={isSelected} watermark />}
-
-                {isExpanded && (
-                  <div
-                    aria-hidden="true"
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      backgroundImage: `url(${raceIconSrc(r.id)})`,
-                      backgroundSize: isMobile ? '260px' : '440px',
-                      backgroundPosition: isMobile ? 'top right' : 'top right',
-                      backgroundRepeat: 'no-repeat',
-                      filter: 'invert(1) sepia(0.25) saturate(0.6) brightness(0.9)',
-                      mixBlendMode: 'screen',
-                      opacity: 0.08,
-                      maskImage: 'linear-gradient(to bottom left, black 0%, transparent 65%)',
-                      WebkitMaskImage: 'linear-gradient(to bottom left, black 0%, transparent 65%)',
-                      pointerEvents: 'none',
-                      zIndex: 0,
-                    }}
-                  />
-                )}
-
-                {/* Card header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: COLORS.text,
-                      fontFamily: "'Cinzel', serif",
-                      marginBottom: 2,
-                      letterSpacing: '0.04em',
-                    }}>{r.name}</div>
-                    <div style={{ fontSize: 9, color: COLORS.muted, marginBottom: 4 }}>{r.sub}</div>
-                    <div style={{ fontSize: 8, color: COLORS.dim, lineHeight: 1.4, marginBottom: 6 }}>{r.sub2}</div>
-                    <span style={{
-                      display: 'inline-block',
-                      fontSize: 8,
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase',
-                      fontWeight: 700,
-                      padding: '2px 7px',
-                      borderRadius: 2,
-                      background: tc.bg,
-                      color: tc.color,
-                      border: `1px solid ${tc.border}`,
-                      fontFamily: "'Cinzel', serif",
-                    }}>
-                      {r.tag === 'magic' ? 'Magic' : r.tag === 'tech' ? 'Tech' : 'Any'}
-                    </span>
-                  </div>
-                  {isSelected && (
-                    <span style={{ fontSize: 10, color: COLORS.muted, marginLeft: 6 }}>
-                      {isExpanded ? '▲' : '▼'}
-                    </span>
-                  )}
+                <Sigil r={x} />
+                <span className="rf-name">{x.name}<span className="rf-sub">{x.sub}</span></span>
+              </button>
+            ))}
+            <div className="rf-loreband">
+              {hovered && !isMobile ? (
+                <div className="wz-lore" key={hovered.id} style={{ '--accent': accentOf(hovered.tag) }}>
+                  <span>{hovered.name.toUpperCase()} · {hovered.sub.toUpperCase()} · {tagWord(hovered.tag).toUpperCase()}</span>
+                  <p>{hovered.desc}</p>
                 </div>
+              ) : (
+                <p className="rf-hint">{isMobile ? 'Touch a sign to go closer.' : 'Rest on a sign to read of its people. Choose one to go closer.'}</p>
+              )}
+            </div>
+          </div>
+        )}
 
-                {/* Expanded content */}
-                {isExpanded && (
-                  <div
-                    onClick={e => e.stopPropagation()}
-                    style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${COLORS.border}`, position: 'relative', zIndex: 1 }}
-                  >
-                    {/* Description - resolveDesc handles Pa'morph lore + all other races */}
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(118px, 150px) 1fr', gap: 18, alignItems: 'start', marginBottom: 14 }}>
-                      <RaceSigil raceDef={r} selected expanded />
-                      <div>
-                        <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: tc.color, marginBottom: 8, opacity: 0.82 }}>
-                          {r.name} Sigil
-                        </div>
-                        <p style={{
-                          fontSize: 12,
-                          color: COLORS.textSub,
-                          fontFamily: 'Georgia, serif',
-                          fontStyle: 'italic',
-                          lineHeight: 1.75,
-                          margin: 0,
-                        }}>
-                          {resolveDesc(r, rv, pmV)}
-                        </p>
-                      </div>
+        {/* ── The dive: one people, its variants, and the name ── */}
+        {showDive && r && (
+          <div className={`rd${phase === 'rising' ? ' leaving' : ''}`} style={{ '--accent': accentOf(r.tag) }}>
+            <button type="button" className="rd-back" onClick={rise}>← ALL PEOPLES</button>
+
+            {isMobile || r.isPamorph || !(r.variants?.length > 1)
+              ? <Chips r={r} rv={rv} setRv={setRv} pmV={pmV} setPmV={setPmV} />
+              : <Orbit r={r} rv={rv} setRv={setRv} />}
+
+            <div className="rd-card">
+              <div className="rd-eyebrow">{r.sub.toUpperCase()} · {tagWord(r.tag).toUpperCase()}</div>
+              <h2>{r.name}{variantLabel ? <span style={{ color: 'var(--accent)', fontSize: '0.6em' }}> · {variantLabel}</span> : null}</h2>
+              <p className="rd-tagline">{r.sub2}</p>
+              <div className="wz-lore now" key={`${r.id}|${rv}|${pmV}`}><p>{resolveDesc(r, rv, pmV)}</p></div>
+              <Traits raceId={r.id} rv={rv} pmV={pmV} />
+
+              <div className="rd-form">
+                <small>NAME YOUR CHARACTER</small>
+                <div className="rd-seg" role="group" aria-label="Presented gender">
+                  {[['m', 'Male'], ['f', 'Female'], ['n', 'Other']].map(([val, lbl]) => (
+                    <button key={val} type="button" className={gender === val ? 'on' : ''} onClick={() => setGender(val)}>{lbl}</button>
+                  ))}
+                </div>
+                <div className="rd-row">
+                  <div className="rd-field">
+                    <small>FIRST NAME *</small>
+                    <div className="rd-input">
+                      <input value={fn} onChange={e => setFn(e.target.value)} placeholder="First name…" autoComplete="off" inputMode="text" />
+                      <button type="button" onClick={genFirst} title="Generate a first name">✦</button>
                     </div>
-                    <TraitBlock raceId={r.id} rv={rv} pmV={pmV} />
-        
-                    {/* Variants (non-Pa'morph) */}
-                    {r.variants?.length > 1 && !r.isPamorph && (
-                      <div style={{ marginBottom: 14 }}>
-                        <span style={label}>Variant</span>
-                        <div style={{
-                          display: 'grid',
-                          gridTemplateColumns: `repeat(${Math.min(r.variants.length, isMobile ? 2 : 4)}, 1fr)`,
-                          gap: 6,
-                        }}>
-                          {r.variants.map(v => (
-                            <div
-                              key={v}
-                              onClick={() => setRv(rv === v ? null : v)}
-                              style={{
-                                background: rv === v ? 'rgba(240,238,235,0.08)' : 'transparent',
-                                border: `1px solid ${rv === v ? COLORS.borderMid : COLORS.border}`,
-                                borderRadius: 2,
-                                padding: '7px 10px',
-                                cursor: 'pointer',
-                                fontSize: 11,
-                                color: rv === v ? COLORS.text : COLORS.muted,
-                                fontFamily: 'Georgia, serif',
-                                textAlign: 'center',
-                                transition: 'all 0.12s',
-                              }}
-                            >
-                              {v}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Pa'morph bloodlines */}
-                                      {r.isPamorph && (
-                    <div style={{ marginBottom: 14 }}>
-
-                      <span style={label}>Major bloodlines</span>
-                      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: 6, marginBottom: 14 }}>
-                        {PM_MAJ.map(p => (
-                          <div key={p.id} onClick={() => setPmV(pmV === p.id ? null : p.id)}
-                            style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 2, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
-                            <div style={{ fontSize: 11, color: pmV === p.id ? COLORS.text : COLORS.muted, fontFamily: 'Georgia, serif' }}>{p.name}</div>
-                            <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{p.sub}</div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <span style={label}>Minor bloodlines</span>
-                      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: 6, marginBottom: 14 }}>
-                        {PM_MIN.map(p => (
-                          <div key={p.id} onClick={() => setPmV(pmV === p.id ? null : p.id)}
-                            style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 2, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
-                            <div style={{ fontSize: 11, color: pmV === p.id ? COLORS.text : COLORS.muted, fontFamily: 'Georgia, serif' }}>{p.name}</div>
-                            <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{p.sub}</div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <span style={label}>Aeon bloodlines</span>
-                      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: 6, marginBottom: 14 }}>
-                        {PM_AEON.map(p => (
-                          <div key={p.id} onClick={() => setPmV(pmV === p.id ? null : p.id)}
-                            style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 2, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
-                            <div style={{ fontSize: 11, color: pmV === p.id ? COLORS.text : COLORS.muted, fontFamily: 'Georgia, serif' }}>{p.name}</div>
-                            <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{p.sub}</div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {PM_ASTRAL.length > 0 && (
-                        <>
-                          <span style={label}>Astral bloodlines</span>
-                          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: 6 }}>
-                            {PM_ASTRAL.map(p => (
-                              <div key={p.id} onClick={() => setPmV(pmV === p.id ? null : p.id)}
-                                style={{ background: pmV === p.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${pmV === p.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 2, padding: '7px 10px', cursor: 'pointer', transition: 'all 0.12s' }}>
-                                <div style={{ fontSize: 11, color: pmV === p.id ? COLORS.text : COLORS.muted, fontFamily: 'Georgia, serif' }}>{p.name}</div>
-                                <div style={{ fontSize: 9, color: COLORS.dim, marginTop: 2 }}>{p.sub}</div>
-                              </div>
-                            ))}
-                          </div>
-                        </>
-                      )}
-
-                    </div>
-                  )}
                   </div>
-                )}
+                  <div className="rd-field">
+                    <small>{race === 'chronison' ? 'DESIGNATION' : 'LAST NAME / CLAN'}</small>
+                    <div className="rd-input">
+                      <input
+                        value={ln}
+                        onChange={e => race !== 'chronison' && setLn(e.target.value)}
+                        readOnly={race === 'chronison'}
+                        placeholder={race === 'chronison' ? 'Generate →' : 'Last name…'}
+                        autoComplete="off" inputMode="text"
+                      />
+                      <button type="button" onClick={genLast} title="Generate a last name">✦</button>
+                    </div>
+                  </div>
+                  <div className="rd-field">
+                    <small>AGE</small>
+                    <div className="rd-input">
+                      <input value={age} onChange={e => setAge(e.target.value)} placeholder="Age" type="number" min="1" inputMode="numeric" autoComplete="off" />
+                    </div>
+                  </div>
+                </div>
+                <div className="rd-portrait">
+                  <small style={{ display: 'block', fontFamily: 'Cinzel, Georgia, serif', fontSize: 9, letterSpacing: '1.6px', color: '#929b8d', marginBottom: 8 }}>PORTRAIT (OPTIONAL)</small>
+                  <Suspense fallback={<div style={{ fontSize: 10, color: '#6f7f67' }}>Loading…</div>}>
+                    <PortraitUpload
+                      currentUrl={portraitUrl}
+                      onUploaded={async (url) => {
+                        setPortraitUrl(url);
+                        await supabase.from('character_portraits').insert({ url, character_id: null });
+                      }}
+                      size={72}
+                    />
+                  </Suspense>
+                </div>
+                {!fn && <p className="rd-need">A first name is needed to go on to Belief.</p>}
               </div>
             </div>
-          );
-        })}
+          </div>
+        )}
       </div>
-
-      {/* ── Name & Identity ── */}
-      {race && (
-        <div style={{
-          background: COLORS.card,
-          border: `1px solid ${COLORS.border}`,
-          borderRadius: 3,
-          padding: isMobile ? '16px' : '20px 24px',
-          marginBottom: 24,
-        }}>
-          <div style={{
-            fontFamily: "'Cinzel', serif",
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: COLORS.muted,
-            marginBottom: 16,
-          }}>
-            Name your character
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <span style={label}>Portrait (optional)</span>
-            <Suspense fallback={<div style={{ fontSize: 9, color: COLORS.dim }}>Loading…</div>}>
-              <PortraitUpload
-                currentUrl={portraitUrl}
-                onUploaded={async (url) => {
-                  setPortraitUrl(url);
-                  await supabase.from('character_portraits').insert({ url, character_id: null });
-                }}
-                size={72}
-              />
-            </Suspense>
-          </div>
-
-          <div style={{ marginBottom: 16 }}>
-            <span style={label}>Presented gender</span>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {[['m','Male'],['f','Female'],['n','Other']].map(([val, lbl]) => (
-                <button
-                  key={val}
-                  onClick={() => setGender(val)}
-                  style={{
-                    background: gender === val ? 'rgba(240,238,235,0.08)' : 'transparent',
-                    border: `1px solid ${gender === val ? COLORS.borderMid : COLORS.border}`,
-                    borderRadius: 2,
-                    padding: '7px 16px',
-                    cursor: 'pointer',
-                    fontSize: 11,
-                    color: gender === val ? COLORS.text : COLORS.muted,
-                    fontFamily: 'Georgia, serif',
-                    transition: 'all 0.12s',
-                  }}
-                >
-                  {lbl}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr',
-            gap: 14,
-          }}>
-            <div>
-              <span style={label}>First name *</span>
-              <button
-                onClick={genFirst}
-                style={{
-                  display: 'block', width: '100%', background: 'transparent',
-                  border: `1px solid ${COLORS.border}`, borderRadius: 2,
-                  padding: '6px 10px', cursor: 'pointer', fontSize: 9,
-                  letterSpacing: '0.12em', textTransform: 'uppercase',
-                  color: COLORS.muted, fontFamily: "'Cinzel', serif",
-                  marginBottom: 6, textAlign: 'center', transition: 'all 0.12s',
-                }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = COLORS.borderMid}
-                onMouseLeave={e => e.currentTarget.style.borderColor = COLORS.border}
-              >
-                ✦ Generate
-              </button>
-              <input
-                style={inp()}
-                value={fn}
-                onChange={e => setFn(e.target.value)}
-                placeholder="Enter first name…"
-                inputMode="text"
-                autoComplete="off"
-              />
-            </div>
-
-            <div>
-              <span style={label}>Last name / Clan</span>
-              <button
-                onClick={genLast}
-                style={{
-                  display: 'block', width: '100%', background: 'transparent',
-                  border: `1px solid ${COLORS.border}`, borderRadius: 2,
-                  padding: '6px 10px', cursor: 'pointer', fontSize: 9,
-                  letterSpacing: '0.12em', textTransform: 'uppercase',
-                  color: COLORS.muted, fontFamily: "'Cinzel', serif",
-                  marginBottom: 6, textAlign: 'center', transition: 'all 0.12s',
-                }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = COLORS.borderMid}
-                onMouseLeave={e => e.currentTarget.style.borderColor = COLORS.border}
-              >
-                ✦ Generate
-              </button>
-              <input
-                style={inp({
-                  opacity: race === 'chronison' ? 0.7 : 1,
-                  cursor: race === 'chronison' ? 'default' : 'text',
-                })}
-                value={ln}
-                onChange={e => race !== 'chronison' && setLn(e.target.value)}
-                placeholder={race === 'chronison' ? 'Generate a designation →' : 'Enter last name…'}
-                inputMode="text"
-                autoComplete="off"
-                readOnly={race === 'chronison'}
-              />
-            </div>
-
-            <div>
-              <span style={label}>Age</span>
-              <div style={{ height: 33, marginBottom: 6 }} />
-              <input
-                style={inp()}
-                value={age}
-                onChange={e => setAge(e.target.value)}
-                placeholder="Enter Age…"
-                type="number"
-                min="1"
-                inputMode="numeric"
-                autoComplete="off"
-              />
-            </div>
-          </div>
-
-          {!fn && (
-  <div style={{
-    marginTop: 12,
-    fontSize: 10, 
-    color: COLORS.muted,
-    fontFamily: 'Georgia, serif',
-    fontStyle: 'italic',
-  }}>
-    First name is required to continue.
-  </div>
-)}
-        </div>
-      )}
-
-      {/* ── Navigation ── */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingTop: 16,
-        borderTop: `1px solid ${COLORS.border}`,
-      }}>
-        <button
-          onClick={goBack}
-          style={{
-            background: 'transparent',
-            border: `1px solid ${COLORS.border}`,
-            borderRadius: 2,
-            padding: '10px 20px',
-            color: COLORS.muted,
-            cursor: 'pointer',
-            fontFamily: "'Cinzel', serif",
-            fontSize: 9,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-          }}
-        >
-          ← Back
-        </button>
-
-        <button
-          onClick={goNext}
-          disabled={!canAdvance}
-          style={{
-            background: canAdvance ? COLORS.surface : 'transparent',
-            border: `1px solid ${canAdvance ? COLORS.borderMid : COLORS.border}`,
-            borderRadius: 2,
-            padding: '10px 24px',
-            color: canAdvance ? COLORS.text : COLORS.dim,
-            cursor: canAdvance ? 'pointer' : 'default',
-            fontFamily: "'Cinzel', serif",
-            fontSize: 9,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            transition: 'all 0.15s',
-          }}
-        >
-          Belief →
-        </button>
-      </div>
-    </div>
+    </StepStage>
   );
 }
