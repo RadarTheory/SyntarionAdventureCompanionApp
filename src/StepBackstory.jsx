@@ -9,6 +9,7 @@ import {
 } from './constants';
 import StepStage from './wizard/StepStage';
 import { useImageFailed } from './wizard/useImageFailed';
+import { versioned } from './wizard/assetVersion';
 import './wizard/backstory.css';
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -18,7 +19,7 @@ import './wizard/backstory.css';
 // submitting are exactly as before.
 // Props: all from Wizard stepProps
 // ═════════════════════════════════════════════════════════════════════════════
-const raceIconSrc = (raceId) => raceId ? `/RaceIcons/${String(raceId).toLowerCase().replace(/[^a-z]/g, '')}.png` : null;
+const raceIconSrc = (raceId) => raceId ? versioned(`/RaceIcons/${String(raceId).toLowerCase().replace(/[^a-z]/g, '')}.png`) : null;
 
 export default function StepBackstory({
   // Character identity

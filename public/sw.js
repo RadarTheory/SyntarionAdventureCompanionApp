@@ -1,4 +1,7 @@
-const CACHE_NAME = 'syntarion-shell-v4';
+// v5 (user, 2026-11-17): only the build's fingerprinted files (/assets/…) are served from the cache first; everything
+// else (icons, art, the constellation) is fetched fresh and the cache is only the offline fallback. Before, every file
+// was cached for good, so replaced images and scripts never reached the app.
+const CACHE_NAME = 'syntarion-shell-v5';
 const APP_SHELL = [
   '/',
   '/site.webmanifest',
@@ -43,15 +46,20 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  event.respondWith(
-    caches.match(request).then(cached => {
-      if (cached) return cached;
-      return fetch(request).then(response => {
-        if (!response || response.status !== 200) return response;
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-        return response;
-      });
-    })
-  );
+  const keep = response => {
+    if (response && response.status === 200) {
+      const copy = response.clone();
+      caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+    }
+    return response;
+  };
+
+  // Fingerprinted build files never change under the same name, so the cache can answer first.
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(caches.match(request).then(cached => cached || fetch(request).then(keep)));
+    return;
+  }
+
+  // Everything else: the network first, so a replaced file shows at once; the cache only when offline.
+  event.respondWith(fetch(request).then(keep).catch(() => caches.match(request)));
 });

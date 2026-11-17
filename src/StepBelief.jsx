@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useDevice } from './useDevice';
 import { COLORS, GODS, SPIRITS, UNAFFILIATED } from './constants';
 import StepStage from './wizard/StepStage';
+import { versioned } from './wizard/assetVersion';
 import './wizard/belief.css';
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -17,15 +18,15 @@ import './wizard/belief.css';
 // yet stay plain stars.
 const GOD_ICONS = new Set(['asherah', 'atu', 'elgar', 'rota', 'zathon', 'baelnim', 'baeshra', 'daretror', 'denka', 'draagora', 'duneyrr', 'fiharta', 'firreth', 'hreidmar', 'ilo', 'khoneus', 'lotjarr', 'maakurg', 'myr', 'ruehnar', 'shevar', 'syreth', 'thietmar', 'urul', 'ylandar']);
 const godSlug = (name) => String(name).replace(/ł/g, 'l').normalize('NFD').toLowerCase().replace(/[^a-z]/g, '');
-const godIcon = (name) => { const s = godSlug(name); return GOD_ICONS.has(s) ? `/GodIcons/${s}.png` : null; };
+const godIcon = (name) => { const s = godSlug(name); return GOD_ICONS.has(s) ? versioned(`/GodIcons/${s}.png`) : null; };
 // Each spirit's symbol (public/SpiritIcons, from the creator's Elemental Spirits symbols): named by the pair, e.g. inanhnbrek.
 const SPIRIT_ICONS = new Set(['aehalussil', 'amalazayvull', 'birnirnal', 'dinrin', 'dioysisild', 'enkigourn', 'inanhnbrek', 'ixhade', 'lusunziakapa', 'reynuifu', 'sevaxparthen', 'vanglig']);
-const spiritIcon = (name) => { const s = godSlug(name); return SPIRIT_ICONS.has(s) ? `/SpiritIcons/${s}.png` : null; };
+const spiritIcon = (name) => { const s = godSlug(name); return SPIRIT_ICONS.has(s) ? versioned(`/SpiritIcons/${s}.png`) : null; };
 // Each unaffiliated stance's symbol (public/StanceIcons), named by its id.
 const STANCE_ICONS = new Set(['atheistic', 'agnostic', 'nihilistic', 'none']);
 const iconFor = (kind, item) => kind === 'god' ? godIcon(item.name)
   : kind === 'spirit' ? spiritIcon(item.name)
-  : kind === 'unaffiliated' && STANCE_ICONS.has(item.id) ? `/StanceIcons/${item.id}.png` : null;
+  : kind === 'unaffiliated' && STANCE_ICONS.has(item.id) ? versioned(`/StanceIcons/${item.id}.png`) : null;
 // The spirits offered at creation: Soteria's own elementals.
 const CREATION_SPIRITS = SPIRITS.filter(g => /^soteria/i.test(g.label));
 

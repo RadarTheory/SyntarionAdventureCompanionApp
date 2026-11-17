@@ -8,6 +8,8 @@ import {
 import supabase from './lib/supabase';
 import StepStage from './wizard/StepStage';
 import { useImageFailed } from './wizard/useImageFailed';
+import { versioned } from './wizard/assetVersion';
+import { raceArtFor } from './wizard/raceArt';
 import './wizard/race.css';
 const PortraitUpload = lazy(() => import('./PortraitUpload'));
 
@@ -20,7 +22,7 @@ const PortraitUpload = lazy(() => import('./PortraitUpload'));
 // named. The choices and what they set (race, rv, pmV, name, gender, age, portrait) are exactly as before.
 // ═════════════════════════════════════════════════════════════════════════════
 
-const raceIconSrc = (raceId) => raceId ? `/RaceIcons/${String(raceId).toLowerCase().replace(/[^a-z]/g, '')}.png` : null;
+const raceIconSrc = (raceId) => raceId ? versioned(`/RaceIcons/${String(raceId).toLowerCase().replace(/[^a-z]/g, '')}.png`) : null;
 const accentOf = (tag) => tag === 'magic' ? COLORS.magicText : tag === 'tech' ? COLORS.techText : '#c4b389';
 const tagWord = (tag) => tag === 'magic' ? 'Magic' : tag === 'tech' ? 'Tech' : 'Any path';
 const pmName = (id) => PM_ALL.find(b => b.id === id)?.name;
@@ -397,6 +399,11 @@ export default function StepRace({
         {/* ── The dive: one people, its variants, and the name ── */}
         {showDive && r && (
           <div className={`rd${phase === 'rising' ? ' leaving' : ''}`} style={{ '--accent': accentOf(r.tag) }}>
+            {/* The people themselves, faint behind their sign: this variant (or bloodline) in the chosen gender (user, 2026-11-17). */}
+            {(() => {
+              const art = raceArtFor(r.id, r.isPamorph ? pmV : rv, gender);
+              return art ? <div className="rd-art" key={art} style={{ backgroundImage: `url("${versioned(art)}")` }} aria-hidden="true" /> : null;
+            })()}
             <button type="button" className="rd-back" onClick={rise}>← ALL PEOPLES</button>
 
             {isMobile || r.isPamorph || !(r.variants?.length > 1)
