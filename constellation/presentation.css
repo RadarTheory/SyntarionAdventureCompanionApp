@@ -482,8 +482,9 @@ html{scrollbar-color:color-mix(in srgb,var(--accent,#c4b389) 40%,#2a332c) #080f0
 
 /* Host mode (inside Syntarion): the host page supplies the header and owns saving, so the explorer's own chrome is hidden. */
 .hosted .topbar,.hosted .page-footer{display:none}
-/* Pick mode (character wizard): the sky is for choosing a calling, so nothing that buys or counts AP is shown. */
-.picking .map-toolbar .segmented,.picking .map-hud .points,.picking #reset,.picking #hud-awaken,.picking #awaken,.picking .dock-awaken,.picking #axis-meter,.picking #learned-count,.picking .map-legend{display:none!important}
+/* Pick mode (character wizard) shows the whole sky as the campaign does: the AP, the Awaken card with the calling's
+   description, the Magic | Tech meter, the legend and the count (user, 2026-11-16). The wizard hands it the 2 AP a calling
+   costs; awakening the first star picks the calling and the card stays up, settled (app.js). */
 /* "Your abilities" drawer (held-abilities.js): the character's abilities, ready to use. */
 .held-head{align-items:flex-start;padding-bottom:12px;border-bottom:1px solid #c3d2bc12}.held-head h2{font-size:24px;margin:6px 0 6px}.held-head .doctrine-kind{margin:0;color:#8f9a85}
 .held-back{margin-left:auto;background:none;border:1px solid #c4b38944;color:#d9c995;font-size:11px;letter-spacing:1px;padding:6px 10px;white-space:nowrap;align-self:flex-start}.held-back:hover{background:#c4b38914}
