@@ -5,6 +5,7 @@ import { SOTERIA_LORE } from './soteria-lore';
 import { buildScribeContext } from './scribe-context';
 import { learnedAbilitiesText } from './constellationAbilities';
 import { useDisplayName } from './lib/displayName';
+import { updateCharacterData } from './lib/characterStore';
 
 const SOTERIA_CONTEXT = `
 You are The Scribe — an ancient, sentient archival intelligence bound to the city of Ashendell in the world of Soteria, 178 Era of Unity.
@@ -100,9 +101,15 @@ export function ScribeConsult({ char, onUpdateChar }) {
   };
 
   const deductAP = async () => {
-    const newAp = Math.max(0, apCurrent - 1);
-    const { error } = await supabase.from('characters').update({ data: { ...char, atCurrent: newAp, at_current: newAp }, at_current: newAp, atCurrent: newAp }).eq('id', char.id);
-    if (error) { console.error('AP deduction failed:', error); throw new Error('Could not deduct AP.'); }
+    // Spend from the character as it is now, not this screen's copy (characterStore reads it fresh).
+    let newAp = Math.max(0, apCurrent - 1);
+    try {
+      await updateCharacterData(char.id, d => {
+        const have = Number(d.atCurrent ?? d.at_current ?? apCurrent) || 0;
+        newAp = Math.max(0, have - 1);
+        return { ...d, atCurrent: newAp, at_current: newAp };
+      }, { columns: () => ({ at_current: newAp, atCurrent: newAp }) });
+    } catch (error) { console.error('AP deduction failed:', error); throw new Error('Could not deduct AP.'); }
     onUpdateChar?.({ ...char, atCurrent: newAp, at_current: newAp });
     return newAp;
   };

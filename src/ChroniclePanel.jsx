@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import supabase from './lib/supabase';
+import { flushSessionEvents } from './lib/sessionEvents';
 import { COLORS } from './constants';
 
 // ─── EVENT TYPE CONFIG ────────────────────────────────────────────────────────
@@ -319,6 +320,7 @@ export default function ChroniclePanel({ campaignId, userChar }) {
   // renderer work unchanged.
   const loadCampaignRecord = async () => {
     if (!campaignId) { setExtraEvents([]); return; }
+    await flushSessionEvents(); // events are buffered; send any just logged before reading them back
     const [{ data: mem }, { data: sess }] = await Promise.all([
       supabase.from('dm_memory')
         .select('id, category, content, created_at')
@@ -326,7 +328,7 @@ export default function ChroniclePanel({ campaignId, userChar }) {
         .in('category', ['roll', 'lore'])
         .order('created_at', { ascending: true }),
       supabase.from('session_events')
-        .select('id, type, payload, created_at')
+        .select('id, event_type, payload, created_at')
         .eq('campaign_id', String(campaignId))
         .order('created_at', { ascending: true }),
     ]);
@@ -340,7 +342,8 @@ export default function ChroniclePanel({ campaignId, userChar }) {
       _source: 'campaign',
     }));
 
-    const fromSession = (sess || []).map(e => {
+    const fromSession = (sess || []).map(row => {
+      const e = { ...row, type: row.event_type || 'event' };   // the column is event_type
       const p = e.payload || {};
       return {
         id: `sev-${e.id}`,

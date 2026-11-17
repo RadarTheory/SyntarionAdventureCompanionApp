@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import supabase from './lib/supabase';
+import { updateCharacterData } from './lib/characterStore';
 import { COLORS, CAMPAIGNS } from './constants';
 import { buildScribeContext } from './scribe-context';
 import { useDisplayName } from './lib/displayName';
@@ -182,9 +183,11 @@ export function ScribePlayerPanel({ char, onUpdateChar, campaignId, onClose, emb
       }));
 
       const answer = await callGemini(system, geminiHistory);
-      const newTokens = Math.max(0, liveTokens - 1);
-      const { id, status, campaign_id, user_id, ...blob } = char || {};
-      await supabase.from('characters').update({ data: { ...blob, scribeTokens: newTokens } }).eq('id', char.id);
+      let newTokens = Math.max(0, liveTokens - 1);
+      await updateCharacterData(char.id, d => {
+        newTokens = Math.max(0, (Number(d.scribeTokens ?? liveTokens) || 0) - 1);
+        return { ...d, scribeTokens: newTokens };
+      });
       onUpdateChar?.({ ...char, scribeTokens: newTokens });
 
       // Notify DM with the question (DM decides whether to charge a token)
@@ -367,9 +370,7 @@ const handleAsk = async () => {
   };
 
   const chargeToken = async (charId, charData, amount = 1) => {
-    const current = charData.scribeTokens || 0;
-    const next    = Math.max(0, current - amount);
-    await supabase.from('characters').update({ data: { ...charData, scribeTokens: next } }).eq('id', charId);
+    await updateCharacterData(charId, d => ({ ...d, scribeTokens: Math.max(0, (Number(d.scribeTokens ?? charData.scribeTokens) || 0) - amount) }));
     playSfxByKey('ui-scribe-token-spend');
     await loadCharacters();
   };
@@ -377,8 +378,7 @@ const handleAsk = async () => {
   const grantTokens = async (charId, charData, amount) => {
     const n = parseInt(amount);
     if (!n || n < 1) return;
-    const next = (charData.scribeTokens || 0) + n;
-    await supabase.from('characters').update({ data: { ...charData, scribeTokens: next } }).eq('id', charId);
+    await updateCharacterData(charId, d => ({ ...d, scribeTokens: (Number(d.scribeTokens ?? charData.scribeTokens) || 0) + n }));
     setTokenInputs(p => ({ ...p, [charId]: '' }));
     playSfxByKey('ui-scribe-token-grant');
     await loadCharacters();

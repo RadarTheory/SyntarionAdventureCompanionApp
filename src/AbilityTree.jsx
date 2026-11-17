@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { COLORS } from './constants';
 import supabase from './lib/supabase';
+import { updateCharacterData } from './lib/characterStore';
 import { playSfxByKey } from './soundLibrary';
 
 const TREE = {
@@ -797,8 +798,13 @@ export default function AbilityTree({ char, onUpdateChar, user, isDM = false }) 
   async function persist(patch) {
     setSaving(true);
     try {
-      const { error } = await supabase.from('characters').update(patch).eq('id', char.id);
-      if (error) throw error;
+      // sliders lives in the data blob (there is no sliders column); the rest are real columns.
+      const { sliders, ...cols } = patch;
+      if (sliders) await updateCharacterData(char.id, d => ({ ...d, sliders }), { columns: cols });
+      else {
+        const { error } = await supabase.from('characters').update(cols).eq('id', char.id);
+        if (error) throw error;
+      }
       onUpdateChar({ ...char, ...patch });
     } catch (e) {
       setNotice({ type: 'error', msg: e.message || 'Save failed.' });
