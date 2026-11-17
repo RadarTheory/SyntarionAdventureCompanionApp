@@ -31,13 +31,14 @@
 .bf-star.chosen i::after { content: ''; position: absolute; left: 50%; top: 6px; width: 27px; height: 27px; margin: -13.5px 0 0 -13.5px; border-radius: 50%; border: 1px dashed var(--accent); opacity: .7; animation: bf-turn 18s linear infinite; }
 @keyframes bf-turn { to { transform: rotate(360deg); } }
 
-/* A god with its own symbol: the symbol in a small ring, in the faith's colour (the image is the mask). */
+/* A faith with its own symbol: the symbol itself on the sky, in the faith's colour (the image is the mask), with no ring
+   around it (user, 2026-11-17). Resting on it or choosing it brightens it and gives it a soft glow. */
 .bf-star.sym { transform: translate(-50%, -19px); }
-.bf-star.sym i { position: relative; width: 38px; height: 38px; }
-.bf-star.sym i::before { content: ''; position: absolute; inset: 4px; background: var(--accent); -webkit-mask: var(--glyph) center / contain no-repeat; mask: var(--glyph) center / contain no-repeat; opacity: .85; transition: background .3s, opacity .3s; }
-.bf-star.sym.lit i, .bf-star.sym.chosen i, .bf-star.sym:focus-visible i { background: color-mix(in srgb, var(--accent) 22%, #0a120e); transform: scale(1.15); }
+.bf-star.sym i { position: relative; width: 38px; height: 38px; background: none; border: 0; border-radius: 0; }
+.bf-star.sym i::before { content: ''; position: absolute; inset: 0; background: var(--accent); -webkit-mask: var(--glyph) center / contain no-repeat; mask: var(--glyph) center / contain no-repeat; opacity: .8; transition: background .3s, opacity .3s; }
+.bf-star.sym.lit i, .bf-star.sym.chosen i, .bf-star.sym:focus-visible i { background: none; box-shadow: none; transform: scale(1.15); filter: drop-shadow(0 0 6px var(--accent)) drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 45%, transparent)); }
 .bf-star.sym.lit i::before, .bf-star.sym.chosen i::before { background: #fff; opacity: 1; }
-.bf-star.sym.chosen i::after { top: 19px; width: 52px; height: 52px; margin: -26px 0 0 -26px; }
+.bf-star.sym.chosen i::after { top: 19px; width: 56px; height: 56px; margin: -28px 0 0 -28px; opacity: .45; }
 
 .bf-lore-domain { display: block; margin-top: 6px; font-size: 10.5px; font-style: italic; color: #879581; text-shadow: 0 1px 2px #000; }
 

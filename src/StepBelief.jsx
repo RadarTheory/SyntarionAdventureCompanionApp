@@ -7,16 +7,27 @@ import './wizard/belief.css';
 // ═════════════════════════════════════════════════════════════════════════════
 // STEP BELIEF (user, 2026-11-17)
 // On the wizard's full-page stage: every faith is a star. Sanctus, the gods, is a ring of the Soterian pantheon with
-// the Primordials and Celestials inside it; Sacral, the spirits, is three elemental diamonds; the unaffiliated stances
-// are a quiet row beneath. Resting on a star reads it a beat later; choosing one settles it. What is saved is as
+// the Primordials and Celestials inside it; Sacral, the spirits, is Soteria's four elementals as one diamond, with the
+// unaffiliated stances beneath it. Only Soteria's spirits are offered at creation (user, 2026-11-17); the Simic and
+// Lorük elementals stay in the data for later. Resting on a star reads it a beat later; choosing one settles it. What is saved is as
 // before: beliefType ('god' | 'spirit' | 'unaffiliated') with deity, spirit or beliefSub.
 // ═════════════════════════════════════════════════════════════════════════════
 
 // Each god's own symbol (public/GodIcons, from the creator's Soterian God Symbols, user 2026-11-17). Gods without one
 // yet stay plain stars.
-const GOD_ICONS = new Set(['asherah', 'baelnim', 'baeshra', 'daretror', 'denka', 'draagora', 'duneyrr', 'fiharta', 'firreth', 'hreidmar', 'ilo', 'khoneus', 'lotjarr', 'maakurg', 'myr', 'ruehnar', 'shevar', 'syreth', 'thietmar', 'urul', 'ylandar']);
+const GOD_ICONS = new Set(['asherah', 'atu', 'elgar', 'rota', 'zathon', 'baelnim', 'baeshra', 'daretror', 'denka', 'draagora', 'duneyrr', 'fiharta', 'firreth', 'hreidmar', 'ilo', 'khoneus', 'lotjarr', 'maakurg', 'myr', 'ruehnar', 'shevar', 'syreth', 'thietmar', 'urul', 'ylandar']);
 const godSlug = (name) => String(name).replace(/ł/g, 'l').normalize('NFD').toLowerCase().replace(/[^a-z]/g, '');
 const godIcon = (name) => { const s = godSlug(name); return GOD_ICONS.has(s) ? `/GodIcons/${s}.png` : null; };
+// Each spirit's symbol (public/SpiritIcons, from the creator's Elemental Spirits symbols): named by the pair, e.g. inanhnbrek.
+const SPIRIT_ICONS = new Set(['aehalussil', 'amalazayvull', 'birnirnal', 'dinrin', 'dioysisild', 'enkigourn', 'inanhnbrek', 'ixhade', 'lusunziakapa', 'reynuifu', 'sevaxparthen', 'vanglig']);
+const spiritIcon = (name) => { const s = godSlug(name); return SPIRIT_ICONS.has(s) ? `/SpiritIcons/${s}.png` : null; };
+// Each unaffiliated stance's symbol (public/StanceIcons), named by its id.
+const STANCE_ICONS = new Set(['atheistic', 'agnostic', 'nihilistic', 'none']);
+const iconFor = (kind, item) => kind === 'god' ? godIcon(item.name)
+  : kind === 'spirit' ? spiritIcon(item.name)
+  : kind === 'unaffiliated' && STANCE_ICONS.has(item.id) ? `/StanceIcons/${item.id}.png` : null;
+// The spirits offered at creation: Soteria's own elementals.
+const CREATION_SPIRITS = SPIRITS.filter(g => /^soteria/i.test(g.label));
 
 const KINDS = {
   god:          { accent: COLORS.deityText,        title: 'SANCTUS',      sub: 'THE GODS' },
@@ -42,13 +53,13 @@ function godStars() {
   };
 }
 function spiritStars(isMobile) {
-  const centres = isMobile ? [[50, 19], [50, 52], [50, 85]] : [[50, 31], [24, 72], [76, 72]];
-  const ox = isMobile ? 25 : 12, oy = isMobile ? 9 : 13;
+  // One diamond: Soteria's four elementals around their name.
+  const [cx, cy] = isMobile ? [50, 56] : [50, 58];
+  const ox = isMobile ? 30 : 19, oy = isMobile ? 28 : 26;
   const offs = [[0, -oy], [ox, 0], [0, oy], [-ox, 0]];
   const stars = [], lines = [], groups = [];
-  SPIRITS.forEach((group, gi) => {
-    const [cx, cy] = centres[gi] || [50, 50];
-    const pts = group.list.slice(0, 4).map((s, i) => ({ item: s, x: cx + offs[i][0], y: cy + offs[i][1] }));
+  CREATION_SPIRITS.forEach(group => {
+    const pts = group.list.slice(0, 4).map((sp, i) => ({ item: sp, x: cx + offs[i][0], y: cy + offs[i][1] }));
     stars.push(...pts);
     pts.forEach((p, i) => { if (pts.length > 1) lines.push([p, pts[(i + 1) % pts.length]]); });
     groups.push([group.label.replace(/ elemental$/i, '').toUpperCase(), cx, cy]);
@@ -71,7 +82,7 @@ function Constellation({ kind, layout, box, lit, chosen, onLit, onChoose, intera
       {layout.groups.map(([label, x, y]) => <div key={label} className="bf-group" style={{ left: `${x}%`, top: `${y}%` }}>{label}</div>)}
       {layout.stars.map(({ item, x, y }) => {
         const id = `${kind}:${item.id || item.name}`;
-        const icon = kind === 'god' ? godIcon(item.name) : null;
+        const icon = iconFor(kind, item);
         return (
           <button
             key={id} type="button"
@@ -131,11 +142,11 @@ export default function StepBelief({
   const canAdvance = !!chosen;
 
   const boxes = isMobile
-    ? { god: { height: 430 }, spirit: { height: 660 }, unaffiliated: { height: 110 } }
+    ? { god: { height: 430 }, spirit: { height: 320 }, unaffiliated: { height: 110 } }
     : {
       god: { left: '3%', top: '9%', width: '45%', height: '60%' },
-      spirit: { left: '52%', top: '9%', width: '45%', height: '60%' },
-      unaffiliated: { left: '27%', top: '70%', width: '46%', height: '12%' },
+      spirit: { left: '52%', top: '9%', width: '45%', height: '42%' },
+      unaffiliated: { left: '52%', top: '55%', width: '45%', height: '15%' },
     };
   const common = { lit, chosen, onLit: setLit, onChoose: choose, interactive: !isMobile };
 
