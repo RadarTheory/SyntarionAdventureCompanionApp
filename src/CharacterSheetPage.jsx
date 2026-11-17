@@ -1,10 +1,9 @@
 // The campaign Sheet tab (user, 2026-11-16): one page for the character, styled after the Constellation.
-// - Hero: portrait, name, lineage, reputations, and the race and class symbols drawn the way the constellation draws them
-//   (luminance-to-alpha silhouettes tinted to the practice colour, on a glowing star).
-// - The character's own sky: every calling at its atlas position, the ones they have awakened lit with their symbol and threaded to The Self.
-//   Orbiting stars are plain stars, one per level or ability bought (no ability art).
-// - Moral compass: Good ↔ Evil against Magic ↔ Tech. Renown (from their standings), their reputations, and how the NPCs they
-//   have met regard them (tier words only; src/reactions.js).
+// - Hero: portrait, name, lineage, renown and the race and class symbols drawn the way the constellation draws them
+//   (luminance-to-alpha silhouettes tinted to the practice colour, on a glowing star), plus a small drawing of the
+//   character's sky: the callings they have awakened lit with their symbol and threaded to The Self. Orbiting stars are
+//   plain stars, one per level or ability bought (no ability art).
+// - Compass: Will ↔ Whim against Magic ↔ Tech, and how the NPCs they have met regard them (tier words only; src/reactions.js).
 // - The old Scales tab lives here too: attributes, vitals / stamina / resolve, the Will | Whim and Soul | Spirit gauges, trait pools.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import supabase from './lib/supabase';
@@ -212,21 +211,22 @@ function HeroSky({ char, onOpen }) {
   );
 }
 
-// ── Moral compass: north Good, south Evil, west Magic, east Tech ──
-function MoralCompass({ moral, magicTech }) {
+// ── Compass: north Will, south Whim, west Magic, east Tech ──
+// Will | Whim is sliders.willWhim (positive = Will), the same ±4 scale and colours as the creation wizard.
+function Compass({ willWhim, magicTech }) {
   const R = 78, cx = 110, cy = 110;
-  const px = cx + (magicTech / 4) * R, py = cy - (moral / 4) * R;
-  const moralWord = moral > 0.5 ? 'Good' : moral < -0.5 ? 'Evil' : 'Balanced';
+  const px = cx + (magicTech / 4) * R, py = cy - (willWhim / 4) * R;
+  const driveWord = willWhim > 0.5 ? 'Will' : willWhim < -0.5 ? 'Whim' : 'Balanced';
   const leanWord = magicTech < -0.5 ? 'Magic' : magicTech > 0.5 ? 'Tech' : 'Neutral';
   return (
     <div className="cs-panel">
-      <SectionTitle>Moral compass</SectionTitle>
+      <SectionTitle>Compass</SectionTitle>
       <div className="cs-compass">
-        <svg viewBox="-42 0 304 224" role="img" aria-label={`Moral compass: ${moralWord} ${fmt(moral)}, ${leanWord} ${fmt(magicTech)}`}>
+        <svg viewBox="-42 0 304 224" role="img" aria-label={`Compass: ${driveWord} ${fmt(willWhim)}, ${leanWord} ${fmt(magicTech)}`}>
           <defs>
             <radialGradient id="cs-compass-bg"><stop offset="0" stopColor="#1c1813" /><stop offset="1" stopColor={SKY} /></radialGradient>
             <linearGradient id="cs-compass-mt" x1="0" x2="1"><stop offset="0" stopColor={COLORS.magic} stopOpacity="0.22" /><stop offset="0.5" stopColor="#000" stopOpacity="0" /><stop offset="1" stopColor={COLORS.tech} stopOpacity="0.22" /></linearGradient>
-            <linearGradient id="cs-compass-ge" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#e8d9a7" stopOpacity="0.18" /><stop offset="0.5" stopColor="#000" stopOpacity="0" /><stop offset="1" stopColor={COLORS.warn} stopOpacity="0.2" /></linearGradient>
+            <linearGradient id="cs-compass-ge" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor={COLORS.techText} stopOpacity="0.18" /><stop offset="0.5" stopColor="#000" stopOpacity="0" /><stop offset="1" stopColor={COLORS.spiritText} stopOpacity="0.2" /></linearGradient>
           </defs>
           <circle cx={cx} cy={cy} r={R + 14} fill="url(#cs-compass-bg)" stroke={`${GOLD}55`} />
           <circle cx={cx} cy={cy} r={R} fill="url(#cs-compass-mt)" />
@@ -243,13 +243,13 @@ function MoralCompass({ moral, magicTech }) {
           <circle cx={px} cy={py} r="11" fill={GOLD} fillOpacity="0.18" />
           <path d={fourPoint(px, py, 8, 0.3)} fill="#f5e7b8" />
           <circle cx={cx} cy={cy} r="2.5" fill={GOLD} />
-          <text x={cx} y="12" textAnchor="middle" className="cs-compass-label" fill="#e8d9a7">GOOD</text>
-          <text x={cx} y="216" textAnchor="middle" className="cs-compass-label" fill={COLORS.warn}>EVIL</text>
+          <text x={cx} y="12" textAnchor="middle" className="cs-compass-label" fill={COLORS.techText}>WILL</text>
+          <text x={cx} y="216" textAnchor="middle" className="cs-compass-label" fill={COLORS.spiritText}>WHIM</text>
           <text x="-38" y={cy + 3} textAnchor="start" className="cs-compass-label" fill={COLORS.magicText}>MAGIC</text>
           <text x="258" y={cy + 3} textAnchor="end" className="cs-compass-label" fill={COLORS.techText}>TECH</text>
         </svg>
         <div className="cs-compass-read">
-          <div><b style={{ color: moral >= 0 ? '#e8d9a7' : COLORS.warn }}>{moralWord}</b><small>{moral > 0 ? '+' : ''}{fmt(moral)} of ±4</small></div>
+          <div><b style={{ color: willWhim > 0.5 ? COLORS.techText : willWhim < -0.5 ? COLORS.spiritText : COLORS.muted }}>{driveWord}</b><small>{willWhim > 0 ? '+' : ''}{fmt(willWhim)} of ±4</small></div>
           <div><b style={{ color: magicTech < 0 ? COLORS.magicText : magicTech > 0 ? COLORS.techText : COLORS.muted }}>{leanWord}</b><small>{magicTech > 0 ? '+' : ''}{fmt(magicTech)} of ±4</small></div>
         </div>
       </div>
@@ -382,8 +382,7 @@ export default function CharacterSheetPage({ char, effectiveStats, onUpdateChar,
   const raceKey = char.race ? char.race.toLowerCase().replace(/[^a-z]/g, '') : null;
 
   const sliders = char.sliders || {};
-  const dmShift = typeof char.morality === 'number' ? char.morality : (/^-?\d+(\.\d+)?$/.test(String(char.morality ?? '').trim()) ? Number(char.morality) : 0);
-  const moral = clamp4((Number(sliders.morality) || 0) + dmShift);
+  const willWhim = clamp4(sliders.willWhim);
   const magicTech = clamp4(sliders.magicTech);
 
   const xp = char.apTotal ?? char.ap_total ?? 0;
@@ -481,7 +480,7 @@ export default function CharacterSheetPage({ char, effectiveStats, onUpdateChar,
           </div>
         </div>
         <div className="cs-col">
-          <MoralCompass moral={moral} magicTech={magicTech} />
+          <Compass willWhim={willWhim} magicTech={magicTech} />
           <Regard char={char} reputations={reputations} />
           {pools.length > 0 && (
             <div className="cs-panel">
