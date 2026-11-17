@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import supabase from './lib/supabase';
 import { COLORS } from './constants';
 
@@ -207,6 +208,9 @@ const handleMapClick = useCallback((e) => {
 
   // ── Proximity filter for players ───────────────────────────────────────────
   const [activeBattleMap, setActiveBattleMap] = useState(null);
+  // Whether the viewer is open is its own state: the button used to write 'open' into activeBattleMap, so the image
+  // asked for /Maps/open and broke, and closing it cleared the filename and hid the "map available" bar.
+  const [showBattleMap, setShowBattleMap] = useState(false);
 
   useEffect(() => {
     if (!campaignId) return;
@@ -239,18 +243,20 @@ const handleMapClick = useCallback((e) => {
       {activeBattleMap && !isDM && (
         <div style={{ padding: '8px 12px', background: 'rgba(96,150,224,0.06)', borderBottom: '1px solid rgba(96,150,224,0.2)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <div style={{ fontSize: 9, color: '#7da8e0', fontFamily: "'Cinzel', serif", letterSpacing: '0.1em' }}>⛶ Current Location Map Available</div>
-          <button onClick={() => setActiveBattleMap(m => m === 'open' ? activeBattleMap : 'open')}
+          <button onClick={() => setShowBattleMap(o => !o)}
             style={{ background: 'rgba(96,150,224,0.12)', border: '1px solid rgba(96,150,224,0.4)', borderRadius: 5, padding: '4px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, color: '#7da8e0' }}>
             View Map
           </button>
         </div>
       )}
-      {activeBattleMap === 'open' && !isDM && (
-        <div onClick={() => setActiveBattleMap(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      {/* Portalled to the body: inside the draggable World Map window a fixed overlay is clipped to that window. */}
+      {showBattleMap && activeBattleMap && !isDM && createPortal(
+        <div onClick={() => setShowBattleMap(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 400000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8c84a', letterSpacing: '0.12em', marginBottom: 12 }}>{currentLoc?.name || 'Current Location'}</div>
           <img src={`/Maps/${encodeURIComponent(activeBattleMap)}`} alt="Current location" style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 120px)', borderRadius: 8, objectFit: 'contain' }} onClick={e => e.stopPropagation()} />
           <div style={{ marginTop: 12, fontSize: 9, color: 'rgba(240,238,235,0.3)', fontFamily: "'Cinzel', serif" }}>Tap outside to close</div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* ── Toolbar ── */}
