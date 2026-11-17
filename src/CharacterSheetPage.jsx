@@ -123,14 +123,7 @@ const dust = Array.from({ length: 70 }, (_, i) => {
 function SkyStar({ star, color, symbolSrc, lit, orbit }) {
   const url = useTinted(lit ? symbolSrc : null, color);
   const { x, y } = star;
-  if (!lit) {
-    return (
-      <g opacity="0.55">
-        <circle cx={x} cy={y} r="4" fill="none" stroke={color} strokeOpacity="0.45" strokeWidth="1.2" />
-        <circle cx={x} cy={y} r="1.4" fill={color} fillOpacity="0.6" />
-      </g>
-    );
-  }
+  if (!lit) return <circle cx={x} cy={y} r="3" fill={color} fillOpacity="0.28" />;
   return (
     <g>
       <title>{star.cls.name}</title>
@@ -148,7 +141,10 @@ function SkyStar({ star, color, symbolSrc, lit, orbit }) {
   );
 }
 
-function CharacterSky({ char, onOpen }) {
+// A small drawing of the character's sky for the top panel: the Self, the callings they have awakened and the threads
+// between them, cropped to just that part of the sky. Unlit stars are faint dots for context, with no lines or names.
+// The full constellation is one click away.
+function HeroSky({ char, onOpen }) {
   const d = useConstellation();
   const atlas = useAtlas();
   const abilities = char?.abilities;
@@ -160,29 +156,26 @@ function CharacterSky({ char, onOpen }) {
     const rootOf = id => { const c = d.classById(id); return c ? (c.rootId || c.id) : null; };
     const perRoot = new Map();
     for (const id of held) { const r = rootOf(id.split(':')[0]); if (r) perRoot.set(r, (perRoot.get(r) || 0) + 1); }
-    return { layout, perRoot };
+    // Crop to the Self and every lit star, padded, at roughly 4:3.
+    const pts = [SELF];
+    for (const { stars } of layout) for (const s of stars) if (perRoot.has(s.cls.id)) pts.push(s);
+    let x0 = Math.min(...pts.map(p => p.x)) - 110, x1 = Math.max(...pts.map(p => p.x)) + 110;
+    let y0 = Math.min(...pts.map(p => p.y)) - 90, y1 = Math.max(...pts.map(p => p.y)) + 90;
+    const w = Math.max(x1 - x0, 360), h = Math.max(y1 - y0, 270);
+    const W = Math.max(w, h * 4 / 3), H = W * 3 / 4;
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    x0 = cx - W / 2; y0 = cy - H / 2;
+    return { layout, perRoot, view: `${x0.toFixed(0)} ${y0.toFixed(0)} ${W.toFixed(0)} ${H.toFixed(0)}` };
   }, [d, atlas, held]);
 
   const awakened = sky ? [...sky.perRoot.keys()].map(id => d.classById(id)).filter(Boolean) : [];
-  const furthest = useMemo(() => {
-    if (!d) return [];
-    const best = new Map();
-    for (const id of held) {
-      const cls = d.classById(id.split(':')[0]); if (!cls) continue;
-      const root = cls.rootId || cls.id, cur = best.get(root);
-      if (!cur || (cls.tier || 1) > (cur.tier || 1)) best.set(root, cls);
-    }
-    return [...best.values()];
-  }, [d, held]);
+  const label = awakened.length ? `Constellation: ${awakened.map(c => c.name).join(', ')}` : 'Constellation: no callings awakened yet';
 
   return (
-    <div className="cs-panel cs-sky-panel">
-      <SectionTitle right={onOpen && <button type="button" className="cs-link" onClick={onOpen}>Open constellation ↗</button>}>
-        {char?.name ? `${char.name.split(' ')[0]}'s constellation` : 'Constellation'}
-      </SectionTitle>
-      <div className="cs-sky">
+    <button type="button" className="cs-hero-sky" onClick={onOpen} disabled={!onOpen} title={onOpen ? 'Open constellation' : undefined}>
+      <div className="cs-hero-sky-art">
         {!sky ? <div className="cs-empty">Reading the stars…</div> : (
-          <svg viewBox="40 95 1060 815" role="img" aria-label={`Constellation: ${awakened.map(c => c.name).join(', ') || 'no callings awakened yet'}`}>
+          <svg viewBox={sky.view} role="img" aria-label={label}>
             <defs>
               {sky.layout.map(({ discipline }) => (
                 <radialGradient key={discipline.id} id={`glow-${discipline.color.slice(1)}`}>
@@ -192,13 +185,9 @@ function CharacterSky({ char, onOpen }) {
               ))}
               <radialGradient id="cs-self-glow"><stop offset="0" stopColor="#fff" stopOpacity="0.35" /><stop offset="1" stopColor="#fff" stopOpacity="0" /></radialGradient>
             </defs>
-            {dust.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={p.r} fill="#cfe3dc" fillOpacity={p.o} />)}
-            {sky.layout.map(({ discipline, edges, stars, origin }) => (
+            {dust.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={p.r} fill="#cfe3dc" fillOpacity={p.o * 0.6} />)}
+            {sky.layout.map(({ discipline, stars }) => (
               <g key={discipline.id}>
-                <text x={origin.x} y={origin.y + 6} textAnchor="middle" className="cs-sky-region" fill={discipline.color}>{discipline.name.toUpperCase()}</text>
-                {edges.map(([a, b]) => stars[a] && stars[b] && (
-                  <line key={`${a}-${b}`} x1={stars[a].x} y1={stars[a].y} x2={stars[b].x} y2={stars[b].y} stroke={discipline.color} strokeOpacity="0.16" strokeWidth="1.2" />
-                ))}
                 {stars.filter(s => sky.perRoot.has(s.cls.id)).map(s => {
                   const mx = (SELF.x + s.x) / 2 + (s.x < SELF.x ? -40 : 40), my = (SELF.y + s.y) / 2 + 30;
                   return <path key={`t-${s.cls.id}`} d={`M${SELF.x} ${SELF.y} Q${mx} ${my} ${s.x} ${s.y}`} fill="none" stroke={discipline.color} strokeOpacity="0.7" strokeWidth="1.6" className="cs-thread" />;
@@ -212,18 +201,14 @@ function CharacterSky({ char, onOpen }) {
             }))}
             <circle cx={SELF.x} cy={SELF.y} r="40" fill="url(#cs-self-glow)" />
             <path d={fourPoint(SELF.x, SELF.y, 16, 0.24)} fill="#f5f1e8" />
-            <text x={SELF.x} y={SELF.y + 40} textAnchor="middle" className="cs-sky-region" fill="#cfc6b6">THE SELF</text>
           </svg>
         )}
       </div>
-      <div className="cs-sky-foot">
-        {furthest.length ? furthest.map(c => {
-          const color = d.setupForClass(c).color;
-          return <span key={c.id} className="cs-chip" style={{ color, borderColor: `${color}55`, background: `${color}12` }}>{c.name}</span>;
-        }) : <span className="cs-empty">No stars awakened yet{onOpen ? ' — open the constellation to begin.' : '.'}</span>}
-        <span className="cs-sky-count">{held.length} {held.length === 1 ? 'star' : 'stars'} awakened</span>
+      <div className="cs-hero-sky-foot">
+        <span>{held.length} {held.length === 1 ? 'star' : 'stars'} awakened</span>
+        {onOpen && <span className="cs-hero-sky-open">Open ↗</span>}
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -279,24 +264,24 @@ function useReputations() {
   return reps;
 }
 
-function Standing({ char, reputations }) {
+// Renown for the top panel: how widely they are known, what for, and where they stand strongest (top three).
+function HeroRenown({ char, reputations }) {
   const standings = standingsOf(char);
   const held = new Set(Array.isArray(char?.reputations) ? char.reputations : []);
   const reps = reputations.filter(r => held.has(r.id));
   return (
-    <div className="cs-panel">
-      <SectionTitle>Renown</SectionTitle>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-        <div className="cs-big" style={{ color: GOLD }}>{renownOf(standings)}</div>
-        <div className="cs-sub">how widely they are known</div>
+    <div className="cs-hero-renown">
+      <div className="cs-hero-renown-head">
+        <b>{renownOf(standings)}</b>
+        <small>Renown</small>
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-        {reps.length ? reps.map(r => <span key={r.id} className="cs-chip cs-title" title={r.description}>✦ {r.name}</span>)
+      <div className="cs-hero-renown-for">
+        {reps.length ? reps.map(r => <span key={r.id} title={r.description}>✦ {r.name}</span>)
           : <span className="cs-empty">Known for nothing yet.</span>}
       </div>
       {standings.length > 0 && (
         <div className="cs-standings">
-          {standings.slice(0, 6).map(s => (
+          {standings.slice(0, 3).map(s => (
             <div key={s.id}>
               <span>{s.source.name}</span>
               <div className="cs-attr-bar"><span style={{ width: `${Math.abs(s.score)}%`, background: s.score < 0 ? COLORS.warn : GOLD }} /></div>
@@ -406,9 +391,6 @@ export default function CharacterSheetPage({ char, effectiveStats, onUpdateChar,
   const apTotal = char.atTotal ?? char.at_total ?? char.apTotal ?? 0;
   const level = char.charLevel ?? char.level ?? 1;
   const reputations = useReputations();
-  const heldReps = new Set(Array.isArray(char.reputations) ? char.reputations : []);
-  const titles = reputations.filter(r => heldReps.has(r.id)).map(r => r.name);
-  const renown = renownOf(standingsOf(char));
 
   const stat = k => effectiveStats[k] || 8;
   const maxes = d ? poolMaxes(d, char.abilities) : {};
@@ -457,21 +439,20 @@ export default function CharacterSheetPage({ char, effectiveStats, onUpdateChar,
           <div className="cs-lineage">
             {[getRaceDisplay(char.race, char.rv, char.pmV), label?.name, char.deity || char.spirit || null].filter(Boolean).join(' · ')}
           </div>
-          {titles.length > 0 && <div className="cs-hero-titles">{titles.map((t, i) => <span key={`${t}-${i}`}>✦ {t}</span>)}</div>}
           <div className="cs-hero-stats">
             <div><b>{apLeft}</b><small>AP of {apTotal}</small></div>
             <div><b>{xp}</b><small>XP</small></div>
-            <div><b style={{ color: GOLD }}>{renown}</b><small>Renown</small></div>
             <div><b style={{ color: '#d6b85a' }}>{coin || '—'}</b><small>Coin</small></div>
           </div>
+          <HeroRenown char={char} reputations={reputations} />
         </div>
+        <HeroSky char={char} onOpen={onOpenAbilities} />
       </div>
 
-      {/* Two continuous columns, so panels stack without gaps: the sky, attributes and notes on the left; who they are
-          to the world (compass, renown, regard), their scales and pools on the right. One column on narrow screens. */}
+      {/* Two continuous columns, so panels stack without gaps: attributes, scales and notes on the left; who they are
+          to the world (compass, regard) and their pools on the right. One column on narrow screens. */}
       <div className="cs-layout">
         <div className="cs-col">
-          <CharacterSky char={char} onOpen={onOpenAbilities} />
           <div className="cs-panel">
             <SectionTitle>Attributes</SectionTitle>
             <div className="cs-attr-cols">
@@ -486,15 +467,6 @@ export default function CharacterSheetPage({ char, effectiveStats, onUpdateChar,
             </div>
           </div>
           <div className="cs-panel">
-            <SectionTitle>Notes</SectionTitle>
-            <textarea className="cs-notes" value={playerNotes} onChange={e => handleNotesChange(e.target.value)} placeholder="Personal notes, reminders, goals…" rows={4} />
-          </div>
-        </div>
-        <div className="cs-col">
-          <MoralCompass moral={moral} magicTech={magicTech} />
-          <Standing char={char} reputations={reputations} />
-          <Regard char={char} reputations={reputations} />
-          <div className="cs-panel">
             <SectionTitle>Scales</SectionTitle>
             <Gauge label="Vitals" value={stat('body') + stat('will')} max={40} note="Body + Will" color="#e05a5a" />
             <Gauge label="Stamina" value={stat('body') + stat('whim')} max={40} note="Body + Whim" color="#e08a5a" />
@@ -503,6 +475,14 @@ export default function CharacterSheetPage({ char, effectiveStats, onUpdateChar,
             <Balance left="Will" right="Whim" a={stat('will')} b={stat('whim')} colorA={COLORS.techText} colorB={COLORS.spiritText} />
             <Balance left="Soul" right="Spirit" a={stat('soul')} b={stat('spirit')} colorA={COLORS.magicText} colorB={COLORS.deityText} />
           </div>
+          <div className="cs-panel">
+            <SectionTitle>Notes</SectionTitle>
+            <textarea className="cs-notes" value={playerNotes} onChange={e => handleNotesChange(e.target.value)} placeholder="Personal notes, reminders, goals…" rows={4} />
+          </div>
+        </div>
+        <div className="cs-col">
+          <MoralCompass moral={moral} magicTech={magicTech} />
+          <Regard char={char} reputations={reputations} />
           {pools.length > 0 && (
             <div className="cs-panel">
               <SectionTitle right={<span className="cs-sub">refill on a long rest</span>}>Trait pools</SectionTitle>
@@ -533,35 +513,38 @@ const CSS = `
 .cs-link:hover{background:rgba(200,168,74,.1)}
 .cs-sub{font-size:10px;color:${COLORS.dim}}
 .cs-empty{font-size:11px;color:${COLORS.dim};font-style:italic}
-.cs-big{font-family:'Cinzel',serif;font-size:34px;font-weight:700;line-height:1}
-.cs-chip{display:inline-flex;align-items:center;border:1px solid;border-radius:999px;padding:3px 10px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em}
-.cs-title{color:#ecd99a;border-color:rgba(200,168,74,.4);background:rgba(200,168,74,.08)}
-.cs-hero{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:22px;align-items:center;padding:22px 24px;border-radius:12px;border:1px solid rgba(200,168,74,.25);background:radial-gradient(ellipse at 80% 20%,rgba(111,158,120,.12),transparent 55%),radial-gradient(ellipse at 10% 100%,rgba(74,136,184,.10),transparent 50%),linear-gradient(180deg,#121614,#0d0b09);box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.cs-hero{display:grid;grid-template-columns:auto auto minmax(0,1fr) 250px;gap:22px;align-items:center;padding:22px 24px;border-radius:12px;border:1px solid rgba(200,168,74,.25);background:radial-gradient(ellipse at 80% 20%,rgba(111,158,120,.12),transparent 55%),radial-gradient(ellipse at 10% 100%,rgba(74,136,184,.10),transparent 50%),linear-gradient(180deg,#121614,#0d0b09);box-shadow:0 18px 40px rgba(0,0,0,.35)}
 .cs-portrait{flex-shrink:0}
 .cs-eyebrow{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:${GOLD};margin-bottom:6px}
 .cs-name{margin:0;font-family:'Cinzel',serif;font-size:30px;font-weight:700;letter-spacing:.04em;line-height:1.1;color:#f6f0e2;text-shadow:0 0 24px rgba(200,168,74,.15)}
 .cs-lineage{margin-top:6px;font-style:italic;font-size:13px;color:${COLORS.muted}}
-.cs-hero-titles{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.1em;color:#ecd99a}
 .cs-hero-stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .cs-hero-stats>div{min-width:74px;padding:7px 12px;border:1px solid rgba(240,238,235,.08);border-radius:8px;background:rgba(0,0,0,.25)}
 .cs-hero-stats b{display:block;font-family:'Cinzel',serif;font-size:18px;color:${COLORS.magicText}}
 .cs-hero-stats small{font-size:9px;color:${COLORS.dim};letter-spacing:.08em;text-transform:uppercase}
+.cs-hero-renown{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 16px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid rgba(200,168,74,.14);max-width:560px}
+.cs-hero-renown-head{grid-row:span 2;display:flex;flex-direction:column;align-items:center;gap:3px}
+.cs-hero-renown-head b{font-family:'Cinzel',serif;font-size:28px;font-weight:700;line-height:1;color:${GOLD}}
+.cs-hero-renown-head small{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:${COLORS.dim}}
+.cs-hero-renown-for{display:flex;flex-wrap:wrap;gap:4px 12px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em;color:#ecd99a}
+.cs-hero-renown .cs-standings{margin-top:2px;gap:4px}
+.cs-hero-sky{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:6px;cursor:pointer;border-radius:10px;padding:6px;border:1px solid rgba(255,255,255,.05);background:radial-gradient(ellipse at 50% 60%,#14201c 0%,${SKY} 75%);transition:border-color .2s}
+.cs-hero-sky:hover:not(:disabled){border-color:rgba(200,168,74,.4)}
+.cs-hero-sky:focus-visible{outline:2px solid ${GOLD};outline-offset:2px}
+.cs-hero-sky:disabled{cursor:default}
+.cs-hero-sky-art svg{display:block;width:100%;height:auto}
+.cs-hero-sky-art .cs-empty{padding:40px 10px;text-align:center}
+.cs-hero-sky-foot{display:flex;justify-content:space-between;padding:0 4px 2px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:${COLORS.dim}}
+.cs-hero-sky-open{color:#e3cf8f}
 .cs-emblems{display:flex;flex-direction:column;gap:14px}
 .cs-emblem{position:relative;display:grid;place-items:center;filter:drop-shadow(0 0 14px color-mix(in srgb,var(--glow) 45%,transparent))}
 .cs-emblem-frame{position:absolute;inset:12%;transform:rotate(45deg);border:1px solid;border-radius:6px;background:radial-gradient(circle,color-mix(in srgb,var(--glow) 22%,transparent),rgba(8,10,9,.9) 70%)}
-.cs-layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:16px;align-items:start}
+.cs-layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
 .cs-col{display:grid;gap:16px;min-width:0}
-.cs-sky-panel{padding-bottom:12px}
-.cs-sky{border-radius:8px;overflow:hidden;background:radial-gradient(ellipse at 50% 60%,#14201c 0%,${SKY} 70%);border:1px solid rgba(255,255,255,.05)}
-.cs-sky svg{display:block;width:100%;height:auto}
-.cs-sky .cs-empty{padding:60px;text-align:center}
 .cs-sky-label{font-family:'Cinzel',serif;font-size:19px;letter-spacing:.12em}
-.cs-sky-region{font-family:'Cinzel',serif;font-size:17px;letter-spacing:.3em;opacity:.55}
 .cs-thread{stroke-dasharray:4 5;animation:cs-flow 6s linear infinite}
 @keyframes cs-flow{to{stroke-dashoffset:-90}}
 @media (prefers-reduced-motion:reduce){.cs-thread{animation:none}}
-.cs-sky-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
-.cs-sky-count{margin-left:auto;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:${COLORS.dim}}
 .cs-compass{display:grid;gap:10px}
 .cs-compass svg{width:100%;max-width:250px;height:auto;display:block;margin:0 auto}
 .cs-compass-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.2em}
@@ -592,11 +575,17 @@ const CSS = `
 .cs-regard{display:grid;gap:6px}.cs-regard>div{display:flex;justify-content:space-between;gap:10px;padding-bottom:6px;border-bottom:1px solid rgba(240,238,235,.06);font-size:12px}.cs-regard b{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.08em}
 .cs-notes{width:100%;box-sizing:border-box;background:rgba(0,0,0,.25);border:1px solid rgba(240,238,235,.08);border-radius:8px;padding:10px 12px;color:${COLORS.text};font-size:12px;font-family:Georgia,serif;outline:none;resize:vertical}
 .cs-notes:focus{border-color:rgba(200,168,74,.4)}
-@media (max-width:900px){.cs-layout{grid-template-columns:1fr}}
+@media (max-width:900px){
+  .cs-layout{grid-template-columns:1fr}
+  .cs-hero{grid-template-columns:auto auto minmax(0,1fr)}
+  .cs-hero-sky{grid-column:1/-1;justify-self:center;width:100%;max-width:360px}
+}
 @media (max-width:620px){
   .cs-hero{grid-template-columns:1fr;justify-items:center;text-align:center;padding:18px 16px}
   .cs-emblems{flex-direction:row;order:-1}
-  .cs-hero-stats,.cs-hero-titles{justify-content:center}
+  .cs-hero-stats,.cs-hero-renown-for,.cs-hero-renown-head{justify-content:center}
+  .cs-hero-renown{grid-template-columns:1fr;justify-items:center;margin-left:auto;margin-right:auto}
+  .cs-hero-renown-head{grid-row:auto;flex-direction:row;align-items:baseline;gap:8px}
   .cs-name{font-size:24px}
   .cs-attr-cols{grid-template-columns:1fr}
 }
