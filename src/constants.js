@@ -54,23 +54,24 @@ export const CAMPAIGNS = [
 
 // ─── RACES ────────────────────────────────────────────────────────────────────
 export const RACES = [
-  { id:'addamar',   name:'Addamar',    sub:'Human',      tag:'any',  lean:0,  sub2:'Veridoran · Brunar · Matekwan', variants:['Veridoran','Brunar','Matekwan','Vàld','Pontunean','Sunoàca',"Jiro'Ќi",'Varid','Tachechana','Eryatav','Rajava','Ahnkir'], ns:'addamar',   desc:"The most adaptable people in Soteria. Addamar societies span merchant cities, spirit-forests, and desert trade routes. Their strength is not in any one direction — it is in the refusal to be defined by one." },
-  { id:'durinak',   name:'Durinak',    sub:'Dwarf',      tag:'tech', lean:2,  sub2:'Grimrock · Yewhammer · Graniteheart', variants:['Hill','Mountain'], ns:'durinak', desc:"Forged in deep halls and foundry-light. Their culture prizes endurance, craft, and consequence. The Veinrunner passes through their mountain territories — a relationship that is complicated and unresolved." },
-  { id:'telari',    name:"Tel'ari",    sub:'Elf',        tag:'magic',lean:-2, sub2:'Wood · Dark · Eladrin', variants:['Wood','Dark','Eladrin'], ns:'telari', desc:"Ancient. Long-memoried. The Tel'ari carry their history in their bones and their songs in languages that predate the current era. Some have adapted to the age of steam; others have not forgiven it." },
-  { id:'othrod',    name:'Othrod',     sub:'Orc',        tag:'any',  lean:1,  sub2:"Kul'kal · Grothmogg · Telrok · Jotunnar", variants:["Kul'kal Rakhar",'Grothmogg','Telrok','Jotunnar'], ns:'othrod', desc:"The Othrod clans have survived everything Soteria has thrown at them through force of will and refusal to yield. Several clans have integrated with the Veinrunner era. Several have not." },
+  { id:'addamar',   name:'Addamar',    sub:'Human',      tag:'any',  lean:0,  sub2:'Veridoran · Brunar · Matekwan', variants:['Veridoran','Brunar','Matekwan','Hrald','Pontunean','Sunoàca','Caanan','Tachechana','Eryatav',"Jiro'Ќi",'Rajava','Ahnkir'], ns:'addamar',   desc:"The most adaptable people in Soteria. Addamar societies span merchant cities, spirit-forests, and desert trade routes. Their strength is not in any one direction — it is in the refusal to be defined by one." },
+  { id:'durinak',   name:'Durinak',    sub:'Dwarf',      tag:'tech', lean:2,  sub2:'Oinnar · Brughaire · Kho', variants:['Oinnar','Brughaire','Kho'], ns:'durinak', desc:"Forged in deep halls and foundry-light. Their culture prizes endurance, craft, and consequence. The Veinrunner passes through their mountain territories — a relationship that is complicated and unresolved." },
+  { id:'telari',    name:"Tel'ari",    sub:'Elf',        tag:'magic',lean:-2, sub2:'Reveahn · Morvyn · Eladrin · Nereid', variants:['Reveahn','Morvyn','Eladrin','Nereid'], ns:'telari', desc:"Ancient. Long-memoried. The Tel'ari carry their history in their bones and their songs in languages that predate the current era. Some have adapted to the age of steam; others have not forgiven it." },
+  { id:'othrod',    name:'Othrod',     sub:'Orc',        tag:'any',  lean:1,  sub2:"Kul'kal · Grothmogg · Telrok · Jotunnar", variants:["Kul'kal Rakhar",'Jotunnar','Grothmogg','Telrok'], ns:'othrod', desc:"The Othrod clans have survived everything Soteria has thrown at them through force of will and refusal to yield. Several clans have integrated with the Veinrunner era. Several have not." },
   { id:'terraxian', name:'Terraxian',  sub:'Nephilim',   tag:'tech', lean:1,  sub2:'Large · Stone-skinned', variants:[], ns:'terraxian', desc:"Stone-skinned and mountain-born. Those who descend to the lowlands tend to arrive with either a purpose or a problem — sometimes just curiosity about smoke." },
-  { id:'fynlor',    name:'Fynlor',     sub:'Halfling',   tag:'any',  lean:0,  sub2:'Lightfoot · Stout', variants:['Lightfoot','Stout'], ns:'fynlor', desc:"Small, quick, and socially gifted in ways that larger folk consistently underestimate. The Fynlor have a talent for arriving at the right moment and leaving before the wrong one." },
-  { id:'trink',     name:'Trink',      sub:'Gnome',      tag:'tech', lean:2,  sub2:'Small · Arcane logic', variants:[], ns:'trink', desc:"Curious to a fault and mechanically gifted. The Trink built half the systems that run Ashendell's lower districts and have filed patents on the other half." },
-  { id:'pamorph',   name:"Pa'morph",   sub:'Beast-folk', tag:'any',  lean:0,  sub2:'Choose bloodline below', variants:[], isPamorph:true, ns:'pamorph', desc:"Shape-touched and bloodline-defined, the Pa'morph exist across every corner of Soteria. Their culture varies as widely as their forms — from pack-law territories to city guilds to wilderness enclaves that appear on no official map." },
-  { id:'maugar',    name:'Maugar',     sub:'Firbolg',    tag:'any',  lean:-1, sub2:'Large · Wilderness-attuned', variants:[], ns:'maugar', desc:"Tall, broad, and built for country that does not forgive mistakes. The Maugar carry their history in braid and bead and bone — long drooping ears, features that never quite settled on human, and a warrior tradition older than every border currently drawn across it. They are unfailingly courteous to strangers, which outsiders consistently mistake for softness." },
+  { id:'fynlor',    name:'Periann',    sub:'Halfling',   tag:'any',  lean:0,  sub2:'Fhynn · Hobylt · Kuduk', variants:['Fhynn','Hobylt','Kuduk'], ns:'fynlor', desc:"Small, quick, and socially gifted in ways that larger folk consistently underestimate. The Fynlor have a talent for arriving at the right moment and leaving before the wrong one." },
+  { id:'trink',     name:'Trink',      sub:'Gnome',      tag:'tech', lean:2,  sub2:'Pygmie · Powrie · Nisse · Tomte', variants:['Pygmie','Powrie','Nisse','Tomte'], ns:'trink', desc:"Curious to a fault and mechanically gifted. The Trink built half the systems that run Ashendell's lower districts and have filed patents on the other half." },
+  { id:'pamorph',   name:"Pa'morph",   sub:'Beast-folk', tag:'any',  lean:0,  sub2:'Major · Minor · Sauric · Ferra · Astral', variants:[], isPamorph:true, ns:'pamorph', desc:"Shape-touched and bloodline-defined, the Pa'morph exist across every corner of Soteria. Their culture varies as widely as their forms — from pack-law territories to city guilds to wilderness enclaves that appear on no official map." },
+  { id:'maugar',    name:'Maugar',     sub:'',    tag:'any',  lean:-1, sub2:'Large · Wilderness-attuned', variants:[], ns:'maugar', desc:"Tall, broad, and built for country that does not forgive mistakes. The Maugar carry their history in braid and bead and bone — long drooping ears, features that never quite settled on human, and a warrior tradition older than every border currently drawn across it. They are unfailingly courteous to strangers, which outsiders consistently mistake for softness." },
   { id:'fae',       name:'Fae',        sub:"Faerie",     tag:'magic',lean:-2, sub2:'Arcani potential · Soul-sight', variants:[], ns:'fae', desc:"Fae exist at the intersection of the material and the resonant. They perceive things that others cannot and are occasionally perceived by things that others cannot see." },
-  { id:'djinn',     name:'Djinn',      sub:'Genie',      tag:'magic',lean:-1, sub2:'Efreet · Marid · Djinni · Dao', variants:['Efreet — Wish','Marid — Hex','Djinni — Heal','Dao — Luck'], ns:'djinn', desc:"Born of supernatural convergence, the Djinn carry their heritage in their blood, but their whim remains unpredictable.." },
+  { id:'djinn',     name:'Djinn',      sub:'Genie',      tag:'magic',lean:-1, sub2:'Efreet · Marid · Dao · Hinn', variants:['Efreet','Marid','Dao','Hinn'], ns:'djinn', desc:"Born of supernatural convergence, the Djinn carry their heritage in their blood, but their whim remains unpredictable.." },
   { id:'helianth',  name:'Helianth',   sub:'Tiefling',   tag:'magic',lean:-1, sub2:'Infernal ancestry', variants:[], ns:'helianth', desc:"Infernal blood runs cool in the Helianth — not hot. They are not defined by their ancestry unless they choose to be, and most of them are tired of being defined by it." },
   { id:'seraphan',  name:'Seraphan',   sub:'Aasimar',    tag:'magic',lean:-1, sub2:'Celestial blood', variants:[], ns:'seraphan', desc:"Celestial-blooded and occasionally burdened by it. The Seraphan carry a presence that others read before the Seraphan has spoken." },
   { id:'drakazir',  name:'Drakazir',   sub:'Dragonborn', tag:'any',  lean:0,  sub2:'10 color lineages', variants:['Black','Blue','Brass','Bronze','Copper','Gold','Green','Red','Silver','White'], ns:'drakazir', desc:"Lineage-proud and breath-gifted. The ten lineages have different cultural relationships to the age of steam, but all of them remember when the world was hotter." },
   { id:'nazari',    name:'Nazari',     sub:'Sea-folk',   tag:'tech', lean:1,  sub2:'Aquatic · Superior darkvision', variants:[], ns:'nazari', desc:"Deep-water people who surface with purpose. Every Nazari on land is there by deliberate choice — the Sylvan Lung they invented to breathe surface air is proof of that." },
-  { id:'chronison', name:'Chronison',  sub:'Construct',  tag:'tech', lean:2,  sub2:'Built, not born', variants:[], ns:'chronison', desc:"Built, not born. Sentience arrived uninvited in most cases, and has since made itself at home. Chronison cannot use magic in any form — their constructed nature is fundamentally incompatible with arcane, divine, and spiritual disciplines. The only exception is a weapon or tool infused with a special deposit of Grimrite element, which briefly bridges the gap between material and resonant." },
-  { id:'tiol',      name:'Tiol',       sub:'Giant Vàld Dark-Tel\'ari', tag:'magic',lean:-1, sub2:'Tiol', variants:['Tiol'], ns:'tiol', desc:"The Tiols are the procreation of human Vikingrs and the Dark Elves — two races once at war, joined in the wake of the phenomenon, before the establishment of the Silent Charter. The Dark Elves were the first humans exposed to the phenomenon, wielding magic and great power, and were once believed to bring humanity closer to the gods. Every Tiol is born with a unique ability, and every Tiol travels by flight or teleportation. Only two — Sakara and Kay — have ever been able to do both." },
+  { id:'chronison', name:'Chronison',  sub:'Construct',  tag:'tech', lean:2,  sub2:'Ssythrilson · Minurason · Ainison', variants:['Ssythrilson','Minurason','Ainison'], ns:'chronison', desc:"Built, not born. Sentience arrived uninvited in most cases, and has since made itself at home. Chronison cannot use magic in any form — their constructed nature is fundamentally incompatible with arcane, divine, and spiritual disciplines. The only exception is a weapon or tool infused with a special deposit of Grimrite element, which briefly bridges the gap between material and resonant." },
+  { id:'tiol',      name:'Tiol',       sub:'Giant Vàld Dark-Tel\'ari', tag:'magic',lean:-1, sub2:'Giants', variants:[], ns:'tiol', desc:"The Tiols are the procreation of human Vikingrs and the Dark Elves — two races once at war, joined in the wake of the phenomenon, before the establishment of the Silent Charter. The Dark Elves were the first humans exposed to the phenomenon, wielding magic and great power, and were once believed to bring humanity closer to the gods. Every Tiol is born with a unique ability, and every Tiol travels by flight or teleportation. Only two — Sakara and Kay — have ever been able to do both." },
+  { id:'goblin',    name:'Goblin',     sub:'Goblin',     tag:'any',  lean:0,  sub2:'Boggart · Puck', variants:['Boggart','Puck'], ns:'goblin', desc:"Small, cunning humanoid beings whose recognized subgroups preserve differing folkloric traditions." },
   { id:'folwoade',  name:'Folwoade',   sub:'Pure Magic', tag:'magic',lean:-2, sub2:'Beings of living resonance', variants:[], ns:'folwoade', desc:"The Folwoade are not born in any conventional sense — they coalesce from concentrations of pure magical resonance, taking a form that is part living creature and part sustained spell. Pale, ageless, and faintly luminous, they carry the weight of the Lines in their bones and perceive the world through a register most mortals cannot reach. They cannot use technology — their nature rejects the material logic of machines, mechanisms, and constructed systems entirely. The only exception is an item infused with a special deposit of Grimrite element, which allows brief and uncomfortable interaction with the technical world." },
 ];
 
@@ -155,55 +156,88 @@ export const RACE_VARIANT_DESCS = {
 };
 
 // ─── PA'MORPH BLOODLINES ──────────────────────────────────────────────────────
+// The chart's groups and order (user, 2026-11-17). Ids are kept from before, so saved characters, lore and traits still match.
 export const PM_MAJ = [
   { id:'aaravok',    name:'Aaravok',     sub:'Eagle'              },
   { id:'kraark',     name:"Kra'ark",     sub:'Crow'               },
   { id:'cathvari',   name:"Cath'vari",   sub:'Feline'             },
-  { id:'karazelith', name:"Kara'zelith", sub:'Feline (Elseworld)' },
+  { id:'karazelith', name:"Kara'zelith", sub:'Feline (Ehlsse)' },
   { id:'lioreth',    name:'Lioreth',     sub:'Lion'               },
-  { id:'taeranari',  name:"Taer'anari",  sub:'Canine'             },
+  { id:'taeranari',  name:"Taer'anari",  sub:'Wolf'               },
+  { id:'hoshiari',   name:'Hoshiari',    sub:'Fox'                },
+  { id:'harelin',    name:'Harelin',     sub:'Hare'               },
   { id:'maernethim', name:'Maernethim',  sub:'Lizard'             },
   { id:'bovorin',    name:'Bovorin',     sub:'Minotaur'           },
+  { id:'orylin',     name:'Orylin',      sub:'Owl'                },
+  { id:'rhainar',    name:"Rhae'inar",   sub:'Rhino'              },
   { id:'brawnath',   name:'Brawnath',    sub:'Hippo'              },
   { id:'gajaroi',    name:'Gajaroi',     sub:'Elephant'           },
-  { id:'kodan',      name:'Ködan',       sub:'Bear'               },
-  { id:'krokodon',   name:'Krokodon',    sub:'Crocodile'          },
-  { id:'rhainar',    name:"Rhae'inar",   sub:'Rhino'              },
   { id:'satyr',      name:'Satyr',       sub:'Goat/Faun'          },
-  { id:'hoshiari',   name:'Hoshiari',    sub:'Fox'                },
+  { id:'krogharu',   name:'Kroghari',    sub:'Monkey'             },
+  { id:'testudon',   name:'Testudon',    sub:'Tortoise'           },
+  { id:'ssazaral',   name:'Sszaral',     sub:'Snake'              },
+  { id:'kodan',      name:'Kodan',       sub:'Bear'               },
 ];
 
 export const PM_MIN = [
-  { id:'arbor',    name:'Arbor',     sub:'Boar'       },
-  { id:'avali',    name:'Avali',     sub:'Songbird'   },
-  { id:'bjoral',   name:'Bjoral',    sub:'Badger'     },
-  { id:'harelin',  name:'Harelin',   sub:'Hare'       },
-  { id:'dervir',   name:"Dervi'r",   sub:'Elk'        },
-  { id:'fenrik',   name:'Fenrik',    sub:'Hyena'      },
-  { id:'hylori',   name:'Hylori',    sub:'Frog/Gecko' },
-  { id:'krogharu', name:'Kroghari',  sub:'Monkey'     },
-  { id:'murinor',  name:'Murinor',   sub:'Mouse'      },
-  { id:'oryzd',    name:'Oryzd',     sub:'Rat'        },
-  { id:'testudon', name:'Testudon',  sub:'Tortoise'   },
-  { id:'orylin',   name:'Orylin',    sub:'Owl'        },
-  { id:'ssazaral', name:'Ssazaral',  sub:'Snake'      },
-  { id:'lutrav',   name:"Lutra'v",   sub:'Otter'      },
-  { id:'musteiah', name:'Musteiah',  sub:'Weasel'     },
+  { id:'arbor',    name:'Arbor',     sub:'Boar'      },
+  { id:'avali',    name:'Avali',     sub:'Songbird'  },
+  { id:'bjoral',   name:'Bjoral',    sub:'Badger'    },
+  { id:'dervir',   name:"Dervi'r",   sub:'Elk'       },
+  { id:'faylorn',  name:'Faylorn',   sub:''          },
+  { id:'rylkath',  name:'Rylkath',   sub:'Canine'    },
+  { id:'rhulkin',  name:'Rhulkin',   sub:'Frog'      },
+  { id:'krokodon', name:'Krokodon',  sub:'Crocodile' },
+  { id:'lutrav',   name:"Lutra'v",   sub:'Otter'     },
+  { id:'murinor',  name:'Murinor',   sub:'Mouse'     },
+  { id:'musteiah', name:'Musteiah',  sub:'Weasel'    },
+  { id:'oryzd',    name:'Oryzo',     sub:'Rat'       },
+  { id:'porthu',   name:'Porthu',    sub:''          },
+  { id:'procyon',  name:"Proc'yon",  sub:'Raccoon'   },
+  { id:'quercian', name:'Quercian',  sub:'Squirrel'  },
+  { id:'soricyn',  name:'Soricyn',   sub:'Shrew'     },
+  { id:'suiei',    name:"Sui'ei",    sub:''          },
+  { id:'talpyn',   name:'Talpyn',    sub:'Mole'      },
+  { id:'vanara',   name:'Vanara',    sub:'Simian'    },
+  { id:'brumal',   name:'Brumal',    sub:'Bear'      },
 ];
 
+// The Sauric bloodlines (called Aeon before; the export keeps that name for the screens that already use it).
 export const PM_AEON = [
   { id:'hraelvan',   name:'Hraelvan',   sub:'Feathered Raptor'        },
-  { id:'cerakhjorn', name:'Cerakhjorn', sub:'Many-Horned Ceratopsian' },
   { id:'jevrak',     name:'Jevrak',     sub:'Small Feather-Herbivore' },
-  { id:'anpryd',     name:'Anpryd',     sub:'Armored Shieldback'       },
-  { id:'limridh',    name:'Limridh',    sub:'Mud-Lizard'              },
   { id:'pterrotara', name:'Pterrotara', sub:'Crested Wingfolk'        },
-  { id:'saurok',     name:'Saurok',     sub:'Long-Necked Herdfolk'    },
   { id:'hadrynn',    name:'Hadrynn',    sub:'Duck-Billed Chorusfolk'  },
+  { id:'saurok',     name:'Saurok',     sub:'Long-Necked Herdfolk'    },
+  { id:'cerakhjorn', name:'Cerakjhorn', sub:'Many-Horned Ceratopsian' },
+  { id:'anpryd',     name:'Andpyrd',    sub:'Armored Shieldback'      },
+  { id:'limridh',    name:'Limridh',    sub:'Mud-Lizard'              },
+];
+export const PM_SAURIC = PM_AEON;
+
+export const PM_FERRA = [
+  { id:'illithid',  name:'Illithid',  sub:'Cephalopod' },
+  { id:'arachim',   name:'Arachim',   sub:'Arachnid'   },
+  { id:'prajn',     name:'Prajn',     sub:'Prawn'      },
+  { id:'mawjacket', name:'Mawjacket', sub:'Wasp'       },
 ];
 
 export const PM_ASTRAL = [
+  { id:'khellv',     name:'Khellv',     sub:'' },
+  { id:'khellskini', name:'Khellskini', sub:'' },
+  { id:'khellhanae', name:'Khellhanae', sub:'' },
+  { id:'khellyuum',  name:'Khellyuum',  sub:'' },
 ];
+
+/** Every bloodline group, in the chart's order. */
+export const PM_GROUPS = [
+  { id:'major',  label:'Major',  list:PM_MAJ },
+  { id:'minor',  label:'Minor',  list:PM_MIN },
+  { id:'sauric', label:'Sauric', list:PM_AEON },
+  { id:'ferra',  label:'Ferra',  list:PM_FERRA },
+  { id:'astral', label:'Astral', list:PM_ASTRAL },
+];
+export const PM_ALL = PM_GROUPS.flatMap(g => g.list);
 
 // ─── PA'MORPH BLOODLINE LORE ──────────────────────────────────────────────────
 // Drop these into your getRaceDisplay or constants file alongside PM_MAJ / PM_MIN.
@@ -226,7 +260,7 @@ export const PAMORPH_LORE = {
   },
 
   karazelith: {
-    default: "The Kara'zelith are a feline bloodline from the Elseworld, which means they arrived in Soteria carrying memories of a place that no longer exists — or never did, depending on who you ask. They do not grieve it openly. They move through the world with a composed distance that others often mistake for arrogance. It is not arrogance. It is the particular stillness of someone who has already survived a loss most people cannot imagine, and decided to keep going anyway.",
+    default: "The Kara'zelith are a feline bloodline from Ehlsse, which means they arrived in Soteria carrying memories of a place that no longer exists — or never did, depending on who you ask. They do not grieve it openly. They move through the world with a composed distance that others often mistake for arrogance. It is not arrogance. It is the particular stillness of someone who has already survived a loss most people cannot imagine, and decided to keep going anyway.",
   },
 
   lioreth: {
@@ -2440,7 +2474,7 @@ export function getRaceDisplay(raceId, rv, pmV) {
   const rd = RACES.find(r => r.id === raceId);
   if (!rd) return '—';
   if (raceId === 'pamorph' && pmV) {
-    const pm = [...PM_MAJ, ...PM_MIN].find(p => p.id === pmV);
+    const pm = PM_ALL.find(p => p.id === pmV);
     return pm ? `Pa'morph | ${pm.name}` : rd.name;
   }
   if (rv) return `${rd.name} · ${rv}`;
@@ -2495,3 +2529,75 @@ export const PROGRESSION = {
   Poet:       { row: 'Affect', branches: [['Herald','Provocateur']],                                              capstone: 'Tribune', relic: 'Cryerquill' },
   Alchemist:  { row: 'Dream',  branches: [['Oneir','Philosopher'], ['Mutagenist','Biomancer'], ['Bombardier','Saboteur']], capstone: 'Eikon', relic: 'Philosophial' },
 };
+
+// ═══════════════════════════════════════════════════════════
+// RACES MATCHED TO THE CHART (user, 2026-11-17)
+// The races and variants above follow the creator's Obsidian chart. Where the reference names a variant as the same
+// people under a new name (Mountain → Oinnar, Hill → Brughaire, Wood → Reveahn, Dark → Morvyn, Lightfoot → Fhynn, and
+// the Djinn without their effect tags), its description, active trait and names carry over. The old keys stay, so a
+// character saved under an old variant still reads its own text.
+// ═══════════════════════════════════════════════════════════
+const VARIANT_CARRY = {
+  durinak: { Oinnar: 'Mountain', Brughaire: 'Hill' },
+  telari:  { Reveahn: 'Wood', Morvyn: 'Dark' },
+  fynlor:  { Fhynn: 'Lightfoot' },
+  djinn:   { Efreet: 'Efreet — Wish', Marid: 'Marid — Hex', Dao: 'Dao — Luck' },
+};
+for (const [raceId, map] of Object.entries(VARIANT_CARRY)) {
+  const ns = RACES.find(r => r.id === raceId)?.ns || raceId;
+  for (const [now, was] of Object.entries(map)) {
+    const traits = RACIAL_TRAITS[raceId]?.variants;
+    if (traits && traits[was] && !traits[now]) traits[now] = traits[was];
+    const descs = RACE_VARIANT_DESCS[raceId];
+    if (descs && descs[was] && !descs[now]) descs[now] = descs[was];
+    const names = NAMES[ns];
+    if (names && !Array.isArray(names.m) && names[was] && !names[now]) names[now] = names[was];
+  }
+}
+
+// Descriptions from the creator's race reference for variants that had none. Entries the reference leaves undefined
+// are not written here; those variants read their race's description until they are.
+const NEW_VARIANT_DESCS = {
+  telari:    { Nereid: "Aquatic and coastal Tel'ari, adapted to life in or near the sea." },
+  durinak:   { Kho: 'Crag Dúrinak of the chasms and demanding terrain, known for intensive metalworking.' },
+  trink:     {
+    Powrie: 'A folkloric Trink lineage, tied to the mischievous and uncanny side of gnome tradition.',
+    Nisse:  'A Trink lineage of household and hearth.',
+    Tomte:  'A Trink lineage of the homestead.',
+  },
+  chronison: {
+    Ssythrilson: 'Chronison of the Ssythrilson forging, made by the Sszaral.',
+    Minurason:   'Chronison of the Minurason forging, made by the Dúrinak.',
+    Ainison:     'Chronison of the Ainison forging, made by Ramaei.',
+  },
+  goblin:    {
+    Boggart: 'A goblin lineage known for troublesome, furtive and unsettling ways.',
+    Puck:    'A goblin lineage of mischief, trickery and unpredictable encounters.',
+  },
+};
+for (const [raceId, descs] of Object.entries(NEW_VARIANT_DESCS)) {
+  RACE_VARIANT_DESCS[raceId] = { ...descs, ...(RACE_VARIANT_DESCS[raceId] || {}) };
+}
+
+const NEW_BLOODLINE_LORE = {
+  rylkath:   'A canine bloodline, set apart from the Taer\'anari.',
+  rhulkin:   'An amphibian, frog-like bloodline at home on wet ground.',
+  procyon:   'A raccoon-like bloodline with dexterous hands and an inquisitive nature.',
+  quercian:  'A squirrel-like bloodline: quick climbers, nimble with small things.',
+  soricyn:   'A shrew-like bloodline: diminutive, and always moving.',
+  talpyn:    'A mole-like bloodline with powerful digging limbs, made for life underground.',
+  vanara:    'A simian bloodline with dexterous limbs, at home in the branches.',
+  brumal:    'A bear-like bloodline, set apart from the Kodan.',
+  illithid:  'A tentacled, cephalopod-like people of the Ferra branch.',
+  arachim:   'A spider-like bloodline: chitinous, many-limbed, unmistakably arachnid.',
+  prajn:     'A chitinous, prawn-like people with a crustacean shell and the build of an arthropod.',
+  mawjacket: 'A stinging, wasp-like insectoid bloodline.',
+};
+for (const [id, text] of Object.entries(NEW_BLOODLINE_LORE)) {
+  if (!PAMORPH_LORE[id]) PAMORPH_LORE[id] = { default: text };
+}
+
+// Tiol has no variants on the chart: the trait that was kept under its one variant is the race's own.
+if (RACIAL_TRAITS.tiol && !RACIAL_TRAITS.tiol.active && RACIAL_TRAITS.tiol.variants?.Tiol) {
+  RACIAL_TRAITS.tiol.active = RACIAL_TRAITS.tiol.variants.Tiol;
+}

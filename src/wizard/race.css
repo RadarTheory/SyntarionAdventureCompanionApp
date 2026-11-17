@@ -3,18 +3,31 @@
    lean. Hovering reads a people's lore; choosing one dives in, where its variants circle it and the character is named. */
 
 .rf { position: absolute; inset: 0; }
-.rf-field { position: absolute; inset: 0; transition: transform .65s var(--ease), opacity .55s var(--ease), filter .55s var(--ease); }
-.rf-field.away { transform: scale(2.6); opacity: 0; filter: blur(6px); pointer-events: none; }
-.rf-field.returning { animation: rf-return .6s var(--ease) both; pointer-events: none; }
+.rf-field { position: absolute; inset: 0; overflow: hidden; }
+.rf-map { position: relative; height: 100%; }
+.rf-threads line.rf-divide { stroke: #ffffff14; stroke-dasharray: 2 6; opacity: 1; }
+.rf-boxtitle { position: absolute; transform: translateX(-50%); text-align: center; pointer-events: none; white-space: nowrap; }
+.rf-boxtitle b { display: block; font-family: Cinzel, Georgia, serif; font-weight: 400; font-size: 14px; letter-spacing: 4px; color: #c9c5ab; }
+.rf-boxtitle small { display: block; font-size: 8px; letter-spacing: 1.8px; color: #8d998b; margin-top: 4px; font-family: Cinzel, Georgia, serif; }
+.rf-sign.group .rf-ring { width: calc(var(--sign, 58px) * .7); height: calc(var(--sign, 58px) * .7); }
+.rf-sign.group .rf-ring b { font-size: 13px; }
+.rf-sign.core .rf-ring { width: calc(var(--sign, 58px) * 1.2); height: calc(var(--sign, 58px) * 1.2); }
+.rf-map .rf-ring { width: var(--sign, 58px); height: var(--sign, 58px); }
+.rf-map .rf-name { font-size: clamp(9px, calc(var(--sign, 58px) * .19), 11px); }
+.rf-map.compact .rf-sub { display: none; }
+.rf-map.compact .rf-sign { gap: 4px; }
+.rf-map { position: absolute; inset: 0; transition: transform .65s var(--ease), opacity .55s var(--ease), filter .55s var(--ease); }
+.rf-map.away { transform: scale(2.6); opacity: 0; filter: blur(6px); pointer-events: none; }
+.rf-map.returning { animation: rf-return .6s var(--ease) both; pointer-events: none; }
 @keyframes rf-return { from { transform: scale(2.6); opacity: 0; filter: blur(6px); } to { transform: none; opacity: 1; filter: none; } }
 
 
 .rf-threads { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .rf-threads line { stroke-width: 1; opacity: .16; transition: opacity .4s; }
-.rf-field.focusing .rf-threads line { opacity: .06; }
-.rf-field.focusing .rf-threads line.lit { opacity: .5; }
+.rf-map.focusing .rf-threads line { opacity: .06; }
+.rf-map.focusing .rf-threads line.lit { opacity: .5; }
 
-.rf-axis { position: absolute; left: 8%; right: 8%; top: 79%; height: 1px; background: linear-gradient(90deg, var(--magic), #ffffff22 50%, var(--tech)); opacity: .45; pointer-events: none; }
+.rf-axis { position: absolute; height: 1px; background: linear-gradient(90deg, var(--magic), #ffffff22 50%, var(--tech)); opacity: .45; pointer-events: none; }
 .rf-axis span { position: absolute; top: 8px; font-family: Cinzel, Georgia, serif; font-size: 9px; letter-spacing: 2.4px; }
 .rf-axis span:first-child { left: 0; color: var(--magic); }
 .rf-axis span:last-child { right: 0; color: var(--tech); }
@@ -24,21 +37,22 @@
   display: flex; flex-direction: column; align-items: center; gap: 7px; text-align: center; outline: none;
   transition: opacity .35s var(--ease), transform .35s var(--ease);
 }
-.rf-field.focusing .rf-sign { opacity: .42; }
-.rf-field.focusing .rf-sign.lit { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+.rf-map.focusing .rf-sign { opacity: .42; }
+.rf-map.focusing .rf-sign.lit { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
 .rf-ring {
   width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center;
   background: radial-gradient(circle, color-mix(in srgb, var(--accent) 14%, transparent), #0a120e 70%);
   border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
   transition: box-shadow .35s, border-color .35s;
 }
-.rf-ring img { width: 70%; height: 70%; object-fit: contain; filter: invert(1) sepia(.25) saturate(.6) brightness(.9); mix-blend-mode: screen; opacity: .78; transition: opacity .35s, filter .35s; }
+/* The sign is the icon's own shape cut from a soft light (a mask), so no box ever shows around it (user, 2026-11-17). */
+.rf-glyph { width: 70%; height: 70%; background: #d9d6c4; -webkit-mask: var(--glyph) center / contain no-repeat; mask: var(--glyph) center / contain no-repeat; opacity: .8; transition: opacity .35s, background .35s, filter .35s; }
 .rf-ring b { font-family: Cinzel, Georgia, serif; font-size: 16px; color: var(--accent); font-weight: 400; }
 .rf-sign.lit .rf-ring, .rf-sign:focus-visible .rf-ring, .rf-sign.chosen .rf-ring {
   border-color: var(--accent);
   box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 45%, transparent), 0 0 34px color-mix(in srgb, var(--accent) 18%, transparent);
 }
-.rf-sign.lit .rf-ring img, .rf-sign.chosen .rf-ring img { opacity: 1; filter: invert(1) sepia(.2) saturate(.7) brightness(1.05) drop-shadow(0 0 6px var(--accent)); }
+.rf-sign.lit .rf-glyph, .rf-sign.chosen .rf-glyph { opacity: 1; background: #f4f1e2; filter: drop-shadow(0 0 6px var(--accent)); }
 .rf-name { font-family: Cinzel, Georgia, serif; font-size: 11px; letter-spacing: 1.2px; color: #b3c0ab; transition: color .3s; white-space: nowrap; }
 .rf-sign.lit .rf-name, .rf-sign.chosen .rf-name { color: #eef1da; }
 .rf-sub { display: block; font-family: Georgia, serif; font-size: 9.5px; letter-spacing: .3px; color: #7c877a; margin-top: 2px; }
@@ -60,10 +74,12 @@
 .rd-orbit circle.dotted { stroke-dasharray: 3 6; stroke: color-mix(in srgb, var(--accent) 45%, transparent); }
 .rd-orbit line { stroke: var(--accent); stroke-width: 1; opacity: .55; }
 .rd-core { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: none; }
-.rd-core .rf-ring { width: 148px; height: 148px; box-shadow: 0 0 30px color-mix(in srgb, var(--accent) 22%, transparent), inset 0 0 30px #0007; border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
-.rd-core .rf-ring img { opacity: .95; filter: invert(1) sepia(.2) saturate(.7) brightness(1.05) drop-shadow(0 0 10px var(--accent)); }
+.rd-core .rf-ring { width: var(--core, 148px); height: var(--core, 148px); box-shadow: 0 0 30px color-mix(in srgb, var(--accent) 22%, transparent), inset 0 0 30px #0007; border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+.rd-core .rf-glyph { opacity: 1; background: #f4f1e2; filter: drop-shadow(0 0 10px var(--accent)); }
 .rd-core .rf-ring b { font-size: 40px; }
 .rd-core strong { font-family: Cinzel, Georgia, serif; font-weight: 400; font-size: 13px; letter-spacing: 3px; color: var(--accent); }
+/* The sign itself sits on the orbit's centre; its name hangs beneath without pulling it up. */
+.rd-core strong { position: absolute; top: calc(100% + 24px); left: 50%; transform: translateX(-50%); white-space: nowrap; }
 
 .rd-variant {
   position: absolute; transform: translate(-50%, -50%); background: #0b110fcc; border: 1px solid #ffffff16; border-radius: 14px;
@@ -100,7 +116,13 @@
 .rd-form { border-top: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); margin-top: 8px; padding-top: 18px; animation: wz-smoke 1.1s var(--ease) .5s both; }
 .rd-form > small, .rd-field > small { display: block; font-family: Cinzel, Georgia, serif; font-size: 9px; letter-spacing: 1.6px; color: #929b8d; margin-bottom: 8px; }
 .rd-form > small { font-size: 10px; color: var(--accent); margin-bottom: 14px; }
-.rd-row { display: grid; grid-template-columns: 1fr 1fr 90px; gap: 12px; margin-bottom: 14px; }
+.rd-card { container-type: inline-size; }
+.rd-row { display: grid; grid-template-columns: 1fr 1fr 90px; gap: 12px; margin-bottom: 14px; align-items: end; }
+.rd-field > small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@container (max-width: 520px) {
+  .rd-row { grid-template-columns: 1fr 1fr; }
+  .rd-row .rd-field:last-child { grid-column: 1 / -1; max-width: 120px; }
+}
 .rd-field { min-width: 0; }
 .rd-input { display: flex; align-items: center; background: #0c100e; border: 1px solid var(--line); transition: border-color .2s; }
 .rd-input:focus-within { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
@@ -114,16 +136,26 @@
 .rd-need { margin: 2px 0 0; font-size: 11px; font-style: italic; color: #8b948c; }
 .rd-portrait { margin-bottom: 16px; }
 
+/* Pa'morph's groups, one tab each, above that group's bloodlines. */
+.rd-animal { display: block; font-size: 9.5px; font-style: italic; color: #7c877a; margin-top: 1px; }
+.rd-variant.chosen .rd-animal { color: #2b3326; }
+.rd-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin: 0 0 14px; }
+.rd-tabs button { background: none; border: 1px solid transparent; border-bottom-color: var(--line); color: #8a9782; font: 10px Cinzel, Georgia, serif; letter-spacing: 1.6px; padding: 7px 10px; cursor: pointer; transition: color .2s, border-color .2s; }
+.rd-tabs button small { margin-left: 6px; font-size: 9px; color: #6f7f67; letter-spacing: 0; }
+.rd-tabs button:hover { color: var(--ink); }
+.rd-tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
+
 @media (max-width: 767px) {
-  .rf-ring { width: 40px; height: 40px; }
+  .rf-field { overflow-y: auto; }
+  .rf-map { height: 980px; }
   .rf-name { font-size: 9px; letter-spacing: .6px; }
   .rf-sub { display: none; }
   .rf-sign { gap: 5px; padding: 2px; }
-  .rf-axis { top: 84%; }
   .rf-axis span { font-size: 8px; }
   .rd { display: block; overflow-y: auto; }
   .rd-orbit { height: auto; padding: 58px 16px 8px; }
   .rd-core { position: static; transform: none; margin-bottom: 14px; }
+  .rd-core strong { position: static; transform: none; }
   .rd-core .rf-ring, .rd-orbit.pm .rd-core .rf-ring { width: 96px; height: 96px; }
   .rd-bloodlines { position: static; padding: 0; overflow: visible; }
   .rd-card { overflow: visible; padding: 10px 16px 24px; }

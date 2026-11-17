@@ -1,27 +1,14 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import supabase from './lib/supabase';
 import { logSessionEvent, getCheckedInCharacterIds } from './lib/sessionEvents';
-import { ALL_CLASSES, PM_MAJ, PM_MIN, PM_AEON, PM_ASTRAL, CONDITIONS, CONDITION_COLORS, condColor } from './constants';
+import { ALL_CLASSES, RACES, PM_GROUPS, CONDITIONS, CONDITION_COLORS, condColor } from './constants';
 import PortraitUpload from './PortraitUpload';
 import { FACTIONS } from './reactions';
 import NpcReactions from './NpcReactions';
 
-const RACE_OPTIONS = {
-  Addamar: ['Veridoran', 'Brunar', 'Matekwan'],
-  "Dúrinak": ['Grimrock', 'Yewhammer', 'Graniteheart'],
-  "Tel'ari": ["Wood Tel'ari", "Dark Tel'ari (Drow)", "Sea Tel'ari (Nereid)"],
-  Othrod: ["Kul'kal Rakhar", 'Grothmogg', 'Telrok', 'Jotunnar'],
-  Terraxian: [],
-  Fynlor: [],
-  Trink: [],
-  "Pa'morph": ['Major', 'Minor', 'Aeon'],
-  Fae: [],
-  Djinn: ['Efreet (Fire)', 'Marid (Water)', 'Djinni (Air)', 'Dao (Earth)'],
-  Helianth: [],
-  Seraphan: [],
-  Drakazir: ['Gold', 'Red', 'Blue', 'Green', 'Black', 'White'],
-  Nazari: [],
-};
+// Each race's variants, from the same list the character wizard uses (user's chart, 2026-11-17).
+const RACE_OPTIONS = Object.fromEntries(RACES.map(r => [r.name, r.isPamorph ? PM_GROUPS.map(g => g.label) : (r.variants || [])]));
+const pmPool = (label) => (PM_GROUPS.find(g => g.label === label || (label === 'Aeon' && g.id === 'sauric'))?.list) || [];
 
 const SOTERIA_NPC_CONTEXT = `You are The Scribe, an archival intelligence in Soteria (178 Era of Unity). Generate NPC details for a TTRPG. Be specific, in-world, and creative. Soteria has two axes: Magicka (soul/spirit/mind/body/will/whim/affect/dream) and Ingenium (tech/craft). Respond ONLY with valid JSON, no markdown, no explanation.`;
 
@@ -299,7 +286,7 @@ function NPCModal({ cities, groups, onSave, onClose }) {
     const pickedVariant = variants.length > 0 ? variants[Math.floor(Math.random()*variants.length)] : '';
     let pickedBloodline = '';
     if (pickedRace === "Pa'morph") {
-      const pool = pickedVariant==='Major'?PM_MAJ:pickedVariant==='Minor'?PM_MIN:pickedVariant==='Aeon'?PM_AEON:pickedVariant==='Astral'?PM_ASTRAL:[];
+      const pool = pmPool(pickedVariant);
       if (pool.length) pickedBloodline = pool[Math.floor(Math.random()*pool.length)].id;
     }
     setForm(f => ({...f, race: pickedRace, race_variant: pickedVariant, pamorph_bloodline: pickedBloodline}));
@@ -450,7 +437,7 @@ function NPCModal({ cities, groups, onSave, onClose }) {
                 <div style={{...S.field,flex:1}}><label style={S.label}>Variant</label><select style={S.fieldSelect} value={form.race_variant} onChange={e=>{set('race_variant',e.target.value);set('pamorph_bloodline','');}}><option value="" style={{background:'#0e0c09'}}>— None —</option>{RACE_OPTIONS[form.race].map(v=><option key={v} value={v} style={{background:'#0e0c09'}}>{v}</option>)}</select></div>
               )}
               {form.race === "Pa'morph" && (() => {
-                const pool = form.race_variant==='Major'?PM_MAJ:form.race_variant==='Minor'?PM_MIN:form.race_variant==='Aeon'?PM_AEON:form.race_variant==='Astral'?PM_ASTRAL:[];
+                const pool = pmPool(form.race_variant);
                 return pool.length > 0 ? (
                   <div style={{...S.field,flex:1}}><label style={S.label}>Bloodline</label><select style={S.fieldSelect} value={form.pamorph_bloodline||''} onChange={e=>set('pamorph_bloodline',e.target.value)}><option value="" style={{background:'#0e0c09'}}>— Select bloodline —</option>{pool.map(b=><option key={b.id} value={b.id} style={{background:'#0e0c09'}}>{b.name} ({b.sub})</option>)}</select></div>
                 ) : null;

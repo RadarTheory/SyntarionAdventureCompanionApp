@@ -333,6 +333,9 @@ html{scrollbar-color:color-mix(in srgb,var(--accent,#c4b389) 40%,#2a332c) #080f0
 .hud-symbol .portrait-fallback{position:absolute;color:var(--accent,#c4b389);font-size:28px}
 .hud-symbol .class-portrait.has-class-icon .portrait-fallback{display:none}
 .hud-lore.above{bottom:calc(100% + 92px)}
+/* When no clear sky is left beside or above the stack (a small window), the card keeps a dark backing so it reads
+   cleanly over the stars instead of tangling with them (user, 2026-11-17). */
+.hud-lore.boxed{width:250px;padding:12px 14px;background:#0b110fe8;border:1px solid color-mix(in srgb,var(--accent,#c4b389) 28%,#ffffff12);border-radius:6px;box-shadow:0 10px 30px #0009;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 [data-motion="off"] .hud-symbol{animation:none}
 /* On the atlas the caption is just THE CELESTIAL ATLAS, set larger in the display face; the empty title collapses. */
 .map-caption.atlas-caption #map-title{display:none}

@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
-import { RACES, PM_MAJ, PM_MIN, PM_AEON, PM_ASTRAL, ALL_STATS, getRaceDisplay } from './constants';
+import { RACES, PM_MAJ, PM_ALL, ALL_STATS, getRaceDisplay } from './constants';
 import { useDevice } from './useDevice';
 import { ComingSoonScreen } from './GameUI';
 import { recordLotjarrsGameResult } from './gameStats';
@@ -10,7 +10,7 @@ const START_UNLOCKS = ['rusted-sabre', 'knuckle-wraps', 'shortbow'];
 const W = 960;
 const H = 620;
 const ROOM_GOAL = 6;
-const BLOODLINES = [...PM_MAJ, ...PM_MIN, ...PM_AEON, ...PM_ASTRAL];
+const BLOODLINES = PM_ALL;
 const BASE_HP = 28;
 const SURGE_THRESHOLD = 34;
 const PLAYER_SHEET_COLS = 7;

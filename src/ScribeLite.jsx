@@ -575,7 +575,9 @@ export default function ScribeLite({ dismiss = false }) {
       aria-label="Ask the Scribe"
       disabled={dismiss}
       style={{
-        position: 'fixed', bottom: isMobile ? 16 : 24, right: isMobile ? 16 : 24,
+        // --scribe-lift: room a page asks to keep clear along the bottom (the wizard's foot bar sets it, user 2026-11-17).
+        position: 'fixed', bottom: `calc(${isMobile ? 16 : 24}px + var(--scribe-lift, 0px))`, right: isMobile ? 16 : 24,
+        transition: 'bottom .3s ease',
         zIndex: 1900, width: isMobile ? 68 : 84, height: isMobile ? 68 : 84,
         borderRadius: '50%', border: '1px solid rgba(200,168,74,0.5)',
         background: '#13100d', cursor: 'pointer', padding: 0,

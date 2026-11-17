@@ -401,7 +401,7 @@ const RACE_ABILITIES = {
   ],
 
 
-  // ── MAUGAR (Firbolg) ───────────────────────────────────────────────────────
+  // ── MAUGAR ───────────────────────────────────────────────────────
   maugar: [
     {
       id: 'thornwarden', name: 'Thornwarden', axis: 'magic', boon: '+1 Will per use',

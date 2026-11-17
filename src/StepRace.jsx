@@ -1,19 +1,21 @@
 import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { useDevice } from './useDevice';
 import {
-  COLORS, RACES, PM_MAJ, PM_MIN, PM_AEON, PM_ASTRAL,
+  COLORS, RACES, PM_GROUPS, PM_ALL,
   NAMES, getNamePool, pick, RACE_VARIANT_DESCS,
   PAMORPH_LORE, getRacialTraits,
 } from './constants';
 import supabase from './lib/supabase';
 import StepStage from './wizard/StepStage';
+import { useImageFailed } from './wizard/useImageFailed';
 import './wizard/race.css';
 const PortraitUpload = lazy(() => import('./PortraitUpload'));
 
 // ═════════════════════════════════════════════════════════════════════════════
 // STEP RACE (user, 2026-11-17)
-// On the wizard's full-page stage, like the Class step's constellation: the peoples of Soteria are signs on the sky,
-// set from Magic (left) to Tech (right) by each race's lean. Hovering one reads its lore a beat later, as the
+// On the wizard's full-page stage, like the Class step's constellation: the peoples of Soteria are two constellations
+// (user, 2026-11-17). Humanoid, set from Magic (left) to Tech (right) by each race's lean; and Pa'morph, its sign at
+// the centre with its five bloodline groups (Major, Minor, Sauric, Ferra, Astral) around it. Hovering one reads its lore a beat later, as the
 // constellation does; choosing one dives in, where its variants circle it, its traits are read, and the character is
 // named. The choices and what they set (race, rv, pmV, name, gender, age, portrait) are exactly as before.
 // ═════════════════════════════════════════════════════════════════════════════
@@ -21,15 +23,14 @@ const PortraitUpload = lazy(() => import('./PortraitUpload'));
 const raceIconSrc = (raceId) => raceId ? `/RaceIcons/${String(raceId).toLowerCase().replace(/[^a-z]/g, '')}.png` : null;
 const accentOf = (tag) => tag === 'magic' ? COLORS.magicText : tag === 'tech' ? COLORS.techText : '#c4b389';
 const tagWord = (tag) => tag === 'magic' ? 'Magic' : tag === 'tech' ? 'Tech' : 'Any path';
-const PM_GROUPS = [['Major bloodlines', PM_MAJ], ['Minor bloodlines', PM_MIN], ['Aeon bloodlines', PM_AEON], ['Astral bloodlines', PM_ASTRAL]];
-const pmName = (id) => [...PM_MAJ, ...PM_MIN, ...PM_AEON, ...PM_ASTRAL].find(b => b.id === id)?.name;
+const pmName = (id) => PM_ALL.find(b => b.id === id)?.name;
+const groupOf = (pmV) => PM_GROUPS.find(g => g.list.some(b => b.id === pmV))?.id || PM_GROUPS[0].id;
 
 // ─── RACE DISPLAY HELPER ──────────────────────────────────────────────────────
 export function getRaceDisplay(race, rv, pmV) {
   if (!race) return '';
   if (race === 'pamorph') {
-    const all = [...PM_MAJ, ...PM_MIN];
-    const bloodline = all.find(b => b.id === pmV);
+    const bloodline = PM_ALL.find(b => b.id === pmV);
     if (!bloodline) return "Pa'morph";
     return `Pa'morph · ${bloodline.name}`;
   }
@@ -55,29 +56,48 @@ function resolveDesc(r, rv, pmV) {
 // One column per lean (-2 … +2), each people spaced down its column, alternate ones nudged aside so the columns read
 // as constellations rather than a table. Positions are percentages of the field.
 function seeded(seed) { return () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const HUMANOID = RACES.filter(r => !r.isPamorph);
+const PAMORPH = RACES.find(r => r.isPamorph);
+// Each constellation's box, as percentages of the map (on phones the map is a tall column that scrolls).
+const BOXES = {
+  desktop: { human: { x: 2, y: 8, w: 61, h: 66 }, beast: { x: 66, y: 8, w: 32, h: 66 } },
+  mobile:  { human: { x: 2, y: 4, w: 96, h: 58 }, beast: { x: 2, y: 68, w: 96, h: 30 } },
+};
+const inBox = (box, x, y) => ({ x: box.x + (x * box.w) / 100, y: box.y + (y * box.h) / 100 });
+// Pa'morph's groups around its sign, clockwise from the top.
+const GROUP_ANGLE = { major: -90, minor: -18, sauric: 54, ferra: 126, astral: 198 };
+
 function layoutField(isMobile) {
+  const boxes = isMobile ? BOXES.mobile : BOXES.desktop;
+  // Humanoid: one column per lean (-2 … +2), each people spaced down its column, alternate ones nudged aside so the
+  // columns read as constellations rather than a table.
   const cols = new Map();
-  RACES.forEach(r => { const lean = Math.max(-2, Math.min(2, Math.round(r.lean || 0))); if (!cols.has(lean)) cols.set(lean, []); cols.get(lean).push(r); });
+  HUMANOID.forEach(r => { const lean = Math.max(-2, Math.min(2, Math.round(r.lean || 0))); if (!cols.has(lean)) cols.set(lean, []); cols.get(lean).push(r); });
   const at = {};
-  const x0 = isMobile ? 11 : 14, dx = isMobile ? 19.5 : 18;
-  const top = isMobile ? 16 : 19, span = isMobile ? 64 : 54;
   for (const [lean, list] of cols) {
     list.forEach((r, i) => {
-      const nudge = list.length > 3 ? (i % 2 ? 1 : -1) * (isMobile ? 2 : 3.2) : 0;
-      at[r.id] = { x: x0 + (lean + 2) * dx + nudge, y: top + (i + 0.5) * (span / list.length) };
+      const p = inBox(boxes.human, 9 + (lean + 2) * 20.5, 15 + (i + 0.5) * (82 / list.length));
+      at[r.id] = { ...p, side: list.length > 3 ? (i % 2 ? 1 : -1) : 0 };
     });
   }
-  return { at, cols };
+  // Pa'morph: its sign in the middle, the groups on a ring around it.
+  const cy = isMobile ? 60 : 54;
+  at[PAMORPH.id] = inBox(boxes.beast, 50, cy);
+  for (const g of PM_GROUPS) {
+    const a = ((GROUP_ANGLE[g.id] ?? 0) * Math.PI) / 180;
+    at[`group:${g.id}`] = inBox(boxes.beast, 50 + Math.cos(a) * (isMobile ? 34 : 36), cy + Math.sin(a) * (isMobile ? 28 : 30));
+  }
+  return { at, cols, boxes };
 }
 const DUST = (() => { const rnd = seeded(1729); return Array.from({ length: 110 }, () => ({ x: rnd() * 100, y: rnd() * 100, r: rnd() < 0.9 ? 0.6 : 1.1, o: 0.12 + rnd() * 0.35 })); })();
 
 function Sigil({ r }) {
-  const [failed, setFailed] = useState(false);
   const src = raceIconSrc(r.id);
+  const failed = useImageFailed(src);
   return (
     <span className="rf-ring">
       {src && !failed
-        ? <img src={src} alt="" onError={() => setFailed(true)} />
+        ? <span className="rf-glyph" style={{ '--glyph': `url("${src}")` }} />
         : <b>{r.name.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase()}</b>}
     </span>
   );
@@ -99,7 +119,7 @@ function Traits({ raceId, rv, pmV }) {
         <small className="active">ACTIVE · ONCE PER REST</small>{active && <b>{active.name}</b>}
         {active
           ? <p>{active.text}</p>
-          : <p className="wait">{raceId === 'pamorph' ? 'Choose a bloodline to see your active trait.' : 'Choose a variant to see your active trait.'}</p>}
+          : <p className="wait">{(raceId === 'pamorph' ? pmV : rv) ? 'This one’s active trait has not been written yet.' : raceId === 'pamorph' ? 'Choose a bloodline to see your active trait.' : 'Choose a variant to see your active trait.'}</p>}
       </div>
     </div>
   );
@@ -119,6 +139,8 @@ function Orbit({ r, rv, setRv }) {
   }, []);
   const variants = r.variants?.length > 1 ? r.variants : [];
   const R = Math.max(120, Math.min(235, Math.min(size.w, size.h) / 2 - 56));
+  // The centre sign keeps its proportion to the orbit, so a small orbit never crowds it (user, 2026-11-17).
+  const core = Math.round(Math.max(92, Math.min(148, R * 0.62)));
   const cx = size.w / 2, cy = size.h / 2;
   const spots = variants.map((v, i) => {
     const a = -Math.PI / 2 + (i / variants.length) * Math.PI * 2;
@@ -130,11 +152,11 @@ function Orbit({ r, rv, setRv }) {
       {size.w > 0 && (
         <svg aria-hidden="true">
           <ellipse cx={cx} cy={cy} rx={R} ry={R * 0.86} fill="none" stroke="#c4c4a333" strokeWidth=".7" />
-          <circle className="dotted" cx={cx} cy={cy} r={92} />
+          <circle className="dotted" cx={cx} cy={cy} r={core / 2 + 16} />
           {chosen && <line x1={cx} y1={cy} x2={chosen.x} y2={chosen.y} />}
         </svg>
       )}
-      <div className="rd-core"><Sigil r={r} /><strong>{r.name.toUpperCase()}</strong></div>
+      <div className="rd-core" style={{ '--core': `${core}px` }}><Sigil r={r} /><strong>{r.name.toUpperCase()}</strong></div>
       {size.w > 0 && spots.map((s, i) => (
         <button key={s.v} type="button" className={`rd-variant${rv === s.v ? ' chosen' : ''}`}
           style={{ left: s.x, top: s.y, animationDelay: `${0.35 + i * 0.05}s` }}
@@ -144,31 +166,35 @@ function Orbit({ r, rv, setRv }) {
   );
 }
 
-/** Phones, and Pa'morph's many bloodlines: the sign above, the choices in rows below it. */
-function Chips({ r, rv, setRv, pmV, setPmV }) {
-  const groups = r.isPamorph
-    ? PM_GROUPS.filter(([, list]) => list.length)
-    : (r.variants?.length > 1 ? [[null, r.variants.map(v => ({ id: v, name: v }))]] : []);
+/** Phones, and Pa'morph's bloodlines (a tab for each group): the sign above, the choices in rows below it. */
+function Chips({ r, rv, setRv, pmV, setPmV, pmGroup, setPmGroup }) {
+  const group = r.isPamorph ? (PM_GROUPS.find(g => g.id === pmGroup) || PM_GROUPS[0]) : null;
+  const list = r.isPamorph ? group.list : (r.variants?.length > 1 ? r.variants.map(v => ({ id: v, name: v })) : []);
   const isOn = (id) => r.isPamorph ? pmV === id : rv === id;
   const choose = (id) => r.isPamorph ? setPmV(pmV === id ? null : id) : setRv(rv === id ? null : id);
   return (
     <div className={`rd-orbit${r.isPamorph ? ' pm' : ''}`}>
       <div className="rd-core"><Sigil r={r} /><strong>{r.name.toUpperCase()}</strong></div>
-      {groups.length > 0 && (
+      {(r.isPamorph || list.length > 0) && (
         <div className="rd-bloodlines">
-          {groups.map(([title, list]) => (
-            <div className="rd-group" key={title || 'variants'}>
-              {title && <small>{title.toUpperCase()}</small>}
-              <div className="rd-chips">
-                {list.map((b, i) => (
-                  <button key={b.id} type="button" title={b.sub || undefined}
-                    className={`rd-variant${isOn(b.id) ? ' chosen' : ''}`}
-                    style={{ animationDelay: `${0.3 + i * 0.025}s` }}
-                    onClick={() => choose(b.id)}>{b.name}</button>
-                ))}
-              </div>
+          {r.isPamorph && (
+            <div className="rd-tabs" role="tablist" aria-label="Bloodline groups">
+              {PM_GROUPS.map(g => (
+                <button key={g.id} type="button" role="tab" aria-selected={g.id === group.id}
+                  className={g.id === group.id ? 'on' : ''} onClick={() => setPmGroup(g.id)}>
+                  {g.label.toUpperCase()}<small>{g.list.length}</small>
+                </button>
+              ))}
             </div>
-          ))}
+          )}
+          <div className="rd-chips" key={group?.id || 'variants'}>
+            {list.map((b, i) => (
+              <button key={b.id} type="button" title={b.sub || undefined}
+                className={`rd-variant${isOn(b.id) ? ' chosen' : ''}`}
+                style={{ animationDelay: `${0.12 + i * 0.025}s` }}
+                onClick={() => choose(b.id)}>{b.name}{r.isPamorph && <small className="rd-animal">{b.sub || '?'}</small>}</button>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -186,10 +212,26 @@ export default function StepRace({
   magicTech = 0, willWhim = 0,
 }) {
   const { isMobile } = useDevice();
-  const { at, cols } = useMemo(() => layoutField(isMobile), [isMobile]);
+  const { at, cols, boxes } = useMemo(() => layoutField(isMobile), [isMobile]);
   // 'field' → 'diving' → 'dive' → 'rising' → 'field'. Coming back to this step with a race chosen opens on it.
   const [phase, setPhase] = useState(race ? 'dive' : 'field');
   const [hover, setHover] = useState(null);
+  const [pmGroup, setPmGroup] = useState(() => groupOf(pmV));
+  // The signs are sized from the map (user, 2026-11-17): as large as 58px where there is room, down to 30px, so a
+  // narrow window shrinks them instead of piling them on one another.
+  const mapRef = useRef(null);
+  const [mapSize, setMapSize] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = mapRef.current;
+    if (!el) return undefined;
+    const fit = () => setMapSize({ w: el.clientWidth, h: el.clientHeight });
+    fit();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(fit) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, [phase]);
+  const sign = mapSize.w ? Math.round(Math.max(30, Math.min(58, mapSize.w * (isMobile ? 0.11 : 0.048), mapSize.h * (isMobile ? 0.05 : 0.075)))) : 58;
+  const roomy = mapSize.w >= 1150;
   const timer = useRef(null);
   useEffect(() => () => clearTimeout(timer.current), []);
 
@@ -201,13 +243,14 @@ export default function StepRace({
   const lit = hover || (phase !== 'field' ? race : null);
   const origin = at[lit || race] || { x: 50, y: 50 };
 
-  const choose = (x) => {
+  const choose = (x, groupId) => {
     if (x.id !== race) {
       setRace(x.id);
       setRv(x.variants?.[0] || null);
       setPmV(null);
     }
-    setHover(x.id);
+    if (x.isPamorph) setPmGroup(groupId || groupOf(pmV));
+    setHover(groupId ? `group:${groupId}` : x.id);
     setPhase('diving');
     clearTimeout(timer.current);
     timer.current = setTimeout(() => { setPhase('dive'); setHover(null); }, 480);
@@ -250,7 +293,16 @@ export default function StepRace({
   const canAdvance = !!race && !!fn;
   const showField = phase === 'field' || phase === 'diving' || phase === 'rising';
   const showDive = phase === 'dive' || phase === 'rising';
-  const hovered = RACES.find(x => x.id === hover);
+  const hovered = (() => {
+    if (!hover) return null;
+    if (hover.startsWith('group:')) {
+      const g = PM_GROUPS.find(x => `group:${x.id}` === hover);
+      if (!g) return null;
+      return { key: hover, accent: accentOf(PAMORPH.tag), title: `PA'MORPH · ${g.label.toUpperCase()} BLOODLINES · ${g.list.length}`, text: g.list.map(b => b.sub ? `${b.name} (${b.sub})` : b.name).join(' · ') };
+    }
+    const x = RACES.find(y => y.id === hover);
+    return x ? { key: x.id, accent: accentOf(x.tag), title: [x.name, x.sub, tagWord(x.tag)].filter(Boolean).join(' · ').toUpperCase(), text: x.desc } : null;
+  })();
   const variantLabel = r?.isPamorph ? pmName(pmV) : (r?.variants?.length > 1 ? rv : null);
 
   return (
@@ -260,50 +312,85 @@ export default function StepRace({
       magicTech={magicTech} willWhim={willWhim}
     >
       <div className="rf" style={{ '--magic': COLORS.magicText, '--tech': COLORS.techText }}>
-        {/* ── The field of peoples ── */}
+        {/* ── The field: two constellations, Humanoid and Pa'morph ── */}
         {showField && (
-          <div
-            className={`rf-field${lit ? ' focusing' : ''}${phase === 'diving' ? ' away' : ''}${phase === 'rising' ? ' returning' : ''}`}
-            style={{ transformOrigin: `${origin.x}% ${origin.y}%` }}
-          >
-            <svg className="wz-dust" aria-hidden="true">
-              {DUST.map((d, i) => <circle key={i} cx={`${d.x}%`} cy={`${d.y}%`} r={d.r} fill="#dfe3d2" opacity={d.o} />)}
-            </svg>
-            <svg className="rf-threads" aria-hidden="true">
-              {[...cols.values()].flatMap(list => list.slice(1).map((x, i) => {
-                const a = at[list[i].id], b = at[x.id];
-                const on = lit === x.id || lit === list[i].id;
-                return <line key={x.id} className={on ? 'lit' : ''} x1={`${a.x}%`} y1={`${a.y}%`} x2={`${b.x}%`} y2={`${b.y}%`} stroke={accentOf(x.tag)} />;
-              }))}
-            </svg>
-            <div className="wz-caption"><small>THE PEOPLES OF SOTERIA</small><h2>Choose your race</h2></div>
-            <div className="rf-axis"><span>MAGIC</span><span>TECH</span></div>
-            {RACES.map(x => (
-              <button
-                key={x.id} type="button"
-                className={`rf-sign${lit === x.id ? ' lit' : ''}${race === x.id ? ' chosen' : ''}`}
-                style={{ left: `${at[x.id].x}%`, top: `${at[x.id].y}%`, '--accent': accentOf(x.tag) }}
-                onMouseEnter={() => phase === 'field' && setHover(x.id)}
-                onMouseLeave={() => phase === 'field' && setHover(null)}
-                onFocus={() => phase === 'field' && setHover(x.id)}
-                onBlur={() => phase === 'field' && setHover(null)}
-                onClick={() => choose(x)}
-                aria-label={`${x.name}, ${x.sub}`}
-              >
-                <Sigil r={x} />
-                <span className="rf-name">{x.name}<span className="rf-sub">{x.sub}</span></span>
-              </button>
-            ))}
-            <div className="wz-loreband">
-              {hovered && !isMobile ? (
-                <div className="wz-lore" key={hovered.id} style={{ '--accent': accentOf(hovered.tag) }}>
-                  <span>{hovered.name.toUpperCase()} · {hovered.sub.toUpperCase()} · {tagWord(hovered.tag).toUpperCase()}</span>
-                  <p>{hovered.desc}</p>
-                </div>
-              ) : (
-                <p className="wz-hint">{isMobile ? 'Touch a sign to go closer.' : 'Rest on a sign to read of its people. Choose one to go closer.'}</p>
-              )}
+          <div className="rf-field">
+            <div
+              ref={mapRef}
+              className={`rf-map${lit ? ' focusing' : ''}${phase === 'diving' ? ' away' : ''}${phase === 'rising' ? ' returning' : ''}${sign < 46 ? ' compact' : ''}`}
+              style={{ transformOrigin: `${origin.x}% ${origin.y}%`, '--sign': `${sign}px` }}
+            >
+              <svg className="wz-dust" aria-hidden="true">
+                {DUST.map((d, i) => <circle key={i} cx={`${d.x}%`} cy={`${d.y}%`} r={d.r} fill="#dfe3d2" opacity={d.o} />)}
+              </svg>
+              <svg className="rf-threads" aria-hidden="true">
+                {[...cols.values()].flatMap(list => list.slice(1).map((x, i) => {
+                  const a = at[list[i].id], b = at[x.id];
+                  const on = lit === x.id || lit === list[i].id;
+                  const px = (pt) => mapSize.w ? (pt.x / 100) * mapSize.w + (pt.side || 0) * sign * 0.62 : null;
+                  return <line key={x.id} className={on ? 'lit' : ''} x1={px(a) ?? `${a.x}%`} y1={`${a.y}%`} x2={px(b) ?? `${b.x}%`} y2={`${b.y}%`} stroke={accentOf(x.tag)} />;
+                }))}
+                {PM_GROUPS.map(g => {
+                  const a = at[PAMORPH.id], b = at[`group:${g.id}`];
+                  const on = lit === PAMORPH.id || lit === `group:${g.id}`;
+                  return <line key={g.id} className={on ? 'lit' : ''} x1={`${a.x}%`} y1={`${a.y}%`} x2={`${b.x}%`} y2={`${b.y}%`} stroke={accentOf(PAMORPH.tag)} />;
+                })}
+                {!isMobile && <line className="rf-divide" x1="64.5%" y1="12%" x2="64.5%" y2="76%" />}
+              </svg>
+              {!isMobile && roomy && <div className="wz-caption"><small>THE PEOPLES OF SOTERIA</small><h2>Choose your race</h2></div>}
+              {[['HUMANOID', 'THE PEOPLES', boxes.human], ["PA'MORPH", 'THE BEASTFOLK', boxes.beast]].map(([title, sub, box]) => (
+                <div key={title} className="rf-boxtitle" style={{ left: `${box.x + box.w / 2}%`, top: `${box.y}%` }}><b>{title}</b><small>{sub}</small></div>
+              ))}
+              <div className="rf-axis" style={{ left: `${boxes.human.x + 3}%`, width: `${boxes.human.w - 6}%`, top: `${boxes.human.y + boxes.human.h + 2}%` }}><span>MAGIC</span><span>TECH</span></div>
+              {RACES.map(x => (
+                <button
+                  key={x.id} type="button"
+                  className={`rf-sign${lit === x.id ? ' lit' : ''}${race === x.id ? ' chosen' : ''}${x.isPamorph ? ' core' : ''}`}
+                  style={{ left: `calc(${at[x.id].x}% + ${(at[x.id].side || 0) * sign * 0.62}px)`, top: `${at[x.id].y}%`, '--accent': accentOf(x.tag) }}
+                  onMouseEnter={() => phase === 'field' && setHover(x.id)}
+                  onMouseLeave={() => phase === 'field' && setHover(null)}
+                  onFocus={() => phase === 'field' && setHover(x.id)}
+                  onBlur={() => phase === 'field' && setHover(null)}
+                  onClick={() => choose(x)}
+                  aria-label={[x.name, x.sub].filter(Boolean).join(', ')}
+                >
+                  <Sigil r={x} />
+                  <span className="rf-name">{x.name}{x.sub && <span className="rf-sub">{x.sub}</span>}</span>
+                </button>
+              ))}
+              {PM_GROUPS.map(g => {
+                const id = `group:${g.id}`;
+                const on = race === PAMORPH.id && groupOf(pmV) === g.id && !!pmV;
+                return (
+                  <button
+                    key={id} type="button"
+                    className={`rf-sign group${lit === id ? ' lit' : ''}${on ? ' chosen' : ''}`}
+                    style={{ left: `${at[id].x}%`, top: `${at[id].y}%`, '--accent': accentOf(PAMORPH.tag) }}
+                    onMouseEnter={() => phase === 'field' && setHover(id)}
+                    onMouseLeave={() => phase === 'field' && setHover(null)}
+                    onFocus={() => phase === 'field' && setHover(id)}
+                    onBlur={() => phase === 'field' && setHover(null)}
+                    onClick={() => choose(PAMORPH, g.id)}
+                    aria-label={`Pa'morph, ${g.label} bloodlines`}
+                  >
+                    <span className="rf-ring"><b>{g.list.length}</b></span>
+                    <span className="rf-name">{g.label}<span className="rf-sub">bloodlines</span></span>
+                  </button>
+                );
+              })}
             </div>
+            {!isMobile && (
+              <div className="wz-loreband">
+                {hovered ? (
+                  <div className="wz-lore" key={hovered.key} style={{ '--accent': hovered.accent }}>
+                    <span>{hovered.title}</span>
+                    <p>{hovered.text}</p>
+                  </div>
+                ) : (
+                  <p className="wz-hint">Rest on a sign to read of its people. Choose one to go closer.</p>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -313,11 +400,11 @@ export default function StepRace({
             <button type="button" className="rd-back" onClick={rise}>← ALL PEOPLES</button>
 
             {isMobile || r.isPamorph || !(r.variants?.length > 1)
-              ? <Chips r={r} rv={rv} setRv={setRv} pmV={pmV} setPmV={setPmV} />
+              ? <Chips r={r} rv={rv} setRv={setRv} pmV={pmV} setPmV={setPmV} pmGroup={pmGroup} setPmGroup={setPmGroup} />
               : <Orbit r={r} rv={rv} setRv={setRv} />}
 
             <div className="rd-card">
-              <div className="rd-eyebrow">{r.sub.toUpperCase()} · {tagWord(r.tag).toUpperCase()}</div>
+              <div className="rd-eyebrow">{[r.sub, r.isPamorph ? PM_ALL.find(b => b.id === pmV)?.sub : null, tagWord(r.tag)].filter(Boolean).join(' · ').toUpperCase()}</div>
               <h2>{r.name}{variantLabel ? <span style={{ color: 'var(--accent)', fontSize: '0.6em' }}> · {variantLabel}</span> : null}</h2>
               <p className="rd-tagline">{r.sub2}</p>
               <div className="wz-lore now" key={`${r.id}|${rv}|${pmV}`}><p>{resolveDesc(r, rv, pmV)}</p></div>

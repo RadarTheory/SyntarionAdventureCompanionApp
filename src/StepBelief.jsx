@@ -12,6 +12,12 @@ import './wizard/belief.css';
 // before: beliefType ('god' | 'spirit' | 'unaffiliated') with deity, spirit or beliefSub.
 // ═════════════════════════════════════════════════════════════════════════════
 
+// Each god's own symbol (public/GodIcons, from the creator's Soterian God Symbols, user 2026-11-17). Gods without one
+// yet stay plain stars.
+const GOD_ICONS = new Set(['asherah', 'baelnim', 'baeshra', 'daretror', 'denka', 'draagora', 'duneyrr', 'fiharta', 'firreth', 'hreidmar', 'ilo', 'khoneus', 'lotjarr', 'maakurg', 'myr', 'ruehnar', 'shevar', 'syreth', 'thietmar', 'urul', 'ylandar']);
+const godSlug = (name) => String(name).replace(/ł/g, 'l').normalize('NFD').toLowerCase().replace(/[^a-z]/g, '');
+const godIcon = (name) => { const s = godSlug(name); return GOD_ICONS.has(s) ? `/GodIcons/${s}.png` : null; };
+
 const KINDS = {
   god:          { accent: COLORS.deityText,        title: 'SANCTUS',      sub: 'THE GODS' },
   spirit:       { accent: COLORS.spiritText,       title: 'SACRAL',       sub: 'THE SPIRITS' },
@@ -65,10 +71,11 @@ function Constellation({ kind, layout, box, lit, chosen, onLit, onChoose, intera
       {layout.groups.map(([label, x, y]) => <div key={label} className="bf-group" style={{ left: `${x}%`, top: `${y}%` }}>{label}</div>)}
       {layout.stars.map(({ item, x, y }) => {
         const id = `${kind}:${item.id || item.name}`;
+        const icon = kind === 'god' ? godIcon(item.name) : null;
         return (
           <button
             key={id} type="button"
-            className={`bf-star${lit === id ? ' lit' : ''}${chosen === id ? ' chosen' : ''}`}
+            className={`bf-star${icon ? ' sym' : ''}${lit === id ? ' lit' : ''}${chosen === id ? ' chosen' : ''}`}
             style={{ left: `${x}%`, top: `${y}%` }}
             onMouseEnter={() => interactive && onLit(id)}
             onMouseLeave={() => interactive && onLit(null)}
@@ -78,7 +85,7 @@ function Constellation({ kind, layout, box, lit, chosen, onLit, onChoose, intera
             aria-label={`${item.name}${item.domain ? `, ${item.domain}` : ''}`}
             aria-pressed={chosen === id}
           >
-            <i /><span>{item.name}</span>
+            <i style={icon ? { '--glyph': `url("${icon}")` } : undefined} /><span>{item.name}</span>
           </button>
         );
       })}

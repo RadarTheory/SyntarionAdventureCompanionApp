@@ -1,4 +1,4 @@
-import { useState, useLayoutEffect, useRef } from 'react';
+import { useState, useLayoutEffect, useEffect, useRef } from 'react';
 import { COLORS } from '../constants';
 import './stage.css';
 
@@ -46,6 +46,18 @@ function Lean({ left, right, value, leftColor, rightColor }) {
   );
 }
 
+/** Keeps the app's floating Scribe button above the foot bar, so it never sits on the way on. */
+function useLiftScribeOver(bar) {
+  useEffect(() => {
+    const root = document.documentElement;
+    const set = () => root.style.setProperty('--scribe-lift', `${Math.round(bar.current?.offsetHeight || 0)}px`);
+    set();
+    const ro = typeof ResizeObserver !== 'undefined' && bar.current ? new ResizeObserver(set) : null;
+    if (ro) ro.observe(bar.current);
+    return () => { ro?.disconnect(); root.style.removeProperty('--scribe-lift'); };
+  }, [bar]);
+}
+
 /**
  * @param back / next  { label, onClick, disabled? }
  * @param magicTech, willWhim  the live leans (-4..+4)
@@ -53,7 +65,9 @@ function Lean({ left, right, value, leftColor, rightColor }) {
  */
 export default function StepStage({ back, next, magicTech = 0, willWhim = 0, background = true, children }) {
   const anchor = useRef(null);
+  const bar = useRef(null);
   const top = useTopUnderStepBar(anchor);
+  useLiftScribeOver(bar);
   return (
     <div ref={anchor}>
       <div className="wz-stage" style={{ top: top ?? 0, visibility: top == null ? 'hidden' : 'visible' }}>
@@ -61,7 +75,7 @@ export default function StepStage({ back, next, magicTech = 0, willWhim = 0, bac
           {background && <div className="wz-sky" />}
           {children}
         </div>
-        <div className="wz-bar">
+        <div className="wz-bar" ref={bar}>
           {back
             ? <button type="button" className="wz-nav on" onClick={back.onClick}>← {back.label}</button>
             : <span />}

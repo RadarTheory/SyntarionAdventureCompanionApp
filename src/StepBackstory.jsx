@@ -8,6 +8,7 @@ import {
   getRaceDisplay,
 } from './constants';
 import StepStage from './wizard/StepStage';
+import { useImageFailed } from './wizard/useImageFailed';
 import './wizard/backstory.css';
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -44,13 +45,14 @@ export default function StepBackstory({
   magicTech = 0, willWhim = 0,
 }) {
   const { isMobile } = useDevice();
+  const icon = raceIconSrc(race);
+  const iconFailed = useImageFailed(icon);
 
   const [complication, setComplication]   = useState(null);
   const [submitting, setSubmitting]       = useState(false);
   const [submitted, setSubmitted]         = useState(false);
   const [submitError, setSubmitError]     = useState(null);
   const [confirmSubmit, setConfirmSubmit] = useState(false);
-  const [iconFailed, setIconFailed]       = useState(false);
 
   // Pre-fill backstory from boon lines if empty
   useEffect(() => {
@@ -143,7 +145,6 @@ export default function StepBackstory({
     : beliefType === 'spirit' ? spirit
     : beliefType === 'unaffiliated' ? (UNAFFILIATED.find(u => u.id === beliefSub)?.label || 'Unaffiliated') : null;
   const faithKind = beliefType === 'god' ? 'Sanctus' : beliefType === 'spirit' ? 'Sacral' : beliefType === 'unaffiliated' ? 'Unaffiliated' : null;
-  const icon = raceIconSrc(race);
 
   return (
     <StepStage {...stageProps}>
@@ -154,7 +155,7 @@ export default function StepBackstory({
           <div className="bs-sigil">
             {portraitUrl
               ? <img className="portrait" src={portraitUrl} alt="" />
-              : icon && !iconFailed ? <img className="icon" src={icon} alt="" onError={() => setIconFailed(true)} /> : null}
+              : icon && !iconFailed ? <span className="icon" style={{ '--glyph': `url("${icon}")` }} /> : null}
           </div>
           <h2>{name}</h2>
           <p className="bs-sub">{[getRaceDisplay(race, rv, pmV), age ? `${age} years` : null].filter(Boolean).join(' · ')}</p>
