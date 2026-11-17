@@ -1,3 +1,6 @@
+import { ADDAMAR_POOLS } from './data/namePoolsAddamar.js';
+import { PEOPLE_POOLS } from './data/namePoolsPeoples.js';
+import { PAMORPH_POOLS } from './data/namePoolsPamorph.js';
 // ═════════════════════════════════════════════════════════════════════════════
 // SYNTARION CONSTANTS
 // Single source of truth for all lore data.
@@ -725,17 +728,17 @@ export const NAMES = {
 
   // ── UNUSED / WORLD NAMES — always available, any race ──
   unused: {
-    m: ['Adren','Akira','Alaric','Alwyn','Amante','Amon','Apollyon','Archimago','Arendir','Arthus','Armie','Bedwyr','Belen','Berengar','Bink','Caspian','Cassor','Cecil','Cedric','Chukka','Clifton','Clint',"D'Artagnon",'Dante','Darius','Declan','Demaudre','Dennie','Denvik','Destin','Dovel','Dreihn','Drathan','Drispin','Drogon','Durok','Elloi','Enpap','Eridor','Ermanell','Etienne','Evander','Ezren','Francois','Galen','Garr','Gideon','Graham','Gulliver','Haleth','Hektus','Hensley','Herbert','Hodor','Horatio','Hyzer','Isaac','Isaiah','Jastor','Jax','Jethro','Jin','Joryn','Kadyn','Kaien','Kalrix','Kallinvar','Kraven','Kushim','Kycan','Laguin','Leofric','Lewin','Magnus','Marcus','Maximillion','Milo','Minos','Naram','Narmer','Percival','Piers','Quent','Ramin','Raphael','Rauren','Rebar','Ren','Rhaz','Riven','Roan','Roderick','Rokuhan','Roman','Rowan','Ruggiero','Sarek','Scororro','Sened','Silco','Sora','Soren','Stannis','Tambler','Tamsen','Tarkh','Tavian','Tobin','Tobias','Tyrus','Varis','Virgil','Warren','Wesley','Xander','Xerion','Zerin','Zetiro','Zorak'],
-    f: ['Aderyn','Alcina','Ambar','Anat','Arielle','Arienwen','Ariya','Aru','Aryssa','Astrid','Astraea','Aveline','Baerwen',"Bel'an",'Betha','Beatrix','Calle','Carrie','Cassie','Celia','Ceryth','Chryste','Clarissa','Clorinda','Dali','Dinh','Duessa','Edda','Elspeth','Enheduanna','Ereshkigal','Ermina','Erysse','Eyni','Genevieve','Geshtinanna','Giselle','Gwynetta','Hettana','Huller','Ilyne','Inanna','Ione','Irilde','Ismira','Isolde','Ivania','Jasoni','Jinora','Kaia','Kathlie','Keziah','Kriemhild','Ladeigh','Lenora','Liona','Liza','Lonlon','Maevra','Maloa','Marianne','Maris','Maritza','Marn','Marvene','Maude','Meilin','Mehris','Mercy','Midra','Minden','Morghana','Nayra','Navirra','Nimh','Ninsun','Noor','Noreda','Olu','Poppy','Ramya','Rei','Rohanne','Rosamund','Sable','Sade','Saiva','Sidney','Siduri','Tansy','Twila','Tyrande','Una','Ventress','Venliya','Vexa','Watonia','Willow','Ysbel','Yseuit','Ysol','Zeren','Zora'],
+    m: ['Adren','Akira','Alaric','Alwyn','Amante','Amon','Apollyon','Archimago','Arendir','Arthus','Armie','Bedwyr','Belen','Berengar','Bink','Caspian','Cassor','Cecil','Cedric','Chukka','Clifton','Clint',"D'Artagnon",'Dante','Darius','Declan','Demaudre','Dennie','Denvik','Destin','Dovel','Dreihn','Drathan','Drispin','Drogon','Durok','Elloi','Enpap','Eridor','Ermanell','Etienne','Evander','Ezren','Francois','Galen','Garr','Gideon','Graham','Gulliver','Haleth','Hektus','Hensley','Herbert','Horatio','Hyzer','Isaac','Isaiah','Jastor','Jax','Jethro','Jin','Joryn','Kadyn','Kaien','Kalrix','Kallinvar','Kraven','Kushim','Kycan','Laguin','Leofric','Lewin','Magnus','Marcus','Maximillion','Milo','Minos','Naram','Narmer','Percival','Piers','Quent','Ramin','Raphael','Rauren','Rebar','Ren','Rhaz','Riven','Roan','Roderick','Rokuhan','Roman','Rowan','Ruggiero','Sarek','Scororro','Sened','Silco','Sora','Soren','Tambler','Tamsen','Tarkh','Tavian','Tobin','Tobias','Tyrus','Caelross','Virgil','Warren','Wesley','Xander','Xerion','Zerin','Zetiro','Zorak'],
+    f: ['Aderyn','Alcina','Ambar','Anat','Arielle','Arienwen','Ariya','Aru','Aryssa','Astrid','Astraea','Aveline','Baerwen',"Bel'an",'Brenys','Beatrix','Calle','Carrie','Cassie','Celia','Ceryth','Chryste','Clarissa','Clorinda','Dali','Dinh','Duessa','Edda','Elspeth','Enheduanna','Ereshkigal','Ermina','Erysse','Eyni','Genevieve','Geshtinanna','Giselle','Gwynetta','Hettana','Huller','Ilyne','Inanna','Ione','Irilde','Ismira','Isolde','Ivania','Jasoni','Jinora','Kaia','Kathlie','Keziah','Kriemhild','Ladeigh','Lenora','Liona','Liza','Lonlon','Maevra','Maloa','Marianne','Maris','Maritza','Marn','Marvene','Maude','Meilin','Mehris','Mercy','Midra','Minden','Morghana','Nayra','Navirra','Nimh','Ninsun','Noor','Noreda','Olu','Poppy','Ramya','Rei','Rohanne','Rosamund','Sable','Sade','Saiva','Sidney','Siduri','Tansy','Twila','Una','Ventress','Venliya','Vexa','Watonia','Willow','Ysbel','Yseuit','Ysol','Zeren','Zora'],
     s: ['Adirondack','Arkenstone','Atrahus','Banesly','Baumgardner','Beorn','Boggs','Brighton','Bregho','Brodigan','Brummond','Buskyrre','Casavantes','Dinavar','Djawadi','Doune','Drevic','Droh','Dumuzi','Enkiidu','Fairbairn','Ferros','Frad','Freuhoff','Frye','Garrinsburg','Ghoff','Grimsby','Hayworth','Hidlebaugh','Hoxhaj','Hunley','Ilye','Kastral','Keftelle','Kingsford','Krenek','Laeryn','Lorithar','Luecke','Maccar','Matthers','Maudlow','McGinley','Melange','Molinar','Mournwren',"N'or",'Ninhursag','Norveir','Odiorne','Oliphant','Orroquille','owens','Payne','Pembroke','Pettibone','Pietzsch','Renwyne','Rhodes','Riggan','Schuyler','Shalmo','Sinn','Solis','Stiles','Stroehbel','Supoc','Teach','Terrellond-Ashe','Tiber','Tintagel','Toone','Underhill','Van Kirk','Von Braun','Weisinger','Willoughsby','Wintermire','Zapruder'],
   },
 
   // ── ADDAMAR ──
   addamar: {
     Veridoran: {
-      m: ["Ader'ran",'Aethelstan','Alec','Alden','Alonso','Amar','Archibald','Aric','Armand','Arthur','Artalis','Aela','Barnaby','Baldimar','Benjamin','Braxton','Cohl','Corben','Corrvit','Craddick','Desmond','Destin','Delvin','Dorian','Draven','Dvorak','Edgar','Elias','Elinor','Ephraim','Eraeth','Enoch','Eirik','Ethan','Finnian','Frederick','Frietze','Gavaun','Gareth','Garret','Geoffrey','Gideon','Gregory','Greyhook','Hador','Harn','Henry','Herschel','Ilphrin','Jarek','Jedediah','Jermaine','Jenson','Jonas','Josiah','Jacien','Kael','Kaelen','Kadius','Kaldor','Kethan','Kendric',"Kel'el",'Korin','Kraka-Tur','Lorne','Lucian','Laslow','Marcus','Marius','Matthias','Micah','Mordecai','Nathaniel','Oliver','Orin','Percival','Praetor','Reynard','Raeken','Reginald','Roland','Ralf','Rhaul','Robineir','Rolf','Stetson','Samuel','Sable','Sebastian','Silas','Siler','Thain','Torunn','Thomas','Tarek','Trystan','Tavish','Tovias','Trahan','Thrain','Thrazgim','Vico','Varian','Vyron','William'],
+      m: ["Ader'ran",'Aethelstan','Alec','Alden','Alonso','Amar','Archibald','Aric','Armand','Arthur','Artalis','Aela','Barnaby','Baldimar','Benjamin','Braxton','Cohl','Corben','Corrvit','Craddick','Desmond','Destin','Delvin','Dorian','Draven','Dvorak','Edgar','Elias','Elinor','Ephraim','Eraeth','Enoch','Eirik','Ethan','Finnian','Frederick','Frietze','Gavaun','Gareth','Garret','Geoffrey','Gideon','Gregory','Greyhook','Hador','Harn','Henry','Herschel','Ilphrin','Jarek','Jedediah','Jermaine','Jenson','Jonas','Josiah','Jacien','Kaelen','Kadius','Kaldor','Kethan','Kendric',"Kel'el",'Korin','Kraka-Tur','Lorne','Lucian','Laslow','Marcus','Marius','Matthias','Micah','Mordecai','Nathaniel','Oliver','Orin','Percival','Praetor','Reynard','Raeken','Reginald','Roland','Ralf','Rhaul','Robineir','Rolf','Stetson','Samuel','Sable','Sebastian','Silas','Siler','Thain','Magok','Thomas','Tarek','Trystan','Tavish','Tovias','Trahan','Thrain','Thrazgim','Vico','Vyron','William'],
       f: ['Ada','Adelaide','Aduceneaux','Aelia','Aerin','Alderfrey','Amelia','Anastasia','Arabella','Araminta','Ascencion','Astaria','Azalea','Beatrice','Brynja','Calpurnia','Caelyn','Cassa','Celandine','Celeste','Charity','Clarabelle','Clarissa','Clementine','Comfort','Constance','Cordelia','Cressida','Dahlia','Delphine','Druella','Edie','Elinor','Elizabeth','Eloise','Erisa','Esther','Euphemia','Evelyn','Evangeline','Felicity','Gwendolyn','Galatea','Genevieve','Gracelyn','Harriet','Hedden','Hannah','Jacque','Josephine','Kandis','Kathyrn','Keturah','Krische','Leona','Lilith','Lillian','Lirien','Lorelei','Lysandra','Marigold','Martha','Madeline','Marla','Marian','Mirabelle','Mila','Millicent','Miriam','Octavia','Olexa','Omi','Orcana','Penelope','Persephone','Phoebe','Priscilla','Rebecca','Remember','Rosalind','Rosie','Rowyn','Sarah',"S'ria",'Seraphina','Serraven','Shelly','Sophia','Suri','Susanna','Tabitha','Theodosia','Tierney','Ursoi','Unity','Verity','Victoria','Zeitz','Zipporah'],
-      s: ['Allaunian','Abraham','Ainsley','Aldrick','Almsteadt','Anderton','Ashcroft','Baker','Ballow','Beaumont','Beckwith','Bentham','Black','Blackwood','Bridigem','Brown','Brunmar','Bythesea','Cambley','Cauldron','Calabra','Caladon','Clayden','Cole','Colewell','Corellan','Cross','Crossley','Darrow','Davenport','Deighton','Dirthrich','Donovan','Eichor','Elkhid','Emmins','Fairchild','Ferdinand','Fenton','Fernsby','Flint','Gale','Garynnon','Greneqys','Grey','Grimmitt','Hessler','Helming','Hofeldf','Honeysuckle','Hunt','Ikard','Jennings','Johnson','Kane','Kerwood','Kubicek','Lockwood','MacQuoid','Maeir','Mara','Merritt','Middleton','Morgan','Novak',"O'Malley",'Orensken','Otto','Parrish','Park','Parkhurst','Pearce','Pembroke','Quill','Rattzlaff','Rayne','Reynolds','Rexford','Rrostarr','Ramirez','Ratliff','Raza','Schroeder','Schunatz','Seaheart','Serrano','Sigler','Sinclair','Silar','Somerset','Sinvell','Stone','Stout','Tavera','Thorne','Thorndop','Thorsteinsson','Treyarc','Tugal','Turner','Vance','Vandeventer','Vandevere','Viola','Warnock','Warren','Wendle','Westcliffe','Westwick','Whitaker','Whitman','Whitmore','Whitewood','Wheer','Wilson','Winterbourne','Worthington','Wright','Yuniesky','Zandt'],
+      s: ['Allaunian','Abraham','Ainsley','Aldrick','Almsteadt','Anderton','Ashcroft','Baker','Ballow','Beaumont','Beckwith','Bentham','Black','Blackwood','Bridigem','Brown','Brunmar','Bythesea','Cambley','Cauldron','Ravencombe','Caladon','Clayden','Cole','Colewell','Corellan','Cross','Crossley','Darrow','Davenport','Deighton','Dirthrich','Donovan','Eichor','Elkhid','Emmins','Fairchild','Ferdinand','Fenton','Fernsby','Flint','Gale','Garynnon','Greneqys','Grey','Grimmitt','Hessler','Helming','Hofeldf','Honeysuckle','Hunt','Ikard','Jennings','Johnson','Kane','Kerwood','Kubicek','Lockwood','MacQuoid','Maeir','Mara','Merritt','Middleton','Morgan','Novak',"O'Malley",'Orensken','Otto','Parrish','Park','Parkhurst','Pearce','Pembroke','Quill','Rattzlaff','Rayne','Reynolds','Rexford','Rrostarr','Ramirez','Ratliff','Raza','Schroeder','Schunatz','Seaheart','Serrano','Sigler','Sinclair','Silar','Somerset','Sinvell','Stone','Stout','Tavera','Thorne','Thorndop','Thorsteinsson','Treyarc','Tugal','Turner','Vance','Vandeventer','Vandevere','Viola','Warnock','Warren','Wendle','Westcliffe','Westwick','Whitaker','Whitman','Whitmore','Whitewood','Wheer','Wilson','Winterbourne','Worthington','Wright','Yuniesky','Zandt'],
     },
     Brunar: {
       m: ['Ahmed','Amir','Aurelio','Bersaides','Brethorn',"Dar'Zamar",'Ebrejim','Emil','Emir','Enzalor','Faustino','Galdrin','Hassam','Kalimah','Khalif','Khaled','Kenyiro','Kyvorian','Luviano','Marzied','Messied','Ohtli','Othlor','Rashid','Salgado','Solaris','Taurino','Valkor','Valrik','Vardel','Virgilio','Yahir','Yasir','Yudelmus','Yuder','Zyrian'],
@@ -762,9 +765,9 @@ export const NAMES = {
   // ── TEL'ARI (Wood, Dark, Eladrin only — Sea and Half removed) ──
   telari: {
     Wood: {
-      m: ['Adran','Aelar','Aramil','Arannis','Arcturus','Ardor','Axar','Aust','Balthorin','Beiro','Berrian','Bryn','Carric','Darok','Del','Elentarien','Elowen','Enialis','Erdan','Erevan','Etowan','Eryn','Faen','Galinndan','Hadarai','Heian','Himo','Immeral','Innil','Ivellios','Lael','Laucian','Maegon','Mella','Mindartis','Naeris','Nessaeriel','Orenthil','Othorian','Paelias','Peren','Phann','Quarion','Rael','Riardon','Rinn','Rolen','Sai','Soveliss','Syllin','Thamior','Tharivol','Theren','Vall','Varis'],
-      f: ['Adrie','Alesia','Althaea','Amaraë','Anastrianna','Andraste','Antinua','Ara','Auriel','Bethrynna','Birel','Caladwen','Caelynn',"Cora'nine",'Drusilia','Elaeris','Elara','Elenwë','Enna','Felosial','Galara','Isilindë','Jelenneth','Karmella','Keyleth','Kolette','Lia','Leshanna','Lyraeth','Meriele','Mialee','Naivara','Quillathe','Sariel','Shanairra','Shava','Silaqui','Syla','Sylaria','Sylvarin','Terenia','Theirastra','Thia','Thistle','Thalina','Thalira',"Tyri'Fon",'Vadania','Valanthe','Xanaphia'],
-      s: ['Adgrun',"Adrast'ari","Aerynth'ael",'Aerendyl','Amakiir',"Amalys'ael",'Amastacia',"Amadaris'sin","Astariel'wyn","Astrae'lir",'Calaelen',"Caelum'sin",'Daax',"Daenar'lyn","Daenylor'el",'Eboneir',"Evendir'sil",'Eryndor',"Fyrestar'ari",'Galanodel',"Galathrae'il",'Holimion',"Holiron'drae",'Ilphelkiir',"Illyrth'wyn","Illyrthorn'ael","Key'wyn","Key'drath",'Liadon',"Liadras'ael","Lunadras'ari","Lunaris'wyn",'Meliamne',"Melianth'lyn","Naïlo","Naeth'ari","Sol'valyn","Solarys'il","Sianndal'el","Siannodel",'Swyft',"Swyftraen'el",'Tathariel',"Tathrae'lyn",'Thalassar','Thalassion',"Thalorian'el","Thaldor'sin",'Valyndor',"Velyn'lyn",'Xiloscient',"Xyldoril'sin","Zephrael'wyn"],
+      m: ['Neremir','Velanth','Aelivar','Queniel','Arcturus','Ardor','Axar','Thalross','Balthorin','Caelemir','Lireron','Bryn','Quenemir','Darok','Del','Elentarien','Elowen','Aerross','Quenross','Thalorin','Etowan','Eryn','Faen','Vaelross','Neranth','Quenithar','Loranth','Quenion','Innil','Caelennar','Lael','Lorias','Maegon','Mella','Aerorin','Naeris','Nessaeriel','Orenthil','Othorian','Nerennar','Quenandel','Phann','Quenennar','Rael','Velevar','Rinn','Lorennar','Sai','Velivar','Syllin','Lirevar','Lirithar','Aerennar','Vall','Caelross'],
+      f: ['Taessa','Alesia','Althaea','Amaraë','Aevyre','Andraste','Taenae','Ara','Auriel','Cythra','Lielnae','Caladwen','Syesira',"Cora'nine",'Elnae','Elaeris','Elara','Elenwë','Enna','Taelith','Galara','Isilindë','Illwen','Karmella','Syelune','Kolette','Lia','Ilinae','Lyraeth','Mithra','Vynae','Missa','Eltheia','Sariel','Syevyre','Faerielle','Oraelith','Syla','Sylaria','Sylvarin','Terenia','Vylune','Thia','Thistle','Thalina','Thalira',"Tyri'Fon",'Liellwen','Isetheia','Milune'],
+      s: ['Adgrun',"Adrast'ari","Aerynth'ael",'Aerendyl','Seranor',"Amalys'ael",'Ilimir',"Amadaris'sin","Astariel'wyn","Astrae'lir",'Calaelen',"Caelum'sin",'Daax',"Daenar'lyn","Daenylor'el",'Eboneir',"Evendir'sil",'Eryndor',"Fyrestar'ari",'Sylennis',"Galathrae'il",'Melethil',"Holiron'drae",'Sylyrion',"Illyrth'wyn","Illyrthorn'ael","Key'wyn","Key'drath",'Caelanor',"Liadras'ael","Lunadras'ari","Lunaris'wyn",'Melorien',"Melianth'lyn","Naïlo","Naeth'ari","Sol'valyn","Solarys'il","Sianndal'el","Melanor",'Swyft',"Swyftraen'el",'Tathariel',"Tathrae'lyn",'Thalassar','Thalassion',"Thalorian'el","Thaldor'sin",'Valyndor',"Velyn'lyn",'Ilanor',"Xyldoril'sin","Zephrael'wyn"],
     },
     Dark: {
       m: ['Draegon','Dravenar','Indiro',"Keth'thrak",'Lanthir','Lirieneth','Narridh','Sszin','Thulgarin','Tzorin','Vaelinar',"Vae'l",'Vorn','Vrondir','Xalanthirr','Xalzorin','Xyldar','Xyln','Xyron','Zanor','Ze\'ev','Zyl','Zyreth'],
@@ -772,95 +775,95 @@ export const NAMES = {
       s: ['Allyian','Arabis','Arnith','Auvrea',"Dirth Norre","Dwin'orle",'Eyther','Faerondaerl','Faelor',"Halten'ea",'Halthar',"Kre'ven",'Laldir','Vhylzor','Vylnaris','Xyndraeth','Xyndraeth','Xyrlorn','Xyrthilorn','Xyrthos','Xynthor','Ysayle','Ysthrom','Zythoril','Zyraxos'],
     },
     Eladrin: {
-      m: ['Aerithor','Aelaril','Aelarion','Aelithar','Alathir',"Athen'e",'Auriel','Danius','Elenwe','Elarian','Elaris','Erevan','Everath','Lirion','Lyrael','Myrithas','Nalathor','Seladon','Solarae','Solastri','Sylvaris','Thalindor','Thandui'],
-      f: ['Aerithor','Aelaril','Aelarion','Aelithar','Alathir',"Athen'e",'Auriel','Danius','Elenwe','Elarian','Elaris','Erevan','Everath','Lirion','Lyrael','Myrithas','Nalathor','Seladon','Solarae','Solastri','Sylvaris','Thalindor','Thanduil'],
+      m: ['Aerithor','Aelaril','Aelarion','Aelithar','Alathir',"Athen'e",'Auriel','Danius','Elenwe','Elarian','Elaris','Thalorin','Everath','Lirion','Lyrael','Myrithas','Nalathor','Seladon','Solarae','Solastri','Sylvaris','Thalindor','Thandui'],
+      f: ['Aerithor','Aelaril','Aelarion','Aelithar','Alathir',"Athen'e",'Auriel','Danius','Elenwe','Elarian','Elaris','Lieltheia','Everath','Lirion','Lyrael','Myrithas','Nalathor','Seladon','Solarae','Solastri','Sylvaris','Thalindor','Thanduil'],
       s: ['Aerisindor','Aerithal','Aelarian','Alathoril','Amarilith','Aradithil','Aurielwyn','Elenwyn','Elariath','Elarion','Elowenith','Elyssathil','Lirielor','Lyraethil','Lyrsael','Myrathoril','Nalathir','Rin','Selasael','Selendrith','Solanthir','Sylvaril','Thalarael','Thalassir','Thalindor','Thalindoril'],
     },
     default: {
-      m: ['Adran','Aelar','Aramil','Erdan','Erevan','Galinndan','Hadarai','Immeral','Lael','Paelias','Quarion','Rael','Rolen','Thamior','Theren','Varis'],
-      f: ['Adrie','Alesia','Caelynn','Drusilia','Felosial','Jelenneth','Keyleth','Lia','Meriele','Naivara','Sariel','Shava','Silaqui','Thia','Vadania','Valanthe'],
-      s: ['Adgrun','Aerendyl','Amakiir','Calaelen','Daax','Eboneir','Eryndor','Galanodel','Holimion','Ilphelkiir','Liadon','Meliamne',"Naïlo","Sol'valyn",'Siannodel','Vaelithar'],
+      m: ['Neremir','Velanth','Aelivar','Quenross','Thalorin','Vaelross','Neranth','Quenion','Lael','Nerennar','Quenennar','Rael','Lorennar','Lirevar','Aerennar','Caelross'],
+      f: ['Taessa','Alesia','Syesira','Elnae','Taelith','Illwen','Syelune','Lia','Mithra','Missa','Sariel','Faerielle','Oraelith','Thia','Liellwen','Isetheia'],
+      s: ['Adgrun','Aerendyl','Seranor','Calaelen','Daax','Eboneir','Eryndor','Sylennis','Melethil','Sylyrion','Caelanor','Melorien',"Naïlo","Sol'valyn",'Ilyrion','Vaelithar'],
     },
   },
 
   // ── DURINAK ──
   durinak: {
     Hill: {
-      m: ['Baldrik','Barmok','Boril','Brolgur','Dalothaeck','Dralgur','Durnak','Durnik','Durgin','Ermmiir','Gherhart','Grimgor','Grunor','Krag','Kragrim','Keely','Orion','Osreich','Pomares','Rôk','Rurik','Thalgar','Theggard','Thralin','Throkas','Throrstuhn'],
+      m: ['Baldrik','Barmok','Boril','Brolgur','Dalothaeck','Dralgur','Durnak','Durnik','Durgin','Ermmiir','Gherhart','Grunor','Krag','Kragrim','Keely','Orion','Osreich','Pomares','Rôk','Rurik','Thalgar','Theggard','Thralin','Throkas','Throrstuhn'],
       f: ['Agatha','Berylla','Dagnara','Eira','Elurin','Fjola','Hanne','Hilda','Karnella','Kira','Leidy','Lixy','Lyra','Milda','Ragnhild','Thora','Valkyria','Ylsa'],
-      s: ['Adgrun','Brawnanvil','Brumdur','Brumhand','Daergus','Doraruk','Durndelver','Forrelyth','Gaellaus','Grilddelve','Grim-Thorne','Grumdur','Grumbeard','Ironheir','Kauzlaric','Khazdur','Kibodeaux','Kocian','Pyne','Stogrum','Stormborn','Thardunen','Thrumdur','Thrumstone'],
+      s: ['Adgrun','Bekholt','Brumdur','Brumhand','Daergus','Doraruk','Durndelver','Forrelyth','Gaellaus','Grilddelve','Grim-Thorne','Grumdur','Grumbeard','Ironheir','Kauzlaric','Khazdur','Kibodeaux','Kocian','Pyne','Stogrum','Stormborn','Thardunen','Thrumdur','Thrumstone'],
     },
     Mountain: {
-      m: ['Adrik','Alberich','Baern','Barendd','Bhaldor','Brolgur','Brottor','Bruenor','Daernur','Dain','Darrak','Delg','Dolgrim','Dorin','Drogan','Dulmir','Eberk','Einkil','Fargrim','Flint','Forbrit','Gardain',"Ghre'nar",'Gherhart','Gimdrus','Gorstag','Gorun','Gunnar','Haldor','Hjalmar','Loghaire','Magus','Morgran','Ori','Orsik','Oskar','Rangrim','Rigor','Rurik','Sigrid','Sigrun','Svein','Taklinn','Teleftais','Theodrin','Thelkom','Thoradin','Thorin','Tordek','Traubon','Ulfgar','Vidal','Veit','Vondal','Zendrix'],
-      f: ['Amber','Artin','Astrid','Audhild','Bardryn','Brynhild','Chelcea','Diesa',"Dûra'O",'Dagnal','Duvranna','Eirlys','Elin','Eowyn','Eldeth','Falkrunn','Finellen','Freydis','Greta','Gudrun','Gunnloda','Gurdis','Helja','Hildegarde','Hildryn','Hilmara','Hlin','Ilde','Jorunn','Kathra','Kristryd','Liftrasa','Lyra','Mardred','Orsikka','Olinna','Riswynn','Ragnild','Runa','Sannl','Sigrid','Sigyn','Solveig','Thalar','Theldrin','Thokka','Thrala','Thyra','Torbera','Torgga','Ullina','Vistr'],
-      s: ['Ambolthjerte','Balderk','Banmur','Bjergsten','Dankil','Dargarn','Drunmok','Drunmokor','Durmokh','Durmokhaz','Durmokor',"Dûrnak","Dûrnakor",'Elkhid','Forgewinter','Frostskæg','Galen','Gremram','Graniteheart','Gorunn','Grimrock','Grenram','Holderhek','Jernskjold','Kharnagrim','Kharnaz','Khargrim','Khazdak','Khazgim','Khazgrun','Klippehånd','Loderr','Lutgehr','Rohdir','Rumnaheim','Stalhammar','Strakeln','Sunburst',"Sølvåre",'Thokkarn','Thorunn',"Thrak'ar",'Thranzak','Thranzur','Thrazgim','Thrazgurg','Torunn','Tordensmed','Ungart','Urglukh','Urglukrim','Yewhammer'],
+      m: ['Hagdun','Halddor','Maguk','Gromgrim','Bhaldor','Brolgur','Drumdun','Drumrim','Daernur','Gralgan','Hromnar','Haldrok','Dolgrim','Dorin','Drogan','Dulmir','Thrakuk','Brakbrek','Brakuk','Flint','Forbrit','Kelorn',"Ghre'nar",'Gherhart','Gimdrus','Halavos','Gorun','Gunnar','Haldor','Hjalmar','Loghaire','Magus','Gralorn','Ori','Thrakrok','Oskar','Gorgrim','Rigor','Rurik','Sigrid','Sigrun','Svein','Durmund','Teleftais','Theodrin','Thelkom','Tornar','Durgrim','Hromrok','Tororn','Vidal','Ragngan','Thrakgrim','Zendrix'],
+      f: ['Amber','Helra','Astrid','Helka','Hrundis','Brynhild','Chelcea','Brisdis',"Dûra'O",'Tovdis','Duvranna','Eirlys','Elin','Borgret','Asdra','Dagdra','Freydis','Greta','Gudrun','Brisna','Helella','Ingwyn','Hildegarde','Hildryn','Hilmara','Gudhild','Helhild','Jorunn','Maggret','Tovda','Ketella','Lyra','Magvi','Orsikka','Olinna','Karrun','Ragnild','Runa','Ulvi','Sigrid','Sigyn','Solveig','Thalar','Theldrin','Thokka','Thrala','Thyra','Gudella','Dalfrid','Ullina','Vistr'],
+      s: ['Ambolthjerte','Gormund','Banmur','Bjergsten','Halddek','Dargarn','Drunmok','Drunmokor','Durmokh','Durmokhaz','Durmokor',"Dûrnak","Dûrnakor",'Elkhid','Forgewinter','Frostskæg','Galen','Gremram','Graniteheart','Gormrak','Grimrock','Grenram','Hokheim','Jernskjold','Kharnagrim','Kharnaz','Khargrim','Khazdak','Khazgim','Khazgrun','Klippehånd','Bekrinn','Hokund','Rohdir','Kazvald','Stalhammar','Gormmark','Sunburst',"Sølvåre",'Thokkarn','Thorunn',"Thrak'ar",'Thranzak','Thranzur','Thrazgim','Thrazgurg','Dramholt','Tordensmed','Ostgar','Urglukh','Urglukrim','Yewhammer'],
     },
     default: {
-      m: ['Adrik','Baern','Bruenor','Dain','Dorin','Eberk','Einkil','Fargrim','Gardain','Gunnar','Haldor','Ori','Orsik','Oskar','Rurik','Thoradin','Thorin','Tordek','Ulfgar','Vondal','Zendrix'],
-      f: ['Amber','Artin','Astrid','Audhild','Bardryn','Brynhild','Eirlys','Falkrunn','Greta','Gudrun','Kathra','Mardred','Ragnild','Runa','Sigyn','Solveig','Thyra','Torbera','Ullina','Vistr'],
-      s: ['Ambolthjerte','Balderk','Dankil','Elkhid','Forgewinter','Graniteheart','Gorunn','Grimrock','Holderhek','Loderr','Rohdir','Rumnaheim','Stalhammar','Thokkarn','Thorunn','Ungart','Yewhammer'],
+      m: ['Hagdun','Maguk','Drumrim','Gralgan','Dorin','Thrakuk','Brakbrek','Brakuk','Kelorn','Gunnar','Haldor','Ori','Thrakrok','Oskar','Rurik','Tornar','Durgrim','Tororn','Thrakgrim','Zendrix'],
+      f: ['Amber','Helra','Astrid','Helka','Hrundis','Brynhild','Eirlys','Asdra','Greta','Gudrun','Maggret','Magvi','Ragnild','Runa','Sigyn','Solveig','Thyra','Gudella','Ullina','Vistr'],
+      s: ['Ambolthjerte','Gormund','Halddek','Elkhid','Forgewinter','Graniteheart','Gormrak','Grimrock','Hokheim','Bekrinn','Rohdir','Kazvald','Stalhammar','Thokkarn','Thorunn','Ostgar','Yewhammer'],
     },
   },
 
   // ── TRINK ──
   trink: {
-    m: ['Baldrik','Barmok','Boril','Brolgur','Dalothaeck','Dralgur','Durnak','Durnik','Durgin','Ermmiir','Gherhart','Grimgor','Grunor','Krag','Kragrim','Keely','Orion','Osreich','Pomares','Rôk','Rurik','Thalgar','Theggard','Thralin','Throkas','Throrstuhn'],
-    f: ['Bimpnottin','Bindi','Bonnie','Breena','Caramip','Carlin','Cymbal','Daisy','Dimple','Donella','Duvamil','Elva','Ella','Ellie','Ellyjobell','Ellywick','Fern','Flicker','Gilda','Glimmer','Greta','Hazel','Hattie','Ivy','Juniper','Kizzy','Kymmi','Loopmottin','Lorilla','Lulu','Lura','Lilli','Mabel','Mardnab','Nettle','Nissa','Nyx','Olive','Oda','Orla','Petal','Pixie','Quilla','Razzle','Roywyn','Shamil','Tana','Tilda','Vella','Violet','Waywocket','Willo','Xara','Yara','Zanna','Zinnia'],
-    s: ['Aleslosh','Ashhearth','Badger','Beren','Binkbeetle','Bolderamo','Brandyapple','Bernfitlacks','Cogwhistle','Cloak','Coppercoil','Corth','Coppettle','Dazzleflint','Daergel','Doublelock','Filchbatter','Fnipper','Folkor','Gallow','Garrick','Gligint','Gleamgow','Ladlemeddle','Lyle','Merrygiggle','Murnig','Nackle','Ningel','Nim','Oneshoe','Perrin','Pock','Quickwhirl','Raulnor','Scheppen','Snickerg','Snugglepuff','Spainner','Sprioil','Stumbleduck','Tailblossom','Tinetop','Tirlillinand','Tinderdell','Tumop','Turen','Wellby','Whirligig','Winkletwist','Wrenwhist','Yauntyrr'],
+    m: ['Baldrik','Barmok','Boril','Brolgur','Dalothaeck','Dralgur','Durnak','Durnik','Durgin','Ermmiir','Gherhart','Grunor','Krag','Kragrim','Keely','Orion','Osreich','Pomares','Rôk','Rurik','Thalgar','Theggard','Thralin','Throkas','Throrstuhn'],
+    f: ['Linny','Bindi','Bonnie','Kessla','Fiznella','Carlin','Cymbal','Daisy','Dimple','Donella','Gimette','Elva','Ella','Ellie','Pipkins','Quillbet','Fern','Flicker','Gilda','Glimmer','Greta','Hazel','Hattie','Ivy','Juniper','Kizzy','Kymmi','Mimla','Tibpet','Lulu','Lura','Lilli','Mabel','Vimla','Nettle','Nissa','Nyx','Olive','Oda','Orla','Petal','Pixie','Quilla','Razzle','Tibbet','Tibrix','Tana','Tilda','Vella','Violet','Vimrix','Willo','Xara','Yara','Tuppasy','Zinnia'],
+    s: ['Aleslosh','Ashhearth','Badger','Geartwist','Binkbeetle','Bolderamo','Brandyapple','Bernfitlacks','Cogwhistle','Cloak','Coppercoil','Corth','Coppettle','Dazzleflint','Geartock','Doublelock','Filchbatter','Fnipper','Spindlewobble','Gallow','Garrick','Gligint','Gleamgow','Ladlemeddle','Lyle','Merrygiggle','Coilfuss','Ratchetclank','Valvenettle','Nim','Oneshoe','Perrin','Pock','Quickwhirl','Coilspark','Gearfuss','Snickerg','Snugglepuff','Spainner','Sprioil','Stumbleduck','Tailblossom','Tinetop','Tirlillinand','Tinderdell','Tumop','Gasketsprock','Mossymead','Whirligig','Winkletwist','Wrenwhist','Yauntyrr'],
   },
 
   // ── FYNLOR ──
   fynlor: {
     Lightfoot: {
-      m: ['Alton','Ander','Anso','Bodo','Boffer','Brollo','Cade','Calico','Chumley','Coglin','Corrin','Digger','Eddin','Eldon','Elton','Errich','Fenton','Finnegan','Finnan','Freddy','Garret','Gethin','Hob','Keth','Lindal','Lyle','Merric','Milo','Osborn','Reed','Roscoe','Wellby','Xannek','Brynwick'],
-      f: ['Andry','Bree','Bluebell','Callie','Constance','Cora','Cricket','Dandelion','Euphemia','Glymmer','Hailey','Jillian','Juno','Kithri','Lavinia','Lidda','Marlowe','Meadow','Merla','Nedda','Paela','Peony','Portia','Sandy','Selia','Seraphina','Shaena','Thistle','Tansy','Trym','Tuppence','Vani','Verna'],
-      s: ['Adalgrim','Bagwell','Berrybush','Brambleburr','Bramblethorn','Brushgather','Dappleleaf','Glimmerglen','Goldleaf','Goodbarrel','Greenbottle','Hearthstone','High-hill','Hilltopple','Hladky','Honeypot','Leagallow','Merryhill','Mossfoot','Oakenshadow','Pebblebrook','Puddlejumper','Snugbottom','Springbrook','Springleaf','Sweetbriar','Tealeaf','Thorngage','Tosscobble','Tumbletop','Underbough','Whistlewind','Willosip'],
+      m: ['Alton','Ander','Anso','Bodo','Boffer','Brollo','Cade','Calico','Chumley','Coglin','Corrin','Digger','Eddin','Eldon','Elton','Munmer','Fenton','Finnegan','Finnan','Freddy','Garret','Gethin','Hob','Hrogok','Munnock','Lyle','Tamford','Milo','Osborn','Reed','Roscoe','Pipmer','Xannek','Brynwick'],
+      f: ['Pimette','Bree','Bluebell','Callie','Constance','Cora','Cricket','Dandelion','Euphemia','Glymmer','Hailey','Jillian','Juno','Hesra','Lavinia','Celkin','Marlowe','Meadow','Merla','Holette','Wenwen','Peony','Portia','Sandy','Selia','Seraphina','Pimla','Thistle','Tansy','Heswyn','Tuppence','Nellwyn','Verna'],
+      s: ['Adalgrim','Bagwell','Berrybush','Brambleburr','Bramblethorn','Thistlepatch','Dappleleaf','Glimmerglen','Goldleaf','Honeymore','Brackencap','Hearthstone','High-hill','Brackencrock','Hladky','Honeypot','Peppercrock','Merryhill','Mossfoot','Oakenshadow','Pebblebrook','Puddlejumper','Snugbottom','Springbrook','Springleaf','Sweetbriar','Brackenfoot','Hedgemore','Sorrelbrook','Tumbletop','Fernbrook','Whistlewind','Willosip'],
     },
     Stout: {
-      m: ['Andry','Anso','Bodo','Boffer','Brollo','Cade','Caelum','Calico','Chumley','Coglin','Dandylen','Digger','Eddin','Eldon','Eldorin','Elton','Errich','Fenton','Finn','Fosco','Froland','Gethin','Groover','Hob','Horace','Ivo','Jago','Jasper','Jolly','Kip','Landon','Lark','Lem','Merrifoot','Mungo','Ned','Odo','Pip','Quinlan','Rolo','Tuck'],
+      m: ['Fenwick','Anso','Bodo','Boffer','Brollo','Cade','Caelum','Calico','Chumley','Coglin','Dandylen','Digger','Eddin','Eldon','Eldorin','Elton','Munmer','Fenton','Finn','Fosco','Froland','Gethin','Groover','Hob','Horace','Ivo','Jago','Jasper','Jolly','Kip','Landon','Lark','Lem','Merrifoot','Mungo','Ned','Odo','Pip','Quinlan','Rolo','Tuck'],
       f: ['Alira','Bell','Beryl','Blossom','Celandine','Clem','Daisy','Daffney','Dottie','Elsie','Flossie','Gertie','Goldie','Hattie','Ivy','Juniper','Kitty','Lottie','Mabel','Maisie','Marigold','Millie','Naginata','Nellie','Pansy','Pearl','Penny','Petal','Primrose','Rosie','Sadie','Susie','Tansy','Tillie','Trudie','Twiggy','Violet','Winnie','Zinnia','Zola','Zuzu'],
       s: ['Applebottom','Barrelstout','Biscuitbarrel','Bramblebush','Buckleberry','Butterburr','Caskbreaker','Claypipe','Copperkettle','Crumbleleaf','Dewdrop','Dimplechin','Drowypot','Filfern','Finegaze','Froleap','Gillywick','Goldendroop','Goorberry','Grasshopp','Goodchild','Groaty','Hearthglen','Hingfarthen','Hollowhill','Jartall','Lightheart','Meadowbrook','Merryweather','Mugwort','Oakleaf','Puddlefoot','Quickstep','Rainshadow','Riverstone','Shadewalker','Shortbread','Silverwhittle','Skiprock','Snugglebuns','Sweetwater','Underhill','Willobran'],
     },
     default: {
-      m: ['Alton','Ander','Anso','Bodo','Cade','Calico','Corrin','Digger','Eldon','Fenton','Garret','Hob','Lyle','Merric','Milo','Osborn','Reed','Roscoe','Wellby'],
-      f: ['Andry','Bree','Callie','Cora','Dandelion','Euphemia','Hailey','Jillian','Kithri','Lavinia','Merla','Paela','Peony','Sandy','Thistle','Tansy','Vani'],
-      s: ['Adalgrim','Bagwell','Berrybush','Goodbarrel','Greenbottle','Hearthstone','Honeypot','Mossfoot','Tealeaf','Thorngage','Tosscobble','Underhill'],
+      m: ['Alton','Ander','Anso','Bodo','Cade','Calico','Corrin','Digger','Eldon','Fenton','Garret','Hob','Lyle','Tamford','Milo','Osborn','Reed','Roscoe','Pipmer'],
+      f: ['Pimette','Bree','Callie','Cora','Dandelion','Euphemia','Hailey','Jillian','Hesra','Lavinia','Merla','Wenwen','Peony','Sandy','Thistle','Tansy','Nellwyn'],
+      s: ['Adalgrim','Bagwell','Berrybush','Honeymore','Brackencap','Hearthstone','Honeypot','Mossfoot','Brackenfoot','Hedgemore','Sorrelbrook','Underhill'],
     },
   },
 
   // ── DJINN (Genasi Elementals — Xefren/Air, Terreque/Earth, Pyrros/Fire, Vattenar/Water) ──
   djinn: {
-    m: ['Aerisya','Atticus','Caius','Cassian','Evander','Felix','Galeth','Hadrian','Leander','Lucian','Maximus','Octavian','Remus','Silas','Theron','Zep\'hir','Zeyrion','Aarav','Baelor','Blath','Bran','Caelum','Davor','Elric','Faolan','Frath','Geth','Idris','Jareth','Modar','Thar','Urth','Bor','Fodel','Glar','Grigor','Igan','Ivor','Kosef','Mival','Orel','P\'yre','Pavel','Sergor','Flacari','Bael','Eldar','Grom','Jor','Khar','Luth','Malcer','Naveen','Oren','Orion','Paxton','Quillon','Razi','Sirius','Stor','Taman','Yor'],
-    f: ['Aveline','Camilla','Esme','Gaia','Imogen','Jessamine','Lavinia','Maia','Neryi','Niamha','Sylvara','Amafrey','Betha','Cefrey','Fiametta','Gwyneira','Jocast','Kethra','Olga','Rhiannon','Sariel','Silifrey','Ulyana','Vespera','Westra','Xanthe','Ysanne','Alethra','Amara','Calliope','Ereanah','Isolde','Karar','Natal','Olma','Pylanae','Tanh','Zotah','Amarilla','Belara','Calista','Damaris','Faela','Galadriel','Helora','Iliara','Jessara','Kalista','Lyrae','Mireille','Nerys','Ondine','Parisa','Quenya'],
-    s: ['Evershale','Fyrskar','Glimmerkith','Helkarn','Illivren','Jarnvyr','Kyrthorn','Lyraven','Mystralys','Nethraze','Orinthorn','Pyrethorn','Quaethorn','Rivenvale','Sylvarren','Thrylorn','Umbrasky','Vyrshade','Bersk','Chernin','Helder','Hornraven','Lackman','Nyrath','Orsynn','Pyrath','Qyrrin','Ryssand','Sylvaris','Tyrran','Utharyn','Vyrmere','Windrivver','Wyrmsong','Xyrellis','Zyrris','Allaistarr','Dotsk','Drakul','Farsen','Helgrin','Kaldor','Kulenov','Marsk','Nemetsk','Netherkin','Shemov','Starag','Azheran','Belaskar','Blackthorn','Cyslyr','Drelmor','Elsynth','Fyrskal','Grymryn','Haelren','Ilyssar','Jyrsyth','Kalthorn','Lyrandel','Myrthas','Xyrrak','Ylthorne','Zyrskald'],
+    m: ['Aerisya','Atticus','Caius','Cassian','Evander','Felix','Galeth','Hadrian','Leander','Lucian','Maximus','Octavian','Remus','Silas','Theron','Zep\'hir','Zeyrion','Aarav','Baelor','Selius','Bran','Caelum','Davor','Faolan','Jorric','Alek','Idris','Jareth','Modar','Thar','Torion','Bor','Rosion','Selek','Grigor','Igan','Ivor','Perius','Kalmar','Orel','P\'yre','Pavel','Brenric','Flacari','Bael','Eldar','Grom','Jor','Khar','Luth','Pereth','Naveen','Oren','Orion','Paxton','Quillon','Razi','Sirius','Stor','Taman','Yor'],
+    f: ['Aveline','Camilla','Esme','Gaia','Imogen','Jessamine','Lavinia','Maia','Neryi','Niamha','Sylvara','Lorith','Brenys','Melra','Fiametta','Gwyneira','Jocast','Ashine','Olga','Rhiannon','Sariel','Ziria','Ulyana','Vespera','Valenne','Xanthe','Ysanne','Marys','Amara','Calliope','Ereanah','Isolde','Karar','Natal','Brenia','Pylanae','Tanh','Zotah','Amarilla','Belara','Calista','Damaris','Faela','Helora','Iliara','Jessara','Kalista','Lyrae','Mireille','Nerys','Ondine','Parisa','Quenya'],
+    s: ['Evershale','Fyrskar','Glimmerkith','Helkarn','Illivren','Jarnvyr','Kyrthorn','Lyraven','Mystralys','Nethraze','Orinthorn','Pyrethorn','Quaethorn','Rivenvale','Sylvarren','Thrylorn','Umbrasky','Vyrshade','Ashmarsh','Cinderstead','Helder','Duskmarsh','Wickfield','Nyrath','Orsynn','Pyrath','Qyrrin','Ryssand','Sylvaris','Tyrran','Utharyn','Vyrmere','Hollowvane','Wyrmsong','Xyrellis','Zyrris','Allaistarr','Wickcombe','Drakul','Farsen','Helgrin','Kaldor','Duskcombe','Duskveil','Ashfield','Netherkin','Duskbrand','Greymourne','Azheran','Belaskar','Blackthorn','Cyslyr','Drelmor','Elsynth','Fyrskal','Grymryn','Haelren','Ilyssar','Jyrsyth','Kalthorn','Lyrandel','Myrthas','Xyrrak','Ylthorne','Zyrskald'],
   },
 
   // ── TERRAXIAN (Goliath/Nephilim) ──
   terraxian: {
-    m: ['Boranh','Brogar','Dorran','Durgan','Garmek','Grendar','Halvor','Hrothgar','Kaelen','Korath','Kronar','Kromek','Khuvek','Orin','Rhogar','Sigrun','Skorn','Strongjaw','Thalgar','Thoran','Thrain','Valkar','Vardon','Vargan','Varun'],
+    m: ['Boranh','Brogar','Dorran','Durgan','Garmek','Grendar','Halvor','Hrothgar','Kaelen','Korath','Kronar','Kromek','Khuvek','Orin','Hesath','Sigrun','Skorn','Strongjaw','Thalgar','Thoran','Thrain','Valkar','Vardon','Vargan','Varun'],
     f: ['Brun','Brynja','Draya','Druna','Elda','Fenra','Freyja','Galara','Garrun','Jordis','Kira','Korra','Marra','Mirka','Ragna','Serka','Skara','Thalara','Thalina','Thora','Thordis','Valka','Varka','Vendra','Vuma-Theaku'],
     s: ['Andersen','Bjornsson','Clausen','Eriksson','Gundersen','Haagensen','Hammersen','Holmgaard','Ingvarsen','Jansson','Jorgensen','Kristiansen','Larsen','Lauritsen','Mathiasen','Mikkelsen','Nielsen','Olesen','Pedersen','Ragnarsson','Skovgaard','Sorensen','Stormgaard','Thorsen','Vinterson'],
   },
 
   // ── OTHROD ──
   othrod: {
-    m: ['Tirnark','Gulall',"Gruk'thak",'Brakthar','Brugor','Drakthul','Draka','Drakka','Drogar','Durok','Garr','Gorak','Gorgothin','Graknar','Grakar','Grimgor','Grishnak',"Gruk'thak",'Grunk','Grugok','Gulall',"Gul'dan",'Gromak','Grommash','Grommok','Hulgar','Korgar','Krugor','Lazgul','Morvus','Morgash','Murgoth','Roknar','Rognak','Rukar','Skarnak','Tarok','Thokk','Thoggar','Thorgar','Thrag','Throkk','Throknar','Tirnark','Tornog','Ulgoth','Umog','Uzgar','Vargash','Zargoth','Zmaragdis',"Zo'ggar",'Zogrim','Zog'],
-    f: ['Azhara','Brunga','Draga','Draka','Dronka','Drogar','Durnasha','Durgana','Eira','Gaarna','Gorlakka','Gornak','Grukka','Grishna','Grimma','Grondra','Grulk','Grunk','Gulka','Gurne','Horka','Kargana','Krisha','Krazna','Lurtza','Morga','Mornash','Narzug','Ragnara','Rika','Rogga','Rulza','Shagra','Skara','Skarzog','Sylra','Tharzog','Thokara','Throkka','Tragna','Urga','Uzgara','Vorka','Vrazka','Vrakka','Vugra','Zagra','Zokara','Zurga'],
-    s: ['Aakre',"Ba'elnohr",'Brogmar','Brogmok','Brognar','Bromnar','Broknar','Broktar','Bula','Burzog','Dragnar','Drakgash','Draknar','Dralmok','Drokthar','Fjordlord','Ghoran',"Gra'adok",'Gralmok','Graktar','Grobuk','Grukthar','Grungar','Grungash',"Gul'danhrock",'Hellhammer','Kragmar','Kragthar','Krangash','Krulgash','Krugnar','Omenarr','Thranduil','Throgar','Throgash','Throkmar','Thrugmar','Thrugmok','Thrugnar','Thraknar','Zalmok','Zargash','Zolgar','Zormok','Zurnak','Zarthak','Zalthar'],
+    m: ['Tirnark','Gulall',"Gruk'thak",'Brakthar','Brugor','Drakthul','Drakka','Drogar','Durok','Garr','Gorak','Gorgothin','Graknar','Grakar',"Gruk'thak",'Grunk','Grugok','Gulall','Gromak','Grommok','Hulgar','Korgar','Krugor','Lazgul','Morvus','Morgash','Murgoth','Roknar','Rognak','Rukar','Skarnak','Tarok','Mokok','Thoggar','Thorgar','Thrag','Throkk','Throknar','Tirnark','Tornog','Ulgoth','Umog','Uzgar','Vargash','Zargoth','Zmaragdis',"Zo'ggar",'Zogrim','Zog'],
+    f: ['Brunga','Draga','Dronka','Drogar','Durnasha','Durgana','Eira','Gaarna','Gorlakka','Gornak','Grukka','Grishna','Grimma','Grondra','Grulk','Grunk','Gulka','Gurne','Horka','Kargana','Krisha','Krazna','Lurtza','Morga','Mornash','Narzug','Ragnara','Rika','Rogga','Rulza','Shagra','Skara','Skarzog','Sylra','Tharzog','Thokara','Throkka','Tragna','Urga','Uzgara','Vorka','Vrazka','Vrakka','Vugra','Zagra','Zokara','Zurga'],
+    s: ['Aakre',"Ba'elnohr",'Brogmar','Brogmok','Brognar','Bromnar','Broknar','Broktar','Bula','Burzog','Dragnar','Drakgash','Draknar','Dralmok','Drokthar','Fjordlord','Ghoran',"Gra'adok",'Gralmok','Graktar','Grobuk','Grukthar','Grungar','Grungash','Hellhammer','Kragmar','Kragthar','Krangash','Krulgash','Krugnar','Omenarr','Throgar','Throgash','Throkmar','Thrugmar','Thrugmok','Thrugnar','Thraknar','Zalmok','Zargash','Zolgar','Zormok','Zurnak','Zarthak','Zalthar'],
   },
 
   // ── DRAKAZIR ──
   drakazir: {
-    m: ['Arjhan','Balasar','Bharash','Callisto','Donaar','Ghesh','Heskan',"Kald'er",'Koragon','Kriv',"Lewwe'ghar",'Medrash','Mehen','Nadarr','Pandjed','Patrin','Renthok','Rhogar','Shamash','Shedinn','Sylaren','Tarhun','Torinn','Travok','Valdarin','Zarkan'],
-    f: ['Akra','Biri','Daar','Drasithia','Farideh','Harann','Havilar','Jheri','Kava','Korinn','Kylraxis','Mishann','Nala','Perra','Pyraxia','Raiann','Sora','Sornala','Surina','Syraxis','Tharzali','Thava','Uadjit','Veshara','Xyrixa','Zythra'],
-    s: ['Caragarson','Clethtinthiallor','Daardendrian','Delmirev','Drachedandion','Emerury','Ehput-Ki','Fenkenkabradon','Frale','Iforson','Irame','Kepeshkmolik','Kerrhylon','Kimbatuul','Linxakasendalor','Myastan','Nemmonis','Norixius','Ophinshtalajiir','Prexijandilin','Shestendeliath','Storrae','Thunerike','Turnuroth','Verthisathurgiesh','Yarjerit'],
+    m: ['Korugar','Aradh','Tharath','Callisto','Rhazivar','Ararak','Balorn',"Kald'er",'Koragon','Ostox',"Lewwe'ghar",'Hesuun','Korivar','Zarox','Garox','Patrin','Renthok','Hesath','Shamash','Tharivar','Sylaren','Ixugar','Tharesh','Drumrok','Valdarin','Zarkan'],
+    f: ['Zika','Vexrith','Iraka','Drasithia','Farideh','Orira','Asra','Thassa','Kava','Tharith','Kylraxis','Nyka','Nala','Selylla','Pyraxia','Zirisa','Sora','Sornala','Surina','Syraxis','Tharzali','Eshrith','Uadjit','Veshara','Xyrixa','Zythra'],
+    s: ['Caragarson','Ruunaldrasz','Myruldrevan','Ixosseth','Ixivrexa','Emerury','Thornfield','Velixarion','Frale','Iforson','Irame','Kharanthul','Zethathrimor','Vorixarion','Ostorvanthi','Ostunthalor','Saruldrevan','Sarekkoras','Ruunorvanthi','Ostathrimor','Velosseth','Storrae','Thunerike','Kharuldrevan','Ruununthalor','Myrathrimor'],
   },
 
   // ── HELIANTH (Tiefling) ──
   helianth: {
-    m: ['Corvus','Corvum','Aoth','Bareris','Ehput-Ki','Kethoth','Mumed','Ramas','So-Kehur','Thazar-De','Urhur','Borivik','Faurgar','Jandar','Kanithar','Madislak','Ralmevik','Shaumar','Vladislak','Diero','Marcon','Akmenos','Amnon','Barakas','Damakos','Ekemon','Iados','Kairon','Leucis','Melech','Mordai','Morthos','Pelaios','Skamos','Therai','Pieron','Rimardo','Romero','Umbro'],
-    f: ['Arizima','Chathi','Nephis','Nulara','Murithi','Sefris','Thola','Umara','Zolis','Fyevarra','Hulmarra','Immith','Imzel','Navarra','Shevarra','Tammith','Yuldra','Balama','Dona','Faila','Jalana',"Damar'ra",'Luisa','Quara','Selise','VondaAkta','Anakis','Leucia','Bryseis','Criella','Damaia','Ea','Kallista','Lerissa','Makaria','Nemeia','Orianna','Phelaia','Rieta'],
-    s: ['Corraer','Ankhalab','Anskuld','Fezim','Hahpet','Nathandem','Sepret','Uuthrakt','Chergoba','Dyernina','Iltazyara','Murnyethara','Stayanoga','Ulmokina','Agosto','Astorio','Calabra','Domine','Falone','Marivaldi','Pisacar','Aberwyn','Brynmor','Caerthyn','Derwynn','Eirwen','Fenwyll','Glynfyr','Hafryn','Islynd','Llyrien','Maelwys','Neirin','Owynal','Rhodwyn','Selwynn','Talfryn','Wynfael','Gwynfraught'],
+    m: ['Corvus','Corvum','Ozrard','Darorn','Torric','Vesard','Toras','Noren','Brenorn','Vesavos','Valan','Marion','Selric','Ithric','Ozreth','Vesorn','Ozrek','Dareth','Selorn','Daren','Valorn','Azoth','Amnon','Kaeleron','Kaelael','Zepion','Ithael','Zeporath','Xerorath','Melech','Xerekiel','Sareth','Ozroth','Belion','Valeth','Lorek','Alavos','Romero','Umbro'],
+    f: ['Neressa','Brenith','Melessa','Marara','Coressa','Veyra','Marena','Oriwyn','Kesith','Kesia','Corara','Ashena','Valys','Brenine','Kesys','Brenena','Darine','Keswyn','Dona','Brenwyn','Melena',"Damar'ra",'Luisa','Breniel','Darwyn','VondaAkta','Cyrine','Leucia','Bryseis','Nimys','Sesiel','Ea','Kallista','Lysessa','Makaria','Zirathe','Zirria','Belessa','Kesara'],
+    s: ['Corraer','Sablebrand','Wickmourne','Sablemarsh','Morrowmourne','Ravenbrand','Duskstead','Vesperstead','Cinderwell','Morrowgate','Duskwell','Thornstead','Ravenveil','Ravenmarsh','Ironstead','Hollowmarsh','Ravencombe','Ironwell','Wickgate','Ashveil','Greymarsh','Aberwyn','Brynmor','Caerthyn','Derwynn','Eirwen','Fenwyll','Glynfyr','Hafryn','Islynd','Llyrien','Maelwys','Neirin','Owynal','Rhodwyn','Selwynn','Talfryn','Wynfael','Gwynfraught'],
   },
 
   // ── SERAPHAN ──
@@ -879,7 +882,7 @@ export const NAMES = {
 
   // ── FAE ──
   fae: {
-    m: ['Armand','Étienne','Fabien','Henri','Jacques','Laurent','Mathieu','Pierre','René','Rémy','Thierry','Aelaril','Aelarion','Danius','Elenwe','Elarian','Erevan','Everath','Lirion','Lyrael','Myrithas','Nalathor','Seladon','Solarae','Sylvaris','Thalindor'],
+    m: ['Armand','Étienne','Fabien','Henri','Jacques','Laurent','Mathieu','Pierre','René','Rémy','Thierry','Aelaril','Aelarion','Danius','Elenwe','Elarian','Thalorin','Everath','Lirion','Lyrael','Myrithas','Nalathor','Seladon','Solarae','Sylvaris','Thalindor'],
     f: ['Adèle','Amélie','Camille','Céline','Dianthe','Élodie','Ilayda','Lucie','Margot','Mathilde','Wyhn','Aelindra','Aelithra','Auriel','Caelithra','Daelora','Elaria','Elindra','Faelith','Galindra','Harael','Ildra','Jaelith','Kaelira','Laerina','Maelindra','Naelithra','Orina','Paelina','Raelora','Saelithra','Taelindra','Turina','Vaelora','Zaelithra'],
     s: ['Brumes','Étoiles','Faucon','Féerie',"l'Aube",'Mystère','Rêves','Sortilège','Songes','Trésor','Ventes','Aerisindor','Aerithal','Aelarian','Alathoril','Aurielwyn','Elenwyn','Elariath','Elarion','Lirielor','Lyraethil','Nalathir','Rin','Selasael','Selendrith','Solanthir','Sylvaril','Thalarael','Thalassir','Thalindor'],
   },
@@ -927,9 +930,9 @@ export const NAMES = {
       s: ['Umbacca','Odion','Okoro','Doumbia','Azikiwe','Ogbonna','Obi','Jelani','Ebo','Adebayo','Kamara','Amara','Onyeka','Theros','Brokenmoor','Cindermane'],
     },
     harelin: {
-      m: ['Varian','Arthas','Lothar','Uther','Turalyon','Bolvar','Khadgar','Danath','Tirion','Muradin','Rhonin','Medivh','Kael','Genn','Llane','Aiden','Daelin','Thoradin'],
-      f: ['Alleria','Taria','Calia','Vereesa','Moira','Tiffin','Lorna','Aegwynn','Tamsin','Tessia','Aysa','Taria','Adariall','Dorna','Yrel'],
-      s: ['Proudmoore','Menethil','Wrynn','Mograine','Thaurissan','Darvane','Mograine'],
+      m: ['Aiden'],
+      f: ['Moira','Lorna','Tamsin','Dorna'],
+      s: [],
     },
     bovorin: {
       m: ['Dorotok','Asefen','Laanter','Henedin','Oenken','Fenfen','Kindaran','Goerut','Manbaran','Gunrios'],
@@ -952,7 +955,7 @@ export const NAMES = {
       s: ['Targutai','Chingis','Batu','Temür','Ogedei','Kaidu','Subutai','Ordu','Orlok','Noyan','Urussaire'],
     },
     taeranari: {
-      m: ['Tiber','Ulfgar','Fenrir','Skoll','Sif','Vidar','Haldor','Torvald','Roggulf'],
+      m: ['Tiber','Tororn','Fenrir','Skoll','Sif','Vidar','Haldor','Torvald','Roggulf'],
       f: ['Runa','Hati','Frieda','Rieka','Solveig','Eirlys','Lagertha','Nurdvild','Ygfalestris'],
       s: ['Shrouw','Bjornssen','Fenrirson','Hrothgarsson','Skollrsson','Runewulf','Ylvaström'],
     },
@@ -962,14 +965,14 @@ export const NAMES = {
       s: ["Kai'on",'Ubi','Wod','Nuepyg','Wua','Linqo'],
     },
     ssazaral: {
-      m: ['Eldric','Grimnir','Kaelthas','Lir\'ael',"Necht'an",'Sozsi','Vaelin','Wulfgar','Xiltotl','Zarssen'],
-      f: ['Hihli','Kethra','Mosa','Seraffina','Seretha','Sessaria',"Sses'suth",'Ssike','Thessa','Vixra'],
+      m: ['Eldric','Grimnir','Lir\'ael',"Necht'an",'Sozsi','Xiltotl','Zarssen'],
+      f: ['Hihli','Ashine','Mosa','Seraffina','Seretha','Sessaria',"Sses'suth",'Ssike','Thessa','Vixra'],
       s: ['Hikra','Hyrainth','Krilot','Lomed','Sahahliel','Ssathash','Sserento','Ssithra','Verdant','Vesssark'],
     },
     default: {
-      m: ['Kraven','Kenzo','Haruki','Aurum','Aegemon','Killian','Rook','Leonidas','Varian'],
-      f: ['Neema','Abena','Malaika','Lykia','Selene','Alleria','Kurama'],
-      s: ['Mbaku','Umbacca','Krowe','Proudmoore','Aleval','Ardentbrin','Deecye'],
+      m: ['Kraven','Kenzo','Haruki','Aurum','Aegemon','Killian','Rook','Leonidas'],
+      f: ['Neema','Abena','Malaika','Lykia','Selene','Kurama'],
+      s: ['Mbaku','Umbacca','Krowe','Aleval','Ardentbrin','Deecye'],
     },
   },
 
@@ -982,7 +985,7 @@ export const NAMES = {
 
   // ── TIOL — Giant Nordic Dark-Tel'ari lineage ──
   tiol: {
-    m: ['Kay','Bjorvael','Sindri','Torvaeth','Eirikkar','Havrell','Skorne','Vandrik','Ulfren','Draumund','Kelthar','Ravnir','Solmund','Vaelric','Thrainor'],
+    m: ['Kay','Bjorvael','Pibbin','Torvaeth','Eirikkar','Havrell','Skorne','Vandrik','Ulfren','Draumund','Kelthar','Ravnir','Solmund','Vaelric','Thrainor'],
     f: ['Sakara','Yrsavel','Signyth','Astrilde','Ravenna','Solveth','Kelda','Myrrun','Freylis','Vanya','Eirvath','Duskild','Silvra','Nachtrun','Thyrvi'],
     s: ['Charterborn','Vikingrsblood','Duskmark','Elvssen','Stormveil','Nightsdottir','Frostmark','Skyhewn','Veilstrand','Godsreach','Myrkirsson','Aldervane'],
   },
@@ -1008,7 +1011,7 @@ export const NAMES = {
 
 
 // ─── NAME GENERATION ──────────────────────────────────────────────────────────
-// Returns { m:[], f:[], s:[] } for a given race + variant + pamorph bloodline
+// Returns { m: [], f: [], s: [] } for a given race + variant + pamorph bloodline
 // Also always includes a sample from the UNUSED world pool
 export function getNamePool(raceId, variant, pmBloodline) {
   const unused = NAMES.unused;
@@ -1040,11 +1043,12 @@ export function getNamePool(raceId, variant, pmBloodline) {
     pool = { m: raceNames.default.m || [], f: raceNames.default.f || [], s: raceNames.default.s || [] };
   }
 
-  // Merge in unused world names (interleaved)
+  // A people's own names only (user, 2026-11-17): the unused world names fill in just where a list is empty. Mixing them
+  // into every pool meant most draws came from the world list instead of the race's (Testudon: 6 own names vs 119).
   return {
-    m: [...pool.m, ...unused.m],
-    f: [...pool.f, ...unused.f],
-    s: [...pool.s, ...unused.s],
+    m: pool.m.length ? pool.m : [...unused.m],
+    f: pool.f.length ? pool.f : [...unused.f],
+    s: pool.s.length ? pool.s : [...unused.s],
   };
 }
 
@@ -2601,4 +2605,43 @@ for (const [id, text] of Object.entries(NEW_BLOODLINE_LORE)) {
 // Tiol has no variants on the chart: the trait that was kept under its one variant is the race's own.
 if (RACIAL_TRAITS.tiol && !RACIAL_TRAITS.tiol.active && RACIAL_TRAITS.tiol.variants?.Tiol) {
   RACIAL_TRAITS.tiol.active = RACIAL_TRAITS.tiol.variants.Tiol;
+}
+
+// The simian name pool belongs to the monkey bloodlines (user's name sweep, 2026-11-17): Kroghari (id krogharu) and Vanara.
+if (NAMES.pamorph?.simian) {
+  if (!NAMES.pamorph.krogharu) NAMES.pamorph.krogharu = NAMES.pamorph.simian;
+  if (!NAMES.pamorph.vanara) NAMES.pamorph.vanara = NAMES.pamorph.simian;
+}
+
+// ─── NAME POOLS FROM HISTORICAL TRADITIONS (user, 2026-11-17) ───────────────────────────────────────────────────
+// src/data/namePools*.js give each culture, variant and bloodline names from the real-world tradition it echoes.
+// They grow the lists above (no duplicates) and create the ones that were missing, so every chart variant and
+// bloodline draws on names of its own.
+{
+  const split = (text) => (text ? String(text).split('|').map(n => n.trim()).filter(Boolean) : []);
+  const grow = (target, add) => {
+    for (const g of ['m', 'f', 's']) {
+      const list = Array.isArray(target[g]) ? target[g] : (target[g] = []);
+      for (const n of split(add[g])) if (!list.includes(n)) list.push(n);
+    }
+    return target;
+  };
+  const poolAt = (ns, key) => {
+    const race = NAMES[ns] || (NAMES[ns] = {});
+    if (key === '*') return Array.isArray(race.m) ? race : (race.default || (race.default = { m: [], f: [], s: [] }));
+    return race[key] || (race[key] = { m: [], f: [], s: [] });
+  };
+  for (const [variant, add] of Object.entries(ADDAMAR_POOLS)) grow(poolAt('addamar', variant), add);
+  for (const [ns, variants] of Object.entries(PEOPLE_POOLS)) {
+    for (const [variant, add] of Object.entries(variants)) grow(poolAt(ns, variant), add);
+  }
+  for (const [id, add] of Object.entries(PAMORPH_POOLS)) if (add) grow(poolAt('pamorph', id), add);
+  // Goblin has only variant pools: with no variant chosen it draws on both (once each).
+  if (NAMES.goblin && !NAMES.goblin.default) {
+    NAMES.goblin.default = { m: [], f: [], s: [] };
+    for (const v of ['Boggart', 'Puck']) if (NAMES.goblin[v]) grow(NAMES.goblin.default, Object.fromEntries(['m', 'f', 's'].map(g => [g, NAMES.goblin[v][g].join('|')])));
+  }
+  // No list repeats a name.
+  const dedupe = (o) => { if (Array.isArray(o)) { const u = [...new Set(o)]; o.length = 0; o.push(...u); return; } if (o && typeof o === 'object') Object.values(o).forEach(dedupe); };
+  dedupe(NAMES);
 }

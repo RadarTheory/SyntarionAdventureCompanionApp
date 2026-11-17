@@ -1,8 +1,9 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useDevice } from './useDevice';
 import { COLORS, ALL_STATS, DEFAULT_STATS } from './constants';
 import StepStage from './wizard/StepStage';
 import AstragalTray from './AstragalTray';
+import { loadOfficialFinishes } from './lib/diceFinishBundle.js';
 import './wizard/stats.css';
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -71,6 +72,15 @@ export default function StepStats({
   const [trayReady, setTrayReady] = useState(false);
   const [casting, setCasting] = useState(false);
   const onTrayStatus = useCallback(({ ready }) => setTrayReady(!!ready), []);
+  // The dice are the official Syntarion finish (user, 2026-11-17); the plain bone set only if it can't be loaded.
+  const [skin, setSkin] = useState('bone');
+  useEffect(() => {
+    let live = true;
+    loadOfficialFinishes()
+      .then(finishes => { const own = Object.values(finishes || {}).find(f => f?.name === 'Syntarion'); if (live && own) setSkin(own); })
+      .catch(() => {});
+    return () => { live = false; };
+  }, []);
   const doRoll = async () => {
     if (casting) return;
     setSelectedIdx(null);
@@ -78,8 +88,8 @@ export default function StepStats({
     setCasting(true);
     setCurrentRoll(null);
     try {
-      const first = await tray.current.roll({ sides: 4, count: 8 });
-      const second = await tray.current.roll({ sides: 4, count: 8 });
+      const first = await tray.current.roll({ sides: 4, count: 8, skin });
+      const second = await tray.current.roll({ sides: 4, count: 8, skin });
       const faces = [...(first?.values || []), ...(second?.values || [])].map(Number);
       setCurrentRoll(faces.length === 16 && faces.every(n => n >= 1 && n <= 4) ? fromDice(faces) : rollSet());
     } catch {
