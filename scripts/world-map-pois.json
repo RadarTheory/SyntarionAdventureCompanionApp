@@ -1,0 +1,1073 @@
+[
+ {
+  "name": "AEIRHYD'S DEPTHS",
+  "region": "Veridora · Sylvan Grove",
+  "x_pct": 45.776,
+  "y_pct": 25.346,
+  "notes": "Resting Place of Aeirhyd, Neutral Sea Dragon of Warman's Lake",
+  "nudged": false,
+  "type": "dungeon"
+ },
+ {
+  "name": "Albion",
+  "region": "Atu",
+  "x_pct": 31.2991,
+  "y_pct": 85.3272,
+  "notes": "The city on the back of Atuin",
+  "nudged": true,
+  "type": "city"
+ },
+ {
+  "name": "ALDERMORE",
+  "region": "Veridora · Corren Range",
+  "x_pct": 53.638,
+  "y_pct": 35.395,
+  "notes": "Unified Kingdom Village \nReuhnar's Temple",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "ANCIENT MAZE",
+  "region": "Veridora · Brivihan Plains",
+  "x_pct": 57.239,
+  "y_pct": 50.218,
+  "notes": "",
+  "nudged": false,
+  "type": "dungeon"
+ },
+ {
+  "name": "ARAKA",
+  "region": "Aerithos",
+  "x_pct": 66.687,
+  "y_pct": 38.388,
+  "notes": "Kenku Pirate Cove Charrak's Summoning Circle",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "ARANGHTHAL",
+  "region": "Paravel",
+  "x_pct": 43.542,
+  "y_pct": 81.17,
+  "notes": "Jötunbane Dragonborn Clan Camp \nSons of Serenwen",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "ARIDARA",
+  "region": "The Seven Isles",
+  "x_pct": 8.02,
+  "y_pct": 74.139,
+  "notes": "HIMRING: A CITY ON THE SOUTH WESTERN ISLE OF SOTERIA",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "ASHENDELL",
+  "region": "Veridora · Corren Range",
+  "x_pct": 54.517,
+  "y_pct": 43.543,
+  "notes": "Unified Kingdom Capitol",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "AVALORA",
+  "region": "Beranthes",
+  "x_pct": 64.526,
+  "y_pct": 67.155,
+  "notes": "Kingdom Capitol, King Aric of the Unified Kingdom",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "BA'ELNIM'S RESTING PLACE",
+  "region": "Beranthes",
+  "x_pct": 66.321,
+  "y_pct": 82.382,
+  "notes": "",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "BAELRUS' PAGODA ALTAR",
+  "region": "Paravel",
+  "x_pct": 41.65,
+  "y_pct": 90.981,
+  "notes": "Baelrus' Altar",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "BRINEHOLME FOREST",
+  "region": "Lilith'iel",
+  "x_pct": 27.759,
+  "y_pct": 57.938,
+  "notes": "The Tree of Týr",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "BROKEN CATHEDRAL",
+  "region": "Veridora · The Moors",
+  "x_pct": 42.749,
+  "y_pct": 42.521,
+  "notes": "",
+  "nudged": false,
+  "type": "ruin"
+ },
+ {
+  "name": "BRONZE DOORS",
+  "region": "Veridora · Chronolithe Wastes",
+  "x_pct": 56.97,
+  "y_pct": 28.031,
+  "notes": "Dwarven Graniteheart Clan",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "CAERLŶF",
+  "region": "Veridora · The Moors",
+  "x_pct": 49.561,
+  "y_pct": 66.347,
+  "notes": "Taer'anari Ludas Encampment",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "CALDOR",
+  "region": "Makeda Kwetu",
+  "x_pct": 75.33,
+  "y_pct": 69.625,
+  "notes": "Unified Kingdom Camp",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "CIELO DORADO",
+  "region": "The Seven Isles",
+  "x_pct": 12.915,
+  "y_pct": 9.811,
+  "notes": "XUNANTUNICH: A CITY ON THE NORTH WESTERN ISLE OF SOTERIA",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "COATL",
+  "region": "Aerithos",
+  "x_pct": 64.5262,
+  "y_pct": 26.7717,
+  "notes": "Yuan-Ti City Lyxicah's Herem",
+  "nudged": true,
+  "type": "city"
+ },
+ {
+  "name": "CORRANH",
+  "region": "The Seven Isles",
+  "x_pct": 90.198,
+  "y_pct": 72.595,
+  "notes": "CORRANHOS: A CITY ON THE SOUTH EASTERN ISLE IN SOTERIA",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "CORREN MOUNTAIN MINES",
+  "region": "Veridora · Corren Range",
+  "x_pct": 49.133,
+  "y_pct": 39.481,
+  "notes": "Dwarven Grimrock Clan \nDuneyrr's Obelisk",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "DAR AL-FAKHAMA",
+  "region": "Zhallakan",
+  "x_pct": 80.872,
+  "y_pct": 35.3239,
+  "notes": "Brunar Naval City",
+  "nudged": true,
+  "type": "city"
+ },
+ {
+  "name": "DARK ELF CAMP",
+  "region": "Veridora · Chronolithe Wastes",
+  "x_pct": 58.057,
+  "y_pct": 40.55,
+  "notes": "",
+  "nudged": false,
+  "type": "camp"
+ },
+ {
+  "name": "DEADBROOK",
+  "region": "Veridora · The Moors",
+  "x_pct": 39.441,
+  "y_pct": 50.337,
+  "notes": "Fishing Town",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "DJEKOTO",
+  "region": "Makeda Kwetu",
+  "x_pct": 75.732,
+  "y_pct": 56.346,
+  "notes": "Matekwan Capitol",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "DRAK'AR",
+  "region": "Veridora · Sylvan Grove",
+  "x_pct": 42.078,
+  "y_pct": 17.484,
+  "notes": "Drow Capitol \nFirreth Summoning Circle",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "DUNGEON OF THE DRAGON POOL",
+  "region": "Veridora · Chronolithe Wastes",
+  "x_pct": 55.908,
+  "y_pct": 32.592,
+  "notes": "",
+  "nudged": false,
+  "type": "dungeon"
+ },
+ {
+  "name": "EBBA",
+  "region": "Veridora · The Moors",
+  "x_pct": 53.906,
+  "y_pct": 57.249,
+  "notes": "Unified Kingdom Naval City (Mayor Beckwith)",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "ELDDIM",
+  "region": "Veridora · The Moors",
+  "x_pct": 39.27,
+  "y_pct": 40.241,
+  "notes": "Unified Kingdom Capitol",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "ELDRATHAR",
+  "region": "Lilith'iel",
+  "x_pct": 31.445,
+  "y_pct": 51.548,
+  "notes": "Loxodon Capitol \nThàl's Altar",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "ELMOIRE",
+  "region": "Veridora · Corren Range",
+  "x_pct": 52.93,
+  "y_pct": 46.013,
+  "notes": "Satyr Grove \nDionysia Ritual Site",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "ELVEN RUINS",
+  "region": "Veridora · Sylvan Grove",
+  "x_pct": 37.207,
+  "y_pct": 26.344,
+  "notes": "",
+  "nudged": false,
+  "type": "ruin"
+ },
+ {
+  "name": "EMBRELYN",
+  "region": "Veridora · Brivihan Plains",
+  "x_pct": 61.755,
+  "y_pct": 55.016,
+  "notes": "",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "ENEOWA",
+  "region": "Paravel",
+  "x_pct": 38.367,
+  "y_pct": 80.03,
+  "notes": "Unified Kingdom City \nShevar's Palace",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "EPHAM",
+  "region": "The Seven Isles",
+  "x_pct": 53.0635,
+  "y_pct": 88.5579,
+  "notes": "BRIDGE OF SYLPH: Entrance to the Bridge of Sylph",
+  "nudged": true,
+  "type": "city"
+ },
+ {
+  "name": "EYMONT",
+  "region": "Kul'kal Rakhar",
+  "x_pct": 81.335,
+  "y_pct": 79.602,
+  "notes": "",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "FALCHON'S ACHE",
+  "region": "Aerithos",
+  "x_pct": 64.966,
+  "y_pct": 46.702,
+  "notes": "Fi'harta Temple",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "FALHZER",
+  "region": "Veridora · The Moors",
+  "x_pct": 40.369,
+  "y_pct": 46.369,
+  "notes": "Unified Kingdom City",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "FROSTPEAK",
+  "region": "Veridora · Falorn Fjords",
+  "x_pct": 54.028,
+  "y_pct": 27.746,
+  "notes": "Goliath Mountain City",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "GALEKGARDE",
+  "region": "Lilith'iel",
+  "x_pct": 23.743,
+  "y_pct": 84.52,
+  "notes": "Southern Inn in Lilith'iel",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "GAMDON",
+  "region": "Veridora · Sylvan Grove",
+  "x_pct": 51.086,
+  "y_pct": 19.978,
+  "notes": "Rhae'inar, Loxodon, Giff settlement \nSharalya's Tabernacle",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "GATEWAY TO THE WASTES",
+  "region": "Veridora · Brivihan Plains",
+  "x_pct": 56.946,
+  "y_pct": 41.547,
+  "notes": "",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "GIFFTON",
+  "region": "Veridora · The Moors",
+  "x_pct": 44.861,
+  "y_pct": 50.099,
+  "notes": "Giff Camp \nBarracks of Klarrosh",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "GLY'WNFRON",
+  "region": "Makeda Kwetu",
+  "x_pct": 81.909,
+  "y_pct": 62.879,
+  "notes": "Owlin Capitol \nLuen'eir Reliquery",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "GOLGOTHA PASS",
+  "region": "Veridora · Corren Range",
+  "x_pct": 47.217,
+  "y_pct": 48.246,
+  "notes": "",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "GREAK OAK FORREST",
+  "region": "Veridora · The Moors",
+  "x_pct": 51.477,
+  "y_pct": 62.523,
+  "notes": "Sy'vros's Roots",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "GROUNDS OF VEZZAKAR",
+  "region": "Lilith'iel",
+  "x_pct": 30.566,
+  "y_pct": 56.822,
+  "notes": "Vezzakar's Altar",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "HADMONT",
+  "region": "Veridora · The Moors",
+  "x_pct": 53.711,
+  "y_pct": 70.528,
+  "notes": "Unified Kingdom City (King Praetor) \nBa'elnariani Temple",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "HAUF",
+  "region": "Veridora · Sylvan Grove",
+  "x_pct": 49.426,
+  "y_pct": 24.087,
+  "notes": "Aarakocra encampment \nAiluris' Shrine",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "HEIDBOROUGH",
+  "region": "Veridora · Brivihan Plains",
+  "x_pct": 58.594,
+  "y_pct": 46.94,
+  "notes": "Gnome underground city hidden under a statue",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "HLONDETH",
+  "region": "Veridora · Chronolithe Wastes",
+  "x_pct": 59.399,
+  "y_pct": 35.585,
+  "notes": "Chronolithe Yuan-Ti Encampment Syraxiz Shrine",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "HULNOM",
+  "region": "Dorhaven · The Grim Isle",
+  "x_pct": 67.7121,
+  "y_pct": 58.9831,
+  "notes": "Abandoned City Ruins \nUrul's Offering Stone",
+  "nudged": true,
+  "type": "city"
+ },
+ {
+  "name": "IFOR'S CAVE",
+  "region": "Zhallakan",
+  "x_pct": 71.5578,
+  "y_pct": 22.235,
+  "notes": "Stormdragon's Hoarde",
+  "nudged": true,
+  "type": "dungeon"
+ },
+ {
+  "name": "JACK RED-LOCK BAY",
+  "region": "Red Lock Bay",
+  "x_pct": 53.577,
+  "y_pct": 8.3383,
+  "notes": "",
+  "nudged": true,
+  "type": "port"
+ },
+ {
+  "name": "JUMLET",
+  "region": "Zhallakan",
+  "x_pct": 79.187,
+  "y_pct": 20.572,
+  "notes": "Brunar Trade City\nAsherah's Altar",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "KARAK BYRN",
+  "region": "Veridora · The Moors",
+  "x_pct": 47.461,
+  "y_pct": 44.041,
+  "notes": "Dwarven YewHammer Clan Mines",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "KRA'ARK",
+  "region": "Zhallakan",
+  "x_pct": 71.399,
+  "y_pct": 26.534,
+  "notes": "Ra'Kesh Kenku Clan Village",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "LUMINA",
+  "region": "Veridora · Brivihan Plains",
+  "x_pct": 55.835,
+  "y_pct": 54.019,
+  "notes": "Unified Kingdom City",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "LUTETIA",
+  "region": "The Dinidae Insula",
+  "x_pct": 69.812,
+  "y_pct": 4.917,
+  "notes": "Tortle Pirate Cove",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "LYCHARROW",
+  "region": "Veridora · Corren Range",
+  "x_pct": 52.405,
+  "y_pct": 53.638,
+  "notes": "Tear'anari Village",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "MAAKURG'S ALTAR",
+  "region": "Veridora · Corren Range",
+  "x_pct": 50.745,
+  "y_pct": 47.866,
+  "notes": "Maakug's Altar",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "Maernethim Village",
+  "region": "Veridora · Sylvan Grove",
+  "x_pct": 48.462,
+  "y_pct": 15.369,
+  "notes": "Baeshra's Altar",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "MARAVI",
+  "region": "Makeda Kwetu",
+  "x_pct": 77.441,
+  "y_pct": 66.775,
+  "notes": "Matekwan City",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "MARRIGIZH'AR",
+  "region": "Lilith'iel",
+  "x_pct": 23.792,
+  "y_pct": 44.445,
+  "notes": "Genasi Abandoned City \nDra'Agora's Acropalis",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "MERCHANT'S INLET",
+  "region": "Dunalach",
+  "x_pct": 31.1406,
+  "y_pct": 8.5991,
+  "notes": "Naval Trade City",
+  "nudged": true,
+  "type": "port"
+ },
+ {
+  "name": "MIRADOR",
+  "region": "The Seven Isles",
+  "x_pct": 8.105,
+  "y_pct": 44.493,
+  "notes": "UMBERFELL: A CITY ON THE WESTERN OUTSKIRTING ISLE OF SOTERIA",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "MISTCLIFF",
+  "region": "Aerithos",
+  "x_pct": 64.148,
+  "y_pct": 32.687,
+  "notes": "Aarakocra Capitol",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "N'QUYTHALAS",
+  "region": "Lilith'iel",
+  "x_pct": 27.3561,
+  "y_pct": 22.5908,
+  "notes": "Drow City",
+  "nudged": true,
+  "type": "city"
+ },
+ {
+  "name": "NEW HARSTEN",
+  "region": "Veridora · Brivihan Plains",
+  "x_pct": 58.923,
+  "y_pct": 43.329,
+  "notes": "",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "NNEBE",
+  "region": "Makeda Kwetu",
+  "x_pct": 80.432,
+  "y_pct": 56.655,
+  "notes": "Matekawn City \nDenke's Shrine",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "NOVAHR",
+  "region": "The Seven Isles",
+  "x_pct": 90.991,
+  "y_pct": 7.221,
+  "notes": "TIBER: A CITY ON THE NORTH EASTERN ISLE OF SOTERIA",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "ORMR",
+  "region": "Zhallakan",
+  "x_pct": 75.378,
+  "y_pct": 19.455,
+  "notes": "Brunar Capitol",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "PAIOS",
+  "region": "Kul'kal Rakhar",
+  "x_pct": 75.562,
+  "y_pct": 87.798,
+  "notes": "Simian Camp \nGorùn's Altar",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "PENTHOSANCTUM",
+  "region": "Dorhaven · The Grim Isle",
+  "x_pct": 66.431,
+  "y_pct": 54.066,
+  "notes": "Unified Kingdom Bastille",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "PHLEGETH",
+  "region": "Lilith'iel",
+  "x_pct": 22.375,
+  "y_pct": 65.255,
+  "notes": "Tiefling City Capitol",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "POACHER'S CAMP",
+  "region": "Veridora · Sylvan Grove",
+  "x_pct": 42.993,
+  "y_pct": 34.231,
+  "notes": "Thorne Lumber  & Ore Research Team Camp",
+  "nudged": false,
+  "type": "camp"
+ },
+ {
+  "name": "PORT HALDANE",
+  "region": "Dunalach",
+  "x_pct": 36.108,
+  "y_pct": 12.139,
+  "notes": "Port City",
+  "nudged": false,
+  "type": "port"
+ },
+ {
+  "name": "PRIOKOS",
+  "region": "Makeda Kwetu",
+  "x_pct": 72.705,
+  "y_pct": 63.853,
+  "notes": "Leonin Pride Settlement \nAuron's Temple",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "PYROTHOS",
+  "region": "Lilith'iel",
+  "x_pct": 23.1686,
+  "y_pct": 75.1843,
+  "notes": "Sýr'eth Sighting",
+  "nudged": true,
+  "type": "city"
+ },
+ {
+  "name": "QUYNTHE'RA",
+  "region": "Veridora · Sylvan Grove",
+  "x_pct": 42.615,
+  "y_pct": 27.556,
+  "notes": "Elven City in the trees \nFi'harta's Altar",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "RAZOR'S POINT",
+  "region": "Veridora · The Moors",
+  "x_pct": 46.252,
+  "y_pct": 65.872,
+  "notes": "(Gra'adok Clan): Orc War Camp",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "RED-LOCK'S SHIPWRECK",
+  "region": "Beranthes",
+  "x_pct": 72.1553,
+  "y_pct": 80.7185,
+  "notes": "",
+  "nudged": true,
+  "type": "ruin"
+ },
+ {
+  "name": "REVELRY HEMLOCK",
+  "region": "Lilith'iel",
+  "x_pct": 20.9474,
+  "y_pct": 90.8862,
+  "notes": "Satyr Settlement",
+  "nudged": true,
+  "type": "city"
+ },
+ {
+  "name": "Rimehollow",
+  "region": "Veridora · Falorn Fjords",
+  "x_pct": 56.323,
+  "y_pct": 22.211,
+  "notes": "",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "ROOKVALE",
+  "region": "Veridora · Sylvan Grove",
+  "x_pct": 47.144,
+  "y_pct": 22.163,
+  "notes": "Village on Warman's Lake Hreidmar's Altar",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "SANCTUM",
+  "region": "Verdelie're · The Enchanted Isle of Wonders",
+  "x_pct": 74.805,
+  "y_pct": 40.621,
+  "notes": "SANCTUM The Enchanted Isle of Wonders",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "SARAZANA",
+  "region": "Paravel",
+  "x_pct": 41.956,
+  "y_pct": 86.824,
+  "notes": "Cath'vari Grand Capitol",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "SERENEA",
+  "region": "Veridora · The Moors",
+  "x_pct": 44.995,
+  "y_pct": 43.234,
+  "notes": "Cath'vari settlement \nSelvaris' Chapel",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "SHEVAR'S ALTAR",
+  "region": "Veridora · The Moors",
+  "x_pct": 42.102,
+  "y_pct": 62.428,
+  "notes": "Shevar's Altar",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "SOEFERUS",
+  "region": "Lilith'iel",
+  "x_pct": 25.464,
+  "y_pct": 23.256,
+  "notes": "Llewell and Caragar's Roost: \nKnoneus' Paramore",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "STEEL COAST",
+  "region": "Veridora · Chronolithe Wastes",
+  "x_pct": 59.412,
+  "y_pct": 38.364,
+  "notes": "",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "STONEMIRK",
+  "region": "Veridora · Chronolithe Wastes",
+  "x_pct": 60.034,
+  "y_pct": 27.603,
+  "notes": "Dwarven sentry outpost",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "STORMWATCH",
+  "region": "Dunalach",
+  "x_pct": 24.329,
+  "y_pct": 11.592,
+  "notes": "Unified Kingdom Naval City",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "STRANGE POND",
+  "region": "Veridora · Falorn Fjords",
+  "x_pct": 54.529,
+  "y_pct": 25.631,
+  "notes": "Secret Entrance to the Ebonshroud Hand Compound",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "THE DRAGONMAW CLAN CAMP",
+  "region": "Kul'kal Rakhar",
+  "x_pct": 78.333,
+  "y_pct": 91.337,
+  "notes": "Orc Clan Camp",
+  "nudged": false,
+  "type": "camp"
+ },
+ {
+  "name": "THE FROZEN BOG",
+  "region": "Veridora · Falorn Fjords",
+  "x_pct": 51.501,
+  "y_pct": 25.679,
+  "notes": "Frostspire Citadel\n Gul'danhrhock Outpost",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "THE GRA'ADOK CLAN CAMP",
+  "region": "Kul'kal Rakhar",
+  "x_pct": 83.716,
+  "y_pct": 82.809,
+  "notes": "Orc Tribe",
+  "nudged": false,
+  "type": "camp"
+ },
+ {
+  "name": "THE GREAT FOUNDRY",
+  "region": "Aerithos",
+  "x_pct": 62.695,
+  "y_pct": 14.894,
+  "notes": "Unified Kingdom Industrial Foundry",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "THE GUL'DANHRHOCK CLAN CAMP",
+  "region": "Kul'kal Rakhar",
+  "x_pct": 79.724,
+  "y_pct": 89.698,
+  "notes": "Orc Clan Camp",
+  "nudged": false,
+  "type": "camp"
+ },
+ {
+  "name": "THE OLD LAGOON",
+  "region": "Veridora · The Moors",
+  "x_pct": 38.367,
+  "y_pct": 33.969,
+  "notes": "",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "THE PLACE OF THE LOST VOICES",
+  "region": "Veridora · Falorn Fjords",
+  "x_pct": 58.411,
+  "y_pct": 25.323,
+  "notes": "Whisphering Frostwraith Lair",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "THE RUINS OF SZAR",
+  "region": "Veridora · Chronolithe Wastes",
+  "x_pct": 58.618,
+  "y_pct": 30.953,
+  "notes": "",
+  "nudged": false,
+  "type": "ruin"
+ },
+ {
+  "name": "THE VEILED KNOLLS",
+  "region": "Veridora · The Moors",
+  "x_pct": 48.523,
+  "y_pct": 52.95,
+  "notes": "Veridoran Village",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "THERIENSTADT",
+  "region": "The Menagerie",
+  "x_pct": 46.313,
+  "y_pct": 10.666,
+  "notes": "Pa'morph Capitol",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "THETIS",
+  "region": "Beranthes",
+  "x_pct": 61.8528,
+  "y_pct": 74.7327,
+  "notes": "",
+  "nudged": true,
+  "type": "city"
+ },
+ {
+  "name": "THIETMAR'S ALTAR",
+  "region": "Beranthes",
+  "x_pct": 58.594,
+  "y_pct": 77.583,
+  "notes": "Thietmar's Altar",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "TREAHNOA",
+  "region": "Lilith'iel",
+  "x_pct": 25.598,
+  "y_pct": 67.416,
+  "notes": "Unified Kingdom City on the Coast \nMýr Temple",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "TREYVIN",
+  "region": "The Seven Isles",
+  "x_pct": 92.48,
+  "y_pct": 46.655,
+  "notes": "LIRISIUM: A CITY ON THE EASTERN  ISLE OF SOTERIA",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "TRYSTIQUE",
+  "region": "Trystique",
+  "x_pct": 89.27,
+  "y_pct": 25.917,
+  "notes": "The City of Arrana",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "VALESTONE",
+  "region": "Lilith'iel",
+  "x_pct": 32.117,
+  "y_pct": 61.953,
+  "notes": "Unified Kingdom City",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "VALORHOLD",
+  "region": "Valorhold",
+  "x_pct": 48.059,
+  "y_pct": 71.953,
+  "notes": "Unified Kingdom Outpost \nLótjarr's Table",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "VELHURR",
+  "region": "Red Lock Bay",
+  "x_pct": 56.36,
+  "y_pct": 8.124,
+  "notes": "Tortle Atoll Ku'rma's Market",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "VLARETH",
+  "region": "Lilith'iel",
+  "x_pct": 30.566,
+  "y_pct": 70.908,
+  "notes": "Örlögsylfir Dragonborn Clan Camp\nSons of Llewell",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "VONYALAR",
+  "region": "Nari'ath",
+  "x_pct": 18.335,
+  "y_pct": 23.755,
+  "notes": "Tip of Nazari Captiol",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "WEALDSTONE",
+  "region": "Veridora · Brivihan Plains",
+  "x_pct": 58.655,
+  "y_pct": 58.817,
+  "notes": "Veridoran Trade City Ylandar's Temple",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "WHIMWOOD",
+  "region": "Verdelie're · The Enchanted Isle of Wonders",
+  "x_pct": 77.063,
+  "y_pct": 41.809,
+  "notes": "Fae Village",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "WITHERED DRAKE SIGHTING",
+  "region": "Veridora · The Moors",
+  "x_pct": 49.841,
+  "y_pct": 68.984,
+  "notes": "",
+  "nudged": false,
+  "type": "landmark"
+ },
+ {
+  "name": "WOLF CAVE",
+  "region": "Veridora · The Moors",
+  "x_pct": 47.095,
+  "y_pct": 55.515,
+  "notes": "Lyo'mir's Den",
+  "nudged": false,
+  "type": "dungeon"
+ },
+ {
+  "name": "YÜYAK'E",
+  "region": "Veridora · The Moors",
+  "x_pct": 43.811,
+  "y_pct": 55.182,
+  "notes": "Mystical Kitsune Village \nI'nari's Sacellum",
+  "nudged": false,
+  "type": "city"
+ },
+ {
+  "name": "ZEPHYRIA",
+  "region": "Aerithos",
+  "x_pct": 62.476,
+  "y_pct": 38.293,
+  "notes": "Univiersity of Magic",
+  "nudged": false,
+  "type": "city"
+ }
+]
