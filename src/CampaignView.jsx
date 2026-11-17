@@ -2152,7 +2152,7 @@ useEffect(() => {
         { id: 'lark', title: 'Lark — Send a Letter', onClick: () => setShowLark(o => !o),
           children: <img src="/Larkicon.png" alt="Lark" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
         { id: 'whisper', title: 'Whisper — Message the Architect directly', onClick: () => setShowWhisper(o => !o),
-          children: <span style={{ fontFamily: "'Cinzel', serif", fontSize: 20, color: '#e8c84a', pointerEvents: 'none', lineHeight: 1 }}>✉</span> },
+          children: <img src="/Whispericon.svg" alt="Whisper" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} /> },
         { id: 'handbook', title: 'Player Handbook', onClick: () => setHandbookOpenSignal(n => n + 1),
           children: <img src="/player-handbook.png" alt="Handbook" draggable={false} style={{ width: '160%', height: '160%', objectFit: 'contain', pointerEvents: 'none', transform: 'scale(1.06)' }} /> },
       ]} />

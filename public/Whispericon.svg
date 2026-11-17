@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Whisper: a sealed letter with whisper curls rising from it, in the Lark / Grimoire emblem style (flat gold on near-black). -->
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="70%">
+      <stop offset="0" stop-color="#262624"/>
+      <stop offset="1" stop-color="#121211"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6e7a8"/>
+      <stop offset="0.5" stop-color="#e2c272"/>
+      <stop offset="1" stop-color="#b8893c"/>
+    </linearGradient>
+    <linearGradient id="goldV" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f6e7a8"/>
+      <stop offset="1" stop-color="#c49a48"/>
+    </linearGradient>
+    <symbol id="spark" viewBox="-10 -10 20 20">
+      <path d="M0 -10 Q1.6 -1.6 10 0 Q1.6 1.6 0 10 Q-1.6 1.6 -10 0 Q-1.6 -1.6 0 -10Z"/>
+    </symbol>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <g transform="translate(512 512) scale(1.15) translate(-512 -512)">
+
+  <!-- Ring, broken at the top where the whisper rises through it -->
+  <path d="M 452 228 A 296 296 0 1 0 572 228" fill="none" stroke="url(#gold)" stroke-width="20" stroke-linecap="round"/>
+
+  <!-- Sparkles at the compass points, dots at the lower diagonals (as on the Lark) -->
+  <g fill="url(#goldV)">
+    <use href="#spark" x="487" y="132" width="50" height="50"/>
+    <use href="#spark" x="487" y="842" width="50" height="50"/>
+    <use href="#spark" x="132" y="487" width="50" height="50"/>
+    <use href="#spark" x="842" y="487" width="50" height="50"/>
+    <circle cx="258" cy="760" r="13"/>
+    <circle cx="766" cy="760" r="13"/>
+  </g>
+
+  <!-- Whisper curls rising from the letter -->
+  <g fill="none" stroke="url(#goldV)" stroke-linecap="round">
+    <path d="M 470 410 C 430 370, 470 330, 440 290 C 420 262, 438 236, 462 226" stroke-width="16"/>
+    <path d="M 530 410 C 570 364, 528 322, 566 280 C 586 258, 574 232, 552 218" stroke-width="16"/>
+    <path d="M 500 400 C 486 360, 512 330, 498 300" stroke-width="11" stroke-opacity="0.75"/>
+  </g>
+
+  <!-- The letter -->
+  <g>
+    <rect x="300" y="430" width="424" height="278" rx="18" fill="url(#gold)"/>
+    <!-- flap and folds cut in near-black -->
+    <path d="M 316 446 L 512 596 L 708 446" fill="none" stroke="#151514" stroke-width="18" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M 316 692 L 448 572" fill="none" stroke="#151514" stroke-width="14" stroke-linecap="round"/>
+    <path d="M 708 692 L 576 572" fill="none" stroke="#151514" stroke-width="14" stroke-linecap="round"/>
+    <!-- wax seal with a four-point star -->
+    <circle cx="512" cy="600" r="58" fill="#151514"/>
+    <circle cx="512" cy="600" r="46" fill="url(#gold)"/>
+    <path d="M 512 568 Q 517 595 544 600 Q 517 605 512 632 Q 507 605 480 600 Q 507 595 512 568 Z" fill="#151514"/>
+  </g>
+  </g>
+</svg>
