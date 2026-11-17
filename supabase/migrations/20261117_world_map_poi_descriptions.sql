@@ -1,6 +1,6 @@
 -- World Map: descriptions for the 18 POIs that had none, from the opening of each entry in the
 -- "UPDATED Official Reference" doc (SOTERIA: POINTS OF INTEREST). Only empty descriptions are filled; safe to run twice.
--- Rimehollow is left empty: the doc has only its tagline ("Rootwraught settlement").
+-- Rimehollow has only a tagline in the doc; its description is the user's (2026-11-17), added at the end.
 update public.locations l set notes = v.notes
 from (values
   ('ANCIENT MAZE', 'The Ancient Maze is not but a foundation in the middle of the otherwise barren wastes. It is said to be marked by the dead. Located at the heart of the Brivihan Plains, the Ancient Temple stands tall and proud. Despite its deserted appearance, it emanates an aura of mystery and power that can be felt by anyone who approaches its ancient walls. The only visible entrance is a pair of imposing rock stairs that lead down into the depths of the dungeon below.'),
@@ -23,3 +23,6 @@ from (values
   ('WITHERED DRAKE SIGHTING', 'A decaying dragon corpse found in the outskirts of the Lowlands, the withered drake is a foreboding sign. Its contorted skeletal remains and tattered wings suggest an unnatural death, giving credence to rumors that something sinister may lurk in the remote wilderness.')
 ) as v(name, notes)
 where l.campaign_id is null and l.name = v.name and coalesce(btrim(l.notes), '') = '';
+
+update public.locations set notes = 'Rimehollow is a gnoll-run base on the frozen shore of the Falorn Fjords, directly across the water from Gamdon. Behind its snowbound palisades it serves as a hub for criminal activity of every kind, and it is where the children who have gone missing from Gamdon are being taken.'
+where campaign_id is null and name = 'Rimehollow' and coalesce(btrim(notes), '') = '';
