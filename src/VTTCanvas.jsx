@@ -3,6 +3,7 @@ import supabase from './lib/supabase';
 import { COLORS, ALL_CLASSES, combatConditions, condColor } from './constants';
 import { LOCATIONS } from './MapPanel';
 import { computeCrowdedKeys, tokenLayoutKey } from './lib/tokenLayout';
+import { drawDeathMarker, drawDeathPin } from './lib/deathMarker';
 import { logSessionEvent } from './lib/sessionEvents';
 import { useActiveGameSession } from './lib/session';
 
@@ -456,6 +457,7 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
       } else if (isEnemyTok) {
         drawBeastGlyph(ctx, tok, tx, ty, pr * 1.1, TOKEN_STYLE.iconDark);
       }
+      if (tok.status === 'dead' && isEnemyTok) drawDeathPin(ctx, tx, ty, pr, onIconReady);
       ctx.restore();
       return;
     }
@@ -520,20 +522,7 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
     }
 
     // Death overlay (enemies only)
-    if (tok.status === 'dead' && tok.type !== 'player') {
-      const deathIcon = getRawIcon('/death-skull.png', onIconReady);
-      if (deathIcon) {
-        ctx.globalAlpha = 0.9;
-        const dr = r * 0.8;
-        ctx.drawImage(deathIcon, tx - dr, ty - dr, dr * 2, dr * 2);
-      } else {
-        ctx.globalAlpha = 0.9;
-        ctx.fillStyle = '#e05a5a';
-        ctx.font = `bold ${r}px sans-serif`;
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText('☠', tx, ty);
-      }
-    }
+    if (tok.status === 'dead' && tok.type !== 'player') drawDeathMarker(ctx, tx, ty, r, onIconReady);
 
     // Pips sit above the token; the name label below is untouched.
     drawConditionPips(ctx, combatConditions(tok.conditions), tx, ty, r, isHovered);

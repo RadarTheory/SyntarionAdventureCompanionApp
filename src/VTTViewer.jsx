@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import supabase from './lib/supabase';
 import { COLORS, ALL_CLASSES, combatConditions, condColor } from './constants';
 import { computeCrowdedKeys, tokenLayoutKey } from './lib/tokenLayout';
+import { drawDeathMarker, drawDeathPin } from './lib/deathMarker';
 import { logSessionEvent } from './lib/sessionEvents';
 import { useActiveGameSession } from './lib/session';
 import { logHerculesEvent } from './lib/herculesLog';
@@ -437,6 +438,7 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
       } else if (isEnemyTok) {
         drawBeastGlyph(ctx, tok, tx, ty, pr * 1.1, TOKEN_STYLE.iconDark);
       }
+      if (tok.status === 'dead' && isEnemyTok) drawDeathPin(ctx, tx, ty, pr, onIconReady);
       ctx.restore();
       return;
     }
@@ -495,18 +497,7 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
         }
       }
     }
-    if (tok.status === 'dead' && tok.type !== 'player') {
-      const deathIcon = getRawIcon('/death-skull.png', onIconReady);
-      if (deathIcon) {
-        ctx.globalAlpha = 0.85;
-        ctx.drawImage(deathIcon, tx - r, ty - r, r * 2, r * 2);
-      } else {
-        ctx.fillStyle = 'rgba(224,90,90,0.9)';
-        ctx.font = `bold ${r}px sans-serif`;
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText('☠', tx, ty);
-      }
-    }
+    if (tok.status === 'dead' && tok.type !== 'player') drawDeathMarker(ctx, tx, ty, r, onIconReady);
 
     // Pips sit above the token; the name label below is untouched.
     drawConditionPips(ctx, combatConditions(tok.conditions), tx, ty, r, isHovered);
