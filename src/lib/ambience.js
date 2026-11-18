@@ -151,7 +151,7 @@ export function drawAmbience(ctx, { W, H, mapRect, time: t, ambience, clock, tok
 
   // Darkness, with every light cutting through it.
   // A map the DM has not set up shows what is revealed exactly as it is; chosen scenes go as dark as they are meant to.
-  const darkness = ambience?.configured === false ? 0 : Math.min(0.9, scene.dark + scene.night * (1 - daylight.level));
+  const darkness = ambience?.configured === false ? 0 : Math.min(0.5, scene.dark + scene.night * (1 - daylight.level)); // never so dark that revealed ground can't be read; lights add the drama
   const dark = scratch('dark', W, H), d = dark.getContext('2d');
   d.globalCompositeOperation = 'source-over';
   d.clearRect(0, 0, W, H);
