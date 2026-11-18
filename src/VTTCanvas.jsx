@@ -7,9 +7,10 @@ import { drawDeathMarker, drawDeathPin } from './lib/deathMarker';
 import { logSessionEvent } from './lib/sessionEvents';
 import { useActiveGameSession } from './lib/session';
 import { getLiveClock } from './lib/soteriaclock';
-import { drawAmbience, buildFogMask, drawFog, drawLightPins, lightAt, SCENES, LIGHT_KINDS } from './lib/ambience';
+import { drawAmbience, buildFogMask, drawFog, drawLightPins, lightAt, SCENES, LIGHT_KINDS, ELEMENT_KINDS } from './lib/ambience';
 import { useMapAmbience, useWorldClock } from './lib/useMapAmbience';
 import Picker from './Picker';
+import { mapSrc, loadMapImage, uploadMap, useUploadedMaps } from './lib/maps';
 import { revealAlong } from './lib/sight';
 import { drawFullGrid, drawLocalGrid, drawRuler, gridFromBox, gridFor, squareScaleView, snapToSquare, SQUARE } from './lib/grid';
 
@@ -333,7 +334,10 @@ function isTokenFogged(tok, fogZones) {
 const liveClockOf = clock => (clock ? getLiveClock(clock) : null);
 // Options for the map's ambience pickers: each scene shows its mist, each light its glow.
 const SCENE_OPTIONS = Object.entries(SCENES).map(([value, sc]) => ({ value, label: sc.label, swatch: `rgb(${sc.mist.color.join(',')})` }));
-const LIGHT_OPTIONS = Object.entries(LIGHT_KINDS).map(([value, k]) => ({ value, label: k.label, swatch: `rgb(${k.color.join(',')})`, hint: k.fire ? 'fire' : undefined }));
+const LIGHT_OPTIONS = [
+  ...Object.entries(LIGHT_KINDS).map(([value, k]) => ({ value, label: k.label, swatch: `rgb(${k.color.join(',')})`, hint: k.fire ? 'fire' : undefined, group: 'Lights' })),
+  ...Object.entries(ELEMENT_KINDS).map(([value, k]) => ({ value, label: k.label, swatch: `rgb(${k.color.join(',')})`, group: 'Elements' })),
+];
 const SKY_OPTIONS = [
   { value: 'clock', label: 'World clock', hint: 'follows the passes', swatch: '#c8a84a' },
   { value: 'day', label: 'Day', swatch: '#f0d050' },
@@ -365,7 +369,7 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   ctx.save();
   ctx.setTransform(transform.scale, 0, 0, transform.scale, transform.x, transform.y);
   drawFog(ctx, { W, H, fog: buildFogMask(fogZones, mapRect, W, H), time, opacity: dmFogOpacity });
-  if (isDM && tool === 'light' && ambience) drawLightPins(ctx, { ambience, mapRect });
+  if (isDM && tool === 'light' && ambience) drawLightPins(ctx, { ambience, mapRect, mapImg });
 
   // ── 4. Draw tokens ───────────────────────────────────────────────────────
   // Tokens never move; where full portraits would collide we draw compact pins.
@@ -567,10 +571,32 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   const [mapSearch, setMapSearch]             = useState('');
   const [previewLoc, setPreviewLoc]           = useState(null);
   const selectedRowRef                        = useRef(null);
+  // The DM's uploaded maps (lib/maps.js) are listed first, then the built-in maps in public/Maps.
+  const { maps: uploadedMaps, reload: reloadUploadedMaps } = useUploadedMaps();
+  const [uploading, setUploading] = useState(false);
+  const [uploadNote, setUploadNote] = useState('');
+  const uploadInputRef = useRef(null);
   const filteredLocations = useMemo(
-    () => LOCATIONS.filter(l => l.name.toLowerCase().includes(mapSearch.toLowerCase())),
-    [mapSearch]
+    () => [...uploadedMaps, ...LOCATIONS].filter(l => l.name.toLowerCase().includes(mapSearch.toLowerCase())),
+    [mapSearch, uploadedMaps]
   );
+  const onUploadFile = async e => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setUploading(true); setUploadNote('');
+    try {
+      const up = await uploadMap(file);
+      await reloadUploadedMaps();
+      setPreviewLoc({ id: up.key, name: up.name, filename: up.key, uploaded: true, width: up.width, height: up.height });
+      setUploadNote(up.onStandard
+        ? `Uploaded · ${up.squares[0]} × ${up.squares[1]} squares at the map standard.`
+        : `Uploaded · ${up.width} × ${up.height} px isn't whole 100 px squares, so fit its grid with Set grid once it's open.`);
+    } catch (err) {
+      setUploadNote(err.message || 'Upload failed.');
+    }
+    setUploading(false);
+  };
   const [pinnedCampaignId, setPinnedCampaignId] = useState(() => localStorage.getItem('vtt_pinned_campaign') || campaignId);
   const [showCampaignPicker, setShowCampaignPicker] = useState(false);
   // With onCampaignChange the host (DM mode) owns the campaign, so the map, the NPC tracker and the rest of DM mode
@@ -928,9 +954,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   useEffect(() => {
     if (!mapFilename) return;
     setMapLoaded(false);
-    const img = new Image();
-    img.onload = () => { mapImgRef.current = img; setMapLoaded(true); };
-    img.src = `/Maps/${encodeURIComponent(mapFilename)}`;
+    loadMapImage(mapFilename, img => { mapImgRef.current = img; setMapLoaded(true); });
   }, [mapFilename]);
 
   useEffect(() => {
@@ -1011,8 +1035,10 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
     }
     if (tool === 'light') {
       if (pos.x < 0 || pos.x > 1 || pos.y < 0 || pos.y > 1) return;
-      const hit = lightAt(ambience, pos, getMapRect(canvasRef.current, mapImgRef.current));
-      updateAmbience(prev => ({ lights: hit ? prev.lights.filter(l => l.id !== hit.id) : [...prev.lights, { id: uid(), x: pos.x, y: pos.y, kind: lightKind, size: lightSize }] }));
+      const hit = lightAt(ambience, pos, getMapRect(canvasRef.current, mapImgRef.current), mapImgRef.current);
+      // A painted light the map found is switched off or back on; a placed one is removed; empty ground gets the chosen element.
+      if (hit?.found) updateAmbience(prev => { const off = new Set(prev.hiddenFound || []); if (off.has(hit.id)) off.delete(hit.id); else off.add(hit.id); return { hiddenFound: [...off] }; });
+      else updateAmbience(prev => ({ lights: hit ? prev.lights.filter(l => l.id !== hit.id) : [...prev.lights, { id: uid(), x: pos.x, y: pos.y, kind: lightKind, size: lightSize }] }));
       return;
     }
     if (tool === 'fog-reveal' || tool === 'fog-hide') {
@@ -1176,7 +1202,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         {toolBtn('token-move', '✥ Move',   tool === 'token-move')}
         {toolBtn('erase-token','✕ Erase',  tool === 'erase-token')}
         {toolBtn('pan',        '✋ Pan',    tool === 'pan')}
-        {toolBtn('light',      '✦ Lights', tool === 'light')}
+        {toolBtn('light',      '✦ Elements', tool === 'light')}
         {toolBtn('grid-set',   '⌗ Set grid', tool === 'grid-set')}
         <div style={{ width: 1, height: 20, background: COLORS.border, margin: '0 4px' }} />
         <div style={{ ...label8, marginRight: 4 }}>Brush</div>
@@ -1231,7 +1257,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
               {[0.6, 1, 1.6, 2.4].map((sz, i2) => (
                 <button key={sz} onClick={() => setLightSize(sz)} style={{ background: lightSize === sz ? 'rgba(200,168,74,0.15)' : COLORS.card, border: `1px solid ${lightSize === sz ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '5px 9px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>{['Small', 'Medium', 'Large', 'Huge'][i2]}</button>
               ))}
-              <span style={{ ...label8, color: COLORS.dim }}>Click to place · click a light to remove</span>
+              <span style={{ ...label8, color: COLORS.dim }}>Click to place · click a placed one to remove · click a found light (hollow) to switch it off or on</span>
               {ambience.lights.length > 0 && <button onClick={() => updateAmbience({ lights: [] })} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '5px 9px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.muted }}>Clear lights</button>}
             </>)}
             {tool === 'grid-set' && (<>
@@ -1303,14 +1329,21 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
           <div style={{ padding: '24px 20px', display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'flex-start' }}>
             {/* Left — search + location list (click previews, does not commit) */}
             <div style={{ flex: '1 1 300px', minWidth: 260, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.muted, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Select a map — click to preview</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ flex: 1, fontFamily: "'Cinzel', serif", fontSize: 11, color: COLORS.muted, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Select a map — click to preview</div>
+                {isDM && (<>
+                  <input ref={uploadInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={onUploadFile} style={{ display: 'none' }} />
+                  <button onClick={() => uploadInputRef.current?.click()} disabled={uploading} title="Upload a map image. Maps drawn to the standard (100 px per square) need no grid setup." style={{ background: 'rgba(200,168,74,0.15)', border: '1px solid #c8a84a', borderRadius: 6, padding: '6px 12px', cursor: uploading ? 'default' : 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>{uploading ? 'Uploading…' : '⇪ Upload map'}</button>
+                </>)}
+              </div>
+              {uploadNote && <div style={{ fontSize: 11, color: COLORS.textSub, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{uploadNote}</div>}
               <input value={mapSearch} onChange={e => setMapSearch(e.target.value)} placeholder="Search locations…" style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 11, fontFamily: 'Georgia, serif', outline: 'none' }} />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 380, overflowY: 'auto' }}>
                 {filteredLocations.map(loc => {
                   const selected = previewLoc?.id === loc.id;
                   return (
                     <button key={loc.id} ref={selected ? selectedRowRef : null} onClick={() => setPreviewLoc(loc)} style={{ textAlign: 'left', background: selected ? 'rgba(200,168,74,0.14)' : COLORS.card, border: `1px solid ${selected ? '#c8a84a88' : COLORS.border}`, borderRadius: 6, padding: '8px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.06em', color: selected ? '#e8c84a' : COLORS.text }}>
-                      {selected && <span style={{ marginRight: 6, opacity: 0.7 }}>✦</span>}{loc.name}
+                      {selected && <span style={{ marginRight: 6, opacity: 0.7 }}>✦</span>}{loc.name}{loc.uploaded && <span style={{ marginLeft: 8, fontSize: 8, letterSpacing: '0.12em', color: '#c8a84a', opacity: 0.8 }}>UPLOADED</span>}
                     </button>
                   );
                 })}
@@ -1323,7 +1356,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: 14, background: 'rgba(10,8,6,0.5)' }}>
                   <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#e8c84a', letterSpacing: '0.1em' }}>{previewLoc.name}</div>
                   <div style={{ borderRadius: 8, overflow: 'hidden', background: '#0d0b09', border: `1px solid ${COLORS.border}` }}>
-                    <img src={`/Maps/${encodeURIComponent(previewLoc.filename)}`} alt={previewLoc.name} style={{ width: '100%', maxHeight: 380, objectFit: 'contain', display: 'block' }} />
+                    <img src={mapSrc(previewLoc.filename)} alt={previewLoc.name} style={{ width: '100%', maxHeight: 380, objectFit: 'contain', display: 'block' }} />
                   </div>
                   <div style={{ fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Preview only — players won't see this until you press Load.</div>
                   <div style={{ display: 'flex', gap: 8 }}>

@@ -43,6 +43,7 @@ import { LEVEL_CAP, AP_PER_LEVEL, apForLevel, getLevelProgress, grantAp } from '
 import { logAstragalRoll } from './lib/herculesLog';
 import LearnedAbilitiesList from './LearnedAbilitiesList';
 import ConstellationTab from './ConstellationTab';
+import { mapSrc } from './lib/maps';
 import StandingEditor from './StandingEditor';
 import { useConstellation, classLabel } from './useConstellation';
 
@@ -1159,7 +1160,7 @@ function normalizeMapUrl(value) {
   const raw = String(value || '').trim();
   if (!raw) return '';
   if (/^(https?:|data:|blob:|\/)/i.test(raw)) return raw;
-  return `/Maps/${raw.replace(/^Maps[\\/]/i, '')}`;
+  return mapSrc(raw);
 }
 
 // MAP MANAGER

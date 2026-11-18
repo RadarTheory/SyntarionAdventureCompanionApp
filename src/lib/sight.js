@@ -5,7 +5,7 @@
 //   - Daylight on an open scene: much wider, scaled by how bright the sky is.
 //   - Darkvision: the peoples listed below keep a wider radius even with no light.
 // The map doesn't know its walls, so sight reaches through them; the DM's Undo and Hide brush correct that.
-import { SCENES, DEFAULT_SCENE, LIGHT_KINDS, daylightOf, findMapLights } from './ambience';
+import { SCENES, DEFAULT_SCENE, LIGHT_KINDS, daylightOf, foundFor, isLightKind } from './ambience';
 
 export const BASE_SIGHT = 0.06;
 
@@ -35,7 +35,7 @@ export function sightAt(token, pos, { ambience, mapImg, clock } = {}) {
   if (scene.night > 0.2) r = Math.max(r, BASE_SIGHT * (1 + 2 * day));
 
   // Light they stand in.
-  const lights = [...(ambience?.foundLights === false ? [] : findMapLights(mapImg)), ...(Array.isArray(ambience?.lights) ? ambience.lights : [])];
+  const lights = [...foundFor(ambience, mapImg), ...(Array.isArray(ambience?.lights) ? ambience.lights : []).filter(l => isLightKind(l.kind))];
   for (const l of lights) {
     const k = LIGHT_KINDS[l.kind] || LIGHT_KINDS.torch;
     const reach = k.radius * (Number(l.size) || 1);

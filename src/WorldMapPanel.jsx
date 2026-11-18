@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import supabase from './lib/supabase';
+import { mapSrc } from './lib/maps';
 import { COLORS } from './constants';
 
 function label8() {
@@ -253,7 +254,7 @@ const handleMapClick = useCallback((e) => {
       {showBattleMap && activeBattleMap && !isDM && createPortal(
         <div onClick={() => setShowBattleMap(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 400000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: '#e8c84a', letterSpacing: '0.12em', marginBottom: 12 }}>{currentLoc?.name || 'Current Location'}</div>
-          <img src={`/Maps/${encodeURIComponent(activeBattleMap)}`} alt="Current location" style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 120px)', borderRadius: 8, objectFit: 'contain' }} onClick={e => e.stopPropagation()} />
+          <img src={mapSrc(activeBattleMap)} alt="Current location" style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 120px)', borderRadius: 8, objectFit: 'contain' }} onClick={e => e.stopPropagation()} />
           <div style={{ marginTop: 12, fontSize: 9, color: 'rgba(240,238,235,0.3)', fontFamily: "'Cinzel', serif" }}>Tap outside to close</div>
         </div>,
         document.body,

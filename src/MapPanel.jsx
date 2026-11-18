@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { COLORS } from './constants';
 import { GENERATED_MAPS } from './mapsGenerated';
+import { mapSrc } from './lib/maps';
 
 // ─── LOCATION REGISTRY ────────────────────────────────────────────────────────
 // Hand-written names and ids. These win over the generated list, so curating an
@@ -177,7 +178,7 @@ export default function MapPanel() {
           {active && (
             <div style={{ position: 'relative' }}>
               <img
-                src={`/Maps/${encodeURIComponent(active.filename)}`}
+                src={mapSrc(active.filename)}
                 alt={active.name}
                 style={{ width: '100%', display: 'block', maxHeight: 420, objectFit: 'contain', background: '#0d0b09' }}
               />
@@ -239,7 +240,7 @@ export default function MapPanel() {
         >
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#e8c84a', letterSpacing: '0.12em', marginBottom: 16 }}>{active.name}</div>
           <img
-            src={`/Maps/${encodeURIComponent(active.filename)}`}
+            src={mapSrc(active.filename)}
             alt={active.name}
             style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 120px)', borderRadius: 8, objectFit: 'contain' }}
             onClick={e => e.stopPropagation()}

@@ -8,6 +8,7 @@ import { useActiveGameSession } from './lib/session';
 import { drawAmbience, buildFogMask, drawFog } from './lib/ambience';
 import { useMapAmbience, useWorldClock } from './lib/useMapAmbience';
 import { getLiveClock } from './lib/soteriaclock';
+import { loadMapImage } from './lib/maps';
 import { drawLocalGrid, drawRuler, gridFor, squareScaleView, snapToSquare } from './lib/grid';
 import { logHerculesEvent } from './lib/herculesLog';
 
@@ -670,9 +671,7 @@ export default function VTTViewer({ campaignId, userChar, castMode = false }) {
   useEffect(() => {
     if (!mapFilename) return;
     setMapLoaded(false);
-    const img = new Image();
-    img.onload = () => { mapImgRef.current = img; setMapLoaded(true); };
-    img.src = `/Maps/${encodeURIComponent(mapFilename)}`;
+    loadMapImage(mapFilename, img => { mapImgRef.current = img; setMapLoaded(true); });
   }, [mapFilename]);
 
   // Living map: the map's scene and lights (set by the DM, live) and the campaign's world clock.

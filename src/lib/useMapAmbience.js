@@ -5,8 +5,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import supabase from './supabase';
 import { DEFAULT_SCENE } from './ambience';
 
-const blank = map => ({ map, scene: DEFAULT_SCENE, timeMode: 'clock', lights: [], grid: null, configured: false });
-const fromRow = row => ({ map: row.map, scene: row.scene || DEFAULT_SCENE, timeMode: row.time_mode || 'clock', lights: Array.isArray(row.lights) ? row.lights : [], grid: row.grid || null, configured: true });
+const blank = map => ({ map, scene: DEFAULT_SCENE, timeMode: 'clock', lights: [], grid: null, hiddenFound: [], configured: false });
+const fromRow = row => ({ map: row.map, scene: row.scene || DEFAULT_SCENE, timeMode: row.time_mode || 'clock', lights: Array.isArray(row.lights) ? row.lights : [], grid: row.grid || null, hiddenFound: Array.isArray(row.hidden_found) ? row.hidden_found : [], configured: true });
 
 export function useMapAmbience(mapFilename) {
   const [ambience, setAmbience] = useState(() => blank(mapFilename));
@@ -32,9 +32,9 @@ export function useMapAmbience(mapFilename) {
       clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(async () => {
         const { error } = await supabase.from('map_ambience').upsert({
-          map: mapFilename, scene: next.scene, time_mode: next.timeMode, lights: next.lights, grid: next.grid || null, updated_at: new Date().toISOString(),
+          map: mapFilename, scene: next.scene, time_mode: next.timeMode, lights: next.lights, grid: next.grid || null, hidden_found: next.hiddenFound || [], updated_at: new Date().toISOString(),
         });
-        setSaveError(error ? (/grid/.test(error.message) ? 'Run supabase/migrations/20261117_map_grid.sql to save the map grid.' : /map_ambience/.test(error.message) ? 'Run supabase/migrations/20261117_map_ambience.sql to save map ambience.' : error.message) : '');
+        setSaveError(error ? (/hidden_found/.test(error.message) ? 'Run supabase/migrations/20261118_map_uploads.sql to save map elements.' : /grid/.test(error.message) ? 'Run supabase/migrations/20261117_map_grid.sql to save the map grid.' : /map_ambience/.test(error.message) ? 'Run supabase/migrations/20261117_map_ambience.sql to save map ambience.' : error.message) : '');
       }, 400);
       return next;
     });

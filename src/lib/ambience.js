@@ -49,6 +49,14 @@ export const LIGHT_KINDS = {
   moonpool: { label: 'Moonpool', color: [150, 180, 255], radius: 0.120, flicker: 0.06, speed: 0.15, fire: false },
 };
 
+// ── Elements that aren't lights ──
+// Water ripples and glints within its reach; smoke rises from a point in slow puffs. Placed with the Elements tool.
+export const ELEMENT_KINDS = {
+  water: { label: 'Water', color: [150, 210, 230], radius: 0.08 },
+  smoke: { label: 'Smoke', color: [170, 166, 160], radius: 0.05 },
+};
+export const isLightKind = kind => !!LIGHT_KINDS[kind];
+
 // ── Small deterministic helpers ──
 const fract = v => v - Math.floor(v);
 const hash = n => fract(Math.sin(n * 127.1 + 311.7) * 43758.5453);
@@ -117,7 +125,8 @@ export function drawAmbience(ctx, { W, H, mapRect, time: t, ambience, clock, tok
   const daylight = daylightOf(clock, ambience?.timeMode || 'clock');
   // The map's own painted lights (unless the DM turned them off) and the DM's placed lights.
   const placed = Array.isArray(ambience?.lights) ? ambience.lights : [];
-  const lights = frameLights([...(ambience?.foundLights === false ? [] : findMapLights(mapImg)), ...placed], mapRect, t, pointer, daylight);
+  const lights = frameLights([...foundFor(ambience, mapImg), ...placed.filter(l => isLightKind(l.kind))], mapRect, t, pointer, daylight);
+  const elements = placed.filter(l => ELEMENT_KINDS[l.kind]);
   const { x: mx, y: my, w: mw, h: mh } = mapRect;
 
   ctx.save();
@@ -330,6 +339,48 @@ export function drawAmbience(ctx, { W, H, mapRect, time: t, ambience, clock, tok
     ctx.stroke();
   }
 
+  // Water: drifting ripples and a few glints, inside its reach.
+  ctx.globalCompositeOperation = 'screen';
+  for (const el of elements.filter(e => e.kind === 'water')) {
+    const x = mx + el.x * mw, y = my + el.y * mh, r = ELEMENT_KINDS.water.radius * (Number(el.size) || 1) * mw;
+    ctx.save();
+    const clip = ctx.createRadialGradient(x, y, r * 0.2, x, y, r);
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.clip();
+    const tile = getSmokeTile('wisp'), pat = ctx.createPattern(tile, 'repeat');
+    const seed = idSeed(el.id);
+    // Fine, faint, blue: light moving on water, not a veil over it.
+    ctx.globalAlpha = 0.14;
+    ctx.translate(x + ((t * 9 + seed) % 128), y + ((t * 4) % 128));
+    ctx.scale(0.45, 0.45);
+    ctx.fillStyle = pat; ctx.fillRect(-r * 2 - 256, -r * 2 - 256, r * 4 + 512, r * 4 + 512);
+    ctx.restore();
+    ctx.save();
+    clip.addColorStop(0, rgba([90, 170, 210], 0.12)); clip.addColorStop(1, rgba([90, 170, 210], 0));
+    ctx.fillStyle = clip; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+    for (let i = 0; i < 10; i++) {
+      const s = seed + i * 4.1, a = Math.max(0, Math.sin(t * (1.3 + hash(s)) + s * 3)) ** 10;
+      if (a < 0.04) continue;
+      const ang = hash(s + 1) * Math.PI * 2, d = Math.sqrt(hash(s + 2)) * r * 0.85;
+      const gx = x + Math.cos(ang) * d, gy = y + Math.sin(ang) * d;
+      ctx.strokeStyle = rgba([240, 250, 255], 0.85 * a); ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(gx - 3, gy); ctx.lineTo(gx + 3, gy); ctx.moveTo(gx, gy - 3); ctx.lineTo(gx, gy + 3); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  // Smoke: puffs rising from the point, widening and fading as they climb and drift.
+  ctx.globalCompositeOperation = 'source-over';
+  for (const el of elements.filter(e => e.kind === 'smoke')) {
+    const x = mx + el.x * mw, y = my + el.y * mh, size = Number(el.size) || 1, seed = idSeed(el.id);
+    for (let i = 0; i < 12; i++) {
+      const s = seed + i * 2.9, life = fract(t * 0.09 + hash(s));
+      const rise = life * mw * 0.09 * size, drift = Math.sin(t * 0.5 + s) * mw * 0.008 * life + life * mw * 0.02 * size;
+      const pr = (4 + life * 18) * size, a = Math.min(1, life * 5) * (1 - life) * 0.32;
+      const g = ctx.createRadialGradient(x + drift, y - rise, 0, x + drift, y - rise, pr);
+      g.addColorStop(0, rgba(ELEMENT_KINDS.smoke.color, a)); g.addColorStop(1, rgba(ELEMENT_KINDS.smoke.color, 0));
+      ctx.fillStyle = g; ctx.fillRect(x + drift - pr, y - rise - pr, pr * 2, pr * 2);
+    }
+  }
+
   // Lightning: a double flash every so often.
   if (scene.lightning) {
     const cycle = Math.floor(t / 7.3), local = t - cycle * 7.3;
@@ -411,23 +462,32 @@ export function drawFogSmoke(ctx, { W, H, fogCanvas, time: t, strength = 0.55 })
 }
 
 // The light under a point (0-1 map coordinates), for the DM's light tool.
-export function lightAt(ambience, pos, mapRect) {
-  const lights = Array.isArray(ambience?.lights) ? ambience.lights : [];
+export function lightAt(ambience, pos, mapRect, mapImg = null) {
+  const placed = Array.isArray(ambience?.lights) ? ambience.lights : [];
   let best = null, bestD = Infinity;
-  for (const l of lights) {
-    const k = LIGHT_KINDS[l.kind] || LIGHT_KINDS.torch;
+  for (const l of [...placed, ...findMapLights(mapImg)]) {
+    const k = LIGHT_KINDS[l.kind] || ELEMENT_KINDS[l.kind] || LIGHT_KINDS.torch;
     const dx = (l.x - pos.x) * mapRect.w, dy = (l.y - pos.y) * mapRect.h, dist = Math.hypot(dx, dy);
-    if (dist < Math.max(10, k.radius * (Number(l.size) || 1) * mapRect.w * 0.3) && dist < bestD) { best = l; bestD = dist; }
+    const reach = l.found ? 9 : Math.max(10, k.radius * (Number(l.size) || 1) * mapRect.w * 0.3);
+    if (dist < reach && dist < bestD) { best = l; bestD = dist; }
   }
   return best;
 }
 
 // The DM's pins for placed lights (drawn only on the DM's map while the light tool is active).
-export function drawLightPins(ctx, { ambience, mapRect }) {
+export function drawLightPins(ctx, { ambience, mapRect, mapImg = null }) {
   const lights = Array.isArray(ambience?.lights) ? ambience.lights : [];
+  const off = new Set(Array.isArray(ambience?.hiddenFound) ? ambience.hiddenFound : []);
   ctx.save();
-  for (const l of lights) {
+  for (const l of findMapLights(mapImg)) {
     const k = LIGHT_KINDS[l.kind] || LIGHT_KINDS.torch;
+    const x = mapRect.x + l.x * mapRect.w, y = mapRect.y + l.y * mapRect.h, hidden = off.has(l.id);
+    ctx.strokeStyle = rgba(hidden ? [150, 140, 130] : k.color, hidden ? 0.6 : 0.85); ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(x, y - 5); ctx.lineTo(x + 4, y); ctx.lineTo(x, y + 5); ctx.lineTo(x - 4, y); ctx.closePath(); ctx.stroke();
+    if (hidden) { ctx.beginPath(); ctx.moveTo(x - 5, y - 5); ctx.lineTo(x + 5, y + 5); ctx.stroke(); }
+  }
+  for (const l of lights) {
+    const k = LIGHT_KINDS[l.kind] || ELEMENT_KINDS[l.kind] || LIGHT_KINDS.torch;
     const x = mapRect.x + l.x * mapRect.w, y = mapRect.y + l.y * mapRect.h, r = k.radius * (Number(l.size) || 1) * mapRect.w;
     ctx.strokeStyle = rgba(k.color, 0.5); ctx.setLineDash([3, 4]); ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
@@ -549,6 +609,12 @@ export function drawFog(ctx, { W, H, fog, time: t, opacity = 1 }) {
 // points become flickering flames, violet and cyan glows become pulsing crystals, wide orange-red flows become lava.
 // They light every map with no setup; the DM's own lights add to them. Returns lights in 0-1 map coordinates.
 const foundCache = new WeakMap();
+// The found lights in use for a map: all of them, less any the DM switched off.
+export function foundFor(ambience, img) {
+  if (ambience?.foundLights === false) return [];
+  const off = new Set(Array.isArray(ambience?.hiddenFound) ? ambience.hiddenFound : []);
+  return findMapLights(img).filter(l => !off.has(l.id));
+}
 export function findMapLights(img) {
   if (!img || !img.width) return [];
   if (foundCache.has(img)) return foundCache.get(img);
