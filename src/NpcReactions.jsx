@@ -12,6 +12,13 @@ export default function NpcReactions({ npc, cityName, campaignId }) {
   const [reputations, setReputations] = useState([]);
   const [open, setOpen] = useState(null);
   const [error, setError] = useState('');
+  const [campaignName, setCampaignName] = useState('');
+  useEffect(() => {
+    let live = true;
+    if (campaignId) supabase.from('campaigns').select('subtitle, name').eq('id', String(campaignId)).maybeSingle()
+      .then(({ data }) => { if (live) setCampaignName(data?.subtitle || data?.name || ''); });
+    return () => { live = false; };
+  }, [campaignId]);
 
   useEffect(() => {
     let live = true;
@@ -40,7 +47,7 @@ export default function NpcReactions({ npc, cityName, campaignId }) {
   return (
     <div style={{ marginTop: 6 }}>
       <div style={{ fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(184,137,42,0.85)', marginBottom: 6 }}>
-        Reactions{campaignId ? '' : ' · all campaigns'}
+        Reactions · {campaignId ? (campaignName || 'this campaign') : 'all campaigns'}
       </div>
       {!chars ? <div style={{ fontSize: 10, color: '#7a6a55', fontStyle: 'italic' }}>Reading the room…</div>
         : !chars.length ? <div style={{ fontSize: 10, color: '#7a6a55', fontStyle: 'italic' }}>No characters to react to.</div>

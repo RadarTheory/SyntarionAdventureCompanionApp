@@ -1298,7 +1298,10 @@ export default function DMView({ user, session, onHome, darkMode = true, module 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingChar, setEditingChar] = useState(null);
-  const [activeCampaignTab, setActiveCampaignTab] = useState(() => localStorage.getItem('dm_active_campaign') || null);
+  // One campaign for all of DM mode: the campaign tabs, the map's "Set Campaign" and the NPC tracker share it.
+  // A map pinned before they were joined carries over.
+  const [activeCampaignTab, setActiveCampaignTab] = useState(() => localStorage.getItem('dm_active_campaign') || localStorage.getItem('vtt_pinned_campaign') || null);
+  const chooseCampaign = id => { setActiveCampaignTab(id); try { localStorage.setItem('dm_active_campaign', id); localStorage.setItem('vtt_pinned_campaign', id); } catch { /* storage unavailable */ } };
   const [dbCampaigns, setDbCampaigns] = useState([]);  
   const [campaignSubTab, setCampaignSubTab] = useState('log');
   const [activeSession, setActiveSession] = useState(null);
@@ -1696,7 +1699,7 @@ const renderTab = () => {
         {dbCampaigns.length === 0 && <div style={{ fontSize: 13, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>No campaigns found.</div>}
         <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
           {dbCampaigns.map(c => (
-            <button key={c.id} onClick={() => { setActiveCampaignTab(c.id); localStorage.setItem('dm_active_campaign', c.id); }} style={{ background: activeCampaignTab === c.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${activeCampaignTab === c.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: activeCampaignTab === c.id ? COLORS.text : COLORS.dim }}>{c.subtitle || c.id}</button>
+            <button key={c.id} onClick={() => chooseCampaign(c.id)} style={{ background: activeCampaignTab === c.id ? 'rgba(240,238,235,0.08)' : 'transparent', border: `1px solid ${activeCampaignTab === c.id ? COLORS.borderMid : COLORS.border}`, borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, color: activeCampaignTab === c.id ? COLORS.text : COLORS.dim }}>{c.subtitle || c.id}</button>
           ))}
         </div>
         {activeCampaignTab && (() => {
@@ -1745,6 +1748,7 @@ const renderTab = () => {
       }}>
         <VTTCanvas
           campaignId={activeCampaignTab}
+          onCampaignChange={chooseCampaign}
           isDM={true}
           sessionId={activeGameSessionId}
           onRegisterPlaceToken={fn => { vttPlaceTokenRef.current = fn; }}

@@ -567,7 +567,7 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   }
 }
 
-export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlaceToken, onTokensChange, checkedInPlayers, isDM = false }) {
+export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlaceToken, onTokensChange, checkedInPlayers, isDM = false, onCampaignChange }) {
   const canvasRef    = useRef(null);
   const mapImgRef    = useRef(null);
   const paintingRef  = useRef(false);
@@ -600,7 +600,9 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   );
   const [pinnedCampaignId, setPinnedCampaignId] = useState(() => localStorage.getItem('vtt_pinned_campaign') || campaignId);
   const [showCampaignPicker, setShowCampaignPicker] = useState(false);
-  const activeCampaignId = pinnedCampaignId || campaignId;
+  // With onCampaignChange the host (DM mode) owns the campaign, so the map, the NPC tracker and the rest of DM mode
+  // always agree; "Set Campaign" on the map changes it for all of them. Without it the map pins its own.
+  const activeCampaignId = onCampaignChange ? campaignId : (pinnedCampaignId || campaignId);
   const activeGameSessionId = useActiveGameSession(activeCampaignId);
   const [showCommitPicker, setShowCommitPicker] = useState(false);
   const [feather, setFeather]                 = useState(0.35);
@@ -1112,7 +1114,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   };
   const revealAll = () => setFogZones([{ id: uid(), type: 'reveal', x: 0.5, y: 0.5, r: 1.5 }]);
   const resetView = () => setTransform({ scale: 1, x: 0, y: 0 });
-  const pinCampaign = (id) => { setPinnedCampaignId(id); localStorage.setItem('vtt_pinned_campaign', id); setShowCampaignPicker(false); };
+  const pinCampaign = (id) => { setPinnedCampaignId(id); localStorage.setItem('vtt_pinned_campaign', id); setShowCampaignPicker(false); onCampaignChange?.(id); };
 
   const syncMapFromCampaign = async () => {
     const { data } = await supabase.from('campaigns').select('map_url').eq('id', campaignId).single();
