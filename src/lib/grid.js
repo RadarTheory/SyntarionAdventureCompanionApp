@@ -73,11 +73,18 @@ export function drawLocalGrid(ctx, { grid, mapRect, center, range = MOVE_SQUARES
 
   // The pool: each square glows by how near it is, and a ripple travels outward from the token.
   ctx.globalCompositeOperation = 'lighter';
+  // A soft wash under the whole reach, so the gaps between squares glow too instead of reading as dark lines.
+  {
+    const L0 = g.ox + (home.i - range) * g.cell, T0 = g.oy + (home.j - range) * g.cell, S0 = (range * 2 + 1) * g.cell;
+    const wash = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, S0 * 0.72);
+    wash.addColorStop(0, rgba(color, 0.12)); wash.addColorStop(1, rgba(color, 0.05));
+    ctx.fillStyle = wash; ctx.fillRect(L0, T0, S0, S0);
+  }
   for (let dj = -range; dj <= range; dj++) for (let di = -range; di <= range; di++) {
     const steps = Math.max(Math.abs(di), Math.abs(dj));
     const near = 1 - steps / (range + 1);
     const ripple = 0.5 + 0.5 * Math.sin(t * 2.4 - steps * 1.1);
-    const a = 0.02 + 0.16 * near ** 1.6 + 0.08 * ripple * (0.3 + 0.7 * near);
+    const a = 0.04 + 0.17 * near ** 1.5 + 0.11 * ripple * (0.35 + 0.65 * near);
     const x = g.ox + (home.i + di) * g.cell, y = g.oy + (home.j + dj) * g.cell;
     ctx.fillStyle = rgba(color, a);
     ctx.beginPath(); ctx.roundRect(x + inset, y + inset, g.cell - inset * 2, g.cell - inset * 2, round); ctx.fill();
@@ -85,7 +92,7 @@ export function drawLocalGrid(ctx, { grid, mapRect, center, range = MOVE_SQUARES
   ctx.globalCompositeOperation = 'source-over';
 
   // Faint seams between the lit squares, so each one reads as a step.
-  ctx.strokeStyle = rgba(color, 0.16);
+  ctx.strokeStyle = rgba([255, 236, 180], 0.22);
   ctx.lineWidth = 0.7;
   ctx.beginPath();
   for (let k = -range; k <= range + 1; k++) {
@@ -97,15 +104,15 @@ export function drawLocalGrid(ctx, { grid, mapRect, center, range = MOVE_SQUARES
 
   // The limit: a glowing double border with light running along it, and a rune at each corner and side.
   const L = g.ox + (home.i - range) * g.cell, T = g.oy + (home.j - range) * g.cell, S = (range * 2 + 1) * g.cell;
-  ctx.shadowColor = rgba(color, 0.8); ctx.shadowBlur = 10;
-  ctx.strokeStyle = rgba(color, 0.75); ctx.lineWidth = 1.4;
+  ctx.shadowColor = rgba(color, 0.9); ctx.shadowBlur = 14;
+  ctx.strokeStyle = rgba(color, 0.9); ctx.lineWidth = 1.6;
   ctx.strokeRect(L, T, S, S);
   ctx.shadowBlur = 0;
   ctx.strokeStyle = rgba([255, 236, 180], 0.9); ctx.lineWidth = 1.6;
   ctx.setLineDash([g.cell * 0.5, g.cell * 1.5]); ctx.lineDashOffset = -t * g.cell * 1.2;
   ctx.strokeRect(L, T, S, S);
   ctx.setLineDash([]);
-  ctx.strokeStyle = rgba(color, 0.3); ctx.lineWidth = 0.8;
+  ctx.strokeStyle = rgba(color, 0.45); ctx.lineWidth = 0.8;
   ctx.strokeRect(L + 3, T + 3, S - 6, S - 6);
   const rune = (x, y, r) => {
     ctx.fillStyle = 'rgba(14,11,8,0.9)'; ctx.strokeStyle = rgba([255, 236, 180], 0.95); ctx.lineWidth = 1;
