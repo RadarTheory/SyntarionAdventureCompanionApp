@@ -1575,7 +1575,8 @@ useEffect(() => {
   const { data: campData } = await campaignQuery;
   if (campData && campData.length > 0) {
     setDbCampaigns(campData);
-    setActiveCampaignTab(prev => prev - campData[0].id);
+    // Keep the campaign the DM last chose if it still exists; otherwise start on the first one.
+    setActiveCampaignTab(prev => (prev != null && campData.some(c => String(c.id) === String(prev)) ? prev : campData[0].id));
   }
   await Promise.all([fetchCharacters(), fetchMessages()]);
   setLoading(false);
