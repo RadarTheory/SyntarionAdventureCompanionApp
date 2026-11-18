@@ -5,8 +5,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import supabase from './supabase';
 import { DEFAULT_SCENE } from './ambience';
 
-const blank = map => ({ map, scene: DEFAULT_SCENE, timeMode: 'clock', lights: [] });
-const fromRow = row => ({ map: row.map, scene: row.scene || DEFAULT_SCENE, timeMode: row.time_mode || 'clock', lights: Array.isArray(row.lights) ? row.lights : [] });
+const blank = map => ({ map, scene: DEFAULT_SCENE, timeMode: 'clock', lights: [], configured: false });
+const fromRow = row => ({ map: row.map, scene: row.scene || DEFAULT_SCENE, timeMode: row.time_mode || 'clock', lights: Array.isArray(row.lights) ? row.lights : [], configured: true });
 
 export function useMapAmbience(mapFilename) {
   const [ambience, setAmbience] = useState(() => blank(mapFilename));
@@ -28,7 +28,7 @@ export function useMapAmbience(mapFilename) {
   // The DM's changes show at once and are saved a moment later (several quick clicks make one write).
   const update = useCallback(change => {
     setAmbience(prev => {
-      const next = { ...prev, ...(typeof change === 'function' ? change(prev) : change), map: mapFilename };
+      const next = { ...prev, ...(typeof change === 'function' ? change(prev) : change), map: mapFilename, configured: true };
       clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(async () => {
         const { error } = await supabase.from('map_ambience').upsert({

@@ -143,14 +143,15 @@ export function drawAmbience(ctx, { W, H, mapRect, time: t, ambience, clock, tok
     const r = mw * (0.22 + hash(i + 3) * 0.22);
     const x = mx + fract(hash(i) + t * mist.speed * (0.6 + hash(i + 9) * 0.8)) * (mw + r * 2) - r;
     const y = my + mh * (0.1 + hash(i + 5) * 0.8) + Math.sin(t * 0.07 + i * 2) * mh * 0.03;
-    const a = mist.alpha * (0.7 + 0.3 * Math.sin(t * 0.21 + i * 1.3));
+    const a = mist.alpha * (ambience?.configured === false ? 0 : 1) * (0.7 + 0.3 * Math.sin(t * 0.21 + i * 1.3));
     const g = ctx.createRadialGradient(x, y, 0, x, y, r);
     g.addColorStop(0, rgba(mist.color, a)); g.addColorStop(1, rgba(mist.color, 0));
     ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
   }
 
   // Darkness, with every light cutting through it.
-  const darkness = Math.min(0.9, scene.dark + scene.night * (1 - daylight.level));
+  // A map the DM has not set up shows what is revealed exactly as it is; chosen scenes go as dark as they are meant to.
+  const darkness = ambience?.configured === false ? 0 : Math.min(0.9, scene.dark + scene.night * (1 - daylight.level));
   const dark = scratch('dark', W, H), d = dark.getContext('2d');
   d.globalCompositeOperation = 'source-over';
   d.clearRect(0, 0, W, H);
@@ -347,21 +348,45 @@ export function drawAmbience(ctx, { W, H, mapRect, time: t, ambience, clock, tok
 
 // ── Smoke churning inside the fog of war ──
 // Called right after the fog is composited, with the same transform; fogCanvas is the fog mask (W x H).
-let smokeTile = null;
-function getSmokeTile() {
-  if (smokeTile) return smokeTile;
+const smokeTiles = {};
+// A smoke-brush texture, made once: domain-warped turbulence shaped into thin, streaky wisps (not round blobs).
+// It tiles seamlessly, so two copies drifting at different speeds never show a seam.
+function tileNoise(size, period, seed) {
+  const grid = new Float32Array(period * period);
+  for (let i = 0; i < grid.length; i++) grid[i] = hash(seed * 131 + i * 1.7);
+  const at = (x, y) => grid[((y % period + period) % period) * period + ((x % period + period) % period)];
+  const smooth = v => v * v * (3 - 2 * v);
+  return (x, y) => {
+    const fx = (x / size) * period, fy = (y / size) * period;
+    const x0 = Math.floor(fx), y0 = Math.floor(fy), tx = smooth(fx - x0), ty = smooth(fy - y0);
+    const a = at(x0, y0), b = at(x0 + 1, y0), c = at(x0, y0 + 1), d = at(x0 + 1, y0 + 1);
+    return a + (b - a) * tx + (c - a) * ty + (a - b - c + d) * tx * ty;
+  };
+}
+// kind 'billow': large, soft, low-contrast volumes for the body of the fog (mostly dark, a few slow swells of grey).
+// kind 'wisp': thin curling filaments, used only along the fog's edge, where it meets what the party has revealed.
+function getSmokeTile(kind = 'billow') {
+  if (smokeTiles[kind]) return smokeTiles[kind];
   const size = 256, c = document.createElement('canvas');
   c.width = c.height = size;
   const g = c.getContext('2d');
-  for (let i = 0; i < 140; i++) {
-    const x = hash(i * 3.1) * size, y = hash(i * 7.7) * size, r = 10 + hash(i * 1.9) * 42, a = 0.05 + hash(i * 5.3) * 0.13;
-    for (const ox of [-size, 0, size]) for (const oy of [-size, 0, size]) { // wrap so the tile repeats seamlessly
-      const grad = g.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, r);
-      grad.addColorStop(0, `rgba(96,102,116,${a})`); grad.addColorStop(1, 'rgba(96,102,116,0)');
-      g.fillStyle = grad; g.fillRect(x + ox - r, y + oy - r, r * 2, r * 2);
-    }
+  const octaves = [2, 4, 8, 16].map((period, i) => ({ n: tileNoise(size, period, i + (kind === 'wisp' ? 21 : 1)), amp: 0.5 ** i }));
+  const warp = [2, 4].map((period, i) => tileNoise(size, period, i + 11));
+  const fbm = (x, y) => octaves.reduce((sum, o) => sum + o.n(x, y) * o.amp, 0) / 1.875;
+  const wrap = v => ((v % size) + size) % size;
+  const img = g.createImageData(size, size), px = img.data;
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    const wx = x + (warp[0](x, y) - 0.5) * 90 + (warp[1](x, y) - 0.5) * 30;
+    const wy = y + (warp[0](y, x) - 0.5) * 90 + (warp[1](y + 37, x) - 0.5) * 30;
+    const n = fbm(wrap(wx), wrap(wy));
+    let a;
+    if (kind === 'wisp') a = (1 - Math.abs(n * 2 - 1)) ** 10 * 0.9;          // filaments
+    else a = Math.max(0, n - 0.48) ** 1.4 * 3.2;                             // only the swells, the rest stays dark
+    const i = (y * size + x) * 4;
+    px[i] = 120; px[i + 1] = 126; px[i + 2] = 138; px[i + 3] = Math.round(Math.min(1, a) * 255);
   }
-  smokeTile = c;
+  g.putImageData(img, 0, 0);
+  smokeTiles[kind] = c;
   return c;
 }
 export function drawFogSmoke(ctx, { W, H, fogCanvas, time: t, strength = 0.55 }) {
@@ -369,9 +394,9 @@ export function drawFogSmoke(ctx, { W, H, fogCanvas, time: t, strength = 0.55 })
   const smoke = scratch('smoke', W, H), s = smoke.getContext('2d');
   s.globalCompositeOperation = 'source-over';
   s.clearRect(0, 0, W, H);
-  const tile = getSmokeTile();
+  const tile = getSmokeTile('billow');
   const pattern = s.createPattern(tile, 'repeat');
-  for (const [vx, vy, scale, alpha] of [[9, 3, 1.6, 0.9], [-6, 4, 2.4, 0.7]]) {
+  for (const [vx, vy, scale, alpha] of [[4, 1.5, 3.2, 0.9], [-2.5, 2, 4.4, 0.6]]) {
     s.save();
     s.globalAlpha = alpha;
     s.translate((t * vx) % (256 * scale), (t * vy) % (256 * scale));
@@ -453,7 +478,7 @@ export function buildFogMask(fogZones, mapRect, W, H) {
   const pc = padded.getContext('2d');
   pc.fillStyle = '#000'; pc.fillRect(0, 0, padded.width, padded.height);
   pc.clearRect(pad, pad, W, H); pc.drawImage(mask, pad, pad);
-  s.filter = 'blur(12px)'; s.drawImage(padded, -pad, -pad); s.filter = 'none';
+  s.filter = 'blur(5px)'; s.drawImage(padded, -pad, -pad); s.filter = 'none';
   s.globalCompositeOperation = 'source-over';
   const band = document.createElement('canvas');
   band.width = W; band.height = H;
@@ -472,7 +497,7 @@ export function buildFogMask(fogZones, mapRect, W, H) {
   body.width = W; body.height = H;
   const b = body.getContext('2d');
   const grad = b.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.1, W / 2, H / 2, Math.max(W, H) * 0.7);
-  grad.addColorStop(0, '#08090d'); grad.addColorStop(1, '#030305');
+  grad.addColorStop(0, '#020203'); grad.addColorStop(1, '#000000');
   b.fillStyle = grad; b.fillRect(0, 0, W, H);
   b.globalCompositeOperation = 'destination-in';
   b.drawImage(soft, 0, 0);
@@ -491,8 +516,8 @@ export function drawFog(ctx, { W, H, fog, time: t, opacity = 1 }) {
   f.clearRect(0, 0, W, H);
   f.drawImage(fog.body, 0, 0);
 
-  // Tendrils: a drifting smoke texture, kept to the edge band, eats into the fog's edge and lets it curl.
-  const tile = getSmokeTile();
+  // The edge breaks up: a drifting soft texture, kept to the edge band, eats into the fog so its outline is never a circle.
+  const tile = getSmokeTile('billow');
   const wisp = scratch('fogwisp', W, H), w = wisp.getContext('2d');
   w.globalCompositeOperation = 'source-over';
   w.clearRect(0, 0, W, H);
@@ -510,8 +535,22 @@ export function drawFog(ctx, { W, H, fog, time: t, opacity = 1 }) {
   ctx.drawImage(frame, 0, 0);
   ctx.restore();
 
+  // Wisps curling off the edge: thin grey strands, only along the edge band.
+  const strands = scratch('fogstrands', W, H), st = strands.getContext('2d');
+  st.globalCompositeOperation = 'source-over';
+  st.clearRect(0, 0, W, H);
+  const wispPattern = st.createPattern(getSmokeTile('wisp'), 'repeat');
+  st.save(); st.translate((t * 6) % 512, (t * -3) % 512); st.scale(2, 2); st.fillStyle = wispPattern; st.fillRect(-256, -256, W / 2 + 512, H / 2 + 512); st.restore();
+  st.globalCompositeOperation = 'destination-in';
+  st.drawImage(fog.band, 0, 0);
+  st.drawImage(frame, 0, 0); // only over the fog, never over what is revealed
+  ctx.save();
+  ctx.globalAlpha = 0.45 * opacity;
+  ctx.drawImage(strands, 0, 0);
+  ctx.restore();
+
   // Smoke churning inside the fog itself.
-  drawFogSmoke(ctx, { W, H, fogCanvas: frame, time: t, strength: 0.6 * opacity });
+  drawFogSmoke(ctx, { W, H, fogCanvas: frame, time: t, strength: 0.22 * opacity });
 
   // The edge of the known: a faint gold rim that breathes.
   const rim = scratch('fogrim', W, H), r = rim.getContext('2d');
@@ -524,7 +563,7 @@ export function drawFog(ctx, { W, H, fog, time: t, opacity = 1 }) {
   r.drawImage(frame, 0, 0);
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
-  ctx.globalAlpha = (0.16 + 0.06 * Math.sin(t * 0.8)) * opacity;
+  ctx.globalAlpha = (0.06 + 0.025 * Math.sin(t * 0.8)) * opacity;
   ctx.drawImage(rim, 0, 0);
   ctx.restore();
 }
