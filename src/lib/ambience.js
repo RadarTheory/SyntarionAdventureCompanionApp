@@ -214,15 +214,8 @@ export function drawAmbience(ctx, { W, H, mapRect, time: t, ambience, clock, tok
     ctx.fillStyle = g; ctx.fillRect(tx - r, ty - r, r * 2, r * 2);
   }
 
-  // Particles. Each is a pure function of time; the cursor parts them.
-  const ppx = pointer ? mx + pointer.x * mw : null, ppy = pointer ? my + pointer.y * mh : null;
-  const part = (x, y) => {
-    if (ppx == null) return [x, y];
-    const dx = x - ppx, dy = y - ppy, dist = Math.hypot(dx, dy), R = mw * 0.07;
-    if (dist >= R || dist < 0.001) return [x, y];
-    const push = ((R - dist) / R) ** 2 * R * 0.6;
-    return [x + (dx / dist) * push, y + (dy / dist) * push];
-  };
+  // Particles. Each is a pure function of time and drifts on its own.
+  const part = (x, y) => [x, y];
   const P = scene.particles || {};
   ctx.globalCompositeOperation = 'lighter';
 
