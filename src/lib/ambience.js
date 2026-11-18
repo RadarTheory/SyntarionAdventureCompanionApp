@@ -54,7 +54,15 @@ export const LIGHT_KINDS = {
 export const ELEMENT_KINDS = {
   water: { label: 'Water', color: [150, 210, 230], radius: 0.08 },
   smoke: { label: 'Smoke', color: [170, 166, 160], radius: 0.05 },
+  // Exits: where the party can leave this map (src/lib/forge.js). Not drawn for players; an approved move onto one offers
+  // the Map Forge, or follows its link to the map it already leads to. 'edge' marks a linked map edge (side: n/e/s/w).
+  door: { label: 'Door', color: [214, 176, 98], radius: 0.02, exit: true, glyph: '▯' },
+  stairsUp: { label: 'Stairs up', color: [214, 176, 98], radius: 0.02, exit: true, glyph: '▲' },
+  stairsDown: { label: 'Stairs down', color: [214, 176, 98], radius: 0.02, exit: true, glyph: '▼' },
+  passage: { label: 'Passage', color: [214, 176, 98], radius: 0.02, exit: true, glyph: '◇' },
+  edge: { label: 'Map edge', color: [214, 176, 98], radius: 0.02, exit: true, glyph: '⇥', hidden: true },
 };
+export const isExitKind = kind => !!ELEMENT_KINDS[kind]?.exit;
 export const isLightKind = kind => !!LIGHT_KINDS[kind];
 
 // ── Small deterministic helpers ──
@@ -465,7 +473,7 @@ export function drawFogSmoke(ctx, { W, H, fogCanvas, time: t, strength = 0.55 })
 export function lightAt(ambience, pos, mapRect, mapImg = null) {
   const placed = Array.isArray(ambience?.lights) ? ambience.lights : [];
   let best = null, bestD = Infinity;
-  for (const l of [...placed, ...findMapLights(mapImg)]) {
+  for (const l of [...placed.filter(p => p.kind !== 'edge'), ...findMapLights(mapImg)]) {
     const k = LIGHT_KINDS[l.kind] || ELEMENT_KINDS[l.kind] || LIGHT_KINDS.torch;
     const dx = (l.x - pos.x) * mapRect.w, dy = (l.y - pos.y) * mapRect.h, dist = Math.hypot(dx, dy);
     const reach = l.found ? 9 : Math.max(10, k.radius * (Number(l.size) || 1) * mapRect.w * 0.3);
@@ -486,7 +494,19 @@ export function drawLightPins(ctx, { ambience, mapRect, mapImg = null }) {
     ctx.beginPath(); ctx.moveTo(x, y - 5); ctx.lineTo(x + 4, y); ctx.lineTo(x, y + 5); ctx.lineTo(x - 4, y); ctx.closePath(); ctx.stroke();
     if (hidden) { ctx.beginPath(); ctx.moveTo(x - 5, y - 5); ctx.lineTo(x + 5, y + 5); ctx.stroke(); }
   }
-  for (const l of lights) {
+  for (const l of lights.filter(e => isExitKind(e.kind))) {
+    const k = ELEMENT_KINDS[l.kind];
+    // A map edge's pin sits at the middle of its edge.
+    const at = l.kind === 'edge' ? ({ e: { x: 0.985, y: 0.5 }, w: { x: 0.015, y: 0.5 }, n: { x: 0.5, y: 0.02 }, s: { x: 0.5, y: 0.98 } })[l.side] || l : l;
+    const x = mapRect.x + at.x * mapRect.w, y = mapRect.y + at.y * mapRect.h;
+    ctx.fillStyle = 'rgba(12,10,8,0.85)'; ctx.strokeStyle = rgba(k.color, 0.95); ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = rgba(k.color, 1); ctx.font = '9px Georgia, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(k.glyph, x, y + 0.5);
+    if (l.link) { ctx.fillStyle = '#8fb89a'; ctx.beginPath(); ctx.arc(x + 7, y - 7, 3, 0, Math.PI * 2); ctx.fill(); }
+    if (l.sealed) { ctx.strokeStyle = 'rgba(205,92,92,0.9)'; ctx.beginPath(); ctx.moveTo(x - 6, y - 6); ctx.lineTo(x + 6, y + 6); ctx.stroke(); }
+  }
+  for (const l of lights.filter(e => !isExitKind(e.kind))) {
     const k = LIGHT_KINDS[l.kind] || ELEMENT_KINDS[l.kind] || LIGHT_KINDS.torch;
     const x = mapRect.x + l.x * mapRect.w, y = mapRect.y + l.y * mapRect.h, r = k.radius * (Number(l.size) || 1) * mapRect.w;
     ctx.strokeStyle = rgba(k.color, 0.5); ctx.setLineDash([3, 4]); ctx.lineWidth = 1;

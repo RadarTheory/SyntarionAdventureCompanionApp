@@ -28,7 +28,7 @@ export function useUploadedMaps() {
   const [maps, setMaps] = useState([]);
   const load = useCallback(async () => {
     const { data } = await supabase.from('vtt_maps').select('*').order('name');
-    return (data || []).map(m => ({ id: m.key, name: m.name, filename: m.key, uploaded: true, width: m.width, height: m.height }));
+    return (data || []).map(m => ({ id: m.key, name: m.poi || m.name, filename: m.key, uploaded: true, canon: !!m.locked, region: m.region || null, width: m.width, height: m.height }));
   }, []);
   useEffect(() => { let live = true; load().then(list => { if (live) setMaps(list); }); return () => { live = false; }; }, [load]);
   const reload = useCallback(() => load().then(setMaps), [load]);

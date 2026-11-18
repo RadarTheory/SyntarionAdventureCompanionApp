@@ -11,6 +11,8 @@ import { drawAmbience, buildFogMask, drawFog, drawLightPins, lightAt, SCENES, LI
 import { useMapAmbience, useWorldClock } from './lib/useMapAmbience';
 import Picker from './Picker';
 import { mapSrc, loadMapImage, uploadMap, useUploadedMaps } from './lib/maps';
+import { exitFor, linkedArrival } from './lib/forge';
+import MapForge from './MapForge';
 import { revealAlong } from './lib/sight';
 import { drawFullGrid, drawLocalGrid, drawRuler, gridFromBox, gridFor, squareScaleView, snapToSquare, SQUARE } from './lib/grid';
 
@@ -616,6 +618,10 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   // Grid: the box being dragged while fitting it, and where a token's move started.
   const [gridBox, setGridBox] = useState(null);
   const moveStartRef = useRef(null);
+  // Exits (src/lib/forge.js): the banner after an approved move onto an exit or edge, and the open Map Forge.
+  const [exitPrompt, setExitPrompt] = useState(null); // { exit, travellers: [{ id, name }] }
+  const [forgeRequest, setForgeRequest] = useState(null);
+  const [travelling, setTravelling] = useState(false);
   const [showCommitPicker, setShowCommitPicker] = useState(false);
   const [feather, setFeather]                 = useState(0.35);
   const [localCampaigns, setLocalCampaigns]   = useState([]);
@@ -694,6 +700,49 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
       source: 'vtt',
     });
     setPendingMoves(remaining);
+    const exit = exitFor(ambience, { x: approved.x, y: approved.y }, mapImgRef.current);
+    if (exit && !exit.pin?.sealed) {
+      const who = { id: String(characterId), name: approved.characterName || tokenName(previousToken) };
+      const same = (a, b) => a && b && a.kind === b.kind && (a.kind === 'edge' ? a.side === b.side : a.pin?.id === b.pin?.id);
+      setExitPrompt(prev => (prev && same(prev.exit, exit)
+        ? { ...prev, travellers: [...prev.travellers.filter(t => t.id !== who.id), who] }
+        : { exit, travellers: [who] }));
+    }
+  };
+
+  // Move the party through an exit to another map: they leave this map's board and arrive on the other's, which
+  // becomes the campaign's map for everyone. Fog there opens around where they arrive.
+  const travel = async (targetKey, arrival, travellerIds) => {
+    if (!vttSession?.id || !mapFilename) return;
+    setTravelling(true);
+    const ids = new Set(travellerIds.map(String));
+    const going = tokens.filter(t => ids.has(String(t.characterId)));
+    const states = { ...(vttSession.map_states || {}) };
+    states[mapFilename] = { fog_zones: fogZones, tokens: tokens.filter(t => !ids.has(String(t.characterId))), view_transform: transform };
+    const target = states[targetKey] || {};
+    const arriving = going.map((t, i) => ({ ...t, x: Math.min(0.98, Math.max(0.02, arrival.x + (i - (going.length - 1) / 2) * 0.035)), y: arrival.y }));
+    const nextTokens = [...(target.tokens || []).filter(t => !ids.has(String(t.characterId))), ...arriving];
+    const reveal = arriving.length ? revealAlong(arriving[0], arriving.map(t => ({ x: t.x, y: t.y })), { ambience: null, mapImg: null, clock: null }) : [];
+    const nextFog = [...(target.fog_zones || []), ...reveal];
+    states[targetKey] = { fog_zones: nextFog, tokens: nextTokens, view_transform: target.view_transform || { scale: 1, x: 0, y: 0 } };
+    await supabase.from('vtt_sessions').update({ map_filename: targetKey, fog_zones: nextFog, tokens: nextTokens, map_states: states, updated_at: new Date().toISOString() }).eq('id', vttSession.id);
+    await supabase.from('campaigns').update({ map_url: targetKey }).eq('id', activeCampaignId);
+    setVttSession(prev => (prev ? { ...prev, map_states: states } : prev));
+    setFogZones(nextFog); setTokens(nextTokens); setTransform(states[targetKey].view_transform);
+    setMapFilename(targetKey);
+    await logSessionEvent(activeCampaignId, activeGameSessionId, 'vtt_travel', { actor_name: 'The Architect', from: mapFilename, to: targetKey, character_ids: [...ids], description: `${going.map(tokenName).join(', ') || 'The party'} travelled to ${uploadedMaps.find(m => m.filename === targetKey)?.name || targetKey}.`, source: 'vtt' });
+    setTravelling(false);
+  };
+  const followExit = async () => {
+    const { exit, travellers } = exitPrompt;
+    setExitPrompt(null);
+    await travel(exit.link.map, await linkedArrival(exit.link), travellers.map(t => t.id));
+  };
+  const sealExit = () => {
+    const { exit } = exitPrompt;
+    setExitPrompt(null);
+    if (exit.pin) updateAmbience(prev => ({ lights: prev.lights.map(l => (l.id === exit.pin.id ? { ...l, sealed: true } : l)) }));
+    else updateAmbience(prev => ({ lights: [...prev.lights, { id: uid(), kind: 'edge', side: exit.side, x: 0.5, y: 0.5, sealed: true }] }));
   };
 
   const denyMoves = async (characterId) => {
@@ -1325,6 +1374,27 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
           </button>
         )}
 
+        {isDM && exitPrompt && mapFilename && (
+          <div role="status" style={{ position: 'absolute', left: '50%', top: 12, transform: 'translateX(-50%)', zIndex: 30, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', maxWidth: 'calc(100% - 24px)', padding: '10px 14px', background: 'rgba(16,13,10,0.95)', border: '1px solid rgba(200,168,74,0.5)', borderRadius: 8, boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+            <span style={{ fontFamily: 'Georgia, serif', fontSize: 12, color: COLORS.textSub }}>
+              {exitPrompt.travellers.map(t => t.name).join(', ')} {exitPrompt.travellers.length === 1 ? 'is leaving' : 'are leaving'} by the {exitPrompt.exit.label}.
+            </span>
+            {exitPrompt.exit.link
+              ? <button onClick={followExit} disabled={travelling} style={{ background: 'rgba(200,168,74,0.18)', border: '1px solid #c8a84a', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>{travelling ? 'Travelling…' : `➜ Follow to ${uploadedMaps.find(m => m.filename === exitPrompt.exit.link.map)?.name || 'the linked map'}`}</button>
+              : <button onClick={() => { setForgeRequest({ exit: exitPrompt.exit, travellers: exitPrompt.travellers.map(t => t.name), travellerIds: exitPrompt.travellers.map(t => t.id), originKey: mapFilename, mapName: uploadedMaps.find(m => m.filename === mapFilename)?.name || LOCATIONS.find(l => l.filename === mapFilename)?.name || mapFilename, img: mapImgRef.current, ambience, campaignId: activeCampaignId }); setExitPrompt(null); }} style={{ background: 'rgba(200,168,74,0.18)', border: '1px solid #c8a84a', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>⚒ Extend the map</button>}
+            <button onClick={() => setExitPrompt(null)} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.muted }}>Not yet</button>
+            {!exitPrompt.exit.link && <button onClick={sealExit} title="Never offer to extend through this exit (a cliff, a sealed wall, the end of the map)" style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif', fontSize: 10, color: COLORS.dim, textDecoration: 'underline' }}>Seal this exit</button>}
+          </div>
+        )}
+        {forgeRequest && (
+          <MapForge
+            request={forgeRequest}
+            saveOriginAmbience={updateAmbience}
+            onClose={() => setForgeRequest(null)}
+            onApproved={async ({ key, arrival }) => { const ids = forgeRequest.travellerIds; setForgeRequest(null); await reloadUploadedMaps(); await travel(key, arrival, ids); }}
+          />
+        )}
+
         {!mapFilename ? (
           <div style={{ padding: '24px 20px', display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'flex-start' }}>
             {/* Left — search + location list (click previews, does not commit) */}
@@ -1343,7 +1413,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
                   const selected = previewLoc?.id === loc.id;
                   return (
                     <button key={loc.id} ref={selected ? selectedRowRef : null} onClick={() => setPreviewLoc(loc)} style={{ textAlign: 'left', background: selected ? 'rgba(200,168,74,0.14)' : COLORS.card, border: `1px solid ${selected ? '#c8a84a88' : COLORS.border}`, borderRadius: 6, padding: '8px 12px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.06em', color: selected ? '#e8c84a' : COLORS.text }}>
-                      {selected && <span style={{ marginRight: 6, opacity: 0.7 }}>✦</span>}{loc.name}{loc.uploaded && <span style={{ marginLeft: 8, fontSize: 8, letterSpacing: '0.12em', color: '#c8a84a', opacity: 0.8 }}>UPLOADED</span>}
+                      {selected && <span style={{ marginRight: 6, opacity: 0.7 }}>✦</span>}{loc.name}{loc.uploaded && <span title={loc.canon ? `Canon: a place in Soteria${loc.region ? ` (${loc.region})` : ''}, forged and approved` : 'Uploaded map'} style={{ marginLeft: 8, fontSize: 8, letterSpacing: '0.12em', color: loc.canon ? '#8fb89a' : '#c8a84a', opacity: 0.85 }}>{loc.canon ? '✦ CANON' : 'UPLOADED'}</span>}
                     </button>
                   );
                 })}
