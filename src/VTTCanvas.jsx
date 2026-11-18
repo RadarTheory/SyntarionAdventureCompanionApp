@@ -10,6 +10,8 @@ import { getLiveClock } from './lib/soteriaclock';
 import { drawAmbience, buildFogMask, drawFog, drawLightPins, lightAt, SCENES, LIGHT_KINDS } from './lib/ambience';
 import { useMapAmbience, useWorldClock } from './lib/useMapAmbience';
 import Picker from './Picker';
+import { revealAlong } from './lib/sight';
+import { drawFullGrid, drawLocalGrid, drawRuler, gridFromBox, gridFor, squareScaleView, SQUARE } from './lib/grid';
 
 const BRUSH_SIZES = [20, 40, 70, 110];
 const TOKEN_COLORS = ['#e85d4a', '#4a9edd', '#79f5a7', '#e8c84a', '#c084fc', '#fb923c'];
@@ -339,7 +341,7 @@ const SKY_OPTIONS = [
   { value: 'night', label: 'Night', swatch: '#5b8fc7' },
 ];
 
-function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId, onIconReady, showGrid, gridSize, dmFogOpacity = 1, time = 0, ambience = null, clock = null, pointer = null }) {
+function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId, onIconReady, showGrid, dmFogOpacity = 1, time = 0, ambience = null, clock = null, pointer = null, moveFocus = null, gridBox = null }) {
   if (!canvas || !mapImg) return;
   const ctx = canvas.getContext('2d');
   const W = canvas.width;
@@ -352,17 +354,6 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   ctx.save();
   ctx.setTransform(transform.scale, 0, 0, transform.scale, transform.x, transform.y);
   ctx.drawImage(mapImg, mapRect.x, mapRect.y, mapRect.w, mapRect.h);
-
-  if (showGrid) {
-    ctx.strokeStyle = 'rgba(200,168,74,0.15)';
-    ctx.lineWidth = 0.5 / transform.scale;
-    for (let x = mapRect.x; x <= mapRect.x + mapRect.w; x += gridSize) {
-      ctx.beginPath(); ctx.moveTo(x, mapRect.y); ctx.lineTo(x, mapRect.y + mapRect.h); ctx.stroke();
-    }
-    for (let y = mapRect.y; y <= mapRect.y + mapRect.h; y += gridSize) {
-      ctx.beginPath(); ctx.moveTo(mapRect.x, y); ctx.lineTo(mapRect.x + mapRect.w, y); ctx.stroke();
-    }
-  }
 
   // Living map: darkness, lights, mist and particles, under the fog (src/lib/ambience.js).
   if (ambience) drawAmbience(ctx, { W, H, mapRect, time, ambience, clock, tokens, pointer, mapImg });
@@ -520,6 +511,20 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
     ctx.restore();
   });
 
+  // ── Grid (src/lib/grid.js): every square on request or while fitting it; around a token being moved, a local grid
+  // with its reach and a ruler in fathoms.
+  if (showGrid || tool === 'grid-set') drawFullGrid(ctx, { grid: gridFor(ambience?.grid, mapImg), mapRect, strong: tool === 'grid-set' });
+  if (gridBox) {
+    const ax = mapRect.x + gridBox.a.x * mapRect.w, ay = mapRect.y + gridBox.a.y * mapRect.h, bx = mapRect.x + gridBox.b.x * mapRect.w, by = mapRect.y + gridBox.b.y * mapRect.h;
+    ctx.save(); ctx.strokeStyle = '#ecd99a'; ctx.lineWidth = 1.5 / transform.scale; ctx.setLineDash([4 / transform.scale, 3 / transform.scale]);
+    ctx.fillStyle = 'rgba(200,168,74,0.15)'; ctx.fillRect(Math.min(ax, bx), Math.min(ay, by), Math.abs(bx - ax), Math.abs(by - ay));
+    ctx.strokeRect(Math.min(ax, bx), Math.min(ay, by), Math.abs(bx - ax), Math.abs(by - ay)); ctx.restore();
+  }
+  if (moveFocus) {
+    drawLocalGrid(ctx, { grid: gridFor(ambience?.grid, mapImg), mapRect, center: moveFocus.from, time });
+    if (moveFocus.to) drawRuler(ctx, { grid: gridFor(ambience?.grid, mapImg), mapRect, from: moveFocus.from, to: moveFocus.to, scale: transform.scale });
+  }
+
   ctx.restore();
 
   // ── 5. Brush preview (screen space, no transform) ────────────────────────
@@ -578,7 +583,13 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   const drawArgsRef = useRef(null);
   const pointerRef = useRef(null);
   const [lightKind, setLightKind] = useState('torch');
+  // Auto-reveal on approved moves: on unless the DM turns it off (remembered on this device).
+  const [autoReveal, setAutoReveal] = useState(() => { try { return localStorage.getItem('vtt_auto_reveal') !== 'off'; } catch { return true; } });
+  const toggleAutoReveal = () => setAutoReveal(on => { try { localStorage.setItem('vtt_auto_reveal', on ? 'off' : 'on'); } catch { /* storage unavailable */ } return !on; });
   const [lightSize, setLightSize] = useState(1);
+  // Grid: the box being dragged while fitting it, and where a token's move started.
+  const [gridBox, setGridBox] = useState(null);
+  const moveStartRef = useRef(null);
   const [showCommitPicker, setShowCommitPicker] = useState(false);
   const [feather, setFeather]                 = useState(0.35);
   const [localCampaigns, setLocalCampaigns]   = useState([]);
@@ -633,9 +644,15 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
     const next = tokens.map(t => String(t.characterId) === String(characterId) ? { ...t, x: approved.x, y: approved.y } : t);
     setTokens(next);
     const remaining = pendingMoves.filter(m => m.characterId !== characterId);
-    const { data: sess } = await supabase.from('vtt_sessions').select('id').eq('campaign_id', String(activeCampaignId)).maybeSingle();
+    // Auto-reveal: what the character sees along the way opens up (src/lib/sight.js). The new zones are added to the fog
+    // players already have, so the DM's uncommitted brush work stays on the DM's screen until Commit.
+    const reveal = autoReveal && previousToken
+      ? revealAlong(previousToken, [{ x: previousToken.x, y: previousToken.y }, ...movesForCharacter.map(m => ({ x: m.x, y: m.y }))], { ambience, mapImg: mapImgRef.current, clock: liveClockOf(clock) })
+      : [];
+    if (reveal.length) setFogZones(prev => [...prev, ...reveal]);
+    const { data: sess } = await supabase.from('vtt_sessions').select('id, fog_zones').eq('campaign_id', String(activeCampaignId)).maybeSingle();
     if (sess?.id) {
-      await supabase.from('vtt_sessions').update({ tokens: next, pending_moves: remaining, updated_at: new Date().toISOString() }).eq('id', sess.id);
+      await supabase.from('vtt_sessions').update({ tokens: next, pending_moves: remaining, ...(reveal.length ? { fog_zones: [...(Array.isArray(sess.fog_zones) ? sess.fog_zones : []), ...reveal] } : {}), updated_at: new Date().toISOString() }).eq('id', sess.id);
     }
     await logSessionEvent(activeCampaignId, activeGameSessionId, 'vtt_token_move_approved', {
       actor_name: 'The Architect',
@@ -918,9 +935,12 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
 
   useEffect(() => {
     if (!mapLoaded) return;
-    drawArgsRef.current = { canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId: hoveredToken?.id || null, onIconReady: () => setIconTick(t => t + 1), showGrid, gridSize, dmFogOpacity, ambience, clock: liveClockOf(clock) };
+    const moving = selectedTokenId && moveStartRef.current?.id === selectedTokenId ? tokens.find(t => t.id === selectedTokenId) : null;
+    const hovered = tool === 'token-move' && hoveredToken ? tokens.find(t => t.id === hoveredToken.id) : null;
+    const moveFocus = moving ? { from: moveStartRef.current, to: { x: moving.x, y: moving.y } } : hovered ? { from: { x: hovered.x, y: hovered.y } } : null;
+    drawArgsRef.current = { canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId: hoveredToken?.id || null, onIconReady: () => setIconTick(t => t + 1), showGrid, gridSize, dmFogOpacity, ambience, clock: liveClockOf(clock), moveFocus, gridBox };
     drawCanvas({ ...drawArgsRef.current, time: performance.now() / 1000, pointer: pointerRef.current });
-  }, [fogZones, tokens, brushPreview, mapLoaded, tool, transform, isDM, hoveredToken, iconTick, dmFogOpacity, ambience, clock]);
+  }, [fogZones, tokens, brushPreview, mapLoaded, tool, transform, isDM, hoveredToken, iconTick, dmFogOpacity, ambience, clock, selectedTokenId, gridBox, showGrid]);
 
   // The map is alive: redraw about 30 times a second with the latest arguments.
   useEffect(() => {
@@ -984,6 +1004,11 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
     if (e.ctrlKey && (e.button === 0 || e.buttons === 1)) { panRef.current = { active: true, lastX: clientX, lastY: clientY }; return; }
     if (tool === 'pan' || e.button === 1) { panRef.current = { active: true, lastX: clientX, lastY: clientY }; return; }
     const pos = screenToMap(clientX, clientY);
+    if (tool === 'grid-set') {
+      if (pos.x < 0 || pos.x > 1 || pos.y < 0 || pos.y > 1) return;
+      setGridBox({ a: pos, b: pos });
+      return;
+    }
     if (tool === 'light') {
       if (pos.x < 0 || pos.x > 1 || pos.y < 0 || pos.y > 1) return;
       const hit = lightAt(ambience, pos, getMapRect(canvasRef.current, mapImgRef.current));
@@ -1022,6 +1047,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         if (d < closestDist) { closest = tok.id; closestDist = d; }
       });
       setSelectedTokenId(closest);
+      { const t0 = tokens.find(t => t.id === closest); moveStartRef.current = t0 ? { id: closest, x: t0.x, y: t0.y } : null; }
     }
   }, [tool, brushRadius, feather, tokens, ambience, lightKind, lightSize, updateAmbience]);
 
@@ -1055,6 +1081,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
     }
     const pos = screenToMap(clientX, clientY);
     pointerRef.current = pos;
+    if (tool === 'grid-set' && gridBox && (e.buttons === 1 || e.touches)) { setGridBox(b => (b ? { ...b, b: pos } : b)); return; }
     const { px, py } = screenToCanvasPx(clientX, clientY);
     const t = transformRef.current;
     setBrushPreview({ sx: px, sy: py, sr: brushRadius * t.scale });
@@ -1079,9 +1106,16 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
     if (tool === 'token-move' && selectedTokenId && (e.buttons === 1 || e.touches)) {
       setTokens(prev => prev.map(t => t.id === selectedTokenId ? { ...t, x: pos.x, y: pos.y } : t));
     }
-  }, [tool, brushRadius, feather, selectedTokenId, tokens, isDM, fogZones]);
+  }, [tool, brushRadius, feather, selectedTokenId, tokens, isDM, fogZones, gridBox]);
 
-  const handlePointerUp = useCallback(() => { paintingRef.current = false; paintingRef._snapped = false; panRef.current.active = false; setSelectedTokenId(null); }, []);
+  const handlePointerUp = useCallback(() => {
+    paintingRef.current = false; paintingRef._snapped = false; panRef.current.active = false; setSelectedTokenId(null); moveStartRef.current = null;
+    if (gridBox) {
+      const { a, b } = gridBox;
+      if (Math.abs(b.x - a.x) > 0.003 || Math.abs(b.y - a.y) > 0.003) updateAmbience({ grid: gridFromBox(a, b, getMapRect(canvasRef.current, mapImgRef.current)) });
+      setGridBox(null);
+    }
+  }, [gridBox, updateAmbience]);
   const handlePointerLeave = useCallback(() => { setBrushPreview(null); setHoveredToken(null); pointerRef.current = null; }, []);
 
   useEffect(() => {
@@ -1111,6 +1145,14 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   };
   const revealAll = () => setFogZones([{ id: uid(), type: 'reveal', x: 0.5, y: 0.5, r: 1.5 }]);
   const resetView = () => setTransform({ scale: 1, x: 0, y: 0 });
+  // Square scale: zoom so one square is the standard size on screen, keeping the view's centre (src/lib/grid.js).
+  const squareScale = () => {
+    const canvas = canvasRef.current, img = mapImgRef.current;
+    if (!canvas || !img) return;
+    const mapRect = getMapRect(canvas, img), t = transformRef.current;
+    const cx = (canvas.width / 2 - t.x) / t.scale, cy = (canvas.height / 2 - t.y) / t.scale;
+    setTransform(squareScaleView(gridFor(ambience.grid, img), mapRect, canvas.width, canvas.height, { x: (cx - mapRect.x) / mapRect.w, y: (cy - mapRect.y) / mapRect.h }, [MIN_SCALE, MAX_SCALE]));
+  };
   const pinCampaign = (id) => { setPinnedCampaignId(id); localStorage.setItem('vtt_pinned_campaign', id); setShowCampaignPicker(false); onCampaignChange?.(id); };
 
   const syncMapFromCampaign = async () => {
@@ -1133,6 +1175,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         {toolBtn('erase-token','✕ Erase',  tool === 'erase-token')}
         {toolBtn('pan',        '✋ Pan',    tool === 'pan')}
         {toolBtn('light',      '✦ Lights', tool === 'light')}
+        {toolBtn('grid-set',   '⌗ Set grid', tool === 'grid-set')}
         <div style={{ width: 1, height: 20, background: COLORS.border, margin: '0 4px' }} />
         <div style={{ ...label8, marginRight: 4 }}>Brush</div>
         {BRUSH_SIZES.map((_, i) => (
@@ -1153,6 +1196,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         <button onClick={undoFog} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↩ Undo</button>
         <button onClick={() => setShowGrid(g => !g)} style={{ background: showGrid ? 'rgba(200,168,74,0.15)' : COLORS.card, border: `1px solid ${showGrid ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: showGrid ? '#e8c84a' : COLORS.text }}>⊞ Grid</button>
         <button onClick={cycleFog} title="How fog looks on YOUR screen only — players always see full fog" style={{ background: dmFogMode !== 'full' ? 'rgba(200,168,74,0.15)' : COLORS.card, border: `1px solid ${dmFogMode !== 'full' ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: dmFogMode !== 'full' ? '#e8c84a' : COLORS.text }}>◑ Fog: {dmFogMode === 'full' ? 'Full' : dmFogMode === 'dim' ? 'Dim' : 'Off'}</button>
+        <button onClick={squareScale} title="Zoom so one square (a fathom) is the standard size on screen" style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>▣ Square scale</button>
         <button onClick={resetView} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>⊡ Reset View</button>
         {isDM && (
           <div style={{ position: 'relative' }}>
@@ -1178,6 +1222,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
             <Picker label="Scene" compact width={150} value={ambience.scene} onChange={scene => updateAmbience({ scene })} options={SCENE_OPTIONS} />
             <div style={{ ...label8, margin: '0 2px 0 8px' }}>Sky</div>
             <Picker label="Sky" compact width={140} value={ambience.timeMode} onChange={timeMode => updateAmbience({ timeMode })} options={SKY_OPTIONS} />
+            <button onClick={toggleAutoReveal} aria-pressed={autoReveal} title="When you approve a move, reveal what the character sees along the way: a room around them, wider in light, by day, or with darkvision" style={{ background: autoReveal ? 'rgba(200,168,74,0.15)' : COLORS.card, border: `1px solid ${autoReveal ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '5px 9px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: autoReveal ? COLORS.text : COLORS.muted }}>{autoReveal ? '◉ Auto-reveal on moves' : '○ Auto-reveal off'}</button>
             {tool === 'light' && (<>
               <div style={{ ...label8, margin: '0 2px 0 8px' }}>Light</div>
               <Picker label="Light" compact width={130} value={lightKind} onChange={setLightKind} options={LIGHT_OPTIONS} />
@@ -1186,6 +1231,13 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
               ))}
               <span style={{ ...label8, color: COLORS.dim }}>Click to place · click a light to remove</span>
               {ambience.lights.length > 0 && <button onClick={() => updateAmbience({ lights: [] })} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '5px 9px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.muted }}>Clear lights</button>}
+            </>)}
+            {tool === 'grid-set' && (<>
+              <span style={{ ...label8, color: COLORS.textSub, marginLeft: 8 }}>Drag a box over one square of the map · 1 {SQUARE.name} = {SQUARE.feet} ft</span>
+              {[['−', 0.97], ['+', 1.03]].map(([sign, k]) => (
+                <button key={sign} onClick={() => updateAmbience(prev => ({ grid: { ...(prev.grid || { ox: 0, oy: 0 }), cell: gridFor(prev.grid, mapImgRef.current).cell * k } }))} aria-label={sign === '+' ? 'Larger squares' : 'Smaller squares'} style={{ width: 26, height: 26, background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, cursor: 'pointer', color: COLORS.text }}>{sign}</button>
+              ))}
+              {ambience.grid && <button onClick={() => updateAmbience({ grid: null })} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '5px 9px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.muted }}>Reset grid</button>}
             </>)}
             {ambienceError && <span style={{ fontSize: 10, color: COLORS.warn }}>{ambienceError}</span>}
           </div>

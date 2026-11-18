@@ -8,6 +8,7 @@ import { useActiveGameSession } from './lib/session';
 import { drawAmbience, buildFogMask, drawFog } from './lib/ambience';
 import { useMapAmbience, useWorldClock } from './lib/useMapAmbience';
 import { getLiveClock } from './lib/soteriaclock';
+import { drawLocalGrid, drawRuler, gridFor, squareScaleView } from './lib/grid';
 import { logHerculesEvent } from './lib/herculesLog';
 
 const MIN_SCALE = 0.5;
@@ -498,6 +499,15 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
     }
     ctx.restore();
   });
+
+  // Grid (src/lib/grid.js): around your own token, a local grid with a turn's reach; while you drag it, a ruler in fathoms.
+  const ownToken = tokens.find(t => String(t.characterId) === String(userCharId));
+  if (draggingToken && dragPos) {
+    drawLocalGrid(ctx, { grid: gridFor(ambience?.grid, mapImg), mapRect, center: { x: draggingToken.x, y: draggingToken.y }, time });
+    drawRuler(ctx, { grid: gridFor(ambience?.grid, mapImg), mapRect, from: { x: draggingToken.x, y: draggingToken.y }, to: dragPos, scale: transform.scale });
+  } else if (ownToken && hoveredTokenId && hoveredTokenId === ownToken.id) {
+    drawLocalGrid(ctx, { grid: gridFor(ambience?.grid, mapImg), mapRect, center: { x: ownToken.x, y: ownToken.y }, time });
+  }
 
   // Dragging ghost token
   if (draggingToken && dragPos) {
@@ -1014,6 +1024,14 @@ useEffect(() => {
   }, []);
 
   const resetView = () => setTransform({ scale: 1, x: 0, y: 0 });
+  // Square scale: zoom so one square is the standard size on screen, centred on your own token (src/lib/grid.js).
+  const squareScale = () => {
+    const img = mapImgRef.current;
+    if (!img) return;
+    const mapRect = getMapRect(canvasRef.current, img);
+    const own = tokens.find(t => String(t.characterId) === String(userCharId));
+    setTransform(squareScaleView(gridFor(ambience.grid, img), mapRect, LOGICAL_W, LOGICAL_H, own ? { x: own.x, y: own.y } : undefined, [MIN_SCALE, MAX_SCALE]));
+  };
 
   const myPendingMoves = pendingMoves.filter(m => String(m.characterId) === userCharId);
 
@@ -1040,6 +1058,7 @@ useEffect(() => {
           Live Map · {Math.round(transform.scale * 100)}% · Scroll/pinch to zoom · Drag to pan
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
+          <button onClick={squareScale} title="Zoom so one square (a fathom) is the standard size, centred on you" style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 9, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>▣ Square scale</button>
           <button onClick={resetView} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 9, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>⊡ Reset</button>
           {!castMode && <button onClick={() => setFullscreen(true)} style={{ background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 9, color: COLORS.dim, fontFamily: "'Cinzel', serif" }}>⛶ Expand</button>}
         </div>
