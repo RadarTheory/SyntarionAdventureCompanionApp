@@ -346,7 +346,7 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
   ctx.drawImage(mapImg, mapRect.x, mapRect.y, mapRect.w, mapRect.h);
 
   // Living map: darkness, lights, mist and particles, under the fog (src/lib/ambience.js).
-  if (ambience) drawAmbience(ctx, { W, H, mapRect, time, ambience, clock, tokens, pointer });
+  if (ambience) drawAmbience(ctx, { W, H, mapRect, time, ambience, clock, tokens, pointer, mapImg });
 
   // Fog of war: soft ragged edges that curl, smoke churning inside, a faint rim at the edge of the known.
   drawFog(ctx, { W, H, fog: buildFogMask(fogZones, mapRect, W, H), time });

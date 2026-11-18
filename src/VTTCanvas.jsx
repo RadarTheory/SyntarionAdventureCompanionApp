@@ -365,7 +365,7 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
   }
 
   // Living map: darkness, lights, mist and particles, under the fog (src/lib/ambience.js).
-  if (ambience) drawAmbience(ctx, { W, H, mapRect, time, ambience, clock, tokens, pointer });
+  if (ambience) drawAmbience(ctx, { W, H, mapRect, time, ambience, clock, tokens, pointer, mapImg });
 
   ctx.restore();
 

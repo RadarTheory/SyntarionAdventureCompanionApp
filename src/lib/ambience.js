@@ -94,8 +94,7 @@ function scratch(name, w, h) {
 }
 
 // Light state for one frame (shared by darkness, glow, embers and token warmth).
-function frameLights(ambience, mapRect, t, pointer, daylight) {
-  const lights = Array.isArray(ambience?.lights) ? ambience.lights : [];
+function frameLights(lights, mapRect, t, pointer, daylight) {
   return lights.map(l => {
     const k = LIGHT_KINDS[l.kind] || LIGHT_KINDS.torch;
     const seed = idSeed(l.id);
@@ -113,10 +112,12 @@ function frameLights(ambience, mapRect, t, pointer, daylight) {
 
 // ── The atmosphere under the fog: darkness, lights, mist, particles, token glow ──
 // ctx: the map canvas with the map's pan/zoom transform already applied. W, H: the logical canvas size.
-export function drawAmbience(ctx, { W, H, mapRect, time: t, ambience, clock, tokens = [], pointer = null }) {
+export function drawAmbience(ctx, { W, H, mapRect, time: t, ambience, clock, tokens = [], pointer = null, mapImg = null }) {
   const scene = SCENES[ambience?.scene] || SCENES[DEFAULT_SCENE];
   const daylight = daylightOf(clock, ambience?.timeMode || 'clock');
-  const lights = frameLights(ambience, mapRect, t, pointer, daylight);
+  // The map's own painted lights (unless the DM turned them off) and the DM's placed lights.
+  const placed = Array.isArray(ambience?.lights) ? ambience.lights : [];
+  const lights = frameLights([...(ambience?.foundLights === false ? [] : findMapLights(mapImg)), ...placed], mapRect, t, pointer, daylight);
   const { x: mx, y: my, w: mw, h: mh } = mapRect;
 
   ctx.save();
@@ -151,7 +152,7 @@ export function drawAmbience(ctx, { W, H, mapRect, time: t, ambience, clock, tok
 
   // Darkness, with every light cutting through it.
   // A map the DM has not set up shows what is revealed exactly as it is; chosen scenes go as dark as they are meant to.
-  const darkness = ambience?.configured === false ? 0 : Math.min(0.5, scene.dark + scene.night * (1 - daylight.level)); // never so dark that revealed ground can't be read; lights add the drama
+  const darkness = ambience?.configured === false ? 0 : Math.min(0.3, scene.dark + scene.night * (1 - daylight.level)); // never so dark that revealed ground can't be read; lights add the drama
   const dark = scratch('dark', W, H), d = dark.getContext('2d');
   d.globalCompositeOperation = 'source-over';
   d.clearRect(0, 0, W, H);
@@ -184,11 +185,13 @@ export function drawAmbience(ctx, { W, H, mapRect, time: t, ambience, clock, tok
   for (const l of lights) {
     const r = l.r * (0.9 + 0.1 * l.power);
     const g = ctx.createRadialGradient(l.x, l.y, 0, l.x, l.y, r);
-    g.addColorStop(0, rgba(l.k.color, 0.62 * l.power * glowScale));
-    g.addColorStop(0.2, rgba(l.k.color, 0.30 * l.power * glowScale));
-    g.addColorStop(0.6, rgba(l.k.color, 0.08 * l.power * glowScale));
+    const soft = l.found ? 0.42 : 1; // found lights spill gently around the painted flame
+    g.addColorStop(0, rgba(l.k.color, 0.62 * l.power * glowScale * soft));
+    g.addColorStop(0.2, rgba(l.k.color, 0.30 * l.power * glowScale * soft));
+    g.addColorStop(0.6, rgba(l.k.color, 0.08 * l.power * glowScale * soft));
     g.addColorStop(1, rgba(l.k.color, 0));
     ctx.fillStyle = g; ctx.fillRect(l.x - r, l.y - r, r * 2, r * 2);
+    if (l.found) continue; // the art already paints the flame itself; only its spill and flicker are added
     const c = r * 0.16;
     const core = ctx.createRadialGradient(l.x, l.y, 0, l.x, l.y, c);
     core.addColorStop(0, rgba([255, 248, 228], 0.8 * l.power)); core.addColorStop(1, rgba(l.k.color, 0));
@@ -497,7 +500,7 @@ export function buildFogMask(fogZones, mapRect, W, H) {
   body.width = W; body.height = H;
   const b = body.getContext('2d');
   const grad = b.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.1, W / 2, H / 2, Math.max(W, H) * 0.7);
-  grad.addColorStop(0, '#020203'); grad.addColorStop(1, '#000000');
+  grad.addColorStop(0, '#000000'); grad.addColorStop(1, '#000000');
   b.fillStyle = grad; b.fillRect(0, 0, W, H);
   b.globalCompositeOperation = 'destination-in';
   b.drawImage(soft, 0, 0);
@@ -511,59 +514,126 @@ export function buildFogMask(fogZones, mapRect, W, H) {
 // opacity: the DM's own fog dimmer (players always see 1).
 export function drawFog(ctx, { W, H, fog, time: t, opacity = 1 }) {
   if (!fog?.body || opacity <= 0) return;
+  // Solid black, with a feathered edge that drifts: a slow-moving soft texture, kept to the edge band, eats into the
+  // edge so its outline shifts like smoke, and faint wisps drift along it. Away from the edge the fog is plain black.
   const frame = scratch('fogframe', W, H), f = frame.getContext('2d');
   f.globalCompositeOperation = 'source-over';
   f.clearRect(0, 0, W, H);
   f.drawImage(fog.body, 0, 0);
 
-  // The edge breaks up: a drifting soft texture, kept to the edge band, eats into the fog so its outline is never a circle.
-  const tile = getSmokeTile('billow');
-  const wisp = scratch('fogwisp', W, H), w = wisp.getContext('2d');
-  w.globalCompositeOperation = 'source-over';
-  w.clearRect(0, 0, W, H);
-  const pattern = w.createPattern(tile, 'repeat');
-  w.save(); w.translate((t * 11) % 384, (t * -5) % 384); w.scale(1.5, 1.5); w.fillStyle = pattern; w.fillRect(-256, -256, W + 512, H + 512); w.restore();
-  w.save(); w.translate((t * -7) % 512, (t * 6) % 512); w.scale(2, 2); w.globalAlpha = 0.8; w.fillStyle = pattern; w.fillRect(-256, -256, W + 512, H + 512); w.restore();
-  w.globalAlpha = 1;
-  w.globalCompositeOperation = 'destination-in';
-  w.drawImage(fog.band, 0, 0);
+  const edge = scratch('fogedge', W, H), e = edge.getContext('2d');
+  e.globalCompositeOperation = 'source-over';
+  e.clearRect(0, 0, W, H);
+  const soft = e.createPattern(getSmokeTile('billow'), 'repeat');
+  e.save(); e.translate((t * 5) % 640, (t * -2.5) % 640); e.scale(2.5, 2.5); e.fillStyle = soft; e.fillRect(-256, -256, W / 2.5 + 512, H / 2.5 + 512); e.restore();
+  e.save(); e.translate((t * -3.5) % 768, (t * 3) % 768); e.scale(3, 3); e.globalAlpha = 0.8; e.fillStyle = soft; e.fillRect(-256, -256, W / 3 + 512, H / 3 + 512); e.restore();
+  e.globalAlpha = 1;
+  e.globalCompositeOperation = 'destination-in';
+  e.drawImage(fog.band, 0, 0);
   f.globalCompositeOperation = 'destination-out';
-  for (let k = 0; k < 4; k++) f.drawImage(wisp, 0, 0);
+  for (let k = 0; k < 3; k++) f.drawImage(edge, 0, 0);
 
   ctx.save();
   ctx.globalAlpha = opacity;
   ctx.drawImage(frame, 0, 0);
-  ctx.restore();
 
-  // Wisps curling off the edge: thin grey strands, only along the edge band.
+  // A little smoke along the edge, on the fog side only.
   const strands = scratch('fogstrands', W, H), st = strands.getContext('2d');
   st.globalCompositeOperation = 'source-over';
   st.clearRect(0, 0, W, H);
-  const wispPattern = st.createPattern(getSmokeTile('wisp'), 'repeat');
-  st.save(); st.translate((t * 6) % 512, (t * -3) % 512); st.scale(2, 2); st.fillStyle = wispPattern; st.fillRect(-256, -256, W / 2 + 512, H / 2 + 512); st.restore();
+  const wisp = st.createPattern(getSmokeTile('wisp'), 'repeat');
+  st.save(); st.translate((t * 4) % 512, (t * -2) % 512); st.scale(2, 2); st.fillStyle = wisp; st.fillRect(-256, -256, W / 2 + 512, H / 2 + 512); st.restore();
   st.globalCompositeOperation = 'destination-in';
   st.drawImage(fog.band, 0, 0);
-  st.drawImage(frame, 0, 0); // only over the fog, never over what is revealed
-  ctx.save();
-  ctx.globalAlpha = 0.45 * opacity;
+  st.drawImage(frame, 0, 0);
+  ctx.globalAlpha = 0.35 * opacity;
   ctx.drawImage(strands, 0, 0);
   ctx.restore();
+}
 
-  // Smoke churning inside the fog itself.
-  drawFogSmoke(ctx, { W, H, fogCanvas: frame, time: t, strength: 0.22 * opacity });
-
-  // The edge of the known: a faint gold rim that breathes.
-  const rim = scratch('fogrim', W, H), r = rim.getContext('2d');
-  r.globalCompositeOperation = 'source-over';
-  r.clearRect(0, 0, W, H);
-  r.fillStyle = 'rgb(214,176,98)'; r.fillRect(0, 0, W, H);
-  r.globalCompositeOperation = 'destination-in';
-  r.drawImage(fog.band, 0, 0);
-  r.globalCompositeOperation = 'destination-out';
-  r.drawImage(frame, 0, 0);
-  ctx.save();
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.globalAlpha = (0.06 + 0.025 * Math.sin(t * 0.8)) * opacity;
-  ctx.drawImage(rim, 0, 0);
-  ctx.restore();
+// ── Lights the map already has ──
+// Most maps paint their own lanterns, braziers, crystals and lava. These are found once per map image: bright warm
+// points become flickering flames, violet and cyan glows become pulsing crystals, wide orange-red flows become lava.
+// They light every map with no setup; the DM's own lights add to them. Returns lights in 0-1 map coordinates.
+const foundCache = new WeakMap();
+export function findMapLights(img) {
+  if (!img || !img.width) return [];
+  if (foundCache.has(img)) return foundCache.get(img);
+  let found = [];
+  try {
+    const w = 360, h = Math.max(1, Math.round((img.height / img.width) * w));
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(img, 0, 0, w, h);
+    const px = g.getImageData(0, 0, w, h).data;
+    // Each pixel is sorted into at most one kind of glow by its hue, saturation and how much brighter it is than the
+    // rock around it (painted lights are local bright spots, whatever the map's overall brightness).
+    const N = w * h, val = new Float32Array(N), hue = new Float32Array(N), sat = new Float32Array(N);
+    for (let i = 0; i < N; i++) {
+      const r = px[i * 4] / 255, gg = px[i * 4 + 1] / 255, b = px[i * 4 + 2] / 255;
+      const max = Math.max(r, gg, b), min = Math.min(r, gg, b), d = max - min;
+      val[i] = max; sat[i] = max ? d / max : 0;
+      let hh = 0;
+      if (d) hh = max === r ? ((gg - b) / d) % 6 : max === gg ? (b - r) / d + 2 : (r - gg) / d + 4;
+      hue[i] = ((hh / 6) + 1) % 1;
+    }
+    // Mean brightness around each pixel (a 13 x 13 box, from a summed-area table).
+    const sum = new Float64Array((w + 1) * (h + 1));
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) sum[(y + 1) * (w + 1) + x + 1] = val[y * w + x] + sum[y * (w + 1) + x + 1] + sum[(y + 1) * (w + 1) + x] - sum[y * (w + 1) + x];
+    const R = 6, around = i => {
+      const x = i % w, y = (i - x) / w, x0 = Math.max(0, x - R), y0 = Math.max(0, y - R), x1 = Math.min(w, x + R + 1), y1 = Math.min(h, y + R + 1);
+      return (sum[y1 * (w + 1) + x1] - sum[y0 * (w + 1) + x1] - sum[y1 * (w + 1) + x0] + sum[y0 * (w + 1) + x0]) / ((x1 - x0) * (y1 - y0));
+    };
+    // How dark the map is overall: painted lights only read as lights on darker maps (caves, dungeons, night scenes).
+    // On bright daylight maps, roofs, leaves and water would be mistaken for them, so only the clearest flames count there.
+    let mean = 0;
+    for (let i = 0; i < N; i++) mean += val[i];
+    mean /= N;
+    const dark = mean < 0.27; // caves and dungeons measure 0.11-0.26, daylight towns 0.29 and up
+    const kindAt = new Uint8Array(N); // 0 none, 1 flame, 2 violet, 3 cyan, 4 lava
+    for (let i = 0; i < N; i++) {
+      const v = val[i], sa = sat[i], hu = hue[i];
+      if (v < 0.42 || sa < 0.3) continue;
+      const lift = v - around(i);
+      if (dark && (hu < 0.06 || hu > 0.97) && sa > 0.7 && v > 0.55) kindAt[i] = 4;
+      // A painted flame is a bright warm spot in dark surroundings (roof highlights and straw sit among mid-tones).
+      else if (hu < 0.15 && v > (dark ? 0.48 : 0.7) && lift > (dark ? 0.18 : 0.3) && around(i) < 0.36) kindAt[i] = 1;
+      else if (dark && hu > 0.66 && hu < 0.86 && lift > 0.08) kindAt[i] = 2;
+      else if (dark && hu > 0.44 && hu < 0.63 && lift > 0.08) kindAt[i] = 3;
+    }
+    // Group touching pixels of the same kind into blobs.
+    const seen = new Uint8Array(w * h), blobs = [];
+    for (let start = 0; start < w * h; start++) {
+      const kind = kindAt[start];
+      if (!kind || seen[start]) continue;
+      const stack = [start]; seen[start] = 1;
+      let n = 0, sx = 0, sy = 0, peak = 0;
+      while (stack.length) {
+        const p = stack.pop(), x = p % w, y = (p - x) / w;
+        n++; sx += x; sy += y; if (val[p] > peak) peak = val[p];
+        for (const q of [p - 1, p + 1, p - w, p + w, p - w - 1, p - w + 1, p + w - 1, p + w + 1]) {
+          if (q < 0 || q >= w * h || seen[q] || kindAt[q] !== kind) continue;
+          if (Math.abs((q % w) - x) > 1) continue;
+          seen[q] = 1; stack.push(q);
+        }
+      }
+      blobs.push({ kind, n, peak, x: sx / n / w, y: sy / n / h });
+    }
+    const KIND = { 1: 'candle', 2: 'arcane', 3: 'crystal', 4: 'forge' };
+    const MIN = { 1: 2, 2: 3, 3: 3, 4: 30 };
+    const CAP = { 1: 60, 2: 30, 3: 30, 4: 12 };
+    const byKind = { 1: [], 2: [], 3: [], 4: [] };
+    const MAX = { 1: 30, 2: 400, 3: 400, 4: 4000 };
+    for (const b of blobs) if (b.n >= MIN[b.kind] && b.n <= MAX[b.kind] && (b.kind !== 1 || b.peak >= (dark ? 0.56 : 0.82))) byKind[b.kind].push(b);
+    for (const k of [1, 2, 3, 4]) {
+      byKind[k].sort((a, b) => b.n - a.n);
+      for (const b of byKind[k].slice(0, CAP[k])) {
+        // Size follows how much of the map the glow covers: a lantern is small, a crystal cluster larger, lava wide.
+        const size = k === 1 ? Math.min(1.4, 0.55 + Math.sqrt(b.n) * 0.12) : k === 4 ? Math.min(2.6, 0.8 + Math.sqrt(b.n) * 0.08) : Math.min(1.6, 0.5 + Math.sqrt(b.n) * 0.1);
+        found.push({ id: `found-${k}-${Math.round(b.x * 1000)}-${Math.round(b.y * 1000)}`, x: b.x, y: b.y, kind: KIND[k], size, found: true });
+      }
+    }
+  } catch { found = []; }
+  foundCache.set(img, found);
+  return found;
 }
