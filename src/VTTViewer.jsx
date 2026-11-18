@@ -5,6 +5,9 @@ import { computeCrowdedKeys, tokenLayoutKey } from './lib/tokenLayout';
 import { drawDeathMarker, drawDeathPin } from './lib/deathMarker';
 import { logSessionEvent } from './lib/sessionEvents';
 import { useActiveGameSession } from './lib/session';
+import { drawAmbience, buildFogMask, drawFog } from './lib/ambience';
+import { useMapAmbience, useWorldClock } from './lib/useMapAmbience';
+import { getLiveClock } from './lib/soteriaclock';
 import { logHerculesEvent } from './lib/herculesLog';
 
 const MIN_SCALE = 0.5;
@@ -320,7 +323,7 @@ function isTokenFogged(tok, fogZones) {
   }
   return fogged;
 }
-function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves, draggingToken, dragPos, userCharId, hoveredTokenId, onIconReady }) {
+function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves, draggingToken, dragPos, userCharId, hoveredTokenId, onIconReady, time = performance.now() / 1000, ambience = null, clock = null, pointer = null }) {
   if (!canvas || !mapImg) return;
   const ctx = canvas.getContext('2d');
   // renderScale maps the logical 900x600 space onto the real backing store.
@@ -342,43 +345,11 @@ function drawViewer({ canvas, mapImg, fogZones, tokens, transform, pendingMoves,
   );
   ctx.drawImage(mapImg, mapRect.x, mapRect.y, mapRect.w, mapRect.h);
 
-  // Fog
-  const fogCanvas = document.createElement('canvas');
-  fogCanvas.width = W; fogCanvas.height = H;
-  const fogCtx = fogCanvas.getContext('2d');
-  fogCtx.fillStyle = 'rgba(10,8,6,1)';
-  fogCtx.fillRect(0, 0, W, H);
-  fogZones.forEach(zone => {
-    const cx = mapRect.x + zone.x * mapRect.w;
-    const cy = mapRect.y + zone.y * mapRect.h;
-    const r = zone.r * mapRect.w;
-    const feather = zone.feather ?? 0.35;
-    const inner = Math.max(0, r * (1 - feather));
-    if (zone.type === 'reveal') {
-      fogCtx.globalCompositeOperation = 'destination-out';
-      fogCtx.beginPath();
-      fogCtx.arc(cx, cy, inner, 0, Math.PI * 2);
-      fogCtx.fillStyle = 'rgba(0,0,0,1)';
-      fogCtx.fill();
-      const grad = fogCtx.createRadialGradient(cx, cy, inner, cx, cy, r);
-      grad.addColorStop(0, 'rgba(0,0,0,1)');
-      grad.addColorStop(1, 'rgba(0,0,0,0)');
-      fogCtx.beginPath();
-      fogCtx.arc(cx, cy, r, 0, Math.PI * 2);
-      fogCtx.fillStyle = grad;
-      fogCtx.fill();
-    } else if (zone.type === 'hide') {
-      fogCtx.globalCompositeOperation = 'source-over';
-      const grad = fogCtx.createRadialGradient(cx, cy, inner, cx, cy, r);
-      grad.addColorStop(0, 'rgba(10,8,6,1)');
-      grad.addColorStop(1, 'rgba(10,8,6,0)');
-      fogCtx.beginPath();
-      fogCtx.arc(cx, cy, r, 0, Math.PI * 2);
-      fogCtx.fillStyle = grad;
-      fogCtx.fill();
-    }
-  });
-  ctx.drawImage(fogCanvas, 0, 0);
+  // Living map: darkness, lights, mist and particles, under the fog (src/lib/ambience.js).
+  if (ambience) drawAmbience(ctx, { W, H, mapRect, time, ambience, clock, tokens, pointer });
+
+  // Fog of war: soft ragged edges that curl, smoke churning inside, a faint rim at the edge of the known.
+  drawFog(ctx, { W, H, fog: buildFogMask(fogZones, mapRect, W, H), time });
 
   // Pending move waypoint lines for own character
   const myMoves = (pendingMoves || []).filter(m => String(m.characterId) === String(userCharId));
@@ -610,6 +581,9 @@ export default function VTTViewer({ campaignId, userChar, castMode = false }) {
   const pendingMovesRef = useRef(pendingMoves);
   const vttSessionRef   = useRef(vttSession);
   const activeGameSessionId = useActiveGameSession(campaignId);
+  const drawArgsRef = useRef(null);
+  const pointerRef = useRef(null);
+  const fullCanvasRef = useRef(null);
   // Saved zoom/pan applies only on the first load — never on realtime refreshes
   // (commits, moves) — so a pan/zoom set on this window stays put.
   const hasLoadedTransformRef = useRef(false);
@@ -689,10 +663,30 @@ export default function VTTViewer({ campaignId, userChar, castMode = false }) {
     img.src = `/Maps/${encodeURIComponent(mapFilename)}`;
   }, [mapFilename]);
 
+  // Living map: the map's scene and lights (set by the DM, live) and the campaign's world clock.
+  const { ambience } = useMapAmbience(mapFilename);
+  const clock = useWorldClock(campaignId);
+
 useEffect(() => {
     if (!mapLoaded) return;
-    drawViewer({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, transform, pendingMoves, draggingToken, dragPos, userCharId, hoveredTokenId: hoveredToken?.id || null, onIconReady: () => setIconTick(t => t + 1) });
-  }, [fogZones, tokens, mapLoaded, transform, pendingMoves, draggingToken, dragPos, userCharId, hoveredToken, iconTick]);
+    drawArgsRef.current = { canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, transform, pendingMoves, draggingToken, dragPos, userCharId, hoveredTokenId: hoveredToken?.id || null, onIconReady: () => setIconTick(t => t + 1), ambience, clock: clock ? getLiveClock(clock) : null };
+    drawViewer({ ...drawArgsRef.current, time: performance.now() / 1000, pointer: pointerRef.current });
+  }, [fogZones, tokens, mapLoaded, transform, pendingMoves, draggingToken, dragPos, userCharId, hoveredToken, iconTick, ambience, clock]);
+
+  // The map is alive: redraw about 30 times a second with the latest arguments.
+  useEffect(() => {
+    if (!mapLoaded) return undefined;
+    let raf = 0, last = 0;
+    const loop = now => {
+      raf = requestAnimationFrame(loop);
+      if (now - last < 33 || !drawArgsRef.current) return;
+      last = now;
+      drawViewer({ ...drawArgsRef.current, time: now / 1000, pointer: pointerRef.current });
+      if (fullCanvasRef.current?.isConnected) drawViewer({ ...drawArgsRef.current, canvas: fullCanvasRef.current, draggingToken: null, dragPos: null, time: now / 1000, pointer: null });
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [mapLoaded]);
 
   // Wheel zoom
   const handleWheel = useCallback((e) => {
@@ -869,6 +863,7 @@ useEffect(() => {
       setTransform(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
       return;
     }
+    pointerRef.current = clientToMapCoords(clientX, clientY);
     const hit = hitTestToken(clientX, clientY);
     if (hit && !isTokenFogged(hit, fogZones)) {
       setHoveredToken({ id: hit.id, name: hit.fullName || hit.creatureName || hit.label || '?', portrait_url: hit.portrait_url || null, sprite_url: hit.sprite_url || null, clientX, clientY });
@@ -1162,7 +1157,7 @@ useEffect(() => {
       {fullscreen && mapLoaded && (
         <div onClick={() => setFullscreen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 500, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <canvas
-            ref={node => { if (node) drawViewer({ canvas: node, mapImg: mapImgRef.current, fogZones, tokens, transform, pendingMoves, draggingToken: null, dragPos: null, userCharId, onIconReady: () => setIconTick(t => t + 1) }); }}
+            ref={node => { fullCanvasRef.current = node; }}
             width={900} height={600}
             style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 80px)', borderRadius: 8 }}
             onClick={e => e.stopPropagation()}

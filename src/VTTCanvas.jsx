@@ -6,6 +6,10 @@ import { computeCrowdedKeys, tokenLayoutKey } from './lib/tokenLayout';
 import { drawDeathMarker, drawDeathPin } from './lib/deathMarker';
 import { logSessionEvent } from './lib/sessionEvents';
 import { useActiveGameSession } from './lib/session';
+import { getLiveClock } from './lib/soteriaclock';
+import { drawAmbience, buildFogMask, drawFog, drawLightPins, lightAt, SCENES, LIGHT_KINDS } from './lib/ambience';
+import { useMapAmbience, useWorldClock } from './lib/useMapAmbience';
+import Picker from './Picker';
 
 const BRUSH_SIZES = [20, 40, 70, 110];
 const TOKEN_COLORS = ['#e85d4a', '#4a9edd', '#79f5a7', '#e8c84a', '#c084fc', '#fb923c'];
@@ -324,7 +328,18 @@ function isTokenFogged(tok, fogZones) {
   return fogged;
 }
 
-function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId, onIconReady, showGrid, gridSize, dmFogOpacity = 1 }) {
+const liveClockOf = clock => (clock ? getLiveClock(clock) : null);
+// Options for the map's ambience pickers: each scene shows its mist, each light its glow.
+const SCENE_OPTIONS = Object.entries(SCENES).map(([value, sc]) => ({ value, label: sc.label, swatch: `rgb(${sc.mist.color.join(',')})` }));
+const LIGHT_OPTIONS = Object.entries(LIGHT_KINDS).map(([value, k]) => ({ value, label: k.label, swatch: `rgb(${k.color.join(',')})`, hint: k.fire ? 'fire' : undefined }));
+const SKY_OPTIONS = [
+  { value: 'clock', label: 'World clock', hint: 'follows the passes', swatch: '#c8a84a' },
+  { value: 'day', label: 'Day', swatch: '#f0d050' },
+  { value: 'dusk', label: 'Dusk', swatch: '#c86a5a' },
+  { value: 'night', label: 'Night', swatch: '#5b8fc7' },
+];
+
+function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId, onIconReady, showGrid, gridSize, dmFogOpacity = 1, time = 0, ambience = null, clock = null, pointer = null }) {
   if (!canvas || !mapImg) return;
   const ctx = canvas.getContext('2d');
   const W = canvas.width;
@@ -349,64 +364,17 @@ function drawCanvas({ canvas, mapImg, fogZones, tokens, brushPreview, tool, tran
     }
   }
 
+  // Living map: darkness, lights, mist and particles, under the fog (src/lib/ambience.js).
+  if (ambience) drawAmbience(ctx, { W, H, mapRect, time, ambience, clock, tokens, pointer });
+
   ctx.restore();
 
-  // ── 2. Build fog on an offscreen canvas in unscaled pixel space ──────────
-  // Fog zone coordinates are normalized (0-1) relative to mapRect.
-  // We convert them to unscaled canvas pixels here, so they are
-  // zoom/pan invariant — the fog canvas is then drawn with the transform.
-  const fogCanvas = document.createElement('canvas');
-  fogCanvas.width = W;
-  fogCanvas.height = H;
-  const fog = fogCanvas.getContext('2d');
-
-  fog.fillStyle = '#0a0806';
-  fog.fillRect(0, 0, W, H);
-
-  fogZones.forEach(zone => {
-    const cx = mapRect.x + zone.x * mapRect.w;
-    const cy = mapRect.y + zone.y * mapRect.h;
-    const r  = zone.r * mapRect.w;
-    const feather = zone.feather ?? 0.35;
-    const inner = Math.max(0, r * (1 - feather));
-
-    if (zone.type === 'reveal') {
-      fog.globalCompositeOperation = 'destination-out';
-      // Solid core so overlapping reveal dots don't leave rings
-      fog.beginPath();
-      fog.arc(cx, cy, inner, 0, Math.PI * 2);
-      fog.fillStyle = 'rgba(0,0,0,1)';
-      fog.fill();
-      // Feathered outer ring only
-      const grad = fog.createRadialGradient(cx, cy, inner, cx, cy, r);
-      grad.addColorStop(0, 'rgba(0,0,0,1)');
-      grad.addColorStop(1, 'rgba(0,0,0,0)');
-      fog.beginPath();
-      fog.arc(cx, cy, r, 0, Math.PI * 2);
-      fog.fillStyle = grad;
-      fog.fill();
-    } else if (zone.type === 'hide') {
-      fog.globalCompositeOperation = 'source-over';
-      const grad = fog.createRadialGradient(cx, cy, inner, cx, cy, r);
-      grad.addColorStop(0, 'rgba(10,8,6,1)');
-      grad.addColorStop(1, 'rgba(10,8,6,0)');
-      fog.beginPath();
-      fog.arc(cx, cy, r, 0, Math.PI * 2);
-      fog.fillStyle = grad;
-      fog.fill();
-    }
-  });
-
-  // ── 3. Composite fog onto main canvas with the same transform ────────────
-  // dmFogOpacity dims/hides fog on the DM's screen ONLY — the stored fog_zones
-  // are untouched, so players always see full fog.
+  // ── 2. Fog of war: soft ragged edges that curl, smoke churning inside, a faint rim at the edge of the known.
+  // dmFogOpacity dims the fog on the DM's screen ONLY; players always see full fog.
   ctx.save();
   ctx.setTransform(transform.scale, 0, 0, transform.scale, transform.x, transform.y);
-  if (dmFogOpacity > 0) {
-    ctx.globalAlpha = dmFogOpacity;
-    ctx.drawImage(fogCanvas, 0, 0);
-    ctx.globalAlpha = 1;
-  }
+  drawFog(ctx, { W, H, fog: buildFogMask(fogZones, mapRect, W, H), time, opacity: dmFogOpacity });
+  if (isDM && tool === 'light' && ambience) drawLightPins(ctx, { ambience, mapRect });
 
   // ── 4. Draw tokens ───────────────────────────────────────────────────────
   // Tokens never move; where full portraits would collide we draw compact pins.
@@ -604,6 +572,13 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   // always agree; "Set Campaign" on the map changes it for all of them. Without it the map pins its own.
   const activeCampaignId = onCampaignChange ? campaignId : (pinnedCampaignId || campaignId);
   const activeGameSessionId = useActiveGameSession(activeCampaignId);
+  // Living map: this map's scene and lights (shared with players, saved per map) and the campaign's world clock.
+  const { ambience, update: updateAmbience, saveError: ambienceError } = useMapAmbience(mapFilename);
+  const clock = useWorldClock(activeCampaignId);
+  const drawArgsRef = useRef(null);
+  const pointerRef = useRef(null);
+  const [lightKind, setLightKind] = useState('torch');
+  const [lightSize, setLightSize] = useState(1);
   const [showCommitPicker, setShowCommitPicker] = useState(false);
   const [feather, setFeather]                 = useState(0.35);
   const [localCampaigns, setLocalCampaigns]   = useState([]);
@@ -943,8 +918,23 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
 
   useEffect(() => {
     if (!mapLoaded) return;
-    drawCanvas({ canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId: hoveredToken?.id || null, onIconReady: () => setIconTick(t => t + 1), showGrid, gridSize, dmFogOpacity });
-  }, [fogZones, tokens, brushPreview, mapLoaded, tool, transform, isDM, hoveredToken, iconTick, dmFogOpacity]);
+    drawArgsRef.current = { canvas: canvasRef.current, mapImg: mapImgRef.current, fogZones, tokens, brushPreview, tool, transform, isDM, hoveredTokenId: hoveredToken?.id || null, onIconReady: () => setIconTick(t => t + 1), showGrid, gridSize, dmFogOpacity, ambience, clock: liveClockOf(clock) };
+    drawCanvas({ ...drawArgsRef.current, time: performance.now() / 1000, pointer: pointerRef.current });
+  }, [fogZones, tokens, brushPreview, mapLoaded, tool, transform, isDM, hoveredToken, iconTick, dmFogOpacity, ambience, clock]);
+
+  // The map is alive: redraw about 30 times a second with the latest arguments.
+  useEffect(() => {
+    if (!mapLoaded) return undefined;
+    let raf = 0, last = 0;
+    const loop = now => {
+      raf = requestAnimationFrame(loop);
+      if (now - last < 33 || !drawArgsRef.current) return;
+      last = now;
+      drawCanvas({ ...drawArgsRef.current, time: now / 1000, pointer: pointerRef.current });
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [mapLoaded]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -994,6 +984,12 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
     if (e.ctrlKey && (e.button === 0 || e.buttons === 1)) { panRef.current = { active: true, lastX: clientX, lastY: clientY }; return; }
     if (tool === 'pan' || e.button === 1) { panRef.current = { active: true, lastX: clientX, lastY: clientY }; return; }
     const pos = screenToMap(clientX, clientY);
+    if (tool === 'light') {
+      if (pos.x < 0 || pos.x > 1 || pos.y < 0 || pos.y > 1) return;
+      const hit = lightAt(ambience, pos, getMapRect(canvasRef.current, mapImgRef.current));
+      updateAmbience(prev => ({ lights: hit ? prev.lights.filter(l => l.id !== hit.id) : [...prev.lights, { id: uid(), x: pos.x, y: pos.y, kind: lightKind, size: lightSize }] }));
+      return;
+    }
     if (tool === 'fog-reveal' || tool === 'fog-hide') {
       paintingRef.current = true;
       const canvas = canvasRef.current;
@@ -1027,7 +1023,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
       });
       setSelectedTokenId(closest);
     }
-  }, [tool, brushRadius, feather, tokens]);
+  }, [tool, brushRadius, feather, tokens, ambience, lightKind, lightSize, updateAmbience]);
 
   const handlePointerMove = useCallback((e) => {
     e.preventDefault();
@@ -1058,6 +1054,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
       return;
     }
     const pos = screenToMap(clientX, clientY);
+    pointerRef.current = pos;
     const { px, py } = screenToCanvasPx(clientX, clientY);
     const t = transformRef.current;
     setBrushPreview({ sx: px, sy: py, sr: brushRadius * t.scale });
@@ -1085,7 +1082,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
   }, [tool, brushRadius, feather, selectedTokenId, tokens, isDM, fogZones]);
 
   const handlePointerUp = useCallback(() => { paintingRef.current = false; paintingRef._snapped = false; panRef.current.active = false; setSelectedTokenId(null); }, []);
-  const handlePointerLeave = useCallback(() => { setBrushPreview(null); setHoveredToken(null); }, []);
+  const handlePointerLeave = useCallback(() => { setBrushPreview(null); setHoveredToken(null); pointerRef.current = null; }, []);
 
   useEffect(() => {
     const handleWindowMove = (e) => { if (!panRef.current.active && !paintingRef.current) return; handlePointerMove(e); };
@@ -1135,6 +1132,7 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         {toolBtn('token-move', '✥ Move',   tool === 'token-move')}
         {toolBtn('erase-token','✕ Erase',  tool === 'erase-token')}
         {toolBtn('pan',        '✋ Pan',    tool === 'pan')}
+        {toolBtn('light',      '✦ Lights', tool === 'light')}
         <div style={{ width: 1, height: 20, background: COLORS.border, margin: '0 4px' }} />
         <div style={{ ...label8, marginRight: 4 }}>Brush</div>
         {BRUSH_SIZES.map((_, i) => (
@@ -1174,6 +1172,24 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
         )}
         <button onClick={syncMapFromCampaign} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↺ Sync Map</button>
         {mapFilename && <button onClick={() => { setMapFilename(null); setMapLoaded(false); setFogZones([]); setTokens([]); setPreviewLoc(null); }} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>↩ Change Map</button>}
+        {mapFilename && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexBasis: '100%', flexWrap: 'wrap', paddingTop: 6, borderTop: `1px solid ${COLORS.border}` }}>
+            <div style={{ ...label8, marginRight: 2 }}>Scene</div>
+            <Picker label="Scene" compact width={150} value={ambience.scene} onChange={scene => updateAmbience({ scene })} options={SCENE_OPTIONS} />
+            <div style={{ ...label8, margin: '0 2px 0 8px' }}>Sky</div>
+            <Picker label="Sky" compact width={140} value={ambience.timeMode} onChange={timeMode => updateAmbience({ timeMode })} options={SKY_OPTIONS} />
+            {tool === 'light' && (<>
+              <div style={{ ...label8, margin: '0 2px 0 8px' }}>Light</div>
+              <Picker label="Light" compact width={130} value={lightKind} onChange={setLightKind} options={LIGHT_OPTIONS} />
+              {[0.6, 1, 1.6, 2.4].map((sz, i2) => (
+                <button key={sz} onClick={() => setLightSize(sz)} style={{ background: lightSize === sz ? 'rgba(200,168,74,0.15)' : COLORS.card, border: `1px solid ${lightSize === sz ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '5px 9px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.text }}>{['Small', 'Medium', 'Large', 'Huge'][i2]}</button>
+              ))}
+              <span style={{ ...label8, color: COLORS.dim }}>Click to place · click a light to remove</span>
+              {ambience.lights.length > 0 && <button onClick={() => updateAmbience({ lights: [] })} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '5px 9px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.muted }}>Clear lights</button>}
+            </>)}
+            {ambienceError && <span style={{ fontSize: 10, color: COLORS.warn }}>{ambienceError}</span>}
+          </div>
+        )}
         {mapLoaded && <div style={{ ...label8, color: COLORS.dim }}>Ctrl+drag to pan · Zoom: {Math.round(transform.scale * 100)}%</div>}
         <button onClick={() => setShowCommitPicker(true)} disabled={saving || !mapFilename} style={{ marginLeft: 'auto', background: mapFilename ? 'rgba(200,168,74,0.15)' : 'transparent', border: `1px solid ${mapFilename ? '#c8a84a' : COLORS.border}`, borderRadius: 6, padding: '6px 16px', cursor: mapFilename ? 'pointer' : 'default', fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: mapFilename ? '#e8c84a' : COLORS.dim, fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
           {saving ? 'Saving…' : '✦ Commit'}

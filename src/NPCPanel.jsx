@@ -574,6 +574,9 @@ function NPCModal({ cities, groups, onSave, onClose }) {
   );
 }
 
+// A three-way choice shown as joined buttons, so both settings read at a glance (Lean, Morality).
+function Segmented({label,value,onChange,options}){return(<div role="radiogroup" aria-label={label} style={{display:'flex',border:'1px solid rgba(184,137,42,0.3)',borderRadius:4,overflow:'hidden'}}>{options.map(([v,text,color])=>{const on=value===v;return(<button key={v} type="button" role="radio" aria-checked={on} onClick={()=>onChange(v)} style={{flex:1,padding:'6px 4px',background:on?`${color}26`:'transparent',border:'none',borderRight:'1px solid rgba(184,137,42,0.18)',color:on?color:'#8a7a62',cursor:'pointer',fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:'0.1em',textTransform:'uppercase',boxShadow:on?`inset 0 -2px 0 ${color}`:'none'}}>{text}</button>);})}</div>);}
+
 export default function NPCPanel({ campaignId, sessionId }) {
   const [cities,setCities]=useState([]);
   const [groups,setGroups]=useState([]);
@@ -834,8 +837,8 @@ export default function NPCPanel({ campaignId, sessionId }) {
           <div style={S.field}><label style={S.label}>Faction</label><select style={S.fieldSelect} value={selectedNpc.faction||''} onChange={e=>updateNpcField(selectedNpc.id,'faction',e.target.value)}><option value="" style={{background:'#0e0c09'}}>— Select faction —</option>{FACTIONS.map(f=><option key={f} value={f} style={{background:'#0e0c09'}}>{f}</option>)}</select></div>
           {/* Reactions (src/reactions.js): lean is npcs.alignment, morality is npcs.morality. */}
           <div style={{display:'flex',gap:8}}>
-            <div style={{...S.field,flex:1}}><label style={S.label}>Lean</label><select style={S.fieldSelect} value={selectedNpc.alignment||'neutral'} onChange={e=>updateNpcField(selectedNpc.id,'alignment',e.target.value)}>{['magic','neutral','tech'].map(v=><option key={v} value={v} style={{background:'#0e0c09'}}>{v[0].toUpperCase()+v.slice(1)}</option>)}</select></div>
-            <div style={{...S.field,flex:1}}><label style={S.label}>Morality</label><select style={S.fieldSelect} value={selectedNpc.morality||'neutral'} onChange={e=>updateNpcField(selectedNpc.id,'morality',e.target.value)}>{['good','neutral','evil'].map(v=><option key={v} value={v} style={{background:'#0e0c09'}}>{v[0].toUpperCase()+v.slice(1)}</option>)}</select></div>
+            <div style={{...S.field,flex:1}}><span style={S.label}>Lean</span><Segmented label="Lean" value={selectedNpc.alignment||'neutral'} onChange={v=>updateNpcField(selectedNpc.id,'alignment',v)} options={[['magic','Magic','#6f9e78'],['neutral','Neutral','#b3a89c'],['tech','Tech','#4A88B8']]}/></div>
+            <div style={{...S.field,flex:1}}><span style={S.label}>Morality</span><Segmented label="Morality" value={selectedNpc.morality||'neutral'} onChange={v=>updateNpcField(selectedNpc.id,'morality',v)} options={[['good','Good','#e8d9a7'],['neutral','Neutral','#b3a89c'],['evil','Evil','#CD5C5C']]}/></div>
           </div>
           <div style={S.field}><NpcReactions npc={selectedNpc} cityName={selectedCity?.name} campaignId={campaignId} /></div>
           <div style={S.field}><label style={S.label}>Notes</label><textarea style={S.fieldTextarea} value={selectedNpc.notes||''} onChange={e=>updateNpcField(selectedNpc.id,'notes',e.target.value)} placeholder="DM notes, relationships, plot hooks…"/></div>

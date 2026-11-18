@@ -3,6 +3,7 @@
 // Standings and held reputations are part of the character and are saved with the editor's Save.
 import { useEffect, useMemo, useState } from 'react';
 import { COLORS } from './constants';
+import Picker from './Picker';
 import { STANDING_SOURCES, STANDING_KINDS, EFFECT_TYPES, FACTIONS, standingsOf, renownOf, loadReputations, saveReputation, effectLabel } from './reactions';
 
 const box = { marginBottom: 16, padding: '10px 12px', background: 'rgba(200,168,74,0.05)', border: '1px solid rgba(200,168,74,0.22)', borderRadius: 8 };
@@ -66,14 +67,10 @@ export default function StandingEditor({ data, set }) {
         )) : <span style={small}>No standing anywhere yet.</span>}
       </div>
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-        <select value={adding} onChange={e => setAdding(e.target.value)} style={{ ...input, flex: 1, background: '#13100d' }} aria-label="Add a standing">
-          <option value="">Add standing with…</option>
-          {STANDING_KINDS.map(k => (
-            <optgroup key={k.id} label={k.label}>
-              {STANDING_SOURCES.filter(s => s.kind === k.id && !standings.some(x => x.id === s.id)).map(s => <option key={s.id} value={s.id}>{s.name}{s.region ? ` (${s.region})` : ''}</option>)}
-            </optgroup>
-          ))}
-        </select>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex' }}>
+          <Picker label="Add standing with" placeholder="Add standing with…" searchable width={260} value={adding} onChange={setAdding}
+            options={STANDING_KINDS.flatMap(k => STANDING_SOURCES.filter(src => src.kind === k.id && !standings.some(x => x.id === src.id)).map(src => ({ value: src.id, label: src.name, hint: src.region || undefined, group: k.label })))} />
+        </div>
         <button onClick={addStanding} disabled={!adding} style={btn}>Add</button>
       </div>
 
@@ -102,11 +99,9 @@ export default function StandingEditor({ data, set }) {
             const choices = valueChoices(e.type);
             return (
               <div key={i} style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-                <select value={e.type} onChange={ev => { const type = ev.target.value; setEffect(i, { type, value: (valueChoices(type) || [''])[0] }); }} style={{ ...input, background: '#13100d' }} aria-label="Who it moves">
-                  {EFFECT_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-                </select>
+                <Picker label="Who it moves" compact value={e.type} onChange={type => setEffect(i, { type, value: (valueChoices(type) || [''])[0] })} options={EFFECT_TYPES.map(t => ({ value: t.id, label: t.label }))} />
                 {e.type !== 'all' && (choices
-                  ? <select value={e.value} onChange={ev => setEffect(i, { value: ev.target.value })} style={{ ...input, flex: 1, minWidth: 0, background: '#13100d' }} aria-label="Which">{choices.map(c => <option key={c} value={c}>{c}</option>)}</select>
+                  ? <div style={{ flex: 1, minWidth: 0, display: 'flex' }}><Picker label="Which" compact width={200} value={e.value} onChange={value => setEffect(i, { value })} options={choices.map(c => ({ value: c, label: c }))} /></div>
                   : <input value={e.value || ''} onChange={ev => setEffect(i, { value: ev.target.value })} placeholder="Race, e.g. Durinak" style={{ ...input, flex: 1, minWidth: 0 }} />)}
                 {e.type === 'all' && <span style={{ flex: 1 }} />}
                 <input type="number" value={e.amount} onChange={ev => setEffect(i, { amount: parseInt(ev.target.value, 10) || 0 })} style={{ ...input, width: 54, textAlign: 'center' }} aria-label="Shift" />
