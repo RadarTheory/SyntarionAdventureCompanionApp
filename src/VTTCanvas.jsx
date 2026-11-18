@@ -11,7 +11,7 @@ import { drawAmbience, buildFogMask, drawFog, drawLightPins, lightAt, SCENES, LI
 import { useMapAmbience, useWorldClock } from './lib/useMapAmbience';
 import Picker from './Picker';
 import { revealAlong } from './lib/sight';
-import { drawFullGrid, drawLocalGrid, drawRuler, gridFromBox, gridFor, squareScaleView, SQUARE } from './lib/grid';
+import { drawFullGrid, drawLocalGrid, drawRuler, gridFromBox, gridFor, squareScaleView, snapToSquare, SQUARE } from './lib/grid';
 
 const BRUSH_SIZES = [20, 40, 70, 110];
 const TOKEN_COLORS = ['#e85d4a', '#4a9edd', '#79f5a7', '#e8c84a', '#c084fc', '#fb923c'];
@@ -1104,9 +1104,11 @@ export default function VTTCanvas({ campaignId, dbCampaigns = [], onRegisterPlac
     }
     // Note: no snapshot here — undo reverts entire stroke at once (snapshotted on pointerdown)
     if (tool === 'token-move' && selectedTokenId && (e.buttons === 1 || e.touches)) {
-      setTokens(prev => prev.map(t => t.id === selectedTokenId ? { ...t, x: pos.x, y: pos.y } : t));
+      // The token settles on the centre of the square under the pointer (src/lib/grid.js).
+      const at = snapToSquare(gridFor(ambience?.grid, mapImgRef.current), getMapRect(canvasRef.current, mapImgRef.current), pos);
+      setTokens(prev => prev.map(t => t.id === selectedTokenId ? { ...t, x: at.x, y: at.y } : t));
     }
-  }, [tool, brushRadius, feather, selectedTokenId, tokens, isDM, fogZones, gridBox]);
+  }, [tool, brushRadius, feather, selectedTokenId, tokens, isDM, fogZones, gridBox, ambience]);
 
   const handlePointerUp = useCallback(() => {
     paintingRef.current = false; paintingRef._snapped = false; panRef.current.active = false; setSelectedTokenId(null); moveStartRef.current = null;

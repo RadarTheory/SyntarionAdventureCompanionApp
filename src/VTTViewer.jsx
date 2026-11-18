@@ -8,7 +8,7 @@ import { useActiveGameSession } from './lib/session';
 import { drawAmbience, buildFogMask, drawFog } from './lib/ambience';
 import { useMapAmbience, useWorldClock } from './lib/useMapAmbience';
 import { getLiveClock } from './lib/soteriaclock';
-import { drawLocalGrid, drawRuler, gridFor, squareScaleView } from './lib/grid';
+import { drawLocalGrid, drawRuler, gridFor, squareScaleView, snapToSquare } from './lib/grid';
 import { logHerculesEvent } from './lib/herculesLog';
 
 const MIN_SCALE = 0.5;
@@ -593,6 +593,8 @@ export default function VTTViewer({ campaignId, userChar, castMode = false }) {
   const activeGameSessionId = useActiveGameSession(campaignId);
   const drawArgsRef = useRef(null);
   const pointerRef = useRef(null);
+  // The map's grid, for snapping a dragged token to the square it lands on (kept in a ref for the pointer handlers).
+  const savedGridRef = useRef(null);
   const fullCanvasRef = useRef(null);
   // Saved zoom/pan applies only on the first load — never on realtime refreshes
   // (commits, moves) — so a pan/zoom set on this window stays put.
@@ -675,6 +677,7 @@ export default function VTTViewer({ campaignId, userChar, castMode = false }) {
 
   // Living map: the map's scene and lights (set by the DM, live) and the campaign's world clock.
   const { ambience } = useMapAmbience(mapFilename);
+  useEffect(() => { savedGridRef.current = ambience?.grid || null; }, [ambience]);
   const clock = useWorldClock(campaignId);
 
 useEffect(() => {
@@ -735,6 +738,13 @@ useEffect(() => {
       x: (canvasX - mapRect.x) / mapRect.w,
       y: (canvasY - mapRect.y) / mapRect.h,
     };
+  }, []);
+
+  // Settle a dragged token on the centre of the square under it (src/lib/grid.js).
+  const snapPos = useCallback(pos => {
+    const img = mapImgRef.current;
+    if (!pos || !img || !canvasRef.current) return pos;
+    return snapToSquare(gridFor(savedGridRef.current, img), getMapRect(canvasRef.current, img), pos);
   }, []);
 
   const hitTestToken = useCallback((clientX, clientY) => {
@@ -857,7 +867,7 @@ useEffect(() => {
       const dx = clientX - dragRef.current.startX;
       const dy = clientY - dragRef.current.startY;
       if (Math.sqrt(dx * dx + dy * dy) > 4) dragRef.current.moved = true;
-      const pos = clientToMapCoords(clientX, clientY);
+      const pos = snapPos(clientToMapCoords(clientX, clientY));
       dragRef.current._lastDragPos = pos;
       setDragPos(pos);
       return;
@@ -973,7 +983,7 @@ useEffect(() => {
       const ddx = clientX - dragRef.current.startX;
       const ddy = clientY - dragRef.current.startY;
       if (Math.sqrt(ddx * ddx + ddy * ddy) > 4) dragRef.current.moved = true;
-      const pos = clientToMapCoords(clientX, clientY);
+      const pos = snapPos(clientToMapCoords(clientX, clientY));
       dragRef.current._lastDragPos = pos;
       setDragPos(pos);
       return;

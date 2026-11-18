@@ -122,3 +122,11 @@ export function gridFromBox(a, b, mapRect) {
   const mod = (v, m) => ((v % m) + m) % m;
   return { cell, ox: mod(left, cell), oy: mod(top, cellH) };
 }
+
+// The centre of the square a point (0-1) falls in, as a point (0-1): where a moved token settles.
+export function snapToSquare(grid, mapRect, p) {
+  if (!p || !mapRect?.w) return p;
+  const g = gridOf(grid, mapRect), px = toPx(mapRect, p), c = cellIndex(g, px.x, px.y);
+  const cx = g.ox + (c.i + 0.5) * g.cell, cy = g.oy + (c.j + 0.5) * g.cell;
+  return { x: Math.min(1, Math.max(0, (cx - mapRect.x) / mapRect.w)), y: Math.min(1, Math.max(0, (cy - mapRect.y) / mapRect.h)) };
+}
