@@ -66,13 +66,18 @@ Deno.serve(async (req) => {
           messages: [{ role: 'system', content: system }, ...finalMessages],
           max_tokens: Math.min(max_tokens, 2048),
           temperature: 0.82,
+          // 2.5 models think by default, and thinking eats the token budget; the Scribe answers directly.
+          reasoning_effort: 'none',
         }),
       });
     };
 
-    let res = await attemptCall('gemini-2.0-flash');
-    if (res.status === 429) {
-      res = await attemptCall('gemini-2.5-flash');
+    // gemini-2.0-flash was retired (404). Try each model in turn when one is busy (429/503) or gone (404).
+    const MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest'];
+    let res!: Response;
+    for (const model of MODELS) {
+      res = await attemptCall(model);
+      if (![404, 429, 503].includes(res.status)) break;
     }
 
     const data = await res.json();

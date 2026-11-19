@@ -90,7 +90,11 @@ export async function draftBrief(ctx) {
     + '"region":"the Soteria region it lies in, if known","brief":"3-5 sentences: terrain, structures, light sources, hazards, where the party arrives and what draws the eye"}. '
     + 'Keep it consistent with the lore and log given. Stairs down lead to a lower level, stairs up to a higher one, a door to what lies behind it.';
   const { data, error } = await supabase.functions.invoke('scribe', { body: { system, messages: [{ role: 'user', content: context }], max_tokens: 600 } });
-  if (error) throw error;
+  if (error) {
+    let msg = error.message;
+    try { msg = (await error.context?.json())?.error?.message || msg; } catch { /* keep the generic message */ }
+    throw new Error(msg);
+  }
   const text = data?.content?.[0]?.text || data?.text || data?.choices?.[0]?.message?.content || '';
   const m = text.match(/\{[\s\S]*\}/);
   try { return JSON.parse(m ? m[0] : text); } catch { return { poi: `${ctx.mapName} · Beyond`, region: '', brief: text.trim() }; }
