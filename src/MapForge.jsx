@@ -4,10 +4,10 @@
 // 3. Approving one makes it canon: saved, locked to its POI, linked both ways, and the party moves there.
 import { useEffect, useState } from 'react';
 import { COLORS } from './constants';
-import { draftBrief, forgePrompt, forgeImage, continuationCanvas, styleReference, approveForged } from './lib/forge';
+import { draftBrief, forgePrompt, forgeImage, referenceFor, readImageFile, approveForged } from './lib/forge';
 
 const gold = '#c8a84a';
-const btn = (primary = false) => ({ background: primary ? 'rgba(200,168,74,0.18)' : COLORS.card, border: `1px solid ${primary ? gold : COLORS.border}`, borderRadius: 6, padding: '8px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.text });
+const btn = (primary = false, disabled = false) => ({ opacity: disabled ? 0.45 : 1, cursor: disabled ? 'default' : 'pointer', background: primary ? 'rgba(200,168,74,0.18)' : COLORS.card, border: `1px solid ${primary ? gold : COLORS.border}`, borderRadius: 6, padding: '8px 14px', whiteSpace: 'nowrap', fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: COLORS.text });
 const field = { width: '100%', boxSizing: 'border-box', background: 'rgba(240,238,235,0.04)', border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: '8px 10px', color: COLORS.text, fontSize: 12, fontFamily: 'Georgia, serif', outline: 'none' };
 const label = { fontFamily: "'Cinzel', serif", fontSize: 8, letterSpacing: '0.18em', textTransform: 'uppercase', color: gold, marginBottom: 5 };
 
@@ -32,15 +32,51 @@ export default function MapForge({ request, onClose, onApproved, saveOriginAmbie
     return () => { live = false; };
   }, [campaignId, mapName, ambience?.scene, exit, travellers]);
 
+  const promptText = () => forgePrompt({ brief: note.trim() ? `${brief.trim()} DM's note for this attempt: ${note.trim()}` : brief.trim(), exit });
+
   const forge = async () => {
     if (!brief.trim()) return;
-    setForging(true); setError(''); setOptions([]);
-    const images = exit.kind === 'edge' ? [continuationCanvas(img, exit.side)] : [styleReference(img)];
-    const prompt = forgePrompt({ brief: note.trim() ? `${brief.trim()} DM's note for this attempt: ${note.trim()}` : brief.trim(), exit });
+    setForging(true); setError('');
+    setOptions(prev => prev.filter(o => o?.own)); // keep an image the DM brought in
+    const images = [referenceFor(img, exit)];
+    const prompt = promptText();
     const results = await Promise.all([0, 1].map(() => forgeImage({ prompt, images }).then(image => ({ image })).catch(e => ({ error: e.message }))));
-    setOptions(results);
+    setOptions(prev => [...prev.filter(o => o?.own), ...results]);
     if (results.every(r => r.error)) setError(results[0].error);
     setForging(false);
+  };
+
+  // By hand: paint it in Gemini, ChatGPT or Grok with your own subscription, then bring the image back here.
+  const [copied, setCopied] = useState('');
+  const flash = what => { setCopied(what); setTimeout(() => setCopied(c => (c === what ? '' : c)), 2200); };
+  const handPrompt = () => `${promptText()} Paint it as one landscape image, 3:2 (for example 1536 x 1024). Use the attached image as described.`;
+  const copyPrompt = async () => {
+    setShownPrompt(handPrompt());
+    try { await navigator.clipboard.writeText(handPrompt()); flash('prompt'); } catch { /* the box below shows it to copy by hand */ }
+  };
+  const [shownPrompt, setShownPrompt] = useState('');
+  const refPng = () => new Promise(resolve => {
+    const ref = referenceFor(img, exit), im = new Image();
+    im.onload = () => { const c = document.createElement('canvas'); c.width = im.width; c.height = im.height; c.getContext('2d').drawImage(im, 0, 0); c.toBlob(resolve, 'image/png'); };
+    im.src = `data:${ref.mimeType};base64,${ref.data}`;
+  });
+  const copyReference = async () => {
+    const blob = await refPng();
+    try { await navigator.clipboard.write([new window.ClipboardItem({ 'image/png': blob })]); flash('reference'); }
+    catch { // Some browsers can't copy images: save it instead.
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${(poi || mapName).replace(/[^\w' -]+/g, '')} reference.png`; a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000); flash('saved');
+    }
+  };
+  const useOwnImage = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const image = await readImageFile(file);
+      setError('');
+      setOptions(prev => [{ image, own: true }, ...prev.filter(o => o?.image && !o.own)]);
+    } catch (err) { setError(err.message); }
   };
 
   const approve = async (i) => {
@@ -75,14 +111,30 @@ export default function MapForge({ request, onClose, onApproved, saveOriginAmbie
         <textarea value={brief} onChange={e => setBrief(e.target.value)} rows={4} placeholder={drafting ? 'The Scribe is reading the session…' : 'Terrain, structures, light, hazards, where the party arrives.'} style={{ ...field, resize: 'vertical' }} />
 
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', margin: '12px 0' }}>
-          <button onClick={forge} disabled={forging || drafting || !brief.trim()} style={btn(true)}>{forging ? 'Forging two options…' : options.length ? '↻ Regenerate' : '⚒ Forge two options'}</button>
+          <button onClick={forge} disabled={forging || drafting || !brief.trim()} style={btn(true, forging || drafting || !brief.trim())}>{forging ? 'Forging two options…' : options.some(o => !o?.own) ? '↻ Regenerate' : '⚒ Forge two options'}</button>
           <input value={note} onChange={e => setNote(e.target.value)} placeholder="Note for the next attempt (e.g. narrower, add a rope bridge)" style={{ ...field, flex: 1 }} />
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', margin: '-2px 0 12px', padding: '10px 12px', border: `1px dashed ${COLORS.border}`, borderRadius: 8 }}>
+          <span style={{ ...label, marginBottom: 0, marginRight: 4 }}>Or paint it yourself</span>
+          <button onClick={copyPrompt} disabled={drafting || !brief.trim()} style={btn(false, drafting || !brief.trim())}>{copied === 'prompt' ? '✓ Prompt copied' : '⧉ Copy prompt'}</button>
+          <button onClick={copyReference} style={btn(false)}>{copied === 'reference' ? '✓ Image copied' : copied === 'saved' ? '✓ Image saved' : `⧉ Copy ${exit.kind === 'edge' ? 'edge strip' : 'style reference'}`}</button>
+          <label style={{ ...btn(true), display: 'inline-block' }}>
+            ⬆ Use my own image
+            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={useOwnImage} style={{ display: 'none' }} />
+          </label>
+          <span style={{ flex: '1 1 220px', fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+            Paste the prompt and the image into Gemini, ChatGPT or Grok, then bring the map back here to approve it.
+          </span>
+          {shownPrompt && (
+            <textarea readOnly value={shownPrompt} rows={4} onFocus={e => e.target.select()} aria-label="The forge prompt"
+              style={{ ...field, flexBasis: '100%', resize: 'vertical', fontSize: 11, color: COLORS.textSub }} />
+          )}
         </div>
         {error && <div style={{ fontSize: 11, color: COLORS.warn, marginBottom: 10, fontFamily: 'Georgia, serif' }}>{error}</div>}
 
         {(forging || options.length > 0) && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 12 }}>
-            {(forging ? [null, null] : options).map((o, i) => (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
+            {(forging ? [...options, null, null] : options).map((o, i) => (
               <div key={i} style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, overflow: 'hidden', background: '#0b0a09' }}>
                 <div style={{ aspectRatio: '3 / 2', display: 'grid', placeItems: 'center', position: 'relative' }}>
                   {o?.image ? <img src={`data:${o.image.mimeType};base64,${o.image.data}`} alt={`Option ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -93,8 +145,8 @@ export default function MapForge({ request, onClose, onApproved, saveOriginAmbie
                   )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 10 }}>
-                  <span style={{ flex: 1, fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif' }}>Option {i + 1}{exit.kind === 'edge' ? ' · dashed line: where your map ends' : ''}</span>
-                  <button onClick={() => approve(i)} disabled={!o?.image || approving !== null} style={btn(true)}>{approving === i ? 'Making it canon…' : '✦ Approve'}</button>
+                  <span style={{ flex: 1, fontSize: 10, color: COLORS.dim, fontFamily: 'Georgia, serif' }}>{o?.own ? 'Your image' : `Option ${i + 1 - options.filter(x => x?.own).length}`}{exit.kind === 'edge' ? ' · dashed line: where your map ends' : ''}</span>
+                  <button onClick={() => approve(i)} disabled={!o?.image || approving !== null} style={btn(true, !o?.image || approving !== null)}>{approving === i ? 'Making it canon…' : '✦ Approve'}</button>
                 </div>
               </div>
             ))}

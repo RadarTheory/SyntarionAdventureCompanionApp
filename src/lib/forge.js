@@ -65,6 +65,18 @@ export function styleReference(img) {
   return { data: c.toDataURL('image/jpeg', 0.85).split(',')[1], mimeType: 'image/jpeg' };
 }
 
+// The image that goes with the prompt: the edge strip to continue, or the current map as a style reference.
+export const referenceFor = (img, exit) => (exit.kind === 'edge' ? continuationCanvas(img, exit.side) : styleReference(img));
+
+// A file the DM made elsewhere (Gemini, ChatGPT, Grok…), read as { data, mimeType } like a forged option.
+export const readImageFile = file => new Promise((resolve, reject) => {
+  if (!file?.type?.startsWith('image/')) { reject(new Error('Choose a PNG, JPG or WebP image.')); return; }
+  const r = new FileReader();
+  r.onload = () => { const [head, data] = String(r.result).split(','); resolve({ data, mimeType: head.match(/data:([^;]+)/)?.[1] || file.type }); };
+  r.onerror = () => reject(new Error('Could not read that file.'));
+  r.readAsDataURL(file);
+});
+
 // What the Scribe knows of the moment: the map, its scene, the exit, who went, and the latest lore and session log.
 async function sceneContext({ campaignId, mapName, scene, exit, travellers }) {
   const [{ data: lore }, { data: events }] = await Promise.all([
@@ -115,14 +127,22 @@ export function forgePrompt({ brief, exit }) {
   ].join(' ');
 }
 
+// Gemini's quota errors run to a paragraph of metric names; say what it means instead.
+function friendlyForgeError(msg = '') {
+  if (/free.?tier/i.test(msg) && /limit: 0/.test(msg)) return 'Your Gemini key is on the free tier, which allows no image generation. Turn on billing for the key in Google AI Studio, then forge again.';
+  if (/quota|rate.?limit|429/i.test(msg)) return `The Gemini image quota is used up for now${msg.match(/retry in ([\dhms.]+)/i) ? ` (retry in ${msg.match(/retry in ([\dhms.]+)/i)[1].replace(/\.$/, '').replace(/\.\d+s$/, 's')})` : ''}. Try again later.`;
+  if (/not found|404/i.test(msg)) return 'The forge is not deployed yet: run `npx supabase functions deploy forge`.';
+  return msg;
+}
+
 export async function forgeImage({ prompt, images }) {
   const { data, error } = await supabase.functions.invoke('forge', { body: { prompt, images, aspectRatio: '3:2' } });
   if (error) {
     let msg = error.message;
     try { msg = (await error.context?.json())?.error?.message || msg; } catch { /* keep the generic message */ }
-    throw new Error(/not found|404/i.test(msg) ? 'The forge is not deployed yet: run `npx supabase functions deploy forge`.' : msg);
+    throw new Error(friendlyForgeError(msg));
   }
-  if (data?.error) throw new Error(data.error.message);
+  if (data?.error) throw new Error(friendlyForgeError(data.error.message));
   return data.image; // { data, mimeType }
 }
 
