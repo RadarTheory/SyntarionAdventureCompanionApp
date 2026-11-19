@@ -31,3 +31,4 @@ dist-ssr
 
 # Generated from constellation/ by vite.config.js (scripts/sync-constellation.mjs)
 public/constellation/
+supabase/.temp/
